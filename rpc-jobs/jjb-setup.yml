@@ -1,0 +1,43 @@
+- job:
+    name: 'Jenkins-Job-Builder'
+    description: Creates and updates jobs with Jenkins Job Builder.
+    logrotate:
+        daysToKeep: 20
+    node: general
+    parameters:
+        - string:
+            name: JOBS
+            description: "Which jobs to update and with what options."
+            default: -r rpc-jobs
+        - bool:
+            name: IGNORE_CACHE
+            description: "Ignore cache when updating jobs."
+        - string:
+            name: JJB_REPO
+            default: https://github.com/rcbops/rpc-gating
+        - string:
+            name: JJB_BRANCH
+            default: master
+    scm:
+        - git:
+            url: $JJB_REPO
+            branches:
+                - $JJB_BRANCH
+            skip-tag: true
+            wipe-workspace: false
+    builders:
+        - shell: |
+            scl enable python27 bash
+
+            if [[ ! -d ".venv" ]]; then
+                virtualenv -p /opt/rh/python27/root/usr/bin/python .venv
+            fi
+            source .venv/bin/activate
+
+            pip install jenkins-job-builder
+
+            if [ "$IGNORE_CACHE" = "true" ]; then
+                JJB_ARGS="--ignore-cache"
+            fi
+
+            jenkins-jobs --conf ~/jenkins_jobs.ini $JJB_ARGS update $JOBS
