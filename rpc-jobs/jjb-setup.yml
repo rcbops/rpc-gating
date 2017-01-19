@@ -53,12 +53,13 @@
 
             [jenkins]
             url=${JENKINS_URL}
-            user=${JENKINS_USER}
-            password=${JENKINS_API_PASSWORD}
             EOF
 
             if [ "$IGNORE_CACHE" = "true" ]; then
                 JJB_ARGS="--ignore-cache"
             fi
 
-            jenkins-jobs --conf jenkins_jobs.ini $JJB_ARGS update $JOBS
+            jenkins-jobs --conf jenkins_jobs.ini \
+                         --user $JENKINS_USER \
+                         --password $JENKINS_API_PASSWORD \
+                         $JJB_ARGS update $JOBS
