@@ -25,6 +25,12 @@
                 - $JJB_BRANCH
             skip-tag: true
             wipe-workspace: false
+    wrappers:
+      - credentials-binding:
+          - username-password-separated:
+             credential-id: service_account_jenkins_api_creds
+             username: JENKINS_USER
+             password: JENKINS_API_PASSWORD
     builders:
         - shell: |
             scl enable python27 bash
@@ -36,8 +42,23 @@
 
             pip install jenkins-job-builder
 
+            cat > jenkins_jobs.ini << EOF
+            [job-builder]
+            ignore_cache=False
+            keep_descriptions=False
+            include_path=.:scripts:~/git/
+            recursive=True
+            exclude=.*manual:./development
+            allow_deplicates=False
+
+            [jenkins]
+            url=${JENKINS_URL}
+            user=${JENKINS_USER}
+            password=${JENKINS_API_PASSWORD}
+            EOF
+
             if [ "$IGNORE_CACHE" = "true" ]; then
                 JJB_ARGS="--ignore-cache"
             fi
 
-            jenkins-jobs --conf ~/jenkins_jobs.ini $JJB_ARGS update $JOBS
+            jenkins-jobs --conf jenkins_jobs.ini $JJB_ARGS update $JOBS
