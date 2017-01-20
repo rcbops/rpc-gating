@@ -47,22 +47,27 @@ def create_node(host_ip, name, credential_description, labels=None,
     jenkins.nodes.create_node(name, node_dict)
 
 
+def delete_node(name):
+    jenkins.delete_node(nodename=name)
+
+
 if __name__ == "__main__":
-    description = "Adds Jenkins slave node using SSH via the Jenkins API"
+    description = "Adds or deletes a Jenkins node via the Jenkins API"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("--ip", help="IP address of node", required=True)
-    parser.add_argument("--name", help="Name to give slave node",
-                        required=True)
-    parser.add_argument("--creds", help="Description of credentials to use",
-                        required=True)
+    parser.add_argument("action", choices=['create', 'delete'])
+    parser.add_argument("--name", help="Name of slave node")
+    parser.add_argument("--ip", help="IP address of node")
+    parser.add_argument("--creds", help="Description of credentials to use")
     parser.add_argument("--labels",
                         help="Labels to give node separated by spaces")
     parser.add_argument("--remote-dir",
                         help="Path to use as the home directory on the node")
-
     args = parser.parse_args()
 
-    create_node(host_ip=args.ip, name=args.name,
-                credential_description=args.creds,
-                labels=args.labels,
-                remote_root_dir=args.remote_dir)
+    if args.action == "create":
+        create_node(host_ip=args.ip, name=args.name,
+                    credential_description=args.creds,
+                    labels=args.labels,
+                    remote_root_dir=args.remote_dir)
+    elif args.action == "delete":
+        delete_node(name=args.name)
