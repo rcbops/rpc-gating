@@ -30,14 +30,6 @@
 
 - hosts: cloud_instances
   tasks:
-    - name: Copy RPC public keys
-      copy:
-        src: ../keys/rcb.keys
-        dest: /root/.ssh/rcb.keys
-
-    - name: Add RPC public keys to authorized_keys
-      shell: cat /root/.ssh/rcb.keys >> /root/.ssh/authorized_keys
-
     - name: Install apt packages
       apt:
         pkg: "{{ item }}"
@@ -56,13 +48,11 @@
         home: /var/lib/jenkins
         shell: /bin/bash
 
-    - name: Create SSH directory for Jenkins user
-      file:
-        path: /var/lib/jenkins/.ssh
-        state: directory
-
     - name: Add RPC public keys to authorized_keys
-      shell: cp /root/.ssh/authorized_keys /var/lib/jenkins/.ssh/authorized_keys
+      authorized_key: "user={{ item }} key='{{ lookup('file', '../keys/rcb.keys') }}' state=present"
+      with_items:
+        - root
+        - jenkins
 
     - name: Set proper permissions for Jenkins home directory
       file:
@@ -70,3 +60,10 @@
         owner: jenkins
         group: jenkins
         recurse: yes
+
+    - name: Set Jenkins user to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: 'jenkins'
+        line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
