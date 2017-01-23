@@ -1,0 +1,71 @@
+- job:
+    name: RPC_AIO
+    project-type: workflow
+    concurrent: true
+    parameters:
+      - string:
+          name: RPC_GATING_REPO
+          default: "https://github.com/rcbops/rpc-gating"
+      - string:
+          name: RPC_GATING_BRANCH
+          default: "master"
+      - string:
+          name: REGION
+          default: "IAD"
+      - string:
+          name: FLAVOR
+          default: "performance2-15"
+      - string:
+          name: IMAGE
+          default: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Cleanup"
+          description: |
+            Pipeline stages to run CSV
+            Options:
+              Allocate Resources
+              Cleanup
+
+    dsl: |
+      try {
+        node(){
+          dir("rpc-gating"){
+              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+              common = load 'pipeline-steps/common.groovy'
+          }
+          common.conditionalStage(
+            stage_name: 'Allocate Resources',
+            stage: {
+              def allocate = load 'rpc-gating/pipeline-steps/allocate_pubcloud.groovy'
+
+              //.collect doesnt work in pipeline: job_name_acronym = env.JOB_NAME.split("[-_]").collect{ it[0] }.join("")
+              job_name_acronym=""
+              job_words=env.JOB_NAME.split("[-_ ]")
+              for (i=0; i<job_words.size(); i++){
+                job_name_acronym += job_words[i][0]
+              }
+
+              resources = allocate (
+                name: "${job_name_acronym}-${env.BUILD_NUMBER}",
+                count: 1,
+                region: env.REGION,
+                flavor: env.FLAVOR,
+                image: env.IMAGE,
+                keyname: "jenkins",
+                workspace: env.WORKSPACE
+              )
+            } //stage
+          ) //conditionalStage
+        } // node
+      } finally {
+        node(){
+          common.conditionalStep(
+            step_name: 'Cleanup',
+            step: {
+              def cleanup = load 'rpc-gating/pipeline-steps/cleanup_pubcloud.groovy'
+              cleanup resources: resources
+            } //step
+          ) //conditionalStage
+        } //node
+      } //finally

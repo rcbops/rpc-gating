@@ -1,0 +1,8 @@
+- hosts: job_nodes
+  remote_user: root
+  tasks:
+    - name: Add RPC public keys to authorized_keys
+      authorized_key:
+        user: "{{ auth_keys_user|default('root') }}"
+        key: "{{ lookup('file', workspace+'/rpc-gating/keys/rcb.keys') }}"
+        state: present
