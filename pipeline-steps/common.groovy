@@ -94,6 +94,20 @@ def write_json(Map args){
   )
 }
 
+/* Run a bash script
+ * Args:
+ *  script: Script or path to script from the current directory to run
+ *  environment_vars: Environment variables to set
+ */
+def run_script(Map args) {
+  withEnv(args.environment_vars) {
+    sh """
+        #!/bin/bash
+        sudo -E ./${args.script}
+        """
+  }
+}
+
 /* Run a stage if the stage name is contained in an env var
  * Args:
  *   - stage_name: String name of this stage

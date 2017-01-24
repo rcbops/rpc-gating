@@ -1,0 +1,148 @@
+- job:
+    name: 'OnMetal_Multi_Node_AIO_Prepare_Deployment'
+    project-type: workflow
+    build-discarder:
+        days-to-keep: 30
+    concurrent: true
+    parameters:
+      - string:
+          name: NODE
+          description: "Name or label of Jenkins node to run on"
+      - string:
+          name: OPENSTACK_ANSIBLE_BRANCH
+          default: stable/newton
+          description: Openstack Ansible branch to use in setup
+      - choice:
+          name: DEFAULT_IMAGE
+          description: Version of Ubuntu image to use for VMs (14.04.4 or 16.04)
+          choices:
+            - '14.04.4'
+            - '16.04'
+      - bool:
+          name: PARTITION_HOST
+          default: true
+          description: Enable partitioning of host data disk device
+      - string:
+          name: OSA_OPS_REPO
+          default: https://github.com/openstack/openstack-ansible-ops
+      - string:
+          name: OSA_OPS_BRANCH
+          default: master
+
+    dsl: |
+      node(env.NODE){
+        dir("rpc-gating"){
+          git url: "https://github.com/rcbops/rpc-gating", branch: "master"
+        }
+        dir("openstack-ansible-ops"){
+          git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
+        }
+        def common = load 'rpc-gating/pipeline-steps/common.groovy'
+
+        dir("openstack-ansible-ops/multi-node-aio"){
+          stage ('Setup Host'){
+            common.run_script (
+              script: 'setup-host.sh',
+              environment_vars: ["PARTITION_HOST=${env.PARTITION_HOST}"]
+            )
+          }
+          stage ('Setup Cobbler'){
+            common.run_script (
+              script: 'setup-cobbler.sh',
+              environment_vars: ["DEFAULT_IMAGE=${env.DEFAULT_IMAGE}"]
+            )
+          }
+          stage ('Setup Virtual Networks'){
+            common.run_script (
+              script: 'setup-virsh-net.sh',
+              environment_vars: []
+            )
+          }
+          stage ('Deploy VMs'){
+            common.run_script (
+              script: 'deploy-vms.sh',
+              environment_vars: []
+            )
+          }
+          stage ('Setup OpenStack Ansible'){
+            common.run_script (
+              script: 'deploy-osa.sh',
+              environment_vars: [
+              "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
+              "RUN_OSA=false"]
+            )
+          }
+        }
+      }
+
+- project:
+    name: multi-node-all-in-one-individual
+    setup-action:
+        - Setup_Host:
+            script: setup-host.sh
+        - Setup_Cobbler:
+            script: setup-cobbler.sh
+        - Virtual_Networks:
+            script: setup-virsh-net.sh
+        - Deploy_VMs:
+            script: deploy-vms.sh
+        - OpenStack_Setup:
+            script: deploy-osa.sh
+    jobs:
+        - 'OnMetal_Multi_Node_AIO_{setup-action}'
+
+- job-template:
+    name: 'OnMetal_Multi_Node_AIO_{setup-action}'
+    project-type: workflow
+    build-discarder:
+      days-to-keep: 30
+    concurrent: true
+    parameters:
+      - string:
+          name: NODE
+          description: "Name or label of Jenkins node to run on"
+      - string:
+          name: OPENSTACK_ANSIBLE_BRANCH
+          default: stable/newton
+          description: Openstack Ansible branch to use in OnMetal_Multi_Node_AIO_OpenStack_Setup
+      - choice:
+          name: DEFAULT_IMAGE
+          description: Version of Ubuntu image to use for VMs (14.04.4 or 16.04) in OnMetal_Multi_Node_AIO_Setup_Cobbler
+          choices:
+            - '14.04.4'
+            - '16.04'
+      - bool:
+          name: PARTITION_HOST
+          default: true
+          description: Enable partitioning of host data disk device in Used only in OnMetal_Multi_Node_AIO_Setup_Host
+      - string:
+          name: OSA_OPS_REPO
+          default: https://github.com/openstack/openstack-ansible-ops
+      - string:
+          name: OSA_OPS_BRANCH
+          default: master
+    dsl: |
+      node(env.NODE){{
+        dir("rpc-gating"){{
+          git url: "https://github.com/rcbops/rpc-gating", branch: "master"
+        }}
+        dir("openstack-ansible-ops"){{
+          git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
+        }}
+        def common = load 'rpc-gating/pipeline-steps/common.groovy'
+
+        dir("openstack-ansible-ops/multi-node-aio"){{
+          stage ('{setup-action}'){{
+            environment_vars = [
+            "PARTITION_HOST=${{env.PARTITION_HOST}}",
+            "DEFAULT_IMAGE=${{env.DEFAULT_IMAGE}}",
+            "PARTITION_HOST=${{env.PARTITION_HOST}}",
+            "RUN_OSA=false"
+            ]
+            common.run_script.call (
+              script: '{script}',
+              environment_vars: environment_vars
+            )
+          }}
+        }}
+      }}
