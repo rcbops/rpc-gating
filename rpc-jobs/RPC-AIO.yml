@@ -3,8 +3,8 @@
     project-type: workflow
     concurrent: true
     parameters:
+      # See params.yml
       - single_use_slave_params
-      - rpc_params
     dsl: |
       // CIT Slave node
       node(){
@@ -12,7 +12,6 @@
           dir("rpc-gating"){
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
               pubCloudSlave = load 'pipeline-steps/pub_cloud_slave_highlevel.groovy'
-              common = load 'pipeline-steps/common.groovy'
           }
           resources = pubCloudSlave.getPubCloudSlave()
           // Public Cloud Single Use Slave Node
@@ -25,8 +24,10 @@
                 uptime
               """
             } //stage
-          } //node
+          } // pub cloud node
+        } catch (Exception e){
+          print(e)
         } finally {
-          pubCloudSlave.delPubCloudSlave(resources)
+          pubCloudSlave.delPubCloudSlave resources: resources
         }
-      }
+      } // cit node

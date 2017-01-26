@@ -1,4 +1,5 @@
 def getPubCloudSlave(Map args){
+  common = load './rpc-gating/pipeline-steps/common.groovy'
   build_name = ""
   common.conditionalStage(
     stage_name: 'Allocate Resources',
@@ -14,10 +15,10 @@ def getPubCloudSlave(Map args){
         build_name = "${job_name_acronym}-${env.BUILD_NUMBER}"
       }
       else {
-        build_name = env.JOB_NAME
+        build_name = env.INSTANCE_NAME
       }
 
-      def resources = allocate (
+      resources = allocate (
         name: build_name,
         count: 1,
         region: env.REGION,
@@ -36,15 +37,16 @@ def getPubCloudSlave(Map args){
   return resources
 }
 def delPubCloudSlave(Map args){
+  common = load './rpc-gating/pipeline-steps/common.groovy'
   common.conditionalStep(
-    stage_name: "Pause",
-    stage: {
+    step_name: "Pause",
+    step: {
       input message: "Continue?"
     }
   )
   common.conditionalStep(
-    stage_name: 'Cleanup',
-    stage: {
+    step_name: 'Cleanup',
+    step: {
       def remove_slave = load 'rpc-gating/pipeline-steps/remove_slave.groovy'
       remove_slave()
       def cleanup = load 'rpc-gating/pipeline-steps/cleanup_pubcloud.groovy'

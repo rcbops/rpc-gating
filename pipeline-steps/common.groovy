@@ -45,7 +45,7 @@ def venvPlaybook(Map args){
         sh """
           which scl && source /opt/rh/python27/enable
           . ${args.venv}/bin/activate
-          ansible-playbook -vvv ${args.args.join(' ')} -e@${vars_file} ${playbook}
+          ansible-playbook -vvv --ssh-extra-args="-o  UserKnownHostsFile=/dev/null" ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
       } //for
     } //color

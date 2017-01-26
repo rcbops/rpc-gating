@@ -23,6 +23,6 @@
             }
           }
         } finally {
-          pubCloudSlave.delPubCloudSlave(resources)
+          pubCloudSlave.delPubCloudSlave resources: resources
         }
       }

@@ -1,3 +1,14 @@
+/* Create public cloud node
+ * Params:
+ *  - region: Rax region to build in
+ *  - name: Name of instance to build
+ *  - count: Number of instances to build
+ *  - flavor: Flavor to build
+ *  - image: Image to build from
+ *  - keyname: Name of existing nova keypair
+ * Environment Variables:
+ *  - WORKSPACE
+ */
 def call(Map args){
     common = load './rpc-gating/pipeline-steps/common.groovy'
     withEnv(["RAX_REGION=${args.region}"]){

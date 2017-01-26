@@ -45,15 +45,26 @@ check_bash(){
   while read script
   do
     bash -n $script \
-      && echo "Bash script ok: $script" \
+      && echo "Bash syntax ok: $script" \
       || { echo "Bash syntax fail $script"; rc=1; }
   done < <(find . -iname \*.sh)
 }
+
+check_python(){
+  while read script
+  do
+    python -m py_compile  $script \
+      && echo "Python syntax ok: $script" \
+      || { echo "Bash syntax fail $script"; rc=1; }
+  done < <(find . -iname \*.py)
+}
+
 
 check_jjb
 check_groovy
 check_ansible
 check_bash
+check_python
 
 if [[ $rc == 0 ]]
 then

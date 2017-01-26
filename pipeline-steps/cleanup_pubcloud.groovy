@@ -1,6 +1,12 @@
+/* Remove public cloud instances
+ * Params:
+ *  - resources: dict returned by allocate_pubcloud
+ *    - resources.create_args.region: region instances were built in
+ *    - resources.created: list of instances created by allocate_pubcloud
+ *      - resources.created.item.id: Id field is used to identify instances to delete
+ */
 def call(Map args){
     common = load './rpc-gating/pipeline-steps/common.groovy'
-    common.install_ansible()
     withEnv(['ANSIBLE_FORCE_COLOR=true',
              "RAX_REGION=${args.resources.create_args.region}" ]){
       withCredentials([

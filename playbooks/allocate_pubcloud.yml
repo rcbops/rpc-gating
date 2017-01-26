@@ -27,10 +27,10 @@
     - name: Dump created instances to JSON
       copy:
         content: '{{ rax.success|to_json }}'
-        dest: '{{workspace}}/rpc-gating/playbooks/resources.json'
+        dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/resources.json'
     - name: Write inventory
       copy:
         content: |
           [job_nodes]
           {% for instance in rax.success %} {{instance.name}} ansible_host={{instance.accessIPv4}}{% endfor %}
-        dest: '{{workspace}}/rpc-gating/playbooks/inventory/hosts'
+        dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory/hosts'

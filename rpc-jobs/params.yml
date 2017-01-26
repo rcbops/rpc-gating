@@ -28,20 +28,9 @@
           name: STAGES
           default: "Allocate Resources, Connect Slave, Cleanup"
           description: |
-            Pipeline stages to run CSV
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
               Allocate Resources
               Connect Slave
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
-- parameter:
-    name: rpc_params
-    parameters:
-      - string:
-          name: "RPC_REPO"
-          default: "https://github.com/rcbops/rpc-openstack"
-      - string:
-          name: "RPC_BRANCH"
-          default: "https://github.com/rcbops/rpc-openstack"
-
-
