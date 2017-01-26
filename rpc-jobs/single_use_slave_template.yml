@@ -6,23 +6,40 @@
       # Default params are provided by macro, add any extra params, or
       # params you want to override the defaults for.
       - single_use_slave_params
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Connect Slave, Your Stage, Cleanup"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Allocate Resources
+              Connect Slave
+              Pause (use to hold instance for investigation before cleanup)
+              Cleanup
     dsl: |
+      // CIT Slave node
       node(){
         try {
           dir("rpc-gating"){
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              pubCloudSlave = load 'pipeline-steps/pub_cloud_slave_highlevel.groovy'
+              pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
+              common = load 'pipeline-steps/common.groovy'
           }
-          resources = pubCloudSlave.getPubCloudSlave()
-          node(resources.created[0].name){
+          instance_name = common.gen_instance_name()
+          pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
+          //pub cloud single use slave
+          node(instance_name){
             stage("Your Stage"){
               sh """
                 hostname; date
                 echo "your script here"
               """
             }
-          }
+          } // pub cloud node
+        } catch (Exception e){
+          currentBuild.result = 'FAILURE'
+          print e
         } finally {
-          pubCloudSlave.delPubCloudSlave resources: resources
+          pubCloudSlave.delPubCloudSlave()
         }
-      }
+      } // cit node

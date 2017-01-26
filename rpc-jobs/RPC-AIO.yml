@@ -5,29 +5,36 @@
     parameters:
       # See params.yml
       - single_use_slave_params
+      - rpc_params
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Connect Slave, Prepare Deployment, Cleanup"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Allocate Resources
+              Connect Slave
+              Pause (use to hold instance for investigation before cleanup)
+              Cleanup
     dsl: |
       // CIT Slave node
       node(){
         try {
           dir("rpc-gating"){
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              pubCloudSlave = load 'pipeline-steps/pub_cloud_slave_highlevel.groovy'
+              pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
+              common = load 'pipeline-steps/common.groovy'
+              aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
           }
-          resources = pubCloudSlave.getPubCloudSlave()
-          // Public Cloud Single Use Slave Node
-          node(resources.created[0].name){
-            stage("placeholder"){
-              sh """
-                echo "further stages to be developed"
-                hostname
-                date
-                uptime
-              """
-            } //stage
+          instance_name = common.gen_instance_name()
+          pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
+          node(instance_name){
+            aio_prepare.prepare()
           } // pub cloud node
         } catch (Exception e){
-          print(e)
+          currentBuild.result = 'FAILURE'
+          print e
         } finally {
-          pubCloudSlave.delPubCloudSlave resources: resources
+          pubCloudSlave.delPubCloudSlave()
         }
       } // cit node
