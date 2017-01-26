@@ -1,31 +1,27 @@
 - job:
-    name: RPC_AIO
+    name: Single_Use_Slave_Example
     project-type: workflow
     concurrent: true
     parameters:
+      # Default params are provided by macro, add any extra params, or
+      # params you want to override the defaults for.
       - single_use_slave_params
-      - rpc_params
     dsl: |
-      // CIT Slave node
       node(){
         try {
           dir("rpc-gating"){
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
               pubCloudSlave = load 'pipeline-steps/pub_cloud_slave_highlevel.groovy'
-              common = load 'pipeline-steps/common.groovy'
           }
           resources = pubCloudSlave.getPubCloudSlave()
-          // Public Cloud Single Use Slave Node
           node(resources.created[0].name){
-            stage("placeholder"){
+            stage("Your Stage"){
               sh """
-                echo "further stages to be developed"
-                hostname
-                date
-                uptime
+                hostname; date
+                echo "your script here"
               """
-            } //stage
-          } //node
+            }
+          }
         } finally {
           pubCloudSlave.delPubCloudSlave(resources)
         }
