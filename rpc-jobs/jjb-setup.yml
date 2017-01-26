@@ -3,7 +3,6 @@
     description: Creates and updates jobs with Jenkins Job Builder.
     logrotate:
         daysToKeep: 20
-    node: general
     parameters:
         - string:
             name: JOBS
