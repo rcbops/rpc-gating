@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Cleanup public cloud instances
+      local_action:
+          module: rax
+          instance_ids:
+            - "{{ item.id }}"
+          state: absent
+          wait: yes
+          wait_timeout: 900
+          auto_increment: no
+      with_items: "{{ created }}"

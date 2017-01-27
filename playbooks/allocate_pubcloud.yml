@@ -1,0 +1,36 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Provision a set of public cloud instances
+      local_action:
+          module: rax
+          name: "{{ name }}"
+          flavor: "{{ flavor }}"
+          image: "{{ image }}"
+          count: "{{ count }}"
+          key_name: "{{ keyname }}"
+          wait: yes
+          wait_timeout: 900
+          auto_increment: no
+      register: rax
+      until: rax|success
+      retries: 5
+      delay: 30
+
+    - name: Show created instances
+      debug: msg=" {{ item.name }} {{ item.id }} {{ item.accessIPv4 }}"
+      with_items: "{{ rax.success }}"
+      when: rax.action == 'create'
+
+    - name: Dump created instances to JSON
+      copy:
+        content: '{{ rax.success|to_json }}'
+        dest: '{{workspace}}/rpc-gating/playbooks/resources.json'
+    - name: Write inventory
+      copy:
+        content: |
+          [job_nodes]
+          {% for instance in rax.success %} {{instance.name}} ansible_host={{instance.accessIPv4}}{% endfor %}
+        dest: '{{workspace}}/rpc-gating/playbooks/inventory/hosts'
