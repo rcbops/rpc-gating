@@ -16,19 +16,20 @@
       set_fact:
           ansible_host: "{{ rax_accessipv4 }}"
 
-    - name: Add servers to cloud_instances host group
+    - name: Add servers to job_nodes host group
       local_action:
         module: add_host
         hostname: "{{ name }}"
         ansible_host: "{{ rax_accessipv4 }}"
         ansible_user: root
-        groupname: cloud_instances
+        groupname: job_nodes
 
     - name: Wait for SSH to be available on host
       wait_for: port=22 host="{{ ansible_host }}"
 
 
-- hosts: cloud_instances
+- hosts: job_nodes
+  user: root
   tasks:
     - name: Install apt packages
       apt:
@@ -37,7 +38,7 @@
         update_cache: yes
       with_items:
         - git
-        - default-jre
+        - default-jre-headless
         - python-dev
         - python-pip
         - build-essential
@@ -49,7 +50,7 @@
         shell: /bin/bash
 
     - name: Add RPC public keys to authorized_keys
-      authorized_key: "user={{ item }} key='{{ lookup('file', '../keys/rcb.keys') }}' state=present"
+      authorized_key: "user={{ item }} key='{{ lookup('file', lookup('env', 'WORKSPACE')+'/rpc-gating/keys/rcb.keys') }}' state=present"
       with_items:
         - root
         - jenkins
@@ -67,3 +68,17 @@
         state: present
         regexp: 'jenkins'
         line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
+
+      # pip module didn't work here as it couldn't locate the virtualenv binary
+    - name: Start slave
+      delegate_to: localhost
+      shell: |
+        cd  {{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks
+        . .venv/bin/activate
+        pip install jenkinsapi
+        python ../scripts/jenkins_node.py \
+          create \
+          --name {{inventory_hostname}} \
+          --ip {{ansible_default_ipv4.address}} \
+          --creds "SSH Creds for Jenkins instances in public cloud." \
+          --labels single_use_slave

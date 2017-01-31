@@ -1,0 +1,36 @@
+---
+- parameter:
+    name: single_use_slave_params
+    parameters:
+      - string:
+          name: RPC_GATING_REPO
+          default: "https://github.com/rcbops/rpc-gating"
+      - string:
+          name: RPC_GATING_BRANCH
+          default: "master"
+      - string:
+          name: REGION
+          default: "IAD"
+      - string:
+          name: FLAVOR
+          default: "performance2-15"
+      - string:
+          name: IMAGE
+          default: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+      - string:
+          name: INSTANCE_NAME
+          default: AUTO
+          description: |
+            Set instance name or "AUTO" to have it generated based on job
+            name and build number. Beware the 63 char container name limit
+            as container names includes the host name.
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Connect Slave, Cleanup"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Allocate Resources
+              Connect Slave
+              Pause (use to hold instance for investigation before cleanup)
+              Cleanup
