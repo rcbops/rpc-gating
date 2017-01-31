@@ -1,13 +1,26 @@
 - job:
-    name: 'OnMetal_Multi_Node_AIO_Prepare_Deployment'
+    name: 'OnMetal_Multi_Node_AIO'
     project-type: workflow
     build-discarder:
         days-to-keep: 30
     concurrent: true
     parameters:
       - string:
-          name: NODE
-          description: "Name or label of Jenkins node to run on"
+          name: REGION
+          default: "IAD"
+      - string:
+          name: FLAVOR
+          default: "onmetal-io1"
+      - string:
+          name: IMAGE
+          default: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+      - string:
+          name: INSTANCE_NAME
+          default: AUTO
+          description: |
+            Set instance name or "AUTO" to have it generated based on job
+            name and build number. Beware the 63 char container name limit
+            as container names includes the host name.
       - string:
           name: OPENSTACK_ANSIBLE_BRANCH
           default: stable/newton
@@ -36,77 +49,95 @@
           default: "master"
       - string:
           name: STAGES
-          default: "Setup Host, Setup Cobbler, Setup Virtual Networks, Deploy VMs, Setup OpenStack Ansible"
+          default: |
+            Allocate Resources, Connect Slave, Setup Host, Setup Cobbler, Setup Virtual Networks,
+            Deploy VMs, Setup OpenStack Ansible, Cleanup
           description: |
-            Pipeline stages to run CSV
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
+              Allocate Resources
+              Connect Slave
               Setup Host
               Setup Cobbler
               Setup Virtual Networks
               Deploy VMs
               Setup OpenStack Ansible
+              Pause (use to hold instance for investigation before cleanup)
+              Cleanup
 
     dsl: |
-      node(env.NODE){
-        dir("rpc-gating"){
-          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+      node(){
+        try {
+          dir("rpc-gating"){
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            pubCloudSlave = load 'pipeline-steps/pub_cloud_slave_highlevel.groovy'
+            common = load 'pipeline-steps/common.groovy'
+          }
+          resources = pubCloudSlave.getPubCloudSlave()
+
+          node(resources.created[0].name){
+            dir("openstack-ansible-ops"){
+              git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
+            }
+
+            dir("openstack-ansible-ops/multi-node-aio"){
+              common.conditionalStage(
+                stage_name: 'Setup Host',
+                stage: {
+                  common.run_script (
+                    script: 'setup-host.sh',
+                    environment_vars: ["PARTITION_HOST=${env.PARTITION_HOST}"]
+                  )
+                } //stage
+              ) //conditionalStage
+
+              common.conditionalStage(
+                stage_name: 'Setup Cobbler',
+                stage: {
+                  common.run_script (
+                    script: 'setup-cobbler.sh',
+                    environment_vars: ["DEFAULT_IMAGE=${env.DEFAULT_IMAGE}"]
+                  )
+                } //stage
+              ) //conditionalStage
+
+              common.conditionalStage(
+                stage_name: 'Setup Virtual Networks',
+                stage: {
+                  common.run_script (
+                    script: 'setup-virsh-net.sh',
+                    environment_vars: []
+                  )
+                } //stage
+              ) //conditionalStage
+
+              common.conditionalStage(
+                stage_name: 'Deploy VMs',
+                stage: {
+                  common.run_script (
+                    script: 'deploy-vms.sh',
+                    environment_vars: []
+                  )
+                } //stage
+              ) //conditionalStage
+
+              common.conditionalStage(
+                stage_name: 'Setup OpenStack Ansible',
+                stage: {
+                  common.run_script (
+                    script: 'deploy-osa.sh',
+                    environment_vars: [
+                    "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
+                    "RUN_OSA=false"]
+                  )
+                } //stage
+              ) //conditionalStage
+            } // dir
+          }// public cloud node
+        } catch (e){
+            currentBuild.result = 'FAILURE'
+            throw e
+        } finally {
+            pubCloudSlave.delPubCloudSlave resources: resources
         }
-        dir("openstack-ansible-ops"){
-          git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
-        }
-        def common = load 'rpc-gating/pipeline-steps/common.groovy'
-
-        dir("openstack-ansible-ops/multi-node-aio"){
-          common.conditionalStage(
-            stage_name: 'Setup Host',
-            stage: {
-              common.run_script (
-                script: 'setup-host.sh',
-                environment_vars: ["PARTITION_HOST=${env.PARTITION_HOST}"]
-              )
-            } //stage
-          ) //conditionalStage
-
-          common.conditionalStage(
-            stage_name: 'Setup Cobbler',
-            stage: {
-              common.run_script (
-                script: 'setup-cobbler.sh',
-                environment_vars: ["DEFAULT_IMAGE=${env.DEFAULT_IMAGE}"]
-              )
-            } //stage
-          ) //conditionalStage
-
-          common.conditionalStage(
-            stage_name: 'Setup Virtual Networks',
-            stage: {
-              common.run_script (
-                script: 'setup-virsh-net.sh',
-                environment_vars: []
-              )
-            } //stage
-          ) //conditionalStage
-
-          common.conditionalStage(
-            stage_name: 'Deploy VMs',
-            stage: {
-              common.run_script (
-                script: 'deploy-vms.sh',
-                environment_vars: []
-              )
-            } //stage
-          ) //conditionalStage
-
-          common.conditionalStage(
-            stage_name: 'Setup OpenStack Ansible',
-            stage: {
-              common.run_script (
-                script: 'deploy-osa.sh',
-                environment_vars: [
-                "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
-                "RUN_OSA=false"]
-              )
-            } //stage
-          ) //conditionalStage
-        } // dir
-      } // node
+      } // cit node
