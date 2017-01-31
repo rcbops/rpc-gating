@@ -1,0 +1,112 @@
+- job:
+    name: 'OnMetal_Multi_Node_AIO_Prepare_Deployment'
+    project-type: workflow
+    build-discarder:
+        days-to-keep: 30
+    concurrent: true
+    parameters:
+      - string:
+          name: NODE
+          description: "Name or label of Jenkins node to run on"
+      - string:
+          name: OPENSTACK_ANSIBLE_BRANCH
+          default: stable/newton
+          description: Openstack Ansible branch to use in setup
+      - choice:
+          name: DEFAULT_IMAGE
+          description: Version of Ubuntu image to use for VMs (14.04.4 or 16.04)
+          choices:
+            - '14.04.4'
+            - '16.04'
+      - bool:
+          name: PARTITION_HOST
+          default: true
+          description: Enable partitioning of host data disk device
+      - string:
+          name: OSA_OPS_REPO
+          default: https://github.com/openstack/openstack-ansible-ops
+      - string:
+          name: OSA_OPS_BRANCH
+          default: master
+      - string:
+          name: RPC_GATING_REPO
+          default: "https://github.com/rcbops/rpc-gating"
+      - string:
+          name: RPC_GATING_BRANCH
+          default: "master"
+      - string:
+          name: STAGES
+          default: "Setup Host, Setup Cobbler, Setup Virtual Networks, Deploy VMs, Setup OpenStack Ansible"
+          description: |
+            Pipeline stages to run CSV
+            Options:
+              Setup Host
+              Setup Cobbler
+              Setup Virtual Networks
+              Deploy VMs
+              Setup OpenStack Ansible
+
+    dsl: |
+      node(env.NODE){
+        dir("rpc-gating"){
+          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+        }
+        dir("openstack-ansible-ops"){
+          git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
+        }
+        def common = load 'rpc-gating/pipeline-steps/common.groovy'
+
+        dir("openstack-ansible-ops/multi-node-aio"){
+          common.conditionalStage(
+            stage_name: 'Setup Host',
+            stage: {
+              common.run_script (
+                script: 'setup-host.sh',
+                environment_vars: ["PARTITION_HOST=${env.PARTITION_HOST}"]
+              )
+            } //stage
+          ) //conditionalStage
+
+          common.conditionalStage(
+            stage_name: 'Setup Cobbler',
+            stage: {
+              common.run_script (
+                script: 'setup-cobbler.sh',
+                environment_vars: ["DEFAULT_IMAGE=${env.DEFAULT_IMAGE}"]
+              )
+            } //stage
+          ) //conditionalStage
+
+          common.conditionalStage(
+            stage_name: 'Setup Virtual Networks',
+            stage: {
+              common.run_script (
+                script: 'setup-virsh-net.sh',
+                environment_vars: []
+              )
+            } //stage
+          ) //conditionalStage
+
+          common.conditionalStage(
+            stage_name: 'Deploy VMs',
+            stage: {
+              common.run_script (
+                script: 'deploy-vms.sh',
+                environment_vars: []
+              )
+            } //stage
+          ) //conditionalStage
+
+          common.conditionalStage(
+            stage_name: 'Setup OpenStack Ansible',
+            stage: {
+              common.run_script (
+                script: 'deploy-osa.sh',
+                environment_vars: [
+                "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
+                "RUN_OSA=false"]
+              )
+            } //stage
+          ) //conditionalStage
+        } // dir
+      } // node
