@@ -28,9 +28,18 @@
       copy:
         content: '{{ rax.success|to_json }}'
         dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/resources.json'
+
     - name: Write inventory
       copy:
         content: |
           [job_nodes]
           {% for instance in rax.success %} {{instance.name}} ansible_host={{instance.accessIPv4}}{% endfor %}
         dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory/hosts'
+
+    - name: Wait for SSH to be available on all hosts
+      wait_for: port=22 host="{{ item.accessIPv4 }}"
+      with_items: "{{ rax.success }}"
+
+    - name: Wait an additional amount of time for any remaning startup tasks to finish
+      pause:
+        minutes: 5
