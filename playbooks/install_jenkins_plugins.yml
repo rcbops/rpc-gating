@@ -1,0 +1,106 @@
+---
+- hosts: localhost
+  vars:
+    jenkins_credentials:
+      url_username: "{{ ansible_env.JENKINS_USER }}"
+      url_password: "{{ ansible_env.JENKINS_API_PASSWORD }}"
+      url: "{{ ansible_env.JENKINS_URL }}"
+  handlers:
+    - name: Safely restart jenkins
+      uri:
+        url: "{{ jenkins_credentials['url'] }}/safeRestart"
+        user: "{{ jenkins_credentials['url_username'] }}"
+        password: "{{ jenkins_credentials['url_password'] }}"
+        method: POST
+        force_basic_auth: true
+        follow_redirects: all
+        #status_code: 302
+  tasks:
+    - name: Install plugins
+      jenkins_plugin:
+        name: "{{ item }}"
+        params: "{{ jenkins_credentials }}"
+      notify:
+        - Safely restart jenkins
+      with_items:
+        - nodelabelparameter
+        - shiningpanda
+        - categorized-view
+        - rebuild
+        - workflow-aggregator        # Pipeline Plugin
+        - workflow-cps               # Pipeline Groovy Plugin
+        - workflow-durable-task-step # Pipeline Nodes and Processes Plugin
+        # This are installed by default by CIT
+        # - ansible
+        # - ansicolor
+        # - audit-trail
+        # - buildcontext-capture
+        # - build-flow-plugin
+        # - build-name-setter
+        # - build-pipeline-plugin
+        # - buildresult-trigger
+        # - build-timeout
+        # - claim
+        # - cobertura
+        # - conditional-buildstep
+        # - copyartifact
+        # - credentials
+        # - credentials-binding
+        # - dashboard-view
+        # - debian-package-builder
+        # - docker-custom-build-environment
+        # - docker-build-publish
+        # - docker-build-step
+        # - docker-plugin
+        # - email-ext
+        # - envinject
+        # - external-monitor-job
+        # - ghprb
+        # - git
+        # - git-client
+        # - github
+        # - github-api
+        # - global-build-stats
+        # - gravatar
+        # - grinder
+        # - groovy
+        # - htmlpublisher
+        # - instant-messaging
+        # - ircbot
+        # - jenkinslint
+        # - jira
+        # - jquery
+        # - ldap
+        # - mailer
+        # - mapdb-api
+        # - mask-passwords
+        # - monitoring
+        # - multiple-scms
+        # - nested-view
+        # - next-build-number
+        # - pam-auth
+        # - parameterized-trigger
+        # - performance
+        # - periodicbackup
+        # - postbuild-task
+        # - python
+        # - radiatorviewplugin
+        # - rpmsign-plugin
+        # - run-condition
+        # - saferestart
+        # - saml
+        # - scm-api
+        # - scoring-load-balancer
+        # - scp
+        # - simple-theme-plugin
+        # - ssh-agent
+        # - ssh-credentials
+        # - ssh-slaves
+        # - summary_report
+        # - template-workflows
+        # - throttle-concurrents
+        # - timestamper
+        # - token-macro
+        # - versionnumber
+        # - ws-cleanup
+        # - xunit
