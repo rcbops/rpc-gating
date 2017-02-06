@@ -5,15 +5,18 @@ def prepare(){
       dir("/opt/rpc-openstack"){
         git branch: env.RPC_BRANCH, url: env.RPC_REPO
         sh "git submodule update --init"
-        withEnv([
-          "DEPLOY_AIO=yes",
-          "DEPLOY_OA=no",
-          "DEPLOY_RPC=no"
-        ]){
-          sh """#!/bin/bash
-          scripts/deploy.sh
-          """
-        } //env
+        ansiColor('xterm'){
+          withEnv([
+            "DEPLOY_AIO=yes",
+            "DEPLOY_OA=no",
+            "DEPLOY_RPC=no",
+            "ANSIBLE_FORCE_COLOR=true"
+          ]){
+            sh """#!/bin/bash
+            scripts/deploy.sh
+            """
+          } //env
+        } //color
       } //dir
       withCredentials([
         usernamePassword(

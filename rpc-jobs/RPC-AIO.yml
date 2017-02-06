@@ -8,14 +8,32 @@
       - rpc_params
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Prepare Deployment, Cleanup"
+          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy, Cleanup"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
               Allocate Resources
               Connect Slave
+              Prepare Deployment
+              Deploy
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
+      - text:
+          name: PLAYBOOKS
+          default: |
+            [
+              {"playbook": "setup-hosts.yml",           "path": "/opt/rpc-openstack/openstack-ansible/playbooks", "args": "--skip-tags=V-38462,V-38660"},
+              {"playbook": "ceph-all.yml",              "path": "/opt/rpc-openstack/rpcd/playbooks"},
+              {"playbook": "setup-infrastructure.yml",  "path": "/opt/rpc-openstack/openstack-ansible/playbooks"},
+              {"playbook": "setup-openstack.yml",       "path": "/opt/rpc-openstack/openstack-ansible/playbooks"},
+              {"playbook": "rpc-support.yml",           "path": "/opt/rpc-openstack/rpcd/playbooks"},
+              {"playbook": "setup-maas.yml",            "path": "/opt/rpc-openstack/rpcd/playbooks"},
+              {"playbook": "setup-logging.yml",         "path": "/opt/rpc-openstack/rpcd/playbooks"},
+              {"playbook": "verify-maas.yml",           "path": "/opt/rpc-openstack/rpcd/playbooks"}
+            ]
+          description: |
+            OSA/RPC playbooks to run.
+
     dsl: |
       // CIT Slave node
       node(){
@@ -25,15 +43,17 @@
               pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
               common = load 'pipeline-steps/common.groovy'
               aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
+              deploy = load 'pipeline-steps/deploy.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
           node(instance_name){
             aio_prepare.prepare()
+            deploy.deploy()
           } // pub cloud node
-        } catch (Exception e){
+        } catch (e){
           currentBuild.result = 'FAILURE'
-          print e
+          throw e
         } finally {
           pubCloudSlave.delPubCloudSlave()
         }

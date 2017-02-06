@@ -44,19 +44,43 @@ def venvPlaybook(Map args){
       if (!('venv' in args)){
         args.venv = ".venv"
       }
-      for (i=0; i<args.playbooks.size(); i++){
+      for (def i=0; i<args.playbooks.size(); i++){
         playbook = args.playbooks[i]
         vars_file="vars.${playbook}"
         write_json(file: vars_file, obj: args.vars)
         sh """
           which scl && source /opt/rh/python27/enable
           . ${args.venv}/bin/activate
-          ansible-playbook -vvv --ssh-extra-args="-o  UserKnownHostsFile=/dev/null" ${args.args.join(' ')} -e@${vars_file} ${playbook}
+          ansible-playbook -v --ssh-extra-args="-o  UserKnownHostsFile=/dev/null" ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
       } //for
     } //color
   } //withenv
 } //venvplaybook
+
+def openstack_ansible(Map args){
+  if (!('path' in args)){
+    args.path = "/opt/rpc-openstack/openstack-ansible/playbooks"
+  }
+  if (!('args' in args)){
+    args.args = ""
+  }
+
+  ansiColor('xterm'){
+    dir(args.path){
+      withEnv([
+        'ANSIBLE_FORCE_COLOR=true',
+        'ANSIBLE_HOST_KEY_CHECKING=False'])
+      {
+        sh """#!/bin/bash
+          openstack-ansible ${args.playbook} \
+            -v --ssh-extra-args="-o  UserKnownHostsFile=/dev/null" \
+            ${args.args}
+        """
+      } //withEnv
+    } //dir
+  } //colour
+}
 
 /*
  * JsonSluperClassic and JsonOutput are not serializable, so they
@@ -163,7 +187,7 @@ def conditionalStep(Map args){
 def acronym(Map args){
   acronym=""
   words=args.string.split("[-_ ]")
-  for (i=0; i<words.size(); i++){
+  for (def i=0; i<words.size(); i++){
     acronym += words[i][0]
   }
   return acronym
@@ -177,6 +201,9 @@ def gen_instance_name(){
   else {
     instance_name = env.INSTANCE_NAME
   }
+  //Hostname should match instance name for MaaS. Hostnames are converted
+  //to lower case, so we'll do the same for instance name.
+  instance_name = instance_name.toLowerCase()
   print "Instance_name: ${instance_name}"
   return instance_name
 }
