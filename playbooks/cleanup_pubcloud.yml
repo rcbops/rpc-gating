@@ -2,14 +2,22 @@
 - hosts: localhost
   connection: local
   gather_facts: False
+  vars:
+    region: "{{ lookup('env', 'REGION') }}"
   tasks:
+    - name: Get instance info
+      rax_facts:
+        name: "{{ instance_name }}"
+        region: "{{ region }}"
+      register: get_rax_facts
     - name: Cleanup public cloud instances
-      local_action:
-          module: rax
-          instance_ids:
-            - "{{ item.id }}"
-          state: absent
-          wait: yes
-          wait_timeout: 900
-          auto_increment: no
-      with_items: "{{ created }}"
+      rax:
+        instance_ids:
+          - "{{ rax_id }}"
+        state: absent
+        wait: yes
+        wait_timeout: 900
+        auto_increment: no
+        region: "{{ region }}"
+      when: get_rax_facts |success
+

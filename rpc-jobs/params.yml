@@ -24,13 +24,13 @@
             Set instance name or "AUTO" to have it generated based on job
             name and build number. Beware the 63 char container name limit
             as container names includes the host name.
+
+- parameter:
+    name: rpc_params
+    parameters:
       - string:
-          name: STAGES
-          default: "Allocate Resources, Connect Slave, Cleanup"
-          description: |
-            Pipeline stages to run CSV. Note that this list does not influence execution order.
-            Options:
-              Allocate Resources
-              Connect Slave
-              Pause (use to hold instance for investigation before cleanup)
-              Cleanup
+          name: "RPC_REPO"
+          default: "https://github.com/rcbops/rpc-openstack"
+      - string:
+          name: "RPC_BRANCH"
+          default: "master"

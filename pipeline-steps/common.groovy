@@ -38,6 +38,12 @@ def venvPlaybook(Map args){
       if (!('vars' in args)){
         args.vars=[:]
       }
+      if (!('args' in args)){
+        args.args=[]
+      }
+      if (!('venv' in args)){
+        args.venv = ".venv"
+      }
       for (i=0; i<args.playbooks.size(); i++){
         playbook = args.playbooks[i]
         vars_file="vars.${playbook}"
@@ -118,7 +124,9 @@ def run_script(Map args) {
 def conditionalStage(Map args){
   stage(args.stage_name){
     if (env.STAGES.contains(args.stage_name)){
+        print "Stage Start: ${args.stage_name}"
         args.stage()
+        print "Stage Complete: ${args.stage_name}"
     } else {
       print "Skipped: ${args.stage_name}"
     }
@@ -139,10 +147,38 @@ def conditionalStage(Map args){
  */
 def conditionalStep(Map args){
   if (env.STAGES.contains(args.step_name)){
+      print "Step Start: ${args.step_name}"
       args.step()
+      print "Step Complete: ${args.step_name}"
   } else {
     print "Skipped: ${args.step_name}"
   }
+}
+
+/* Create acronym
+ * quick brown fox --> qbf
+ * Arguments:
+ *  string: the string to process
+ */
+def acronym(Map args){
+  acronym=""
+  words=args.string.split("[-_ ]")
+  for (i=0; i<words.size(); i++){
+    acronym += words[i][0]
+  }
+  return acronym
+}
+
+def gen_instance_name(){
+  if (env.INSTANCE_NAME == "AUTO"){
+    job_name_acronym = common.acronym(string: env.JOB_NAME)
+    instance_name = "${job_name_acronym}-${env.BUILD_NUMBER}"
+  }
+  else {
+    instance_name = env.INSTANCE_NAME
+  }
+  print "Instance_name: ${instance_name}"
+  return instance_name
 }
 
 return this

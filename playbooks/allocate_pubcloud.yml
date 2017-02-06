@@ -11,6 +11,7 @@
           image: "{{ image }}"
           count: "{{ count }}"
           key_name: "{{ keyname }}"
+          region: "{{ region }}"
           wait: yes
           wait_timeout: 900
           auto_increment: no
@@ -18,16 +19,6 @@
       until: rax|success
       retries: 5
       delay: 30
-
-    - name: Show created instances
-      debug: msg=" {{ item.name }} {{ item.id }} {{ item.accessIPv4 }}"
-      with_items: "{{ rax.success }}"
-      when: rax.action == 'create'
-
-    - name: Dump created instances to JSON
-      copy:
-        content: '{{ rax.success|to_json }}'
-        dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/resources.json'
 
     - name: Write inventory
       copy:
