@@ -34,3 +34,13 @@
       - string:
           name: "RPC_BRANCH"
           default: "master"
+
+- parameter:
+    name: rpc_gating_params
+    parameters:
+      - string:
+          name: RPC_GATING_REPO
+          default: "https://github.com/rcbops/rpc-gating"
+      - string:
+          name: RPC_GATING_BRANCH
+          default: "master"

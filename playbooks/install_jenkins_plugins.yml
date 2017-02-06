@@ -2,8 +2,8 @@
 - hosts: localhost
   vars:
     jenkins_credentials:
-      url_username: "{{ ansible_env.JENKINS_USER }}"
-      url_password: "{{ ansible_env.JENKINS_API_PASSWORD }}"
+      url_username: "{{ ansible_env.JENKINS_USERNAME }}"
+      url_password: "{{ ansible_env.JENKINS_API_KEY }}"
       url: "{{ ansible_env.JENKINS_URL }}"
   handlers:
     - name: Safely restart jenkins
