@@ -3,12 +3,6 @@
     name: single_use_slave_params
     parameters:
       - string:
-          name: RPC_GATING_REPO
-          default: "https://github.com/rcbops/rpc-gating"
-      - string:
-          name: RPC_GATING_BRANCH
-          default: "master"
-      - string:
           name: REGION
           default: "IAD"
       - string:
@@ -44,3 +38,19 @@
       - string:
           name: RPC_GATING_BRANCH
           default: "master"
+
+- parameter:
+    name: tempest_params
+    parameters:
+      - string:
+          name: "TEMPEST_TEST_SETS"
+          default: "scenario defcore cinder_backup"
+          description: |
+            Test sets (space seperated). Test sets are defined in
+            https://github.com/openstack/openstack-ansible-os_tempest/blob/master/templates/openstack_tempest_gate.sh.j2
+      - string:
+          name: "RUN_TEMPEST_OPTS"
+          default: "--serial"
+          description: |
+            Options to pass to run_tempest.sh via openstack_tempest_gate.sh
+            Note that both are deprecated and will be replaced in future.
