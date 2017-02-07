@@ -5,6 +5,7 @@
         days-to-keep: 30
     concurrent: true
     parameters:
+      - rpc_params
       - string:
           name: REGION
           default: "IAD"
@@ -51,7 +52,7 @@
           name: STAGES
           default: |
             Allocate Resources, Connect Slave, Setup Host, Setup Cobbler, Setup Virtual Networks,
-            Deploy VMs, Setup OpenStack Ansible, Cleanup
+            Deploy VMs, Setup OpenStack Ansible, Prepare Configs, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -62,6 +63,7 @@
               Setup Virtual Networks
               Deploy VMs
               Setup OpenStack Ansible
+              Prepare Configs
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
 
@@ -70,74 +72,20 @@
         try {
           dir("rpc-gating"){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            pubCloudSlave = load 'pipeline-steps/pub_cloud_slave_highlevel.groovy'
+            pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
             common = load 'pipeline-steps/common.groovy'
+            multi_node_aio_prepare = load 'pipeline-steps/multi_node_aio_prepare.groovy'
           }
-          resources = pubCloudSlave.getPubCloudSlave()
+          instance_name = common.gen_instance_name()
+          pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
 
-          node(resources.created[0].name){
-            dir("openstack-ansible-ops"){
-              git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
-            }
-
-            dir("openstack-ansible-ops/multi-node-aio"){
-              common.conditionalStage(
-                stage_name: 'Setup Host',
-                stage: {
-                  common.run_script (
-                    script: 'setup-host.sh',
-                    environment_vars: ["PARTITION_HOST=${env.PARTITION_HOST}"]
-                  )
-                } //stage
-              ) //conditionalStage
-
-              common.conditionalStage(
-                stage_name: 'Setup Cobbler',
-                stage: {
-                  common.run_script (
-                    script: 'setup-cobbler.sh',
-                    environment_vars: ["DEFAULT_IMAGE=${env.DEFAULT_IMAGE}"]
-                  )
-                } //stage
-              ) //conditionalStage
-
-              common.conditionalStage(
-                stage_name: 'Setup Virtual Networks',
-                stage: {
-                  common.run_script (
-                    script: 'setup-virsh-net.sh',
-                    environment_vars: []
-                  )
-                } //stage
-              ) //conditionalStage
-
-              common.conditionalStage(
-                stage_name: 'Deploy VMs',
-                stage: {
-                  common.run_script (
-                    script: 'deploy-vms.sh',
-                    environment_vars: []
-                  )
-                } //stage
-              ) //conditionalStage
-
-              common.conditionalStage(
-                stage_name: 'Setup OpenStack Ansible',
-                stage: {
-                  common.run_script (
-                    script: 'deploy-osa.sh',
-                    environment_vars: [
-                    "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
-                    "RUN_OSA=false"]
-                  )
-                } //stage
-              ) //conditionalStage
-            } // dir
+          node(instance_name){
+            multi_node_aio_prepare.prepare()
           }// public cloud node
         } catch (e){
             currentBuild.result = 'FAILURE'
             throw e
         } finally {
-            pubCloudSlave.delPubCloudSlave resources: resources
+            pubCloudSlave.delPubCloudSlave()
         }
       } // cit node
