@@ -27,9 +27,7 @@
         - shiningpanda
         - categorized-view
         - rebuild
-        - workflow-aggregator        # Pipeline Plugin
-        - workflow-cps               # Pipeline Groovy Plugin
-        - workflow-durable-task-step # Pipeline Nodes and Processes Plugin
+        - workflow-aggregator # Pipeline Plugin
         # This are installed by default by CIT
         # - ansible
         # - ansicolor
