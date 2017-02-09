@@ -5,7 +5,14 @@
         days-to-keep: 30
     concurrent: true
     parameters:
+      - rpc_gating_params
       - rpc_params
+      - string:
+          name: OSA_OPS_REPO
+          default: https://github.com/openstack/openstack-ansible-ops
+      - string:
+          name: OSA_OPS_BRANCH
+          default: master
       - string:
           name: REGION
           default: "IAD"
@@ -30,29 +37,17 @@
           name: DEFAULT_IMAGE
           description: Version of Ubuntu image to use for VMs (14.04.4 or 16.04)
           choices:
-            - '14.04.4'
             - '16.04'
+            - '14.04.4'
       - bool:
           name: PARTITION_HOST
           default: true
           description: Enable partitioning of host data disk device
       - string:
-          name: OSA_OPS_REPO
-          default: https://github.com/openstack/openstack-ansible-ops
-      - string:
-          name: OSA_OPS_BRANCH
-          default: master
-      - string:
-          name: RPC_GATING_REPO
-          default: "https://github.com/rcbops/rpc-gating"
-      - string:
-          name: RPC_GATING_BRANCH
-          default: "master"
-      - string:
           name: STAGES
           default: |
             Allocate Resources, Connect Slave, Setup Host, Setup Cobbler, Setup Virtual Networks,
-            Deploy VMs, Setup OpenStack Ansible, Prepare Configs, Cleanup
+            Deploy VMs, Setup OpenStack Ansible, Prepare Configs, Deploy RPC w/ Script, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -64,6 +59,7 @@
               Deploy VMs
               Setup OpenStack Ansible
               Prepare Configs
+              Deploy RPC w/ Script
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
 
@@ -75,12 +71,24 @@
             pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
             common = load 'pipeline-steps/common.groovy'
             multi_node_aio_prepare = load 'pipeline-steps/multi_node_aio_prepare.groovy'
+            deploy = load 'pipeline-steps/deploy.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
 
           node(instance_name){
             multi_node_aio_prepare.prepare()
+            deploy.deploy_sh(
+              environment_vars: [
+                "FORKS=10",
+                "DEPLOY_HAPROXY=yes",
+                "DEPLOY_ELK=yes",
+                "DEPLOY_TEMPEST=yes",
+                "DEPLOY_AIO=no",
+                "DEPLOY_MAAS=no"
+                ]
+            ) // deploy_sh
+
           }// public cloud node
         } catch (e){
             currentBuild.result = 'FAILURE'

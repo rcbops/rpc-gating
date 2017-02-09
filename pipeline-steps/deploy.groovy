@@ -16,13 +16,23 @@ def deploy(){
   ) //conditionalStep
 }
 
-// wrap this func in withEnv to set params
-def deploy_sh(){
-  dir("/opt/rpc-openstack/"){
-    sh """#!/bin/bash
-    scripts/deploy.sh
-    """
-  }
+def deploy_sh(Map args) {
+  common.conditionalStage(
+    stage_name: "Deploy RPC w/ Script",
+    stage: {
+      environment_vars = args.environment_vars +
+        ['ANSIBLE_FORCE_COLOR=true', 'ANSIBLE_HOST_KEY_CHECKING=False']
+      withEnv(environment_vars) {
+        ansiColor('xterm') {
+          dir("/opt/rpc-openstack/") {
+            sh """#!/bin/bash
+            scripts/deploy.sh
+            """
+          } // dir
+        } // ansiColor
+      } // withEnv
+    } // stage
+  ) // conditionalStage
 }
 
 return this;
