@@ -208,4 +208,40 @@ def gen_instance_name(){
   return instance_name
 }
 
+def archive_artifacts(){
+  try{
+    sh """#!/bin/bash
+    d="artifacts_\${BUILD_TAG}"
+    mkdir -p \$d
+
+    # logs and config from the single use slave
+    mkdir -p \$d/\$HOSTNAME/log
+    cp -rp /openstack/log/\$HOSTNAME-* \$d/\$HOSTNAME/log ||:
+    cp -rp /etc/ \$d/\$HOSTNAME/etc
+    cp -rp /var/log/ \$d/\$HOSTNAME/var_log
+
+    # logs and config from the containers
+    while read c
+    do
+      mkdir -p \$d/\$c/log
+      cp -rp /openstack/log/\$c/* \$d/\$c/log ||:
+      cp -rp /var/lib/lxc/\$c/rootfs/etc \$d/\$c ||:
+    done < <(lxc-ls)
+
+    # compress to reduce storage space requirements
+    tar cvjf "\$d".tar.bz2 \$d > artifact_index.txt
+    """
+  } catch (e){
+    print(e)
+    throw(e)
+  } finally{
+    // still worth trying to archiveArtifacts even if some part of
+    // artifact collection failed.
+    archiveArtifacts(
+      allowEmptyArchive: true,
+      artifacts: "artifacts_${env.BUILD_TAG}.tar.bz2,artifact_index.txt"
+    )
+  }
+}
+
 return this

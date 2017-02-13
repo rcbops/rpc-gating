@@ -2,13 +2,18 @@
     name: RPC_AIO
     project-type: workflow
     concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
     parameters:
       # See params.yml
-      - single_use_slave_params
       - rpc_params
+      - rpc_gating_params
+      - single_use_slave_params
+      - tempest_params
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy, Cleanup"
+          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy, Tempest, Cleanup"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -16,6 +21,7 @@
               Connect Slave
               Prepare Deployment
               Deploy
+              Tempest
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
       - text:
@@ -33,6 +39,8 @@
             ]
           description: |
             OSA/RPC playbooks to run.
+            Format: JSON list of dicts. Each dict must have keys playbook, path.
+             Optional keys: args. All values are strings.
 
     dsl: |
       // CIT Slave node
@@ -40,19 +48,29 @@
         try {
           dir("rpc-gating"){
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
               common = load 'pipeline-steps/common.groovy'
+              pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
               aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
               deploy = load 'pipeline-steps/deploy.groovy'
+              tempest = load 'pipeline-steps/tempest.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
           node(instance_name){
-            aio_prepare.prepare()
-            deploy.deploy()
+            try {
+              aio_prepare.prepare()
+              deploy.deploy()
+              tempest.tempest()
+            } catch (e) {
+              print(e)
+              throw e
+            } finally {
+              common.archive_artifacts()
+            }
           } // pub cloud node
         } catch (e){
           currentBuild.result = 'FAILURE'
+          print(e)
           throw e
         } finally {
           pubCloudSlave.delPubCloudSlave()
