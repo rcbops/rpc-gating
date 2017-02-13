@@ -48,7 +48,8 @@
           name: STAGES
           default: |
             Allocate Resources, Connect Slave, Setup Host, Setup Cobbler, Setup Virtual Networks,
-             Deploy VMs, Setup OpenStack Ansible, Prepare Configs, Deploy RPC w/ Script, Tempest, Cleanup
+             Deploy VMs, Setup OpenStack Ansible, Prepare Configs, Deploy RPC w/ Script, Install Tempest,
+             Tempest Tests, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -61,7 +62,8 @@
               Setup OpenStack Ansible
               Prepare Configs
               Deploy RPC w/ Script
-              Tempest
+              Install Tempest
+              Tempest Tests
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
 
@@ -91,7 +93,7 @@
                 "DEPLOY_MAAS=no"
                 ]
             ) // deploy_sh
-            tempest.multi_node_tempest()
+            tempest.tempest(vm: "infra1")
 
           }// public cloud node
         } catch (e){

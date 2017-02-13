@@ -13,7 +13,7 @@
       - tempest_params
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy, Tempest, Cleanup"
+          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy, Install Tempest, Tempest Tests, Cleanup"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -21,7 +21,8 @@
               Connect Slave
               Prepare Deployment
               Deploy
-              Tempest
+              Install Tempest
+              Tempest Tests
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
       - text:
