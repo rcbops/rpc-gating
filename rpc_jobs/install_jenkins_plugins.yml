@@ -19,12 +19,11 @@
             common = load 'pipeline_steps/common.groovy'
             common.install_ansible()
             sh """#!/bin/bash
-              . .venv/bin/activate
+              . ../.venv/bin/activate
               pip install urllib3==1.18.1
             """
             common.venvPlaybook(
               playbooks: ["playbooks/install_jenkins_plugins.yml"],
-              venv: ".venv",
               args: [ "-i inventory" ]
             )
           } //dir

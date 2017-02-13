@@ -3,7 +3,9 @@ import groovy.json.JsonOutput
 
 // Install ansible on a jenkins slave
 def install_ansible(){
-  sh """#!/bin/bash
+  sh """#!/bin/bash -x
+    cd ${env.WORKSPACE}
+    which scl && source /opt/rh/python27/enable
     if [[ ! -d ".venv" ]]; then
       if ! which virtualenv; then
         pip install virtualenv
@@ -27,8 +29,67 @@ def install_ansible(){
     pip install -c ${env.WORKSPACE}/rpc-gating/constraints.txt -U ansible pyrax
 
     mkdir -p rpc-gating/playbooks/roles
-    ansible-galaxy install -r ${env.WORKSPACE}/rpc-gating/role_requirements.yml -p ${env.WORKSPACE}/rpc-gating/playbooks/roles
+    ansible-galaxy install -r rpc-gating/role_requirements.yml -p rpc-gating/playbooks/roles
+
+    # The ansible version used on the Jenkins slave is always new enough for
+    # ara. So ARA will be used to collect data about playbooks run on the
+    # jenkins slave even if the ansible used by osa/rpco is too old. ARA is
+    # installed into the osa ansible runtime venv in branches after mitaka by
+    # rpco/scripts/deploy.sh
+    pip install -e ${env.ARA_REPO}@${env.ARA_BRANCH}#egg=ara
+    mkdir -p callbacks
+    cp .venv/src/ara/ara/plugins/callbacks/log_ara.py callbacks
   """
+}
+
+/* ARA records data about ansible task results,
+ * This function calls ara to generate a junit file from
+ * the ara database, and submits it to jenkins.
+ * This allows jenkins to record each ansible task as a
+ * unit test.
+ * Ara generate will dump all ansible task results from it's db into junit.xml,
+ * to prevent double reporting tests, junit.xml is cleared before and after
+ * submission to jenkins and the ara db is cleared afterwards.
+ */
+def submit_ara(){
+  dir(env.WORKSPACE){
+    db_file="ansible.sqlite"
+    if (fileExists(file: db_file)){
+      withEnv(common.get_deploy_script_env()){
+
+        // remove previously generated junit files and generate a new one.
+        sh """#!/bin/bash -x
+          . .venv/bin/activate
+          rm -f junit.xml ||:
+          ara generate junit junit.xml ||:
+        """
+
+        /* Submit results to jenkins.
+         * healthScaleFactor set to 0 so failed tests don't fail the build.
+         * There is no need for test results to contribute to build failure
+         * because the scripts that execute the tests will exit non 0 if there
+         * are failures and cause the build to fail that way.
+         * ARA reports failures with in a block/rescue as failed tests even
+         * if they are exepected failures, so if healthScaleFactor is not 0,
+         * these false negatives will cause all builds to fail.
+         * Tracking this in rcbops/u-suk-dev#1556
+         */
+        junit(
+          allowEmptyResults: true,
+          healthScaleFactor: 0,
+          testResults: 'junit.xml'
+        )
+
+        // remove submitted junit files and clear database
+        sh """#!/bin/bash -x
+          rm -f junit.xml ||:
+          rm -rf ${db_file}
+        """
+      }
+    } else {
+      print("submit_ara skipped as ${env.WORKSPACE}/${db_file} doesn't exist")
+    }
+  }
 }
 
 /* Run ansible-playbooks within a venev
@@ -40,11 +101,18 @@ def install_ansible(){
  *  playbooks: list of playbook filenames
  *  vars: dict of vars to be passed to ansible as overrides
  *  args: list of string args to pass to ansible-playbook
- *  venv: path to venv to activate before runing ansible-playbook.
  */
 def venvPlaybook(Map args){
-  withEnv(['ANSIBLE_FORCE_COLOR=true',
-           'ANSIBLE_HOST_KEY_CHECKING=False']){
+  /* ANSIBLE_CALLBACK_PLUGINS is set by rpco/deploy.sh for rpco and osa playbook
+  executions in newton and above. rpc-gating playbooks are not executed by
+  deploy.sh so need to have the var set here. Mitaka deploys use ansible 1.9
+  for osa deploys so we can't set this in get_deploy_script_env as that would
+  cause ansible1.9 to attempt to load the ara callback and fail. This is
+  because rpc-gating playbooks always use ansible >=2.1 while the ansible used
+  to deploy rpco/osa varies per branch.
+  */
+  withEnv(common.get_deploy_script_env()
+          + ["ANSIBLE_CALLBACK_PLUGINS=${env.WORKSPACE}/callbacks"]){
     ansiColor('xterm'){
       if (!('vars' in args)){
         args.vars=[:]
@@ -52,17 +120,14 @@ def venvPlaybook(Map args){
       if (!('args' in args)){
         args.args=[]
       }
-      if (!('venv' in args)){
-        args.venv = ".venv"
-      }
       for (def i=0; i<args.playbooks.size(); i++){
         playbook = args.playbooks[i]
         vars_file="vars.${playbook.split('/')[-1]}"
         write_json(file: vars_file, obj: args.vars)
-        sh """
+        sh """#!/bin/bash -x
           which scl && source /opt/rh/python27/enable
-          . ${args.venv}/bin/activate
-          ansible-playbook -v ${args.args.join(' ')} -e@${vars_file} ${playbook}
+          . ${env.WORKSPACE}/.venv/bin/activate
+          ansible-playbook -v --ssh-extra-args="-o  UserKnownHostsFile=/dev/null" ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
       } //for
     } //color
@@ -97,7 +162,9 @@ def get_deploy_script_env(){
     "ANSIBLE_FORKS=${forks}",
     'ANSIBLE_SSH_RETRIES=3',
     'ANSIBLE_GIT_RELEASE=ssh_retry', //only used in mitaka and below
-    'ANSIBLE_GIT_REPO=https://github.com/hughsaunders/ansible' // only used in mitaka and below
+    'ANSIBLE_GIT_REPO=https://github.com/hughsaunders/ansible', // only used in mitaka and below,
+    "ARA_DIR=${env.WORKSPACE}",
+    "DEPLOY_ARA=yes" // only used in newton and above. (mitaka uses ansible1.9 while ara requirees 2.1)
   ]
 }
 
@@ -108,17 +175,28 @@ def openstack_ansible(Map args){
   if (!('args' in args)){
     args.args = ""
   }
-
   ansiColor('xterm'){
     dir(args.path){
-      withEnv(common.get_deploy_script_env())
+      /* ANSIBLE_CALLBACK_PLUGINS is set in rpc-o/deploy.sh however some rpco
+       * playbooks are called separately eg setup-maas. In order for ARA to
+       * record results from these seperate runs, ANSIBLE_CALLBACK_PLUGINS
+       * must be set here. However branches older than newton are not
+       * compatible with ARA, so ANSIBLE_CALLBACK_PLUGINS must not be set for
+       * them. For that reason we look at whether the ARA database has already
+       * been created, and only enable the callback if it exists.
+       */
+      ds_env = common.get_deploy_script_env()
+      if (fileExists(file: "${env.WORKSPACE}/ansible.sqlite")){
+        ds_env += ["ANSIBLE_CALLBACK_PLUGINS=/etc/ansible/roles/plugins/callback:/opt/ansible-runtime/lib/python2.7/site-packages/ara/plugins/callbacks"]
+      }
+      withEnv(ds_env)
       {
-        sh """#!/bin/bash
+        sh """#!/bin/bash -x
           openstack-ansible ${args.playbook} ${args.args}
         """
-      } //withEnv
-    } //dir
-  } //colour
+      }
+    }
+  }
 }
 
 /*
