@@ -6,16 +6,15 @@ def tempest_install(){
 }
 
 def tempest_run(Map args) {
-  withEnv(["RUN_TEMPEST_OPTS=${env.RUN_TEMPEST_OPTS}"]){
-    sh """#!/bin/bash
-      utility_container="\$(${args.wrapper} lxc-ls |grep -m1 utility)"
-      ${args.wrapper} lxc-attach \
-        --keep-env \
-        -n \$utility_container \
-        -- /opt/openstack_tempest_gate.sh \
-        ${env.TEMPEST_TEST_SETS}
-    """
-  }
+  sh """#!/bin/bash
+    utility_container="\$(${args.wrapper} lxc-ls |grep -m1 utility)"
+    ${args.wrapper} lxc-attach \
+      --keep-env \
+      -n \$utility_container \
+      -v RUN_TEMPEST_OPTS=${env.RUN_TEMPEST_OPTS} \
+      -- /opt/openstack_tempest_gate.sh \
+      ${env.TEMPEST_TEST_SETS}
+  """
 }
 
 
