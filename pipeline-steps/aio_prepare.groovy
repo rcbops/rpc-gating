@@ -19,13 +19,16 @@ def prepare(){
         } //color
       } //dir
       withCredentials([
-        usernamePassword(
-          credentialsId: "dev_pubcloud_user_key",
-          usernameVariable: "PUBCLOUD_USERNAME",
-          passwordVariable: "PUBCLOUD_APIKEY"
+        string(
+          credentialsId: "dev_pubcloud_username",
+          variable: "PUBCLOUD_USERNAME"
         ),
         string(
-          credentialsId: "dev_pubcloud_tennant",
+          credentialsId: "dev_pubcloud_api_key",
+          variable: "PUBCLOUD_API_KEY"
+        ),
+        string(
+          credentialsId: "dev_pubcloud_tenant_id",
           variable: "PUBCLOUD_TENANT_ID"
         )
       ]){

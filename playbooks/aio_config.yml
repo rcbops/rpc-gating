@@ -42,7 +42,7 @@
       rackspace_cloud_auth_url: "https://identity.api.rackspacecloud.com/v2.0/"
       rackspace_cloud_tenant_id: "{{lookup('env', 'PUBCLOUD_TENANT_ID')}}"
       rackspace_cloud_username: "{{lookup('env', 'PUBCLOUD_USERNAME')}}"
-      rackspace_cloud_api_key: "{{lookup('env', 'PUBCLOUD_APIKEY')}}"
+      rackspace_cloud_api_key: "{{lookup('env', 'PUBCLOUD_API_KEY')}}"
 
   tasks:
     - name: write overrides
