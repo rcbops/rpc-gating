@@ -4,51 +4,14 @@ def prepare() {
   }
   dir("openstack-ansible-ops/multi-node-aio") {
     common.conditionalStage(
-      stage_name: 'Setup Host',
+      stage_name: 'Prepare Multi-Node AIO',
       stage: {
         common.run_script(
-          script: 'setup-host.sh',
-          environment_vars: ["PARTITION_HOST=${env.PARTITION_HOST}"]
-        )
-      } //stage
-    ) //conditionalStage
-
-    common.conditionalStage(
-      stage_name: 'Setup Cobbler',
-      stage: {
-        common.run_script(
-          script: 'setup-cobbler.sh',
-          environment_vars: ["DEFAULT_IMAGE=${env.DEFAULT_IMAGE}"]
-        )
-      } //stage
-    ) //conditionalStage
-
-    common.conditionalStage(
-      stage_name: 'Setup Virtual Networks',
-      stage: {
-        common.run_script(
-          script: 'setup-virsh-net.sh',
-          environment_vars: []
-        )
-      } //stage
-    ) //conditionalStage
-
-    common.conditionalStage(
-      stage_name: 'Deploy VMs',
-      stage: {
-        common.run_script(
-          script: 'deploy-vms.sh',
-          environment_vars: []
-        )
-      } //stage
-    ) //conditionalStage
-
-    common.conditionalStage(
-      stage_name: 'Setup OpenStack Ansible',
-      stage: {
-        common.run_script(
-          script: 'deploy-osa.sh',
+          script: 'build.sh',
           environment_vars: [
+            "PARTITION_HOST=${env.PARTITION_HOST}",
+            "NETWORK_BASE=172.29",
+            "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
             "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
             "RUN_OSA=false"]
         )
@@ -56,7 +19,7 @@ def prepare() {
     ) //conditionalStage
   } //dir
   common.conditionalStage(
-    stage_name: 'Prepare Configs',
+    stage_name: 'Prepare RPC Configs',
     stage: {
       dir("/opt/rpc-openstack") {
         git branch: env.RPC_BRANCH, url: env.RPC_REPO
