@@ -10,19 +10,28 @@
  *  - WORKSPACE
  */
 def create(Map args){
-    withEnv(["RAX_REGION=${args.region}"]){
-      withCredentials([
-        file(
-          credentialsId: 'RPCJENKINS_RAXRC',
-          variable: 'RAX_CREDS_FILE'
-        ),
-        file(
-          credentialsId: 'id_rsa_cloud10_jenkins_file',
-          variable: 'JENKINS_SSH_PRIVKEY'
+  withEnv(["RAX_REGION=${args.region}"]){
+    withCredentials([
+      string(
+        credentialsId: "dev_pubcloud_username",
+        variable: "PUBCLOUD_USERNAME"
+      ),
+      string(
+        credentialsId: "dev_pubcloud_api_key",
+        variable: "PUBCLOUD_API_KEY"
+      ),
+      file(
+        credentialsId: 'id_rsa_cloud10_jenkins_file',
+        variable: 'JENKINS_SSH_PRIVKEY'
+      )
+    ]){
+      dir("rpc-gating/playbooks"){
+        common.install_ansible()
+        pyrax_cfg = common.writePyraxCfg(
+          username: env.PUBCLOUD_USERNAME,
+          api_key: env.PUBCLOUD_API_KEY
         )
-      ]){
-        dir("rpc-gating/playbooks"){
-          common.install_ansible()
+        withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
                         "drop_ssh_auth_keys.yml"],
@@ -33,27 +42,37 @@ def create(Map args){
             ],
             vars: args
           )
-          } // directory
-        } //withCredentials
-      } // withEnv
+        } // withEnv
+      } // directory
+    } //withCredentials
+  } // withEnv
 } //call
 
 
 /* Remove public cloud instances
  */
 def cleanup(){
-    withEnv(['ANSIBLE_FORCE_COLOR=true']){
-      withCredentials([
-        file(
-          credentialsId: 'RPCJENKINS_RAXRC',
-          variable: 'RAX_CREDS_FILE'
-        ),
-        file(
-          credentialsId: 'id_rsa_cloud10_jenkins_file',
-          variable: 'JENKINS_SSH_PRIVKEY'
+  withEnv(['ANSIBLE_FORCE_COLOR=true']){
+    withCredentials([
+      string(
+        credentialsId: "dev_pubcloud_username",
+        variable: "PUBCLOUD_USERNAME"
+      ),
+      string(
+        credentialsId: "dev_pubcloud_api_key",
+        variable: "PUBCLOUD_API_KEY"
+      ),
+      file(
+        credentialsId: 'id_rsa_cloud10_jenkins_file',
+        variable: 'JENKINS_SSH_PRIVKEY'
+      )
+    ]){
+      dir("rpc-gating/playbooks"){
+        pyrax_cfg = common.writePyraxCfg(
+          username: env.PUBCLOUD_USERNAME,
+          api_key: env.PUBCLOUD_API_KEY
         )
-      ]){
-        dir("rpc-gating/playbooks"){
+        withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
           common.venvPlaybook(
             playbooks: ['cleanup_pubcloud.yml'],
             venv: ".venv",
@@ -62,9 +81,10 @@ def cleanup(){
             ],
             vars: ["instance_name": instance_name]
           )
-          } // directory
-        } //withCredentials
-      } // withEnv
+        } // withEnv
+      } // directory
+    } //withCredentials
+  } // withEnv
 } //call
 
 
