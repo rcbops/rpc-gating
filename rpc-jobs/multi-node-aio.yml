@@ -7,6 +7,7 @@
     parameters:
       - rpc_gating_params
       - rpc_params
+      - tempest_params
       - string:
           name: OSA_OPS_REPO
           default: https://github.com/openstack/openstack-ansible-ops
@@ -47,7 +48,8 @@
           name: STAGES
           default: |
             Allocate Resources, Connect Slave, Setup Host, Setup Cobbler, Setup Virtual Networks,
-            Deploy VMs, Setup OpenStack Ansible, Prepare Configs, Deploy RPC w/ Script, Cleanup
+             Deploy VMs, Setup OpenStack Ansible, Prepare Configs, Deploy RPC w/ Script, Install Tempest,
+             Tempest Tests, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -60,6 +62,8 @@
               Setup OpenStack Ansible
               Prepare Configs
               Deploy RPC w/ Script
+              Install Tempest
+              Tempest Tests
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
 
@@ -72,6 +76,7 @@
             common = load 'pipeline-steps/common.groovy'
             multi_node_aio_prepare = load 'pipeline-steps/multi_node_aio_prepare.groovy'
             deploy = load 'pipeline-steps/deploy.groovy'
+            tempest = load 'pipeline-steps/tempest.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
@@ -83,11 +88,12 @@
                 "FORKS=10",
                 "DEPLOY_HAPROXY=yes",
                 "DEPLOY_ELK=yes",
-                "DEPLOY_TEMPEST=yes",
+                "DEPLOY_TEMPEST=no",
                 "DEPLOY_AIO=no",
                 "DEPLOY_MAAS=no"
                 ]
             ) // deploy_sh
+            tempest.tempest(vm: "infra1")
 
           }// public cloud node
         } catch (e){
