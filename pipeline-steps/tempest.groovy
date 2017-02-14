@@ -31,7 +31,10 @@ def tempest(){
         print(e)
         throw(e)
       } finally{
-        sh "rm *tempest*.xml; cp /openstack/log/*utility*/**/*tempest*.xml . ||:"
+        sh """#!/bin/bash
+          rm *tempest*.xml ||:
+          cp /openstack/log/*utility*/**/*tempest*.xml . ||:"
+        """
         junit allowEmptyResults: true, testResults: '*tempest*.xml'
       } //finally
     } //stage
