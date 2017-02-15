@@ -1,0 +1,24 @@
+---
+- name: issue reinstall command to razor
+  razor:
+    url: '{{ razor_url }}'
+    command: 'reinstall-node'
+    name: '{{ inventory_hostname }}'
+
+- name: reboot machine
+  razor:
+    url: '{{ razor_url }}'
+    command: 'reboot-node'
+    name: '{{ inventory_hostname }}'
+  async: 0
+  poll: 0
+
+- name: waiting for server to come back
+  local_action:
+    module: wait_for
+        host={{ ansible_ssh_host }}
+        port=22
+        delay=660
+        timeout=3000
+        state=started
+  sudo: false

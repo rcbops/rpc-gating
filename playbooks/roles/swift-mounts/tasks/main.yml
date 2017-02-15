@@ -1,0 +1,26 @@
+---
+- name: Install xfsprogs
+  apt:
+    name: xfsprogs
+    state: present
+    update_cache: yes
+
+- name: Create and expand Swift's XFS filesystems
+  filesystem:
+    fstype: xfs
+    dev: /dev/{{ item.name }}
+    #TODO(jpmontez): Add when Ansible 2.0 is released - resizefs: yes
+  with_items: '{{ swift_config.drives }}'
+
+- name: Mount Swift partitions
+  mount:
+    name: "{{ swift_config.mount_point }}/{{ item.name }}"
+    src: /dev/{{ item.name }}
+    opts: "{{ swift_config.mount_opts }}"
+    state: mounted
+    fstype: xfs
+  with_items: '{{ swift_config.drives }}'
+
+- name: Wipe Swift drives
+  shell: "rm -rf {{ swift_config.mount_point }}/{{ item.name }}/*"
+  with_items: '{{ swift_config.drives }}'

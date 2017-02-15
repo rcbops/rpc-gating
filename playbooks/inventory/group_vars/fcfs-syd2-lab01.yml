@@ -1,0 +1,283 @@
+---
+lab_name: fcfs-syd2-lab01
+config_prefix: openstack
+repo_dir: openstack-ansible
+
+user_config:
+    container_cidr: 172.20.136.0/22
+    tunnel_cidr:  172.29.240.0/22
+    storage_cidr:  172.31.244.0/22
+    repl_cidr: 192.168.3.0/24
+    used_ips:
+        - "172.20.136.1,172.20.136.15"
+        - "172.20.136.192,172.20.136.201"
+        - "172.29.240.192,172.29.240.201"
+        - "172.31.244.192,172.31.244.201"
+        - "192.168.3.192,192.168.3.201"
+    internal_lb_vip_address: 172.20.136.10
+    external_lb_vip_address: 119.9.38.203
+    tunnel_bridge: br-vxlan
+    container_bridge: br-mgmt
+    lb_name: 705782-lbal3.ac3.com.au
+    networking:
+      - name: container
+        bridge: br-mgmt
+        container_bridge: br-mgmt
+        container_interface: eth1
+        container_type: veth
+        ip_from_q: container
+        type: raw
+        is_ssh_address: true
+        is_container_address: true
+        group_binds:
+          - all_containers
+          - hosts
+        static_routes:
+          - cidr: "172.20.236.0/22"
+            gateway: "172.20.136.1"
+      - name: provider
+        bridge: br-vlan
+        container_interface: eth11
+        container_type: veth
+        type: vlan
+        range: 613:613
+        net_name: vlan
+        group_binds:
+          - neutron_linuxbridge_agent
+      - name: tenant
+        bridge: br-vxlan
+        container_interface: eth10
+        container_type: veth
+        ip_from_q: tunnel
+        type: vxlan
+        range: 1:1000
+        net_name: vxlan
+        group_binds:
+          - neutron_linuxbridge_agent
+      - name: storage
+        bridge: br-storage
+        container_interface: eth2
+        container_type: veth
+        ip_from_q: storage
+        type: raw
+        group_binds:
+          - glance_api
+          - cinder_api
+          - cinder_volume
+          - nova_compute
+          - swift_proxy
+        static_routes:
+          - cidr: "172.30.244.0/22"
+            gateway: "172.31.244.1"
+      - name: replication
+        bridge: br-repl
+        container_interface: eth13
+        container_type: veth
+        ip_from_q: repl
+        type: raw
+        group_binds:
+          - swift_proxy
+        static_routes:
+          - cidr: "192.168.1.0/24"
+            gateway: "192.168.3.1"
+
+tempest_public_provider_net:
+  tempest_public_subnet_cidr: "10.239.0.0/22"
+  tempest_public_subnet_gateway: "10.239.0.1"
+  tempest_public_net_provider_type: vlan
+  tempest_public_net_physical_type: vlan
+  tempest_public_net_seg_id: 613
+  tempest_public_router_external: True
+
+tempest_private_net:
+  tempest_private_subnet_cidr: "172.31.0.0/24"
+  tempest_private_net_provider_type: "vxlan"
+  tempest_private_net_seg_id: 1
+
+vgs:
+  - name: cinder-volumes
+    device:
+      - /dev/sdb
+      - /dev/sdc
+
+# all swift configuration
+swift_config:
+    part_power: 8
+    weight: 100
+    repl_number: 3
+    min_part_hours: 1
+    region: 1
+    storage_network: 'br-storage'
+    replication_network: 'br-repl'
+    drives:
+      - name: sdd
+      - name: sde
+      - name: sdf
+    lv_size: 50G
+    mount_point: /mnt
+    mount_opts: 'noatime,nodiratime,nobarrier,logbufs=8,nobootwait'
+    account: "service:glance"
+    container: glance
+    storage_policies:
+      - name: gold
+        index: 0
+        default: True
+      - name: silver
+        index: 1
+        repl_number: 3
+        depreciated: True
+
+# cinder configuration
+cinder_storage:
+  backends:
+    lvm:
+      volume_group: cinder-volumes
+      volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+      volume_backend_name: LVM_iSCSI
+
+# all networking interface configs
+networking:
+  - name: lo
+    type: loopback
+  - name: p6p1
+    type: manual
+    directives:
+      - bond-master bond0
+      - bond-primary p6p1
+  - name: p7p1
+    type: manual
+    directives:
+      - bond-master bond0
+  # Service network
+  - name: em3
+    type: static
+    directives:
+      - "address {{ ansible_em3.ipv4.address }}"
+      - "netmask {{ ansible_em3.ipv4.netmask }}"
+      - "post-up ip route add 10.191.192.0/18 via 10.136.157.225 dev em3"
+  # Physical Interfaces for Tunnels/Tennant
+  - name: p6p2
+    type: manual
+    directives:
+      - bond-master bond1
+      - bond-primary p6p2
+  - name: p7p2
+    type: manual
+    directives:
+      - bond-master bond1
+  # Bond Interface 0 ( p6p1 and p7p1) for Management / Storage
+  - name: bond0
+    type: static
+    directives:
+      - "bond-slaves p6p1 p7p1"
+      - "bond-mode active-backup"
+      - "bond-miimon 100"
+      - "bond-downdelay 200"
+      - "bond-updelay 200"
+      - "address {{ ansible_default_ipv4.address }}"
+      - "netmask {{ ansible_default_ipv4.netmask }}"
+      - "gateway {{ ansible_default_ipv4.gateway }}"
+      - "dns-nameservers 69.20.0.164 69.20.0.196"
+      - "dns-search eng1.lon3.rackspace.com"
+  # Bond interface 1 (p6p2 and p7p2)
+  - name: bond1
+    type: manual
+    directives:
+      - "bond-slaves p6p2 p7p2"
+      - "bond-mode active-backup"
+      - "bond-miimon 100"
+      - "bond-downdelay 250"
+      - "bond-updelay 250"
+  # Container management VLAN interface
+  - name: bond0.1162
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  # OpenStack Networking VXLAN (tunnel/overlay) VLAN interface
+  - name: bond1.1164
+    type: manual
+    directives:
+      - "vlan-raw-device bond1"
+  # Storage network VLAN interface (optional)
+  - name: bond0.1163
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  # Replication network VLAN interface (optional)
+  - name: bond0.203
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  # Container management bridge
+  - name: br-mgmt
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port references tagged interface
+      - "bridge_ports bond0.1162"
+      - "address 172.20.136.{{ member_number }}/22"
+      # Add the routes
+      - "post-up ip route add 172.20.236.0/22 via 172.20.136.1"
+      - "dns-nameservers 69.20.0.164 69.20.0.196"
+  # OpenStack Networking VXLAN (tunnel/overlay) bridge
+  - name: br-vxlan
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port references tagged interface
+      - "bridge_ports bond1.1164"
+      - "address 172.27.240.{{ member_number }}"
+      - "netmask 255.255.252.0"
+  # OpenStack Networking VLAN bridge
+  - name: br-vlan
+    type: manual
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port references untagged interface
+      - "bridge_ports bond1"
+  # Storage bridge (optional)
+  - name: br-storage
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port reference tagged interface
+      - "bridge_ports bond0.1163"
+      - "address 172.31.244.{{ member_number }}"
+      # Add the routes
+      - "post-up ip route add 172.30.244.0/22 via 172.31.244.1"
+      - "netmask 255.255.252.0"
+  - name: br-repl
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      - "address 192.168.3.{{ member_number }}"
+      - "netmask 255.255.255.0"
+      # Create veth pair, ignore if already exists
+      - "pre-up ip link add br-repl-veth type veth peer name eth13 || true"
+      # Set both ends UP
+      - "pre-up ip link set eth13 up"
+      - "pre-up ip link set br-repl-veth up"
+      # Add the routes
+      - "post-up ip route add 192.168.1.0/24 via 192.168.3.1"
+      # Delete veth pair on DOWN
+      - "post-down ip link del br-repl-veth || true"
+      # Bridge port reference tagged interface
+      - "bridge_ports bond0.203 br-repl-veth"
+  - name: br-snet
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      - "address 172.29.248.1"
+      - "netmask 255.255.252.0"

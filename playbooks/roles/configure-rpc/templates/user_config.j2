@@ -1,0 +1,208 @@
+---
+{% set infra = groups[lab_name + '-infrastructure'] %}
+{% set network = groups[lab_name + '-network'] %}
+{% set compute = groups[lab_name + '-compute'] %}
+{% set cinder = groups[lab_name + '-cinder'] %}
+{% set logger = groups[lab_name + '-logger'] %}
+{% if groups[lab_name +'-haproxy'] is defined %}
+{% set haproxy = groups[lab_name + '-haproxy'] %}
+{% endif %}
+
+# User defined CIDR used for containers
+# Global cidr/s used for everything.
+cidr_networks:
+  # CIDR used in the Management network
+  container: {{ user_config.container_cidr }}
+{% if user_config.tunnel_cidr is defined %}
+  # CIDR used for the VM network
+  tunnel: {{ user_config.tunnel_cidr }}
+{% endif %}
+{% if user_config.service_cidr is defined %}
+  # CIDR used for the service network
+  snet: {{ user_config.service_cidr}}
+{% endif %}
+{% if user_config.storage_cidr is defined %}
+  # CIDR used for the storage network
+  storage: {{ user_config.storage_cidr }}
+{% endif %}
+{% if user_config.repl_cidr is defined %}
+  # CIDR used for the replication network
+  repl: {{ user_config.repl_cidr }}
+{% endif %}
+{% if user_config.used_ips is defined %}
+used_ips:
+{% for used_ip_range in user_config.used_ips %}
+  - {{ used_ip_range }}
+{% endfor %}
+{% endif %}
+
+# overrides anything else any where.
+global_overrides:
+
+  # Internal Management vip address
+  internal_lb_vip_address: {{ user_config.internal_lb_vip_address }}
+
+  # External DMZ VIP address
+  external_lb_vip_address: {{ user_config.external_lb_vip_address }}
+
+{% if user_config.tunnel_bridge is defined %}
+  # Bridged interface to use with tunnel type networks
+  tunnel_bridge: "{{ user_config.tunnel_bridge }}"
+{% endif %}
+
+  # Bridged interface to build containers with
+  management_bridge: "{{ user_config.container_bridge }}"
+
+  # Define your neutron networks.
+  provider_networks:
+{% for network in user_config.networking %}
+    - network:
+        group_binds:
+{% for group_bind in network.group_binds %}
+          - {{ group_bind }}
+{% endfor %}
+{% if network.static_routes is defined %}
+        static_routes:
+{% for static_route in network.static_routes %}
+          - cidr: "{{ static_route.cidr }}"
+            gateway: "{{ static_route.gateway }}"
+{% endfor %}
+{% endif %}
+        container_bridge: "{{ network.bridge }}"
+        container_interface: "{{ network.container_interface }}"
+        type: "{{ network.type }}"
+{% if network.container_type is defined %}
+        container_type: "{{ network.container_type }}"
+{% endif %}
+{% if network.ip_from_q is defined %}
+        ip_from_q: "{{ network.ip_from_q }}"
+{% endif %}
+{% if network.address is defined %}
+        interface_address: "{{ network.address }}"
+{% endif %}
+{% if network.range is defined %}
+        range: "{{ network.range }}"
+{% endif %}
+{% if network.net_name is defined %}
+        net_name: "{{ network.net_name }}"
+{% endif %}
+{% if network.subnetmask is defined %}
+        subnetmask: "{{ network.subnetmask }}"
+{% endif %}
+{% if network.is_container_address is defined %}
+        is_container_address: {{ network.is_container_address }}
+{% endif %}
+{% if network.is_ssh_address is defined %}
+        is_ssh_address: {{ network.is_ssh_address }}
+{% endif %}
+{% endfor %}
+
+# Shared infrastructure parts
+shared-infra_hosts:
+{% for host in infra %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+
+# Openstack Compute Infrastructure Parts
+{% if standalone_swift is not defined %}
+os-infra_hosts:
+{% for host in infra %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+{% endif %}
+
+# Storage Infrastructure Parts
+{% if cinder is defined %}
+storage-infra_hosts:
+{% for host in infra %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+{% endif %}
+
+# Keystone Identity Infrastructure Parts
+identity_hosts:
+{% for host in infra %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+
+# User defined Network Hosts, this should be a required group
+{% if network is defined %}
+network_hosts:
+{% for host in network %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+{% endif %}
+
+# User defined Compute Hosts, this should be a required group
+{% if compute  is defined %}
+compute_hosts:
+{% for host in compute %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+{% endif %}
+
+# User defined Cinder Hosts, this should be a required group
+{% if cinder is defined %}
+storage_hosts:
+{% for host in cinder %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+    container_vars:
+      cinder_backends:
+        limit_container_types: cinder_volume
+{% if cinder_storage.backends.lvm is defined %}
+        lvm:
+          volume_group: {{ cinder_storage.backends.lvm.volume_group }}
+          volume_driver: {{ cinder_storage.backends.lvm.volume_driver }}
+          volume_backend_name: {{ cinder_storage.backends.lvm.volume_backend_name }}
+{% endif %}
+{% if cinder_storage.backends.lvm_ssd is defined %}
+        lvm_ssd:
+          volume_group: {{ cinder_storage.backends.lvm_ssd.volume_group }}
+          volume_driver: {{ cinder_storage.backends.lvm_ssd.volume_driver }}
+          volume_backend_name: {{ cinder_storage.backends.lvm_ssd.volume_backend_name }}
+{% endif %}
+{% if cinder_storage.backends.netapp is defined %}
+        netapp:
+          netapp_storage_family: ontap_7mode
+          netapp_storage_protocol: iscsi
+          netapp_server_hostname: {{ cinder_storage.backends.netapp.hostname }}
+          netapp_server_port: 80
+          netapp_login: {{ cinder_storage.backends.netapp.username }}
+          netapp_password: {{ cinder_storage.backends.netapp.password }}
+          volume_driver: {{ cinder_storage.backends.netapp.volume_driver }}
+          volume_backend_name: {{ cinder_storage.backends.netapp.volume_backend_name }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+# User defined Logger Hosts, this should be a required group
+{% if logger is defined %}
+log_hosts:
+{% for host in logger %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+{% endif %}
+
+# User defined Repo Infrastructure Hosts, this is an optional group
+repo-infra_hosts:
+{% for host in infra %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+
+{% if haproxy is defined %}
+# User defined HAProxy Hosts, this is an optional group
+haproxy_hosts:
+{% for host in haproxy %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+{% endif %}

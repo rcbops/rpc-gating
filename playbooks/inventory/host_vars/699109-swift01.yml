@@ -1,0 +1,4 @@
+---
+ansible_ssh_host: 10.240.0.114
+member_number: 114
+zone: 1

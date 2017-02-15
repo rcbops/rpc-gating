@@ -1,0 +1,56 @@
+{% if repo_url is defined %}
+openstack_repo_url: '{{ repo_url }}'
+{% endif %}
+# required for os-glance-install.yml playbook
+{% if swift_config is defined %}
+glance_default_store: swift
+glance_notification_driver: noop
+glance_swift_store_auth_address: {{ "'{{ keystone_service_internalurl }}'" }}
+glance_swift_store_container: glance_images
+glance_swift_store_endpoint_type: internalURL
+glance_swift_store_key: {{ "'{{ glance_service_password }}'" }}
+glance_swift_store_region: RegionOne
+glance_swift_store_user: 'service:glance'
+swift_allow_all_users: True
+{% endif %}
+
+neutron_plugin_base:
+  - neutron.services.l3_router.l3_router_plugin.L3RouterPlugin
+  - neutron.services.metering.metering_plugin.MeteringPlugin
+  - neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2
+
+{% if tempest_public_provider_net is defined %}
+tempest_public_net_provider_type: "{{ tempest_public_provider_net.tempest_public_net_provider_type }}"
+tempest_public_net_physical_type: "{{ tempest_public_provider_net.tempest_public_net_physical_type }}"
+tempest_public_net_seg_id: "{{ tempest_public_provider_net.tempest_public_net_seg_id }}"
+tempest_public_router_external: "{{ tempest_public_provider_net.tempest_public_router_external }}"
+tempest_public_subnet_cidr: "{{ tempest_public_provider_net.tempest_public_subnet_cidr }}"
+tempest_public_subnet_gateway: "{{ tempest_public_provider_net.tempest_public_subnet_gateway }}"
+{% endif %}
+
+{% if tempest_private_net is defined %}
+tempest_private_subnet_cidr: "{{ tempest_private_net.tempest_private_subnet_cidr }}"
+tempest_private_net_provider_type: "{{ tempest_private_net.tempest_private_net_provider_type }}"
+tempest_private_net_seg_id: "{{ tempest_private_net.tempest_private_net_seg_id }}"
+{% endif %}
+
+{% if standalone_swift is defined %}
+tempest_service_available_cinder: False
+tempest_service_available_glance: False
+tempest_service_available_heat: False
+tempest_service_available_horizon: False
+tempest_service_available_neutron: False
+tempest_service_available_nova: False
+{% endif %}
+tempest_public_subnet_cidr: '172.29.248.0/22'
+tempest_compute_run_ssh: False
+tempest_swift_container_sync: False
+tempest_swift_discoverable_apis:
+  - bulk
+  - object
+  - container_quotas
+  - slo
+  - tempurl
+tempest_tempest_conf_overrides:
+  identity-feature-enabled:
+    api_extensions: OS-REVOKE,OS-FEDERATION,OS-KSCRUD,OS-SIMPLE-CERT,OS-OAUTH1,OS-EC2

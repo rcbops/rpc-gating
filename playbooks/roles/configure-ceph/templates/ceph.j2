@@ -1,0 +1,44 @@
+---
+{% set infra = groups['infrastructure'] %}
+{% set cinder = groups['cinder'] %}
+{% set ceph = groups['ceph'] %}
+
+mons_hosts:
+{% for host in infra %}
+    {{ host }}:
+        ip: {{ hostvars[host]["ansible_ssh_host"] }}
+{% endfor %}
+
+osds_hosts:
+{% for host in ceph %}
+    {{ host }}:
+        ip: {{ hostvars[host]["ansible_ssh_host"] }}
+        container_vars:
+            devices:
+{% for device in ceph_config.devices %}
+                - {{ device }}
+{% endfor %}
+            raw_journal_devices:
+{% for raw_journal_device in ceph_config.raw_journal_devices %}
+                - {{ raw_journal_device }}
+{% endfor %}
+{% endfor %}
+
+storage_hosts:
+    {{ cinder[0] }}:
+        ip: {{ hostvars[cinder[0]]["ansible_ssh_host"] }}
+        container_vars:
+            cinder_backends:
+                limit_container_types: cinder_volume
+                ceph:
+                  volume_driver: {{ ceph_config.volume_driver}}
+                  rbd_pool: {{ ceph_config.rbd_pool }}
+                  rbd_ceph_conf: {{ ceph_config.rbd_ceph_conf }}
+                  rbd_flatten_volume_from_snapshot: {{ ceph_config.rbd_flatten_volume_from_snapshot }}
+                  rbd_max_clone_depth: {{ ceph_config.rbd_max_clone_depth }}
+                  rbd_store_chunk_size: {{ ceph_config.rbd_store_chunk_size }}
+                  rados_connect_timeout: {{ ceph_config.rados_connect_timeout }}
+                  glance_api_version: {{ ceph_config.glance_api_version }}
+                  volume_backend_name: {{ ceph_config.volume_backend_name }}{% raw %}
+                  rbd_user: "{{ cinder_ceph_client }}"
+                  rbd_secret_uuid: "{{ cinder_ceph_client_uuid }}"{% endraw %}

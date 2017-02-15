@@ -1,0 +1,14 @@
+---
+- name: Create conf.d folder
+  file:
+    path: /etc/{{ config_prefix }}_deploy/conf.d
+    state: directory
+    mode: 0755
+  when: swift_config is defined
+
+- name: Create and configure the swift.yml file
+  template:
+    src: swift.j2
+    dest: /etc/{{ config_prefix }}_deploy/conf.d/swift.yml
+    mode: 0644
+  when: swift_config is defined

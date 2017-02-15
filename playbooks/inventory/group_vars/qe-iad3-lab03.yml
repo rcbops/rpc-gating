@@ -1,0 +1,126 @@
+---
+lab_name: qe-iad3-lab03
+config_prefix: openstack
+repo_dir: openstack-ansible
+
+user_config:
+  container_cidr: 172.30.236.0/22
+  tunnel_cidr:  172.30.240.0/22
+  storage_cidr: 172.30.244.0/22
+  used_ips:
+    - "172.30.236.1,172.30.236.15"
+    - "172.30.236.170,172.30.236.179"
+    - "172.30.240.170,172.30.240.179"
+    - "172.30.244.170,172.30.244.179"
+  internal_lb_vip_address: 172.30.236.10
+  external_lb_vip_address: 72.4.117.95
+  tunnel_bridge: br-vxlan
+  container_bridge: br-mgmt
+  lb_name: 605010-lbal1.iad3.rpchost.com
+  networking:
+    - name: container
+      bridge: br-mgmt
+      container_bridge: br-mgmt
+      container_interface: eth1
+      container_type: veth
+      ip_from_q: container
+      is_ssh_address: true
+      is_container_address: true
+      type: raw
+      group_binds:
+        - all_containers
+        - hosts
+    - name: provider
+      bridge: br-vlan
+      container_interface: eth11
+      container_type: veth
+      type: vlan
+      range: 2102:2102
+      net_name: vlan
+      group_binds:
+        - neutron_linuxbridge_agent
+    - name: tenant
+      bridge: br-vxlan
+      container_interface: eth10
+      container_type: veth
+      ip_from_q: tunnel
+      type: vxlan
+      range: 1:1000
+      net_name: vxlan
+      group_binds:
+        - neutron_linuxbridge_agent
+    - name: storage
+      bridge: br-storage
+      container_interface: eth2
+      container_type: veth
+      ip_from_q: storage
+      type: raw
+      group_binds:
+        - glance_api
+        - cinder_api
+        - nova_compute
+        - cinder_volume
+        - swift_proxy
+
+# Swift & Cinder's volume group
+vgs:
+  - name: storage-volumes
+    device:
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+      - /dev/sdi
+      - /dev/sdj
+      - /dev/sdk
+      - /dev/sdl
+
+# Cinder Config
+cinder_storage:
+  backends:
+    lvm:
+      volume_group: storage-volumes
+      volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+      volume_backend_name: LVM_iSCSI
+    lvm_ssd:
+      volume_group: storage-volumes
+      volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+      volume_backend_name: LVM_iSCSI
+
+# Swift Config
+swift_config:
+  part_power: 8
+  weight: 100
+  min_part_hours: 1
+  repl_number: 3
+  region: 1
+  storage_network: 'br-storage'
+  replication_network: 'br-storage'
+  drives:
+    - name: sdb
+    - name: sdc
+    - name: sdd
+    - name: sde
+    - name: sdf
+    - name: sdg
+    - name: sdh
+    - name: sdi
+    - name: sdj
+    - name: sdk
+    - name: sdl
+  lv_size: 400G
+  mount_point: /mnt
+  mount_opts: 'noatime,nodiratime,nobarrier,logbufs=8,nobootwait'
+  account: "service:glance"
+  container: glance
+  storage_policies:
+    - name: gold
+      index: 0
+      default: True
+    - name: silver
+      index: 1
+      repl_number: 3
+      depreciated: True

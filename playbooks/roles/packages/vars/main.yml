@@ -1,0 +1,14 @@
+---
+install:
+   - bridge-utils
+   - git
+   - lldpd
+   - lsof
+   - ntp
+   - ntpdate
+   - ssh
+   - sudo
+   - tcpdump
+   - vim
+   - vlan
+   - python-dev

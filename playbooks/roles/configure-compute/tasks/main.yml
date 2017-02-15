@@ -1,0 +1,48 @@
+---
+- name: Set product's repository directory
+  set_fact:
+    product_repo_dir: "/opt/{{ product }}"
+
+- name: Set OSA's repo directory
+  set_fact:
+    oa_repo_dir: "{{ product_repo_dir }}/openstack-ansible"
+  when: product == "rpc-openstack"
+
+- name: Set OSA's repo directory
+  set_fact:
+    oa_repo_dir: "{{ product_repo_dir }}"
+  when: product == "openstack-ansible"
+
+- name: Create OA environment directory
+  file:
+    path: /etc/{{ config_prefix }}_deploy/env.d
+    state: directory
+    mode: 0755
+
+- name: Copy OA environment files
+  synchronize:
+    src: "{{ oa_repo_dir }}/etc/{{ config_prefix }}_deploy/env.d/"
+    dest: "/etc/{{ config_prefix }}_deploy/env.d"
+    recursive: yes
+    rsync_opts:
+      - "--ignore-existing"
+
+- name: Copy OA secrets file
+  synchronize:
+    src: "{{ oa_repo_dir }}/etc/{{ config_prefix }}_deploy/user_secrets.yml"
+    dest: "/etc/{{ config_prefix }}_deploy/user_osa_secrets.yml"
+    rsync_opts:
+      - "--ignore-existing"
+
+- name: Install user configuration file
+  template:
+    src: user_config.j2
+    dest: /etc/{{ config_prefix }}_deploy/{{ config_prefix }}_user_config.yml
+
+- name: Install user variables file
+  template:
+    src: user_variables.j2
+    dest: /etc/{{ config_prefix }}_deploy/user_variables.yml
+
+- name: Generate passphrases
+  command: "{{ oa_repo_dir }}/scripts/pw-token-gen.py --file /etc/{{ config_prefix }}_deploy/user_osa_secrets.yml"

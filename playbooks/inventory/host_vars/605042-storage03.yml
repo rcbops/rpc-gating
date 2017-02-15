@@ -1,0 +1,4 @@
+---
+ansible_host: 10.16.80.106
+member_number: 106
+zone: 3

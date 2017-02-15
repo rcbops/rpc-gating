@@ -1,2 +1,6 @@
 ---
 pubkey_url:  "https://raw.githubusercontent.com/rcbops/jenkins-rpc/master/keys/rcb.keys"
+ansible_ssh_user: root
+config_prefix: openstack
+repo_dir: openstack-ansible
+enable_interfaces: True

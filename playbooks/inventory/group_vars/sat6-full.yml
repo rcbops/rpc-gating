@@ -1,0 +1,253 @@
+---
+# Repo Config
+lab_name: sat6-full
+config_prefix: openstack
+repo_dir: openstack_repo
+razor_url: http://10.127.101.82:8080/api
+enable_interfaces: False
+
+# Openstack User Config
+user_config:
+    container_cidr: 172.29.236.0/22
+    tunnel_cidr:  172.29.240.0/22
+    storage_cidr:  172.29.244.0/22
+    used_ips:
+        - "172.29.236.1,172.29.236.15"
+        - "172.29.236.83,172.29.236.127"
+        - "172.29.240.83,172.29.240.127"
+        - "172.29.244.83,172.29.244.127"
+    internal_lb_vip_address: 172.29.236.121
+    external_lb_vip_address: 10.127.101.121
+    tunnel_bridge: br-vxlan
+    container_bridge: br-mgmt
+    lb_name:
+    networking:
+      - name: container
+        bridge: br-mgmt
+        container_bridge: br-mgmt
+        container_interface: eth1
+        container_type: veth
+        ip_from_q: container
+        type: raw
+        is_ssh_address: true
+        is_container_address: true
+        group_binds:
+          - all_containers
+          - hosts
+      - name: provider
+        bridge: br-vlan
+        container_interface: eth11
+        container_type: veth
+        type: vlan
+        range: 2010:2010
+        net_name: vlan
+        group_binds:
+          - neutron_linuxbridge_agent
+      - name: tenant
+        bridge: br-vxlan
+        container_interface: eth10
+        container_type: veth
+        ip_from_q: tunnel
+        type: vxlan
+        range: 1:1000
+        net_name: vxlan
+        group_binds:
+          - neutron_linuxbridge_agent
+      - name: storage
+        bridge: br-storage
+        container_interface: eth2
+        container_type: veth
+        ip_from_q: storage
+        type: raw
+        group_binds:
+          - glance_api
+          - cinder_api
+          - cinder_volume
+          - nova_compute
+          - swift_proxy
+
+# tempest net config
+tempest_public_provider_net:
+  tempest_public_subnet_cidr: "10.127.101.128/25"
+  tempest_public_subnet_gateway: "10.127.101.129"
+  tempest_public_net_provider_type: vlan 
+  tempest_public_net_physical_type: vlan
+  tempest_public_net_seg_id: 2010
+  tempest_public_router_external: True
+
+tempest_private_net:
+  tempest_private_subnet_cidr: "192.168.1.0/24"
+  tempest_private_net_provider_type: "vxlan"
+  tempest_private_net_seg_id: 1
+
+# Volume Group Config
+vgs:
+  - name: cinder-volume-ssd
+    device:
+      - /dev/sdb
+  - name: cinder-volume-hdd
+    device:
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+
+# Cinder Config
+cinder_storage:
+  backends:
+    lvm:
+      volume_group: cinder-volume-hdd
+      volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+      volume_backend_name: LVM_iSCSI
+    lvm_ssd:
+      volume_group: cinder-volume-ssd
+      volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+      volume_backend_name: LVM_iSCSISSD
+
+# Swift Config
+swift_config:
+  part_power: 8
+  weight: 100
+  min_part_hours: 1
+  repl_number: 3
+  region: 1
+  storage_network: 'br-storage'
+  replication_network: 'br-storage'
+  drives:
+    - name: sdc
+    - name: sdd
+    - name: sde
+  mount_point: /mnt
+  mount_opts: 'noatime,nodiratime,nobarrier,logbufs=8,nobootwait'
+  account: "service:glance"
+  container: glance
+  storage_policies:
+    - name: gold
+      index: 0
+      default: True
+    - name: silver
+      index: 1
+      repl_number: 3
+      depreciated: True
+
+# Networking Configuration
+networking:
+    - name: lo
+      type: loopback
+    - name: em1
+      type: manual
+      directives:
+        - "bond-master bond0"
+        - "bond-primary em1"
+    - name: em3
+      type: manual
+      directives:
+        - "bond-master bond0"
+    - name: p1p1
+      type: manual
+      directives:
+        - "bond-master bond1"
+        - "bond-primary p1p1"
+    - name: p1p2
+      type: manual
+      directives:
+        - "bond-master bond2"
+        - "bond-primary p1p2"
+    - name: p3p1
+      type: manual
+      directives:
+        - "bond-master bond1"
+    - name: p3p2
+      type: manual
+      directives:
+        - "bond-master bond2"
+    - name: bond0
+      type: static
+      directives:
+        - "bond-slaves none"
+        - "bond-mode active-backup"
+        - "bond-miimon 100"
+        - "bond-downdelay 200"
+        - "bond-updelay 200"
+        - "address {{ ansible_default_ipv4.address }}"
+        - "netmask {{ ansible_default_ipv4.netmask }}"
+        - "gateway {{ ansible_default_ipv4.gateway }}"
+        - "dns-nameservers 8.8.8.8 8.8.4.4"
+        - "dns-search rcb.rackspace.com"
+    - name: bond1
+      type: manual
+      directives:
+        - "up ip link set $IFACE up"
+        - "down ip link set $IFACE down"
+        - "bond-slaves none"
+        - "bond-mode active-backup"
+        - "bond-miimon 100"
+        - "bond-downdelay 250"
+        - "bond-updelay 250"
+    - name: bond2
+      type: manual
+      directives:
+        - "up ip link set $IFACE up"
+        - "down ip link set $IFACE down"
+        - "bond-slaves none"
+        - "bond-mode active-backup"
+        - "bond-miimon 100"
+        - "bond-downdelay 250"
+        - "bond-updelay 250"
+    - name: bond0.2002
+      type: manual
+      directives:
+        - "vlan-raw-device bond0"
+    - name: bond1.2003
+      type: manual
+      directives:
+        - "vlan-raw-device bond1"
+    - name: bond2.2004
+      type: manual
+      directives:
+        - "vlan-raw-device bond2"
+    - name: bond2.2005
+      type: manual
+      directives:
+        - "vlan-raw-device bond2"
+    - name: br-mgmt
+      type: static
+      directives:
+        - "bridge_stp off"
+        - "bridge_waitport 0"
+        - "bridge_fd 0"
+        - "bridge-ports bond0.2002"
+        - "address 172.29.236.{{member_number}}/22"
+        - "dns-nameservers 8.8.8.8 8.8.4.4"
+    - name: br-vxlan
+      type: static
+      directives:
+        - "bridge_stp off"
+        - "bridge_waitport 0"
+        - "bridge_fd 0"
+        - "bridge_ports bond1.2003"
+        - "address 172.29.240.{{member_number}}/22"
+    - name: br-vlan
+      type: manual
+      directives:
+        - "up ip link set $IFACE up"
+        - "down ip link set $IFACE down"
+        - "bridge_stp off"
+        - "bridge_fd 0"
+        - "bridge_maxwait 0"
+        - "bridge_ports bond1"
+    - name: br-storage
+      type: static
+      directives:
+        - "bridge_stp off"
+        - "bridge_waitport 0"
+        - "bridge_fd 0"
+        - "bridge-ports bond2.2004"
+        - "address 172.29.244.{{member_number}}/22"
+    - name: br-repl
+      type: static
+      directives:
+        - "bridge_stp off"
+        - "bridge_waitport 0"
+        - "bridge_fd 0"
+        - "bridge-ports bond2.2005"
+        - "address 172.30.244.{{member_number}}/22"

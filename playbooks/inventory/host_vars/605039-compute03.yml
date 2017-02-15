@@ -1,0 +1,3 @@
+---
+ansible_host: 10.16.80.103
+member_number: 103

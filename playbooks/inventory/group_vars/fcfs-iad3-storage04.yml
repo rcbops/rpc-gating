@@ -1,0 +1,191 @@
+---
+lab_name: fcfs-iad3-storage04
+config_prefix: openstack
+repo_dir: openstack-ansible
+standalone_swift: true
+
+user_config:
+  container_cidr: 192.168.2.0/24
+  storage_cidr:  172.30.244.0/22
+  repl_cidr: 192.168.1.0/24
+  used_ips:
+    - "192.168.2.1,192.168.2.15"
+    - "192.168.2.144,192.168.2.148"
+    - "172.30.244.144,172.30.244.148"
+    - "192.168.1.144,192.168.1.148"
+  internal_lb_vip_address: 192.168.2.10
+  external_lb_vip_address: 173.203.145.68
+  container_bridge: br-mgmt
+  lb_name: 605010-lbal1.iad3.rpchost.com
+  networking:
+    - name: container
+      bridge: br-mgmt
+      container_bridge: br-mgmt
+      container_interface: eth1
+      container_type: veth
+      ip_from_q: container
+      type: raw
+      is_ssh_address: true
+      is_container_address: true
+      group_binds:
+        - all_containers
+        - hosts
+      static_routes:
+        - cidr: "172.20.136.0/24"
+          gateway: "172.20.236.1"
+    - name: storage
+      bridge: br-storage
+      container_interface: eth2
+      container_type: veth
+      ip_from_q: storage
+      type: raw
+      group_binds:
+        - glance_api
+        - cinder_api
+        - cinder_volume
+        - nova_compute
+        - swift_proxy
+      static_routes:
+        - cidr: "172.31.244.0/22"
+          gateway: "172.30.244.1"
+    - name: replication
+      bridge: br-repl
+      container_interface: eth13
+      container_type: veth
+      ip_from_q: repl
+      type: raw
+      group_binds:
+        - swift_proxy
+      static_routes:
+        - cidr: "192.168.3.0/24"
+          gateway: "192.168.1.1"
+
+swift_config:
+  part_power: 8
+  weight: 100
+  repl_number: 3
+  min_part_hours: 1
+  region: 2
+  storage_network: 'br-storage'
+  replication_network: 'br-repl'
+  drives:
+    - name: sdb
+    - name: sdc
+    - name: sdd
+  lv_size: 50G
+  mount_point: /mnt
+  mount_opts: 'noatime,nodiratime,nobarrier,logbufs=8,nobootwait'
+  account: 'service:glance'
+  container: glance
+  storage_policies:
+    - name: gold
+      index: 0
+      default: True
+    - name: silver
+      index: 1
+      repl_number: 3
+      depreciated: True
+
+# all networking interface configs
+networking:
+  - name: lo
+    type: loopback
+  - name: p3p1
+    type: manual
+    directives:
+      - "bond-master bond0"
+      - "bond-primary p3p1"
+  - name: p4p1
+    type: manual
+    directives:
+      - "bond-master bond0"
+  - name: bond0
+    type: static
+    directives:
+      - "bond-slaves p3p1 p4p1"
+      - "bond-mode active-backup"
+      - "bond-miimon 100"
+      - "bond-downdelay 200"
+      - "bond-updelay 200"
+      - "address {{ ansible_default_ipv4.address }}"
+      - "netmask {{ ansible_default_ipv4.netmask }}"
+      - "gateway {{ ansible_default_ipv4.gateway }}"
+      - "dns-nameservers 69.20.0.164 69.20.0.196"
+      - "dns-search eng1.lon3.rackspace.com"
+  - name: p3p2
+    type: manual
+    directives:
+      - "bond-master bond1"
+      - "bond-primary p3p2"
+  - name: p4p2
+    type: manual
+    directives:
+      - "bond-master bond1"
+  - name: bond1
+    type: manual
+    directives:
+      - "bond-slaves p3p2 p4p2"
+      - "bond-mode active-backup"
+      - "bond-miimon 100"
+      - "bond-downdelay 250"
+      - "bond-updelay 250"
+  - name: bond0.1821
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  - name: bond0.2074
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  # Storage network VLAN interface (optional)
+  - name: bond0.2100
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  - name: br-mgmt
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      - "bridge_ports bond0.2074"
+      - "address 192.168.2.{{ member_number }}/24"
+      - "dns-nameservers 69.20.0.164 69.20.0.196"
+      # Add the routes
+      - "post-up ip route add 172.20.136.0/22 via 172.20.236.1"
+  - name: br-storage
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      - "bridge_ports bond0.2100"
+      - "address 172.30.244.{{ member_number }}"
+      # Add the routes
+      - "post-up ip route add 172.31.244.0/22 via 172.30.244.1"
+      - "netmask 255.255.252.0"
+  - name: br-repl
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      - "address 192.168.1.{{ member_number }}"
+      - "netmask 255.255.255.0"
+      # Create veth pair, ignore if already exists
+      - "pre-up ip link add br-repl-veth type veth peer name eth13 || true"
+      # Set both ends UP
+      - "pre-up ip link set eth13 up"
+      - "pre-up ip link set br-repl-veth up"
+      # Add the routes
+      - "post-up ip route add 192.168.3.0/24 via 192.168.1.1"
+      # Delete veth pair on DOWN
+      - "post-down ip link del br-repl-veth || true"
+      # Bridge port reference tagged interface
+      - "bridge_ports bond0.1821 br-repl-veth"
+  - name: em3
+    type: static
+    directives:
+      - "address {{ ansible_em3.ipv4.address }}"
+      - "netmask {{ ansible_em3.ipv4.netmask }}"
+      - "post-up ip route add 10.191.192.0/18 via 10.136.157.225 dev em3"

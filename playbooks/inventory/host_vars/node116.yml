@@ -1,0 +1,3 @@
+---
+ansible_ssh_host: 10.127.101.116
+member_number: 116

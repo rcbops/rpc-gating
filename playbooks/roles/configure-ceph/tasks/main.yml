@@ -1,0 +1,85 @@
+---
+- name: Create env.d folder
+  file:
+    path: /etc/{{ config_prefix }}_deploy/env.d
+    state: directory
+    mode: 0755
+  when: ceph_config is defined
+
+- name: Create and configure the ceph.yml file
+  template:
+    src: ceph.j2
+    dest: /etc/{{ config_prefix }}_deploy/conf.d/ceph.yml
+    mode: 0644
+  when: ceph_config is defined
+
+- name: Add ceph cluster variable monitor_interface to user_extras_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_extras_variables.yml
+    line: "monitor_interface: {{ ceph_config.monitor_interface }}"
+    state: present
+
+- name: Add ceph cluster variable public_network to user_extras_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_extras_variables.yml
+    line: "public_network: {{ ceph_config.public_network }}"
+    state: present
+
+- name: Add ceph cluster variable cluster_network to user_extras_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_extras_variables.yml
+    line: "cluster_network: {{ ceph_config.cluster_network }}"
+    state: present
+
+- name: Set glance_default_store in user_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_variables.yml
+    regexp: "^glance_default_store: "
+    line: "glance_default_store: {{ ceph_config.glance_default_store }}"
+    state: present
+
+- name: Set nova_libvirt_images_rbd_pool in user_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_variables.yml
+    regexp: "^nova_libvirt_images_rbd_pool: "
+    line: "nova_libvirt_images_rbd_pool: {{ ceph_config.nova_libvirt_images_rbd_pool }}"
+    state: present
+
+- name: Set nova_force_config_drive in user_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_variables.yml
+    regexp: "^nova_force_config_drive: "
+    line: "nova_force_config_drive: {{ ceph_config.nova_force_config_drive }}"
+    state: present
+
+- name: Set nova_libvirtd_listen_tls in user_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_variables.yml
+    regexp: "^nova_libvirtd_listen_tls: "
+    line: "nova_libvirtd_listen_tls: {{ ceph_config.nova_libvirtd_listen_tls }}"
+    state: present
+
+- name: Set nova_libvirtd_listen_tcp in user_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_variables.yml
+    regexp: "^nova_libvirtd_listen_tcp: "
+    line: "nova_libvirtd_listen_tcp: {{ ceph_config.nova_libvirtd_listen_tcp }}"
+    state: present
+
+- name: Set nova_libvirtd_auth_tcp in user_variables.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_variables.yml
+    regexp: "^nova_libvirtd_auth_tcp: "
+    line: "nova_libvirtd_auth_tcp: {{ ceph_config.nova_libvirtd_auth_tcp }}"
+    state: present
+
+- name: Generate cinder_ceph_client_uuid
+  shell: uuidgen
+  register: cinder_ceph_client_uuid
+
+- name: Set cinder_ceph_client_uuid in user_secrets.yml
+  lineinfile:
+    dest: /etc/{{ config_prefix }}_deploy/user_secrets.yml
+    regexp: "^cinder_ceph_client_uuid:"
+    line: "cinder_ceph_client_uuid: {{ cinder_ceph_client_uuid.stdout }}"
+    state: present

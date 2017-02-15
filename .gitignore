@@ -1,3 +1,6 @@
+**/id_*
+**/creds
+.venv/
 *.retry
 *.swp
 *.pyc

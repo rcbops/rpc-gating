@@ -1,0 +1,16 @@
+---
+- name: reboot machine
+  command: shutdown -r now "Ansible updates triggered"
+  async: 0
+  poll: 0
+  ignore_errors: true
+
+- name: waiting for server to come back (max 10 minutes)
+  local_action:
+    module: wait_for
+        host={{ ansible_ssh_host }}
+        port=22
+        delay=120
+        timeout=600
+        state=started
+  sudo: false

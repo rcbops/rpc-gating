@@ -1,0 +1,276 @@
+---
+lab_name: qe-iad3-lab02
+config_prefix: openstack
+repo_dir: openstack-ansible
+enable_interfaces: False
+
+user_config:
+  container_cidr: 172.20.236.0/22
+  tunnel_cidr:  172.20.240.0/22
+  storage_cidr: 172.20.244.0/22
+  used_ips:
+    - "172.20.236.1,172.20.236.15"
+    - "172.20.236.170,172.20.236.179"
+    - "172.20.240.170,172.20.240.179"
+    - "172.20.244.170,172.20.244.179"
+  internal_lb_vip_address: 172.20.236.10
+  external_lb_vip_address: 204.232.187.36
+  tunnel_bridge: br-vxlan
+  container_bridge: br-mgmt
+  lb_name: 568572-lbal1.qe.iad3.rackspace.com
+  networking:
+    - name: container
+      bridge: br-mgmt
+      container_bridge: br-mgmt
+      container_interface: eth1
+      container_type: veth
+      ip_from_q: container
+      is_ssh_address: true
+      is_container_address: true
+      type: raw
+      group_binds:
+        - all_containers
+        - hosts
+    - name: provider
+      bridge: br-vlan
+      container_interface: eth11
+      container_type: veth
+      type: vlan
+      range: 840:840
+      net_name: vlan
+      group_binds:
+        - neutron_linuxbridge_agent
+    - name: tenant
+      bridge: br-vxlan
+      container_interface: eth10
+      container_type: veth
+      ip_from_q: tunnel
+      type: vxlan
+      range: 1:1000
+      net_name: vxlan
+      group_binds:
+        - neutron_linuxbridge_agent
+    - name: storage
+      bridge: br-storage
+      container_interface: eth2
+      container_type: veth
+      ip_from_q: storage
+      type: raw
+      group_binds:
+        - glance_api
+        - cinder_api
+        - nova_compute
+        - cinder_volume
+        - swift_proxy
+
+# tempest net config
+tempest_public_provider_net:
+  tempest_public_subnet_cidr: "10.224.0.0/24"
+  tempest_public_subnet_gateway: "10.224.0.1"
+  tempest_public_net_provider_type: vlan
+  tempest_public_net_physical_type: vlan
+  tempest_public_net_seg_id: 840
+  tempest_public_router_external: True
+
+tempest_private_net:
+  tempest_private_subnet_cidr: "192.168.1.0/24"
+  tempest_private_net_provider_type: "vxlan"
+  tempest_private_net_seg_id: 1
+
+# Cinder's volume group
+vgs:
+  - name: cinder-volumes
+    device:
+      - /dev/sdb
+
+# Cinder Config
+cinder_storage:
+  backends:
+    lvm:
+      volume_group: cinder-volumes
+      volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+      volume_backend_name: LVM_iSCSI
+
+# Swift Config
+swift_config:
+  part_power: 8
+  weight: 100
+  min_part_hours: 1
+  repl_number: 3
+  region: 1
+  storage_network: 'br-storage'
+  replication_network: 'br-storage'
+  drives:
+    - name: sdc
+    - name: sdd
+    - name: sde
+    - name: sdf
+    - name: sdg
+  lv_size: 400G
+  mount_point: /mnt
+  mount_opts: 'noatime,nodiratime,nobarrier,logbufs=8,nobootwait'
+  account: "service:glance"
+  container: glance
+  storage_policies:
+    - name: gold
+      index: 0
+      default: True
+    - name: silver
+      index: 1
+      repl_number: 3
+      depreciated: True
+
+# Ceph Config
+ceph_config:
+  glance_default_store: rbd
+  nova_libvirt_images_rbd_pool: vms
+  nova_force_config_drive: False
+  nova_libvirtd_listen_tls: 0
+  nova_libvirtd_listen_tcp: 1
+  nova_libvirtd_auth_tcp: none
+  volume_driver: cinder.volume.drivers.rbd.RBDDriver
+  rbd_pool: volumes
+  rbd_ceph_conf: /etc/ceph/ceph.conf
+  rbd_flatten_volume_from_snapshot: 'false'
+  rbd_max_clone_depth: 5
+  rbd_store_chunk_size: 4
+  rados_connect_timeout: -1
+  glance_api_version: 2
+  volume_backend_name: ceph
+  monitor_interface: eth1
+  public_network: 172.20.236.0/22
+  cluster_network: 192.168.1.0/24
+  devices:
+    - /dev/sdc
+    - /dev/sdd
+    - /dev/sde
+    - /dev/sdf
+    - /dev/sdg
+  raw_journal_devices:
+    - /dev/sdb
+    - /dev/sdb
+    - /dev/sdb
+    - /dev/sdb
+    - /dev/sdb
+
+# Host networking config
+networking:
+  - name: lo
+    type: loopback
+  # Physical interfaces for management/storage
+  - name: p6p1
+    type: manual
+    directives:
+      - "bond-master bond0"
+      - "bond-primary p6p1"
+  - name: p7p1
+    type: manual
+    directives:
+      - "bond-master bond0"
+  # Service network
+  - name: em3
+    type: static
+    directives:
+      - "address {{ ansible_em3.ipv4.address }}"
+      - "netmask {{ ansible_em3.ipv4.netmask }}"
+      - "post-up ip route add 10.191.192.0/18 via 10.136.157.225 dev em3"
+  # Physical interfaces for tunnels/tennant
+  - name: p6p2
+    type: manual
+    directives:
+      - "bond-master bond1"
+      - "bond-primary p6p2"
+  - name: p7p2
+    type: manual
+    directives:
+      - "bond-master bond1"
+  # Bond interface 0 (p6p1 and p7p1) for management/storage
+  - name: bond0
+    type: static
+    directives:
+      - "bond-slaves p6p1 p7p1"
+      - "bond-mode active-backup"
+      - "bond-miimon 100"
+      - "bond-downdelay 200"
+      - "bond-updelay 200"
+      - "address {{ ansible_default_ipv4.address }}"
+      - "netmask {{ ansible_default_ipv4.netmask }}"
+      - "gateway {{ ansible_default_ipv4.gateway }}"
+      - "dns-nameservers 69.20.0.164 69.20.0.196"
+      - "dns-search qe1.iad3.rackspace.com"
+  # Bond interface 1 (p6p2 and p7p2)
+  - name: bond1
+    type: manual
+    directives:
+      - "bond-slaves p6p2 p7p2"
+      - "bond-mode active-backup"
+      - "bond-miimon 100"
+      - "bond-downdelay 250"
+      - "bond-updelay 250"
+  # Container management VLAN interface
+  - name: bond0.837
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  # OpenStack networking VXLAN (tunnel/overlay)VLAN interface
+  - name: bond1.839
+    type: manual
+    directives:
+      - "vlan-raw-device bond1"
+  - name: bond0.838
+    type: manual
+    directives:
+      - "vlan-raw-device bond0"
+  # Container management bridge
+  - name: br-mgmt
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port references tagged interface
+      - "bridge-ports bond0.837"
+      - "address 172.20.236.{{member_number}}"
+      - "netmask 255.255.252.0"
+      - "dns-nameservers 69.20.0.164 69.20.0.196"
+  # OpenStack networking VXLAN (tunnel/overlay) bridge
+  - name: br-vxlan
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port references tagged interface
+      - "bridge_ports bond1.839"
+      - "address 172.20.240.{{member_number}}"
+      - "netmask 255.255.252.0"
+  # OpenStack networking VLAN bridge
+  - name: br-vlan
+    type: manual
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port references tagged interface
+      - "bridge_ports bond1"
+  # Storage bridge (optional)
+  - name: br-storage
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # Bridge port references un-tagged interface
+      - "bridge_ports bond0.838"
+      - "address 172.20.244.{{ member_number }}"
+      - "netmask 255.255.252.0"
+  # Service bridge (Rackspace datacenters only)
+  - name: br-snet
+    type: static
+    directives:
+      - "bridge_stp off"
+      - "bridge_waitport 0"
+      - "bridge_fd 0"
+      # No bridge port on this bridge
+      - "address 172.29.248.1"
+      - "netmask 255.255.252.0"
