@@ -23,6 +23,7 @@
               Deploy
               Install Tempest
               Tempest Tests
+              Holland (test holland mysql backup)
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
       - text:
@@ -54,6 +55,7 @@
               aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
               deploy = load 'pipeline-steps/deploy.groovy'
               tempest = load 'pipeline-steps/tempest.groovy'
+              holland = load 'pipeline-steps/holland.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
@@ -62,6 +64,7 @@
               aio_prepare.prepare()
               deploy.deploy()
               tempest.tempest()
+              holland.holland()
             } catch (e) {
               print(e)
               throw e
