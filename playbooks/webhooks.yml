@@ -1,0 +1,80 @@
+---
+- name: Configure Webhook Proxy Node
+  hosts: job_nodes
+  user: root
+  vars:
+    github_cidr: "192.30.252.0/22"
+  pre_tasks:
+    - name: "Configure SSHD"
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{item.regexp}}"
+        line: "{{item.line}}"
+      with_items:
+        - regexp: "GatewayPorts"
+          line: "GatewayPorts no"
+        - regexp: "PasswordAuthentication"
+          line: "PasswordAuthentication no"
+
+    - name: Install apt packages
+      apt:
+        pkg: "{{ item }}"
+        state: installed
+        update_cache: yes
+      with_items:
+        - apache2-utils
+        - ufw
+
+    - name: Reset UFW
+      ufw:
+        state: reset
+
+    - name: Allow ssh
+      ufw:
+        rule: allow
+        port: 22
+
+    # The nginx instance for basic auth listens on 80
+    # the ssh tunnels listens on 8888 but is not open to the public.
+    - name: Allow webhooks
+      ufw:
+        rule: allow
+        port: 80
+        src: "{{github_cidr}}"
+
+    - name: Enable firewall
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Write ip file
+      delegate_to: localhost
+      copy:
+        dest: "{{WORKSPACE}}/instance_address"
+        content: "{{ansible_default_ipv4.address}}"
+
+    - name: "restart sshd"
+      service:
+        name: sshd
+        state: restarted
+
+    - name: "create htpasswd file"
+      shell: |
+        cd ~jenkins
+        htpasswd -cb .htpasswd {{webhookproxy_user}} {{webhookproxy_pass}}
+  roles:
+    - role: geerlingguy.nginx
+      nginx_remove_default_vhost: true
+      nginx_vhosts:
+        - listen: 80
+          server_name: "webhookproxy"
+          root: "/dev/null"
+          extra_parameters: |
+            location /github-webhook/ {
+              auth_basic "RPC Github Webhooks";
+              auth_basic_user_file /var/lib/jenkins/.htpasswd;
+              proxy_bind 127.0.0.1;
+              proxy_pass https://localhost:8888;
+              # Don't pass auth header on to jenkins.
+              proxy_set_header Authorization "";
+            }
