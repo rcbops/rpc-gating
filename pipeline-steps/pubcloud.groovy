@@ -68,6 +68,7 @@ def cleanup(){
       )
     ]){
       dir("rpc-gating/playbooks"){
+        common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
           username: env.PUBCLOUD_USERNAME,
           api_key: env.PUBCLOUD_API_KEY
