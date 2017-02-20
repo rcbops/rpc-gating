@@ -47,7 +47,7 @@
           default: |
             Allocate Resources, Connect Slave, Prepare Multi-Node AIO, Prepare RPC Configs,
              Deploy RPC w/ Script, Install Tempest, Tempest Tests, Prepare Horizon Selenium,
-             Horizon Tests, Cleanup
+             Horizon Tests, Prepare Kibana Selenium, Kibana Tests, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -60,6 +60,8 @@
               Tempest Tests
               Prepare Horizon Selenium
               Horizon Tests
+              Prepare Kibana Selenium
+              Kibana Tests
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
 
@@ -74,6 +76,7 @@
             deploy = load 'pipeline-steps/deploy.groovy'
             tempest = load 'pipeline-steps/tempest.groovy'
             horizon = load 'pipeline-steps/horizon.groovy'
+            kibana = load 'pipeline-steps/kibana.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
@@ -92,7 +95,7 @@
             ) // deploy_sh
             tempest.tempest(vm: "infra1")
             horizon.horizon_integration()
-
+            kibana.kibana()
           }// public cloud node
         } catch (e){
             currentBuild.result = 'FAILURE'
