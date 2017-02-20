@@ -34,12 +34,10 @@
           name: OPENSTACK_ANSIBLE_BRANCH
           default: stable/newton
           description: Openstack Ansible branch to use in setup
-      - choice:
+      - string:
           name: DEFAULT_IMAGE
-          description: Version of Ubuntu image to use for VMs (14.04.4 or 16.04)
-          choices:
-            - '16.04'
-            - '14.04.4'
+          description: Version of Ubuntu image to use for VMs (14.04.5 or 16.04.2)
+          default: '16.04.2'
       - bool:
           name: PARTITION_HOST
           default: true
@@ -48,7 +46,8 @@
           name: STAGES
           default: |
             Allocate Resources, Connect Slave, Prepare Multi-Node AIO, Prepare RPC Configs,
-             Deploy RPC w/ Script, Install Tempest, Tempest Tests, Cleanup
+             Deploy RPC w/ Script, Install Tempest, Tempest Tests, Prepare Horizon Selenium,
+             Horizon Tests, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -59,6 +58,8 @@
               Deploy RPC w/ Script
               Install Tempest
               Tempest Tests
+              Prepare Horizon Selenium
+              Horizon Tests
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
 
@@ -72,6 +73,7 @@
             multi_node_aio_prepare = load 'pipeline-steps/multi_node_aio_prepare.groovy'
             deploy = load 'pipeline-steps/deploy.groovy'
             tempest = load 'pipeline-steps/tempest.groovy'
+            horizon = load 'pipeline-steps/horizon.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
@@ -89,6 +91,7 @@
                 ]
             ) // deploy_sh
             tempest.tempest(vm: "infra1")
+            horizon.horizon_integration()
 
           }// public cloud node
         } catch (e){
