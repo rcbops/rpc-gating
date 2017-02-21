@@ -6,13 +6,27 @@ def prepare() {
     common.conditionalStage(
       stage_name: 'Prepare Multi-Node AIO',
       stage: {
+        sh """
+        rm -f variables.sh
+        """
         common.run_script(
           script: 'build.sh',
           environment_vars: [
             "PARTITION_HOST=${env.PARTITION_HOST}",
             "NETWORK_BASE=172.29",
+            "DNS_NAMESERVER=8.8.8.8",
+            "OVERRIDE_SOURCES=true",
+            "DEVICE_NAME=vda",
+            "DEFAULT_NETWORK=eth0",
+            "VM_DISK_SIZE=252",
             "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
             "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
+            "SETUP_HOST=true",
+            "PARTITION_HOST=true",
+            "SETUP_VIRSH_NET=true",
+            "VM_IMAGE_CREATE=true",
+            "DEPLOY_OSA=true",
+            "PRE_CONFIG_OSA=true",
             "RUN_OSA=false"]
         )
       } //stage
