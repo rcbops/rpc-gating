@@ -259,4 +259,14 @@ api_key = ${args.api_key}
   return pyrax_cfg
 }
 
+/* Could optimise this to not run if the dir exists, but better for reruns
+ * to always checkout, as it ensures the correct version is available.
+ */
+def clone_rpc_gating(tdir="rpc-gating"){
+  dir(tdir){
+    git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+  }
+}
+
+
 return this
