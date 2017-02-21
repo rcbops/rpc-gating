@@ -195,7 +195,7 @@ def acronym(Map args){
 
 def gen_instance_name(){
   if (env.INSTANCE_NAME == "AUTO"){
-    job_name_acronym = common.acronym(string: env.JOB_NAME)
+    job_name_acronym = acronym(string: env.JOB_NAME)
     instance_name = "${job_name_acronym}-${env.BUILD_NUMBER}"
   }
   else {

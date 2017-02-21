@@ -17,6 +17,9 @@ def connect(){
       passwordVariable: "JENKINS_API_KEY"
     )
   ]){
+    dir("rpc-gating"){
+        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+    }
     dir("rpc-gating/playbooks"){
       common.venvPlaybook(
         playbooks: ["setup-jenkins-slave.yml"],
