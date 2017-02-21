@@ -25,6 +25,9 @@ def create(Map args){
         variable: 'JENKINS_SSH_PRIVKEY'
       )
     ]){
+      dir("rpc-gating"){
+        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+      }
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
@@ -122,6 +125,22 @@ def delPubCloudSlave(Map args){
       cleanup()
     } //stage
   ) //conditionalStage
+}
+
+/* One func entrypoint to run a script on a single use slave */
+def runonpubcloud(Map args){
+  instance_name = common.gen_instance_name()
+  getPubCloudSlave(instance_name: instance_name)
+  try{
+    node(instance_name){
+      args.step()
+    }
+  }catch (e){
+    print(e)
+    throw e
+  }finally {
+    delPubCloudSlave()
+  }
 }
 
 return this
