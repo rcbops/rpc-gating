@@ -25,9 +25,7 @@ def create(Map args){
         variable: 'JENKINS_SSH_PRIVKEY'
       )
     ]){
-      dir("rpc-gating"){
-        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-      }
+      common.clone_rpc_gating()
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
@@ -70,6 +68,7 @@ def cleanup(){
         variable: 'JENKINS_SSH_PRIVKEY'
       )
     ]){
+      common.clone_rpc_gating()
       dir("rpc-gating/playbooks"){
         pyrax_cfg = common.writePyraxCfg(
           username: env.PUBCLOUD_USERNAME,

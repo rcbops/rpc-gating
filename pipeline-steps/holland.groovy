@@ -3,10 +3,7 @@ def holland(){
     stage_name: "Holland",
     stage: {
       //TODO: move test_holland into RPC to avoid this mess.
-      dir("rpc-gating"){
-        // only needed to pull the test_holland from the repo.
-        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-      }
+      common.clone_rpc_gating()
       / * recent versions of openstack-ansible allow execution of playbooks
         * from any directory, but that doesn't work all the way back to liberty
         */
