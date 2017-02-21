@@ -70,13 +70,6 @@
         try {
           dir("rpc-gating"){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
-            common = load 'pipeline-steps/common.groovy'
-            multi_node_aio_prepare = load 'pipeline-steps/multi_node_aio_prepare.groovy'
-            deploy = load 'pipeline-steps/deploy.groovy'
-            tempest = load 'pipeline-steps/tempest.groovy'
-            horizon = load 'pipeline-steps/horizon.groovy'
-            kibana = load 'pipeline-steps/kibana.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
