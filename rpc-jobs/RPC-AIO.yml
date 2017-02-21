@@ -45,6 +45,7 @@
              Optional keys: args. All values are strings.
 
     dsl: |
+      @Library("common@${env.RPC_GATING_BRANCH}")
       // CIT Slave node
       node(){
         try {

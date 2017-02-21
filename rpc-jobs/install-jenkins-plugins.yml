@@ -16,7 +16,6 @@
         ]){
           dir("rpc-gating"){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline-steps/common.groovy'
             common.install_ansible()
             sh """#!/bin/bash
               . .venv/bin/activate
