@@ -47,36 +47,17 @@
     dsl: |
       // CIT Slave node
       node(){
-        try {
-          dir("rpc-gating"){
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline-steps/common.groovy'
-              pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
-              aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
-              deploy = load 'pipeline-steps/deploy.groovy'
-              tempest = load 'pipeline-steps/tempest.groovy'
-              holland = load 'pipeline-steps/holland.groovy'
+        pubcloud.runonpubcloud(step: {
+          try {
+            aio_prepare.prepare()
+            deploy.deploy()
+            tempest.tempest()
+            holland.holland()
+          } catch (e) {
+            print(e)
+            throw e
+          } finally {
+            common.archive_artifacts()
           }
-          instance_name = common.gen_instance_name()
-          pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
-          node(instance_name){
-            try {
-              aio_prepare.prepare()
-              deploy.deploy()
-              tempest.tempest()
-              holland.holland()
-            } catch (e) {
-              print(e)
-              throw e
-            } finally {
-              common.archive_artifacts()
-            }
-          } // pub cloud node
-        } catch (e){
-          currentBuild.result = 'FAILURE'
-          print(e)
-          throw e
-        } finally {
-          pubCloudSlave.delPubCloudSlave()
-        }
+        })
       } // cit node

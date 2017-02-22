@@ -32,6 +32,7 @@ def mitaka_prep() {
     if [[ ! -d ".venv" ]]; then
         pip install virtualenv
         virtualenv .venv
+        virtualenv --relocatable .venv
     fi
     source .venv/bin/activate
 
@@ -39,6 +40,7 @@ def mitaka_prep() {
     pip install selenium==2.53.1
     pip install -r test-requirements.txt
     pip install -r requirements.txt
+    virtualenv --relocatable .venv
     mv ~/.pip/pip.conf.bak ~/.pip/pip.conf
     """
   }

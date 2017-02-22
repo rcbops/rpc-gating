@@ -6,6 +6,8 @@
  - pipeline-steps: Groovy Functions for use in pipelines
  - playbooks: Ansible Playbooks
  - scripts: Bash scripts
+ - vars: link to pipeline-steps as thats the expected location of groovy
+   files for jenkins plugin cps-global-lib.
 
 
 ## Git Hooks

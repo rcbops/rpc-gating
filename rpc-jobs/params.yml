@@ -12,7 +12,7 @@
           name: IMAGE
           default: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
       - string:
-          name: INSTANCE_NAME
+          name: INSTANCE_NAME_RAW
           default: AUTO
           description: |
             Set instance name or "AUTO" to have it generated based on job

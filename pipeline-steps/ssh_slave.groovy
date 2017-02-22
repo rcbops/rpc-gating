@@ -17,6 +17,7 @@ def connect(){
       passwordVariable: "JENKINS_API_KEY"
     )
   ]){
+    common.clone_rpc_gating()
     dir("rpc-gating/playbooks"){
       common.venvPlaybook(
         playbooks: ["setup-jenkins-slave.yml"],
@@ -34,7 +35,7 @@ def connect(){
 /* Disconnect slave
  * Reads global var: instance_name
  */
-def destroy(){
+def destroy(Map args){
   withCredentials([
     usernamePassword(
       credentialsId: "service_account_jenkins_api_creds",
@@ -46,8 +47,9 @@ def destroy(){
       sh """
         . ../playbooks/.venv/bin/activate
         pip install jenkinsapi
+        virtualenv --relocatable ../playbooks/.venv
         python jenkins_node.py \
-          delete --name "${instance_name}"
+          delete --name "${args.instance_name}"
       """
     } //dir
   } //withCredentials

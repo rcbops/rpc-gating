@@ -10,13 +10,17 @@ def install_ansible(){
         virtualenv --python=/opt/rh/python27/root/usr/bin/python .venv
     fi
     # hack the selinux module into the venv
+    virtualenv --relocatable .venv
     cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/
     source .venv/bin/activate
 
     # These pip commands cannot be combined into one.
     pip install -U six packaging appdirs
     pip install -U setuptools pip
+    # installing pip resets the shebang to be absolute
+    virtualenv --relocatable .venv
     pip install -U ansible pyrax
+    virtualenv --relocatable .venv
   """
 }
 
@@ -194,12 +198,11 @@ def acronym(Map args){
 }
 
 def gen_instance_name(){
-  if (env.INSTANCE_NAME == "AUTO"){
-    job_name_acronym = common.acronym(string: env.JOB_NAME)
+  if (env.INSTANCE_NAME_RAW == "AUTO"){
+    job_name_acronym = acronym(string: env.JOB_NAME)
     instance_name = "${job_name_acronym}-${env.BUILD_NUMBER}"
-  }
-  else {
-    instance_name = env.INSTANCE_NAME
+  } else {
+    instance_name = env.INSTANCE_NAME_RAW
   }
   //Hostname should match instance name for MaaS. Hostnames are converted
   //to lower case, so we'll do the same for instance name.
@@ -258,5 +261,15 @@ api_key = ${args.api_key}
 
   return pyrax_cfg
 }
+
+/* Could optimise this to not run if the dir exists, but better for reruns
+ * to always checkout, as it ensures the correct version is available.
+ */
+def clone_rpc_gating(){
+  dir("rpc-gating"){
+    git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+  }
+}
+
 
 return this
