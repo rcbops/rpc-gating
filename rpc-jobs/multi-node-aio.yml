@@ -95,6 +95,6 @@
             currentBuild.result = 'FAILURE'
             throw e
         } finally {
-            pubCloudSlave.delPubCloudSlave()
+            pubCloudSlave.delPubCloudSlave(instance_name: instance_name)
         }
       } // cit node

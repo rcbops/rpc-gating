@@ -194,12 +194,11 @@ def acronym(Map args){
 }
 
 def gen_instance_name(){
-  if (env.INSTANCE_NAME == "AUTO"){
+  if (env.INSTANCE_NAME_RAW == "AUTO"){
     job_name_acronym = acronym(string: env.JOB_NAME)
     instance_name = "${job_name_acronym}-${env.BUILD_NUMBER}"
-  }
-  else {
-    instance_name = env.INSTANCE_NAME
+  } else {
+    instance_name = env.INSTANCE_NAME_RAW
   }
   //Hostname should match instance name for MaaS. Hostnames are converted
   //to lower case, so we'll do the same for instance name.
