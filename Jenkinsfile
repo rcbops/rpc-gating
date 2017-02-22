@@ -21,7 +21,7 @@ node(){
   deleteDir()
   checkout scm
   sh "env"
-  pubcloud.runonpubcloud(step: {
+  docker.image('ubuntu').inside {
     stage("Prepare"){
       sh """#!/bin/bash
         apt-get update
@@ -35,5 +35,5 @@ node(){
     stage("lint"){
       sh "./lint.sh"
     }
-  })
+  }
 }
