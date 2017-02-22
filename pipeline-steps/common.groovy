@@ -20,6 +20,7 @@ def install_ansible(){
     # installing pip resets the shebang to be absolute
     virtualenv --relocatable .venv
     pip install -U ansible pyrax
+    virtualenv --relocatable .venv
   """
 }
 

@@ -20,6 +20,7 @@
             sh """#!/bin/bash
               . .venv/bin/activate
               pip install urllib3==1.18.1
+              virtualenv --relocatable .venv
             """
             common.venvPlaybook(
               playbooks: ["playbooks/install_jenkins_plugins.yml"],
