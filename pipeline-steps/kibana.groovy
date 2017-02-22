@@ -28,9 +28,11 @@ def kibana_prep(){
     if [ -f ~/.pip/pip.conf ]; then
       mv ~/.pip/pip.conf ~/.pip/pip.conf.bak
       pip install -r requirements.txt
+      virtualenv --relocatable .venv
       mv ~/.pip/pip.conf.bak ~/.pip/pip.conf
     else
       pip install -r requirements.txt
+      virtualenv --relocatable .venv
     fi
     """
   }

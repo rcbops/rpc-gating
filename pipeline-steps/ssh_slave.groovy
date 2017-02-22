@@ -47,6 +47,7 @@ def destroy(Map args){
       sh """
         . ../playbooks/.venv/bin/activate
         pip install jenkinsapi
+        virtualenv --relocatable ../playbooks/.venv
         python jenkins_node.py \
           delete --name "${args.instance_name}"
       """
