@@ -9,6 +9,7 @@ def prepare(){
           withEnv([
             "DEPLOY_AIO=yes",
             "DEPLOY_OA=no",
+            "DEPLOY_ELK=${env.DEPLOY_ELK}",
             "DEPLOY_RPC=no",
             "ANSIBLE_FORCE_COLOR=true"
           ]){

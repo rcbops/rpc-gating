@@ -50,6 +50,11 @@
         content: "{{ gating_overrides|to_nice_yaml }}"
         dest: "{{ gating_overrides_file }}"
 
+    - name: append USER_VARS
+      lineinfile:
+        dest: "{{ gating_overrides_file }}"
+        line: "{{ lookup('env', 'USER_VARS') }}"
+
     - name: write rpco defaults file
       copy:
         content: "{{ defaults|combine(maas_creds)|to_nice_yaml }}"

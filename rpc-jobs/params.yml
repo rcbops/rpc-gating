@@ -10,7 +10,7 @@
           default: "performance2-15"
       - string:
           name: IMAGE
-          default: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+          default: "{IMAGE}"
       - string:
           name: INSTANCE_NAME
           default: AUTO
@@ -27,7 +27,16 @@
           default: "https://github.com/rcbops/rpc-openstack"
       - string:
           name: "RPC_BRANCH"
-          default: "master"
+          default: "{RPC_BRANCH}"
+      - string:
+          name: "DEPLOY_CEPH"
+          default: "{DEPLOY_CEPH}"
+      - string:
+          name: "DEPLOY_ELK"
+          default: "{DEPLOY_ELK}"
+      - text:
+          name: "USER_VARS"
+          default: "{USER_VARS}"
 
 - parameter:
     name: rpc_gating_params
