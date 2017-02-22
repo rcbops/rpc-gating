@@ -1,5 +1,61 @@
-- job:
-    name: RPC_AIO
+- defaults:
+    name: "global"
+    IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    DEPLOY_CEPH: "no"
+    DEPLOY_ELK: "yes"
+    CRON: "H H(9-21) * * 1-5"
+
+- project:
+    name: 'RPC-AIO-Jobs'
+    # Note: branch is the branch for periodics to build
+    #       branches is the branch pattern to match for PR Jobs.
+    series:
+      - liberty:
+          branch: liberty-12.2
+          branches: "liberty-.*"
+      - mitaka:
+          branch: mitaka-13.1
+          branches: "mitaka-.*"
+      - newton:
+          branch: newton-14.0
+          branches: "newton-.*"
+      - master:
+          branch: master
+          branches: "master"
+    context:
+      - swift
+      - ceph:
+          DEPLOY_CEPH: "yes"
+          # Nothing uses USER_VARS atm
+          USER_VARS: |
+            cinder_cinder_conf_overrides:
+                DEFAULT:
+                    default_volume_type: ceph
+            cinder_service_backup_driver: cinder.backup.drivers.ceph
+            cinder_service_backup_program_enabled: true
+      - xenial:
+          IMAGE: "Ubuntu 16.04 LTS"
+
+    # NOTE: Hugh tested this and found that ztrigger overrides series and
+    #       trigger doesn't, which is odd because both trigger and ztrigger
+    #       sort after series.
+    ztrigger:
+      - pr:
+          CRON: ""
+          USER_VARS: "maas_use_api: false"
+      - periodic:
+          branches: "do_not_build_on_pr"
+    exclude:
+      # Xenial builds are run for newton and above.
+      - series: liberty
+        context: xenial
+      - series: mitaka
+        context: xenial
+    jobs:
+      - 'RPC-AIO_{series}-{context}-{ztrigger}'
+
+- job-template:
+    name: 'RPC-AIO_{series}-{context}-{ztrigger}'
     project-type: workflow
     concurrent: true
     properties:
@@ -7,48 +63,36 @@
           num-to-keep: 30
     parameters:
       # See params.yml
-      - rpc_params
+      - rpc_params:
+         RPC_BRANCH: "{branch}"
+         DEPLOY_CEPH: "{DEPLOY_CEPH}"
+         DEPLOY_ELK: "{DEPLOY_CEPH}"
       - rpc_gating_params
-      - single_use_slave_params
+      - single_use_slave_params:
+         IMAGE: "{IMAGE}"
       - tempest_params
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy, Install Tempest, Tempest Tests, Cleanup"
+          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Cleanup"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
               Allocate Resources
               Connect Slave
               Prepare Deployment
-              Deploy
+              Deploy RPC w/ Script
               Install Tempest
               Tempest Tests
               Holland (test holland mysql backup)
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
-      - text:
-          name: PLAYBOOKS
-          default: |
-            [
-              {"playbook": "setup-hosts.yml",           "path": "/opt/rpc-openstack/openstack-ansible/playbooks", "args": "--skip-tags=V-38462,V-38660"},
-              {"playbook": "ceph-all.yml",              "path": "/opt/rpc-openstack/rpcd/playbooks"},
-              {"playbook": "setup-infrastructure.yml",  "path": "/opt/rpc-openstack/openstack-ansible/playbooks"},
-              {"playbook": "setup-openstack.yml",       "path": "/opt/rpc-openstack/openstack-ansible/playbooks"},
-              {"playbook": "rpc-support.yml",           "path": "/opt/rpc-openstack/rpcd/playbooks"},
-              {"playbook": "setup-maas.yml",            "path": "/opt/rpc-openstack/rpcd/playbooks"},
-              {"playbook": "setup-logging.yml",         "path": "/opt/rpc-openstack/rpcd/playbooks"},
-              {"playbook": "verify-maas.yml",           "path": "/opt/rpc-openstack/rpcd/playbooks"}
-            ]
-          description: |
-            OSA/RPC playbooks to run.
-            Format: JSON list of dicts. Each dict must have keys playbook, path.
-             Optional keys: args. All values are strings.
-
+    triggers:
+      - timed: "{CRON}"
     dsl: |
       // CIT Slave node
-      node(){
-        try {
-          dir("rpc-gating"){
+      node() {{
+        try {{
+          dir("rpc-gating") {{
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
               common = load 'pipeline-steps/common.groovy'
               pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
@@ -56,27 +100,35 @@
               deploy = load 'pipeline-steps/deploy.groovy'
               tempest = load 'pipeline-steps/tempest.groovy'
               holland = load 'pipeline-steps/holland.groovy'
-          }
+          }}
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
-          node(instance_name){
-            try {
+          node(instance_name) {{
+            try {{
               aio_prepare.prepare()
-              deploy.deploy()
+              deploy.deploy_sh(
+                environment_vars: [
+                  "DEPLOY_HAPROXY=yes",
+                  "DEPLOY_AIO=no",
+                  "DEPLOY_TEMPEST=no",
+                  "DEPLOY_ELK={DEPLOY_ELK}",
+                  "DEPLOY_CEPH={DEPLOY_CEPH}",
+                  ]
+              ) // deploy_sh
               tempest.tempest()
               holland.holland()
-            } catch (e) {
+            }} catch (e) {{
               print(e)
               throw e
-            } finally {
+            }} finally {{
               common.archive_artifacts()
-            }
-          } // pub cloud node
-        } catch (e){
+            }}
+          }} // pub cloud node
+        }} catch (e) {{
           currentBuild.result = 'FAILURE'
           print(e)
           throw e
-        } finally {
+        }} finally {{
           pubCloudSlave.delPubCloudSlave()
-        }
-      } // cit node
+        }}
+      }} // cit node
