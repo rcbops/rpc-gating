@@ -36,6 +36,8 @@ check_ansible(){
     || { echo "ansible-playbook unavailable, please install ansible from pip"
          return
        }
+  mkdir -p playbooks/roles
+  ansible-galaxy install -r role_requirements.yml -p playbooks/roles
   ansible-playbook --syntax-check playbooks/*.yml \
     && echo "Playbook Syntax OK" \
     || { echo "Playbook syntax fail"; rc=1; }

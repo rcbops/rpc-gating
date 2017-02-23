@@ -64,7 +64,7 @@ def cleanup(){
       ),
       file(
         credentialsId: 'id_rsa_cloud10_jenkins_file',
-        variable: 'JENKINS_SSH_PRIVKEY'
+        variable: 'jenkins_ssh_privkey'
       )
     ]){
       dir("rpc-gating/playbooks"){

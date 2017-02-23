@@ -5,18 +5,26 @@ import groovy.json.JsonOutput
 def install_ansible(){
   sh """
     #!/bin/bash
-    which scl && source /opt/rh/python27/enable
     if [[ ! -d ".venv" ]]; then
+      if which scl
+      then
+        source /opt/rh/python27/enable
         virtualenv --python=/opt/rh/python27/root/usr/bin/python .venv
+      else
+        virtualenv .venv
+      fi
     fi
     # hack the selinux module into the venv
-    cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/
+    cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
     source .venv/bin/activate
 
     # These pip commands cannot be combined into one.
     pip install -U six packaging appdirs
     pip install -U setuptools pip
     pip install -U ansible pyrax
+
+    mkdir -p rpc-gating/playbooks/roles
+    ansible-galaxy install -r ${env.WORKSPACE}/rpc-gating/role_requirements.yml -p ${env.WORKSPACE}/rpc-gating/playbooks/roles
   """
 }
 
@@ -46,7 +54,7 @@ def venvPlaybook(Map args){
       }
       for (def i=0; i<args.playbooks.size(); i++){
         playbook = args.playbooks[i]
-        vars_file="vars.${playbook}"
+        vars_file="vars.${playbook.split('/')[-1]}"
         write_json(file: vars_file, obj: args.vars)
         sh """
           which scl && source /opt/rh/python27/enable
