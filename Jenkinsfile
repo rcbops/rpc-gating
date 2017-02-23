@@ -10,7 +10,7 @@ node(){
       checkout scm
     }
     stage("lint"){
-      sh "sudo ./lint.sh 2>&1"
+      sh "./lint.sh 2>&1"
     }
   }
 }
