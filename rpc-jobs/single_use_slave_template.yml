@@ -18,7 +18,7 @@
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
     dsl: |
-      @Library("common@${env.RPC_GATING_BRANCH}")
+      @Library("rpc-gating") _
       // CIT Slave node
       node(){
         pubcloud.runonpubcloud(

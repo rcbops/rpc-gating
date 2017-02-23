@@ -66,7 +66,7 @@
               Cleanup
 
     dsl: |
-      @Library("common@${env.RPC_GATING_BRANCH}")
+      @Library("rpc-gating") _
       node(){
         try {
           dir("rpc-gating"){
