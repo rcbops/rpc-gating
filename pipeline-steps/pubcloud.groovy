@@ -25,6 +25,7 @@ def create(Map args){
         variable: 'JENKINS_SSH_PRIVKEY'
       )
     ]){
+      common.clone_rpc_gating()
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
@@ -51,7 +52,7 @@ def create(Map args){
 
 /* Remove public cloud instances
  */
-def cleanup(){
+def cleanup(Map args){
   withEnv(['ANSIBLE_FORCE_COLOR=true']){
     withCredentials([
       string(
@@ -67,6 +68,7 @@ def cleanup(){
         variable: 'JENKINS_SSH_PRIVKEY'
       )
     ]){
+      common.clone_rpc_gating()
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
@@ -80,7 +82,7 @@ def cleanup(){
             args: [
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
             ],
-            vars: ["instance_name": instance_name]
+            vars: ["instance_name": args.instance_name]
           )
         } // withEnv
       } // directory
@@ -90,7 +92,6 @@ def cleanup(){
 
 
 def getPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline-steps/ssh_slave.groovy'
   common.conditionalStage(
     stage_name: 'Allocate Resources',
     stage: {
@@ -111,7 +112,6 @@ def getPubCloudSlave(Map args){
   })
 }
 def delPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline-steps/ssh_slave.groovy'
   common.conditionalStep(
     step_name: "Pause",
     step: {
@@ -121,10 +121,26 @@ def delPubCloudSlave(Map args){
   common.conditionalStep(
     step_name: 'Cleanup',
     step: {
-      ssh_slave.destroy()
-      cleanup()
+      ssh_slave.destroy(instance_name: args.instance_name)
+      cleanup(instance_name: args.instance_name)
     } //stage
   ) //conditionalStage
+}
+
+/* One func entrypoint to run a script on a single use slave */
+def runonpubcloud(Map args){
+  instance_name = common.gen_instance_name()
+  getPubCloudSlave(instance_name: instance_name)
+  try{
+    node(instance_name){
+      args.step()
+    }
+  }catch (e){
+    print(e)
+    throw e
+  }finally {
+    delPubCloudSlave(instance_name: instance_name)
+  }
 }
 
 return this

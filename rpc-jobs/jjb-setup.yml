@@ -40,6 +40,7 @@
             source .venv/bin/activate
 
             pip install jenkins-job-builder
+            virtualenv --relocatable .venv
 
             cat > jenkins_jobs.ini << EOF
             [job-builder]

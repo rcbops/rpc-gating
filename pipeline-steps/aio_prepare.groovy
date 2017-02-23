@@ -32,9 +32,7 @@ def prepare(){
           variable: "PUBCLOUD_TENANT_ID"
         )
       ]){
-        dir("/opt/rpc-gating"){
-          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-        } //dir
+        common.clone_rpc_gating("/opt/rpc-gating")
         dir("/opt/rpc-gating/playbooks"){
           ansiblePlaybook playbook: "aio_config.yml"
         } //dir

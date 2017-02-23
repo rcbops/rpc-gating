@@ -76,6 +76,7 @@
         cd  {{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks
         . .venv/bin/activate
         pip install jenkinsapi
+        virtualenv --relocatable .venv
         python ../scripts/jenkins_node.py \
           create \
           --name {{inventory_hostname}} \
