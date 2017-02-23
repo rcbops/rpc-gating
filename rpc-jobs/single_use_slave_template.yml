@@ -5,10 +5,12 @@
     parameters:
       # Default params are provided by macro, add any extra params, or
       # params you want to override the defaults for.
-      - single_use_slave_params
+      - single_use_slave_params:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - rpc_gating_params
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Your Stage, Cleanup"
+          default: "Allocate Resources, Connect Slave, Cleanup"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -19,27 +21,15 @@
     dsl: |
       // CIT Slave node
       node(){
-        try {
-          dir("rpc-gating"){
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
-              common = load 'pipeline-steps/common.groovy'
-          }
-          instance_name = common.gen_instance_name()
-          pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
-          //pub cloud single use slave
-          node(instance_name){
-            stage("Your Stage"){
-              sh """
-                hostname; date
-                echo "your script here"
-              """
-            }
-          } // pub cloud node
-        } catch (Exception e){
-          currentBuild.result = 'FAILURE'
-          print e
-        } finally {
-          pubCloudSlave.delPubCloudSlave()
+        dir("rpc-gating"){
+          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+          pubcloud = load 'pipeline-steps/pubcloud.groovy'
+          common = load 'pipeline-steps/common.groovy'
         }
-      } // cit node
+        pubcloud.runonpubcloud {
+          sh """
+            hostname; date
+            echo "your script here"
+          """
+        } //pubcloud
+      } //cit node
