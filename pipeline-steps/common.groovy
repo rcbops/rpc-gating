@@ -61,7 +61,7 @@ def venvPlaybook(Map args){
         sh """
           which scl && source /opt/rh/python27/enable
           . ${args.venv}/bin/activate
-          ansible-playbook -v --ssh-extra-args="-o  UserKnownHostsFile=/dev/null" ${args.args.join(' ')} -e@${vars_file} ${playbook}
+          ansible-playbook -v ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
       } //for
     } //color
@@ -83,9 +83,7 @@ def openstack_ansible(Map args){
         'ANSIBLE_HOST_KEY_CHECKING=False'])
       {
         sh """#!/bin/bash
-          openstack-ansible ${args.playbook} \
-            -v --ssh-extra-args="-o  UserKnownHostsFile=/dev/null" \
-            ${args.args}
+          openstack-ansible ${args.playbook} ${args.args}
         """
       } //withEnv
     } //dir
