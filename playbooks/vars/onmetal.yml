@@ -1,0 +1,7 @@
+---
+gating_overrides:
+  maas_fqdn_extension: ".{{ lookup('env', 'NODE_NAME') }}"
+  memory_used_percentage_warning_threshold: 99.0
+  memory_used_percentage_critical_threshold: 99.5
+  net_max_speed: 1000
+  lb_name: "{{ lookup('env', 'NODE_NAME') }}"

@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  vars:
+    entity_labels:
+      - "cinder1.{{ server_name }}"
+      - "cinder2.{{ server_name }}"
+      - "compute2.{{ server_name }}"
+      - "infra1.{{ server_name }}"
+      - "infra2.{{ server_name }}"
+      - "logging1.{{ server_name }}"
+      - "infra3.{{ server_name }}"
+      - "swift1.{{ server_name }}"
+      - "swift3.{{ server_name }}"
+      - "swift2.{{ server_name }}"
+      - "compute1.{{ server_name }}"
+      - "loadbalancer1.{{ server_name }}"
+  roles:
+    - { role: maas-entities, state: 'absent'}
