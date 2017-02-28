@@ -51,7 +51,7 @@ def create(Map args){
 
 /* Remove public cloud instances
  */
-def cleanup(){
+def cleanup(Map args){
   withEnv(['ANSIBLE_FORCE_COLOR=true']){
     withCredentials([
       string(
@@ -75,12 +75,17 @@ def cleanup(){
         )
         withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
           common.venvPlaybook(
-            playbooks: ['cleanup_pubcloud.yml'],
+            playbooks: ['aio-maas-cleanup.yml',
+                        'cleanup_pubcloud.yml'],
             venv: ".venv",
             args: [
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
             ],
-            vars: ["instance_name": instance_name]
+            vars: [
+              "instance_name": instance_name,
+              "server_name": args.server_name,
+              "region": args.region
+            ]
           )
         } // withEnv
       } // directory
@@ -122,7 +127,11 @@ def delPubCloudSlave(Map args){
     step_name: 'Cleanup',
     step: {
       ssh_slave.destroy()
-      cleanup()
+      cleanup (
+        instance_name: instance_name,
+        server_name: instance_name,
+        region: env.REGION,
+      )
     } //stage
   ) //conditionalStage
 }

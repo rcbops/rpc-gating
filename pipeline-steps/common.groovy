@@ -269,4 +269,36 @@ api_key = ${args.api_key}
   return pyrax_cfg
 }
 
+def prepareConfigs(Map args){
+  withCredentials([
+    string(
+      credentialsId: "dev_pubcloud_username",
+      variable: "PUBCLOUD_USERNAME"
+    ),
+    string(
+      credentialsId: "dev_pubcloud_api_key",
+      variable: "PUBCLOUD_API_KEY"
+    ),
+    string(
+      credentialsId: "dev_pubcloud_tenant_id",
+      variable: "PUBCLOUD_TENANT_ID"
+    )
+    ]){
+      dir("/opt/rpc-gating"){
+        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+      } //dir
+      dir("/opt/rpc-gating/playbooks"){
+        common.install_ansible()
+        common.venvPlaybook(
+          playbooks: ["aio_config.yml"],
+          venv: ".venv",
+          args: [
+            "-i inventory",
+            "--extra-vars \"@vars/${args.deployment_type}.yml\""
+          ]
+        )
+      } //dir
+  } //withCredentials
+}
+
 return this
