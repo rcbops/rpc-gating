@@ -41,9 +41,6 @@ def deploy() {
   common.conditionalStage(
     stage_name: 'Setup MaaS',
     stage: {
-      common.prepareConfigs(
-        deployment_type: "onmetal"
-      )
       common.openstack_ansible(
         path: '/opt/rpc-openstack/rpcd/playbooks',
         playbook: 'setup-maas.yml'

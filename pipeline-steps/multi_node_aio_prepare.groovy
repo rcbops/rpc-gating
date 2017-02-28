@@ -53,6 +53,9 @@ def prepare() {
         apply_security_hardening: false" >> /etc/openstack_deploy/user_osa_variables_overrides.yml'
         """
       } //dir
+      common.prepareConfigs(
+        deployment_type: "onmetal"
+      )
     } //stage
   ) //conditionalStage
 }
