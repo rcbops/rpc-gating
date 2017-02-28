@@ -66,7 +66,13 @@
             https://github.com/openstack/openstack-ansible-os_tempest/blob/master/templates/openstack_tempest_gate.sh.j2
       - string:
           name: "RUN_TEMPEST_OPTS"
-          default: "--serial"
+          default: ""
+          description: |
+            Options to pass to run_tempest.sh via openstack_tempest_gate.sh
+            Note that both are deprecated and will be replaced in future.
+      - string:
+          name: "TESTR_OPTS"
+          default: "--concurrency 3"
           description: |
             Options to pass to run_tempest.sh via openstack_tempest_gate.sh
             Note that both are deprecated and will be replaced in future.

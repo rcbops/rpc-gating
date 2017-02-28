@@ -11,7 +11,6 @@ def tempest_run(Map args) {
     ${args.wrapper} lxc-attach \
       --keep-env \
       -n \$utility_container \
-      -v RUN_TEMPEST_OPTS=${env.RUN_TEMPEST_OPTS} \
       -- /opt/openstack_tempest_gate.sh \
       ${env.TEMPEST_TEST_SETS}
   """
@@ -23,7 +22,8 @@ def tempest_run(Map args) {
  */
 def tempest(Map args){
   if (args != null && args.containsKey("vm")) {
-    wrapper = "sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} "
+    wrapper = "sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} \
+                RUN_TEMPEST_OPTS=\\\"${env.RUN_TEMPEST_OPTS}\\\" TESTR_OPTS=\\\"${env.TESTR_OPTS}\\\" "
     copy_cmd = "scp -o StrictHostKeyChecking=no -p  -r infra1:"
   } else{
     wrapper = ""
