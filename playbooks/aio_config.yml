@@ -2,7 +2,6 @@
 - hosts: localhost
   user: root
   vars:
-    rpco_defaults_file: "/etc/openstack_deploy/user_rpco_variables_defaults.yml"
     gating_overrides_file: "/etc/openstack_deploy/user_zzz_gating_variables.yml"
 
     gating_overrides:
@@ -37,8 +36,6 @@
       journal_size: 1024
       maas_notification_plan: npTechnicalContactsEmail
       osd_directory: true
-    defaults: "{{ lookup('file', rpco_defaults_file)|from_yaml }}"
-    maas_creds:
       rackspace_cloud_auth_url: "https://identity.api.rackspacecloud.com/v2.0/"
       rackspace_cloud_tenant_id: "{{lookup('env', 'PUBCLOUD_TENANT_ID')}}"
       rackspace_cloud_username: "{{lookup('env', 'PUBCLOUD_USERNAME')}}"
@@ -54,8 +51,3 @@
       lineinfile:
         dest: "{{ gating_overrides_file }}"
         line: "{{ lookup('env', 'USER_VARS') }}"
-
-    - name: write rpco defaults file
-      copy:
-        content: "{{ defaults|combine(maas_creds)|to_nice_yaml }}"
-        dest: "{{ rpco_defaults_file }}"

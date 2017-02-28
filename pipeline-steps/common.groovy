@@ -3,9 +3,11 @@ import groovy.json.JsonOutput
 
 // Install ansible on a jenkins slave
 def install_ansible(){
-  sh """
-    #!/bin/bash
+  sh """#!/bin/bash
     if [[ ! -d ".venv" ]]; then
+      if ! which virtualenv; then
+        pip install virtualenv
+      fi
       if which scl
       then
         source /opt/rh/python27/enable

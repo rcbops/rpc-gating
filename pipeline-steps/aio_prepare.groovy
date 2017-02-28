@@ -37,7 +37,12 @@ def prepare(){
           git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
         } //dir
         dir("/opt/rpc-gating/playbooks"){
-          ansiblePlaybook playbook: "aio_config.yml"
+          common.install_ansible()
+          common.venvPlaybook(
+            playbooks: ["aio_config.yml"],
+            venv: ".venv",
+            args: [ "-i inventory" ]
+          )
         } //dir
       } //withCredentials
     } //stage param
