@@ -48,9 +48,6 @@ def prepare() {
         sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_*_defaults.yml /etc/openstack_deploy
         sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_rpco_secrets.yml /etc/openstack_deploy
         sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/env.d/* /etc/openstack_deploy/env.d
-
-        sudo -E sh -c 'echo "
-        apply_security_hardening: false" >> /etc/openstack_deploy/user_osa_variables_overrides.yml'
         """
       } //dir
       common.prepareConfigs(
