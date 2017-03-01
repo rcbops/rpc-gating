@@ -4,12 +4,17 @@
   vars_files:
     - vars/all.yml
   tasks:
-    - name: write overrides
+    - name: Write default overrides
       copy:
-        content: "{{ gating_overrides|to_nice_yaml }}"
+        content: "{{ default_gating_overrides|to_nice_yaml }}"
         dest: "{{ gating_overrides_file }}"
 
-    - name: append USER_VARS
+    - name: Write environment specific overrides
+      lineinfile:
+        dest: "{{ gating_overrides_file }}"
+        line:  "{{ gating_overrides|to_nice_yaml }}"
+
+    - name: Append USER_VARS
       lineinfile:
         dest: "{{ gating_overrides_file }}"
         line: "{{ lookup('env', 'USER_VARS') }}"
