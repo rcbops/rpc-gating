@@ -49,7 +49,7 @@
              Prepare RPC Configs, Deploy RPC w/ Script, Prepare MaaS,
              Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests,
              Prepare Horizon Selenium, Horizon Tests, Prepare Kibana Selenium,
-             Kibana Tests, Cleanup
+             Kibana Tests, Holland, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -67,6 +67,7 @@
               Horizon Tests
               Prepare Kibana Selenium
               Kibana Tests
+              Holland
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
 
@@ -83,6 +84,7 @@
             tempest = load 'pipeline-steps/tempest.groovy'
             horizon = load 'pipeline-steps/horizon.groovy'
             kibana = load 'pipeline-steps/kibana.groovy'
+            holland = load 'pipeline-steps/holland.groovy'
           }
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
@@ -105,6 +107,7 @@
             tempest.tempest(vm: "infra1")
             horizon.horizon_integration()
             kibana.kibana()
+            holland.holland()
           }// public cloud node
         } catch (e){
             currentBuild.result = 'FAILURE'
