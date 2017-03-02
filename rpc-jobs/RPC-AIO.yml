@@ -73,8 +73,8 @@
                 "DEPLOY_AIO=no",
                 "DEPLOY_MAAS=no",
                 "DEPLOY_TEMPEST=no",
-                "DEPLOY_CEPH={DEPLOY_CEPH}",
-                "DEPLOY_ELK={DEPLOY_ELK}",
+                "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
+                "DEPLOY_ELK=${{DEPLOY_ELK}}",
                 ]
               aio_prepare.prepare()
               deploy.deploy_sh(environment_vars: environment_vars)
