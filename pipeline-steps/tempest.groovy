@@ -6,14 +6,16 @@ def tempest_install(){
 }
 
 def tempest_run(Map args) {
-  sh """#!/bin/bash
-    utility_container="\$(${args.wrapper} lxc-ls |grep -m1 utility)"
+  def output = sh (script: """#!/bin/bash
+  utility_container="\$(${args.wrapper} lxc-ls |grep -m1 utility)"
     ${args.wrapper} lxc-attach \
       --keep-env \
       -n \$utility_container \
       -- /opt/openstack_tempest_gate.sh \
       ${env.TEMPEST_TEST_SETS}
-  """
+  """, returnStdout: true)
+  print output
+  return output
 }
 
 
@@ -39,8 +41,15 @@ def tempest(Map args){
     stage_name: "Tempest Tests",
     stage: {
       try{
-        tempest_run(wrapper: wrapper)
-      } catch (e){
+        def result = tempest_run(wrapper: wrapper)
+        def second_result = ""
+        if(result.contains("Race in testr accounting.")){
+          second_result = tempest_run(wrapper: wrapper)
+        }
+        if(second_result.contains("Race in testr accounting.")) {
+          currentBuild.result = 'FAILURE'
+        }
+        } catch (e){
         print(e)
         throw(e)
       } finally{
