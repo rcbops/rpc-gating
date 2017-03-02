@@ -25,6 +25,8 @@
                     default_volume_type: ceph
             cinder_service_backup_driver: cinder.backup.drivers.ceph
             cinder_service_backup_program_enabled: true
+      - upgrade:
+          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Upgrade, Cleanup"
       - xenial:
           IMAGE: "Ubuntu 16.04 LTS"
 
@@ -38,6 +40,12 @@
       - periodic:
           branches: "do_not_build_on_pr"
     exclude:
+      - series: liberty
+        context: upgrade
+      - series: newton
+        context: upgrade
+      - series: master
+        context: upgrade
       # Xenial builds are run for newton and above.
       - series: liberty
         context: xenial
@@ -53,6 +61,8 @@
     DEPLOY_ELK: "yes"
     CRON: "H H(9-21) * * 1-5"
     USER_VARS: ""
+    UPGRADE_FROM_REF: "liberty-12.2"
+    STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Cleanup"
 
     # TEMPLATE
     name: 'RPC-AIO_{series}-{context}-{ztrigger}'
@@ -68,13 +78,14 @@
          DEPLOY_CEPH: "{DEPLOY_CEPH}"
          DEPLOY_ELK: "{DEPLOY_ELK}"
          USER_VARS: "{USER_VARS}"
+         UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - rpc_gating_params
       - single_use_slave_params:
          IMAGE: "{IMAGE}"
       - tempest_params
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Cleanup"
+          default: "{STAGES}"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -85,6 +96,7 @@
               Install Tempest
               Tempest Tests
               Holland (test holland mysql backup)
+              Upgrade
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
     triggers:
@@ -106,19 +118,22 @@
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
           node(instance_name) {{
             try {{
+              environment_vars = [
+                "DEPLOY_HAPROXY=yes",
+                "DEPLOY_AIO=no",
+                "DEPLOY_MAAS=no",
+                "DEPLOY_TEMPEST=no",
+                "DEPLOY_CEPH={DEPLOY_CEPH}",
+                "DEPLOY_ELK={DEPLOY_ELK}",
+                ]
               aio_prepare.prepare()
-              deploy.deploy_sh(
-                environment_vars: [
-                  "DEPLOY_HAPROXY=yes",
-                  "DEPLOY_AIO=no",
-                  "DEPLOY_MAAS=no",
-                  "DEPLOY_TEMPEST=no",
-                  "DEPLOY_CEPH={DEPLOY_CEPH}",
-                  "DEPLOY_ELK={DEPLOY_ELK}",
-                  ]
-              ) // deploy_sh
+              deploy.deploy_sh(environment_vars: environment_vars)
+              deploy.addChecksumRule()
               tempest.tempest()
               holland.holland()
+              deploy.upgrade(environment_vars: environment_vars)
+              deploy.addChecksumRule()
+              tempest.tempest()
             }} catch (e) {{
               print(e)
               throw e

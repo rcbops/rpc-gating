@@ -3,7 +3,11 @@ def prepare(){
     stage_name: "Prepare Deployment",
     stage: {
       dir("/opt/rpc-openstack"){
-        git branch: env.RPC_BRANCH, url: env.RPC_REPO
+        if (env.STAGES.contains("Upgrade")) {
+          git branch: env.UPGRADE_FROM_REF, url: env.RPC_REPO
+        } else {
+          git branch: env.RPC_BRANCH, url: env.RPC_REPO
+        }
         sh "git submodule update --init"
         ansiColor('xterm'){
           withEnv([
