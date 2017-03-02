@@ -1,58 +1,7 @@
 - project:
-    name: 'RPC-AIO-Jobs'
-    # Note: branch is the branch for periodics to build
-    #       branches is the branch pattern to match for PR Jobs.
-    series:
-      - liberty:
-          branch: liberty-12.2
-          branches: "liberty-.*"
-      - mitaka:
-          branch: mitaka-13.1
-          branches: "mitaka-.*"
-      - newton:
-          branch: newton-14.0
-          branches: "newton-.*"
-      - master:
-          branch: master
-          branches: "master"
-    context:
-      - swift
-      - ceph:
-          DEPLOY_CEPH: "yes"
-          USER_VARS: |
-            cinder_cinder_conf_overrides:
-                DEFAULT:
-                    default_volume_type: ceph
-            cinder_service_backup_driver: cinder.backup.drivers.ceph
-            cinder_service_backup_program_enabled: true
-      - upgrade:
-          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Upgrade, Cleanup"
-      - xenial:
-          IMAGE: "Ubuntu 16.04 LTS"
-
-    # NOTE: Hugh tested this and found that ztrigger overrides series and
-    #       trigger doesn't, which is odd because both trigger and ztrigger
-    #       sort after series.
-    ztrigger:
-      - pr:
-          CRON: ""
-          USER_VARS: "maas_use_api: false"
-      - periodic:
-          branches: "do_not_build_on_pr"
-    exclude:
-      - series: liberty
-        context: upgrade
-      - series: newton
-        context: upgrade
-      - series: master
-        context: upgrade
-      # Xenial builds are run for newton and above.
-      - series: liberty
-        context: xenial
-      - series: mitaka
-        context: xenial
+    name: "RPC-AIO Single Job"
     jobs:
-      - 'RPC-AIO_{series}-{context}-{ztrigger}'
+      - 'RPC-AIO'
 
 - job-template:
     # DEFAULTS
@@ -63,9 +12,10 @@
     USER_VARS: ""
     UPGRADE_FROM_REF: "liberty-12.2"
     STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Cleanup"
+    branch: master
 
     # TEMPLATE
-    name: 'RPC-AIO_{series}-{context}-{ztrigger}'
+    name: 'RPC-AIO'
     project-type: workflow
     concurrent: true
     properties:
