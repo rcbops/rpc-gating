@@ -26,7 +26,7 @@
             cinder_service_backup_driver: cinder.backup.drivers.ceph
             cinder_service_backup_program_enabled: true
       - upgrade:
-          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Upgrade, Cleanup"
+          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Upgrade, Cleanup"
       - xenial:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
 
@@ -62,7 +62,7 @@
     CRON: "H H(9-21) * * 1-5"
     USER_VARS: ""
     UPGRADE_FROM_REF: "liberty-12.2"
-    STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Cleanup"
+    STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup"
     branch: master
 
     # TEMPLATE
@@ -94,6 +94,8 @@
               Connect Slave
               Prepare Deployment
               Deploy RPC w/ Script
+              Setup MaaS
+              Verify MaaS
               Install Tempest
               Tempest Tests
               Holland (test holland mysql backup)
@@ -113,6 +115,7 @@
             deploy = load 'pipeline-steps/deploy.groovy'
             tempest = load 'pipeline-steps/tempest.groovy'
             holland = load 'pipeline-steps/holland.groovy'
+            maas = load 'pipeline-steps/maas.groovy'
         }}
         pubcloud.runonpubcloud {{
           // try within pubcloud node so we can archive archive_artifacts
@@ -129,11 +132,18 @@
             aio_prepare.prepare()
             deploy.deploy_sh(environment_vars: environment_vars)
             deploy.addChecksumRule()
+            maas.deploy()
+            maas.verify()
             tempest.tempest()
             holland.holland()
-            deploy.upgrade(environment_vars: environment_vars)
-            deploy.addChecksumRule()
-            tempest.tempest()
+            if (env.STAGES.contains("Upgrade")) {{
+              deploy.upgrade(environment_vars: environment_vars)
+              deploy.addChecksumRule()
+              maas.deploy()
+              maas.verify()
+              tempest.tempest()
+              holland.holland()
+            }}
           }} catch (e) {{
             print(e)
             throw e
