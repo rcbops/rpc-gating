@@ -284,10 +284,10 @@ def prepareConfigs(Map args){
       variable: "PUBCLOUD_TENANT_ID"
     )
     ]){
-      dir("/opt/rpc-gating"){
+      dir("rpc-gating"){
         git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
       } //dir
-      dir("/opt/rpc-gating/playbooks"){
+      dir("rpc-gating/playbooks"){
         common.install_ansible()
         common.venvPlaybook(
           playbooks: ["aio_config.yml"],

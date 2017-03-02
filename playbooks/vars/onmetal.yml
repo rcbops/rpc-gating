@@ -1,5 +1,6 @@
 ---
 gating_overrides:
+  apply_security_hardening: false
   maas_fqdn_extension: ".{{ lookup('env', 'NODE_NAME') }}"
   memory_used_percentage_warning_threshold: 99.0
   memory_used_percentage_critical_threshold: 99.5

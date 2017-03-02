@@ -1,9 +1,16 @@
 ---
 gating_overrides_file: "/etc/openstack_deploy/user_zzz_gating_variables.yml"
 
-gating_overrides:
+default_gating_overrides:
   maas_notification_plan: npTechnicalContactsEmail
   rackspace_cloud_auth_url: "https://identity.api.rackspacecloud.com/v2.0/"
   rackspace_cloud_tenant_id: "{{lookup('env', 'PUBCLOUD_TENANT_ID')}}"
   rackspace_cloud_username: "{{lookup('env', 'PUBCLOUD_USERNAME')}}"
   rackspace_cloud_api_key: "{{lookup('env', 'PUBCLOUD_API_KEY')}}"
+  tempest_swift_container_sync: False
+  tempest_swift_discoverable_apis:
+    - bulk
+    - object
+    - container_quotas
+    - slo
+    - tempurl
