@@ -6,7 +6,12 @@
     concurrent: true
     parameters:
       - rpc_gating_params
-      - rpc_params
+      - string:
+          name: "RPC_REPO"
+          default: "https://github.com/rcbops/rpc-openstack"
+      - string:
+          name: "RPC_BRANCH"
+          default: "master"
       - tempest_params
       - string:
           name: OSA_OPS_REPO
