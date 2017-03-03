@@ -1,5 +1,6 @@
 properties([])
 node(){
+  sh "Echo doing some bad stuff in an non-org member pr"
   deleteDir()
   stage("Prepare"){
     checkout scm
