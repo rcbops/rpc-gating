@@ -204,7 +204,9 @@ def acronym(Map args){
 def gen_instance_name(){
   if (env.INSTANCE_NAME == "AUTO"){
     job_name_acronym = common.acronym(string: env.JOB_NAME)
-    instance_name = "${job_name_acronym}-${env.BUILD_NUMBER}"
+    //4 digit hex string to avoid name colisions
+    rand_str = Integer.toString(Math.abs((new Random()).nextInt(0xFFFF)), 16)
+    instance_name = "${job_name_acronym}-${env.BUILD_NUMBER}-${rand_str}"
   }
   else {
     instance_name = env.INSTANCE_NAME

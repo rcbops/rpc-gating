@@ -1,6 +1,24 @@
 #!/bin/bash
 
 rc=0
+venv=.lintvenv
+# exclude venv and git dir from linting
+fargs=(. -not -path \*${venv}\* -not -path \*.git\*)
+
+trap cleanup EXIT
+cleanup(){
+  deactivate
+}
+install(){
+  which virtualenv >/dev/null \
+    || { echo "virtualenv not available, please install via pip"; return; }
+  if [ ! -d $venv ]; then
+    virtualenv $venv
+  fi
+  . $venv/bin/activate
+  which jenkins-jobs >/dev/null \
+    || pip install jenkins-job-builder ansible
+}
 
 check_jjb(){
   which jenkins-jobs >/dev/null \
@@ -14,13 +32,13 @@ check_jjb(){
 
 check_groovy(){
   which groovy > /dev/null \
-    || { echo "groovy unavailble, please install groovy2 from apt/your package manager"
+    || { echo "groovy unavailble, please install groovy (apt:groovy2 brew:groovy)"
          return
        }
   grc=0
   while read scriptf
   do groovy -classpath pipeline-steps $scriptf || grc=1
-  done < <(find pipeline-steps -name \*.groovy \! -name NonCPS.groovy)
+  done < <(find ${fargs[@]} -name \*.groovy \! -name NonCPS.groovy )
 
   if [[ $grc == 0 ]]
   then
@@ -49,7 +67,7 @@ check_bash(){
     bash -n $script \
       && echo "Bash syntax ok: $script" \
       || { echo "Bash syntax fail $script"; rc=1; }
-  done < <(find . -iname \*.sh)
+  done < <(find ${fargs[@]} -iname \*.sh)
 }
 
 check_python(){
@@ -58,10 +76,10 @@ check_python(){
     python -m py_compile  $script \
       && echo "Python syntax ok: $script" \
       || { echo "Bash syntax fail $script"; rc=1; }
-  done < <(find . -iname \*.py)
+  done < <(find ${fargs[@]} -iname \*.py)
 }
 
-
+[[ ${RPC_GATING_LINT_USE_VENV:-yes} == yes ]] && install
 check_jjb
 check_groovy
 check_ansible
