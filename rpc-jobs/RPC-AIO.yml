@@ -28,7 +28,7 @@
       - upgrade:
           STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Upgrade, Cleanup"
       - xenial:
-          IMAGE: "Ubuntu 16.04 LTS"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
 
     # NOTE: Hugh tested this and found that ztrigger overrides series and
     #       trigger doesn't, which is odd because both trigger and ztrigger
