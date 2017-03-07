@@ -6,15 +6,16 @@ def tempest_install(){
 }
 
 def tempest_run(Map args) {
-  sh """#!/bin/bash
-    utility_container="\$(${args.wrapper} lxc-ls |grep -m1 utility)"
+  def output = sh (script: """#!/bin/bash
+  utility_container="\$(${args.wrapper} lxc-ls |grep -m1 utility)"
     ${args.wrapper} lxc-attach \
       --keep-env \
       -n \$utility_container \
-      -v RUN_TEMPEST_OPTS=${env.RUN_TEMPEST_OPTS} \
       -- /opt/openstack_tempest_gate.sh \
       ${env.TEMPEST_TEST_SETS}
-  """
+  """, returnStdout: true)
+  print output
+  return output
 }
 
 
@@ -23,7 +24,8 @@ def tempest_run(Map args) {
  */
 def tempest(Map args){
   if (args != null && args.containsKey("vm")) {
-    wrapper = "sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} "
+    wrapper = "sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} \
+                RUN_TEMPEST_OPTS=\\\"${env.RUN_TEMPEST_OPTS}\\\" TESTR_OPTS=\\\"${env.TESTR_OPTS}\\\" "
     copy_cmd = "scp -o StrictHostKeyChecking=no -p  -r infra1:"
   } else{
     wrapper = ""
@@ -39,8 +41,15 @@ def tempest(Map args){
     stage_name: "Tempest Tests",
     stage: {
       try{
-        tempest_run(wrapper: wrapper)
-      } catch (e){
+        def result = tempest_run(wrapper: wrapper)
+        def second_result = ""
+        if(result.contains("Race in testr accounting.")){
+          second_result = tempest_run(wrapper: wrapper)
+        }
+        if(second_result.contains("Race in testr accounting.")) {
+          currentBuild.result = 'FAILURE'
+        }
+        } catch (e){
         print(e)
         throw(e)
       } finally{
