@@ -1,9 +1,34 @@
-- job:
-    name: 'OnMetal_Multi_Node_AIO'
+- project:
+    name: 'Multi-Node-AIO-Jobs'
+    series:
+      - mitaka:
+          branch: mitaka-13.1
+          OPENSTACK_ANSIBLE_BRANCH: "stable/mitaka"
+      - newton:
+          branch: newton-14.0
+          OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
+      - master:
+          branch: master
+          OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
+    context:
+      - xenial:
+          DEFAULT_IMAGE: "16.04.2"
+      - trusty:
+          DEFAULT_IMAGE: "14.04.5"
+    exclude:
+      - series: mitaka
+        context: xenial
+    jobs:
+      - 'OnMetal_Multi_Node_AIO_{series}-{context}'
+
+- job-template:
+    name: 'OnMetal_Multi_Node_AIO_{series}-{context}'
     project-type: workflow
     build-discarder:
       days-to-keep: 30
     concurrent: true
+    triggers:
+      - timed: "H H(0-8) * * 1-5"
     parameters:
       - rpc_gating_params
       - string:
@@ -11,8 +36,14 @@
           default: "https://github.com/rcbops/rpc-openstack"
       - string:
           name: "RPC_BRANCH"
-          default: "master"
-      - tempest_params
+          default: "{branch}"
+      - tempest_params:
+         TEMPEST_TEST_SETS: "scenario defcore api"
+         RUN_TEMPEST_OPTS: ""
+         TESTR_OPTS: "--concurrency 3"
+      - single_use_slave_params:
+         IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+         FLAVOR: "onmetal-io1"
       - string:
           name: OSA_OPS_REPO
           default: https://github.com/openstack/openstack-ansible-ops
@@ -20,29 +51,13 @@
           name: OSA_OPS_BRANCH
           default: master
       - string:
-          name: REGION
-          default: "IAD"
-      - string:
-          name: FLAVOR
-          default: "onmetal-io1"
-      - string:
-          name: IMAGE
-          default: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
-      - string:
-          name: INSTANCE_NAME
-          default: AUTO
-          description: |
-            Set instance name or "AUTO" to have it generated based on job
-            name and build number. Beware the 63 char container name limit
-            as container names includes the host name.
-      - string:
           name: OPENSTACK_ANSIBLE_BRANCH
-          default: stable/newton
+          default: "{OPENSTACK_ANSIBLE_BRANCH}"
           description: Openstack Ansible branch to use in setup
       - string:
           name: DEFAULT_IMAGE
+          default: "{DEFAULT_IMAGE}"
           description: Version of Ubuntu image to use for VMs (14.04.5 or 16.04.2)
-          default: '16.04.2'
       - bool:
           name: PARTITION_HOST
           default: true
@@ -77,9 +92,9 @@
               Cleanup
 
     dsl: |
-      node(){
-        try {
-          dir("rpc-gating"){
+      node(){{
+        try {{
+          dir("rpc-gating"){{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
             pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
             common = load 'pipeline-steps/common.groovy'
@@ -90,12 +105,12 @@
             horizon = load 'pipeline-steps/horizon.groovy'
             kibana = load 'pipeline-steps/kibana.groovy'
             holland = load 'pipeline-steps/holland.groovy'
-          }
+          }}
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
 
           maas.prepare(instance_name: instance_name)
-          node(instance_name){
+          node(instance_name){{
             multi_node_aio_prepare.prepare()
             deploy.deploy_sh(
               environment_vars: [
@@ -113,11 +128,11 @@
             horizon.horizon_integration()
             kibana.kibana()
             holland.holland()
-          }// public cloud node
-        } catch (e){
+          }}// public cloud node
+        }} catch (e){{
             currentBuild.result = 'FAILURE'
             throw e
-        } finally {
-            pubCloudSlave.delPubCloudSlave()
-        }
-      } // cit node
+        }} finally {{
+            pubCloudSlave.delPubCloudSlave(instance_name: instance_name)
+        }}
+      }} // cit node

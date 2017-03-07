@@ -7,6 +7,7 @@
       # params you want to override the defaults for.
       - single_use_slave_params:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          FLAVOR: "performance2-15"
       - rpc_gating_params
       - string:
           name: STAGES

@@ -83,7 +83,11 @@
       - rpc_gating_params
       - single_use_slave_params:
          IMAGE: "{IMAGE}"
-      - tempest_params
+         FLAVOR: "performance2-15"
+      - tempest_params:
+         TEMPEST_TEST_SETS: "scenario defcore cinder_backup"
+         RUN_TEMPEST_OPTS: "--serial"
+         TESTR_OPTS: ""
       - string:
           name: STAGES
           default: "{STAGES}"

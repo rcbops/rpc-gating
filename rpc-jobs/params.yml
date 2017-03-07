@@ -7,7 +7,7 @@
           default: "IAD"
       - string:
           name: FLAVOR
-          default: "performance2-15"
+          default: "{FLAVOR}"
       - string:
           name: IMAGE
           default: "{IMAGE}"
@@ -60,18 +60,19 @@
     parameters:
       - string:
           name: "TEMPEST_TEST_SETS"
-          default: "scenario defcore cinder_backup"
+          default: "{TEMPEST_TEST_SETS}"
           description: |
             Test sets (space seperated). Test sets are defined in
             https://github.com/openstack/openstack-ansible-os_tempest/blob/master/templates/openstack_tempest_gate.sh.j2
       - string:
           name: "RUN_TEMPEST_OPTS"
-          default: "--serial"
+          default: "{RUN_TEMPEST_OPTS}"
           description: |
             Options to pass to run_tempest.sh via openstack_tempest_gate.sh. Note that both are deprecated and will be replaced in future.
+            Serial test runner format: --serial
       - string:
           name: "TESTR_OPTS"
-          default: ""
+          default: "{TESTR_OPTS}"
           description: |
             Options to pass to run_tempest.sh via openstack_tempest_gate.sh. Note that both are deprecated and will be replaced in future.
             Concurrent worker format: --concurrency 3
