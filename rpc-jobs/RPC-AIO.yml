@@ -63,6 +63,7 @@
     USER_VARS: ""
     UPGRADE_FROM_REF: "liberty-12.2"
     STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Cleanup"
+    branch: master
 
     # TEMPLATE
     name: 'RPC-AIO_{series}-{context}-{ztrigger}'
