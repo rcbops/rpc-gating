@@ -53,7 +53,11 @@ def tempest(Map args){
         print(e)
         throw(e)
       } finally{
-        sh "rm -f *tempest*.xml; ${copy_cmd}/openstack/log/*utility*/**/*tempest*.xml . ||:"
+        sh """
+        rm -f *tempest*.xml
+        ${copy_cmd}/openstack/log/*utility*/**/*tempest*.xml . ||:
+        ${copy_cmd}/openstack/log/*utility*/*tempest*.xml . ||:
+        """
         junit allowEmptyResults: true, testResults: '*tempest*.xml'
       } //finally
     } //stage
