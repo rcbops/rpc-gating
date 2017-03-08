@@ -69,7 +69,8 @@ def main(args):
             jbase=os.environ["JENKINS_URL"],
             job=child_job_name,
             bnum=child_job_number),
-        description="Direct link to {context} build".format(context=context),
+        description="Direct link to {context} build".format(
+            context=context.split('/')[-1]),
         context=context,
         pat=os.environ["GITHUB_PAT"])
 

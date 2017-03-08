@@ -10,7 +10,11 @@ node(){
       checkout scm
     }
     stage("lint"){
-      sh "./lint.sh 2>&1"
-    }
-  }
-}
+      withEnv([
+        'RPC_GATING_LINT_USE_VENV=no'
+      ]){
+        sh "./lint.sh 2>&1"
+      }// withenv
+    }// stage
+  }// inside
+}// node
