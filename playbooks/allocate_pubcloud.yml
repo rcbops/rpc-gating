@@ -17,8 +17,8 @@
           auto_increment: no
       register: rax
       until: rax|success
-      retries: 5
-      delay: 30
+      retries: 120
+      delay: 60
 
     - name: Write inventory
       copy:
