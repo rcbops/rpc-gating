@@ -6,9 +6,6 @@ def prepare() {
     common.conditionalStage(
       stage_name: 'Prepare Multi-Node AIO',
       stage: {
-        sh """
-        rm -f variables.sh
-        """
         common.run_script(
           script: 'build.sh',
           environment_vars: [
