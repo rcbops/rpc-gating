@@ -122,12 +122,24 @@
                 "DEPLOY_MAAS=no"
                 ]
             ) // deploy_sh
-            maas.deploy()
-            maas.verify()
-            tempest.tempest(vm: "infra1")
-            horizon.horizon_integration()
-            kibana.kibana()
-            holland.holland()
+            parallel(
+              "maas": {{
+                maas.deploy()
+                maas.verify()
+              }},
+              "tempest": {{
+                tempest.tempest(vm: "infra1")
+              }},
+              "horizon": {{
+                horizon.horizon_integration()
+              }},
+              "kibana": {{
+                kibana.kibana()
+              }},
+              "holland": {{
+                holland.holland()
+              }}
+            ) // parallel
           }}// public cloud node
         }} catch (e){{
             currentBuild.result = 'FAILURE'
