@@ -18,6 +18,7 @@
     context:
       - swift
       - ceph:
+          DEPLOY_SWIFT: "no"
           DEPLOY_CEPH: "yes"
           USER_VARS: |
             cinder_cinder_conf_overrides:
@@ -25,6 +26,7 @@
                     default_volume_type: ceph
             cinder_service_backup_driver: cinder.backup.drivers.ceph
             cinder_service_backup_program_enabled: true
+            tempest_service_available_swift: false
       - upgrade:
           STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Upgrade, Cleanup"
       - xenial:
@@ -57,6 +59,7 @@
 - job-template:
     # DEFAULTS
     IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    DEPLOY_SWIFT: "yes"
     DEPLOY_CEPH: "no"
     DEPLOY_ELK: "yes"
     CRON: "H H(9-21) * * 1-5"
@@ -76,6 +79,7 @@
       # See params.yml
       - rpc_params:
          RPC_BRANCH: "{branch}"
+         DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
          DEPLOY_CEPH: "{DEPLOY_CEPH}"
          DEPLOY_ELK: "{DEPLOY_ELK}"
          USER_VARS: "{USER_VARS}"
@@ -126,6 +130,7 @@
               "DEPLOY_AIO=no",
               "DEPLOY_MAAS=no",
               "DEPLOY_TEMPEST=no",
+              "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
               "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
               "DEPLOY_ELK=${{DEPLOY_ELK}}",
               ]
