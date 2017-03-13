@@ -19,7 +19,6 @@ def prepare() {
             "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
             "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
             "SETUP_HOST=true",
-            "PARTITION_HOST=true",
             "SETUP_VIRSH_NET=true",
             "VM_IMAGE_CREATE=true",
             "DEPLOY_OSA=true",
