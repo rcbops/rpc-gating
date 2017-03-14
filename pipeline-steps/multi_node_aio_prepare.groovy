@@ -17,6 +17,7 @@ def prepare() {
             "DEFAULT_NETWORK=eth0",
             "VM_DISK_SIZE=252",
             "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
+            "DEFAULT_KERNEL=${env.DEFAULT_KERNEL}",
             "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
             "SETUP_HOST=true",
             "SETUP_VIRSH_NET=true",
