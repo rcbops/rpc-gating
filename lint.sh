@@ -38,7 +38,7 @@ check_groovy(){
   grc=0
   while read scriptf
   do groovy -classpath pipeline-steps $scriptf || grc=1
-  done < <(find ${fargs[@]} -name \*.groovy \! -name NonCPS.groovy )
+  done < <(find ${fargs[@]} -name \*.groovy \! -name NonCPS.groovy \! -name add_jenkins_cred.groovy)
 
   if [[ $grc == 0 ]]
   then
