@@ -109,7 +109,6 @@
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
 
-          maas.prepare(instance_name: instance_name)
           node(instance_name){{
             multi_node_aio_prepare.prepare()
             deploy.deploy_sh(
@@ -124,6 +123,9 @@
             ) // deploy_sh
             parallel(
               "maas": {{
+                node(){{
+                  maas.prepare(instance_name: instance_name)
+                }}
                 maas.deploy()
                 maas.verify()
               }},
