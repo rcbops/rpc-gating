@@ -29,6 +29,10 @@
           name: "RPC_BRANCH"
           default: "{RPC_BRANCH}"
       - string:
+          name: "DEPLOY_SWIFT"
+          default: "{DEPLOY_SWIFT}"
+          description: "Deploy Swift? yes/no"
+      - string:
           name: "DEPLOY_CEPH"
           default: "{DEPLOY_CEPH}"
           description: "Deploy Ceph? yes/no"
