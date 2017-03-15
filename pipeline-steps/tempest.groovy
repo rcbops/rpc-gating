@@ -18,6 +18,16 @@ def tempest_run(Map args) {
   return output
 }
 
+def tempest_update_flavors(){
+  dir("/opt/rpc-openstack/openstack-ansible/playbooks") {
+    sh"""
+      ansible utility[0] -m shell \
+                         -a '. /root/openrc && nova flavor-key 201 set quota:cpu_quota=20000'
+      ansible utility[0] -m shell \
+                         -a '. /root/openrc && nova flavor-key 202 set quota:cpu_quota=20000'
+    """
+  }
+}
 
 /* if tempest install fails, don't bother trying to run or collect test results
  * however if running fails, we should still collect the failed results
@@ -35,6 +45,9 @@ def tempest(Map args){
     stage_name: "Install Tempest",
     stage: {
       tempest_install()
+      if (args != null && args.containsKey("vm")) {
+         tempest_update_flavors()
+      }
     }
   )
   common.conditionalStage(
