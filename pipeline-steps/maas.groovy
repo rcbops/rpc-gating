@@ -21,6 +21,7 @@ def prepare(Map args) {
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY
           )
+          common.install_ansible()
           withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
             common.venvPlaybook(
               playbooks: ['aio-maas-entities.yml'],
