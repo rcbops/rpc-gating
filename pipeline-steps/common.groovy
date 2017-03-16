@@ -100,7 +100,6 @@ def openstack_ansible(Map args){
         'ANSIBLE_SSH_RETRIES=3'])
       {
         sh """#!/bin/bash
-          echo ${ANSIBLE_FORKS}
           openstack-ansible ${args.playbook} ${args.args}
         """
       } //withEnv

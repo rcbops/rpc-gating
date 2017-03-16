@@ -31,7 +31,6 @@ def deploy_sh(Map args) {
         ansiColor('xterm') {
           dir("/opt/rpc-openstack/") {
             sh """#!/bin/bash
-            echo ${ANSIBLE_FORKS}
             scripts/deploy.sh
             """
           } // dir
