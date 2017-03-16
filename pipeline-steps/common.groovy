@@ -68,6 +68,20 @@ def venvPlaybook(Map args){
   } //withenv
 } //venvplaybook
 
+def calc_ansible_forks(){
+  def forks = sh (script: """#!/bin/bash
+    CPU_NUM=\$(grep -c ^processor /proc/cpuinfo)
+    if [ \${CPU_NUM} -lt "10" ]; then
+      ANSIBLE_FORKS=\${CPU_NUM}
+    else
+      ANSIBLE_FORKS=10
+    fi
+    echo "\${ANSIBLE_FORKS}"
+  """, returnStdout: true)
+  print "Ansible forks: ${forks}"
+  return forks
+}
+
 def openstack_ansible(Map args){
   if (!('path' in args)){
     args.path = "/opt/rpc-openstack/openstack-ansible/playbooks"
@@ -78,11 +92,15 @@ def openstack_ansible(Map args){
 
   ansiColor('xterm'){
     dir(args.path){
+      forks = common.calc_ansible_forks()
       withEnv([
         'ANSIBLE_FORCE_COLOR=true',
-        'ANSIBLE_HOST_KEY_CHECKING=False'])
+        'ANSIBLE_HOST_KEY_CHECKING=False',
+        "ANSIBLE_FORKS=${forks}",
+        'ANSIBLE_SSH_RETRIES=3'])
       {
         sh """#!/bin/bash
+          echo ${ANSIBLE_FORKS}
           openstack-ansible ${args.playbook} ${args.args}
         """
       } //withEnv

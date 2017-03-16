@@ -20,12 +20,18 @@ def deploy_sh(Map args) {
   common.conditionalStage(
     stage_name: "Deploy RPC w/ Script",
     stage: {
+      forks = common.calc_ansible_forks()
       environment_vars = args.environment_vars +
-        ['ANSIBLE_FORCE_COLOR=true', 'ANSIBLE_HOST_KEY_CHECKING=False', 'TERM=linux']
+        ['ANSIBLE_FORCE_COLOR=true',
+         'ANSIBLE_HOST_KEY_CHECKING=False',
+         'TERM=linux',
+         "ANSIBLE_FORKS=${forks}",
+         'ANSIBLE_SSH_RETRIES=3']
       withEnv(environment_vars) {
         ansiColor('xterm') {
           dir("/opt/rpc-openstack/") {
             sh """#!/bin/bash
+            echo ${ANSIBLE_FORKS}
             scripts/deploy.sh
             """
           } // dir
