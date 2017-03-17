@@ -76,7 +76,7 @@ def calc_ansible_forks(){
     else
       ANSIBLE_FORKS=10
     fi
-    echo "\${ANSIBLE_FORKS}"
+    echo -n "\${ANSIBLE_FORKS}"
   """, returnStdout: true)
   print "Ansible forks: ${forks}"
   return forks
