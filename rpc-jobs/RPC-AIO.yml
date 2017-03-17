@@ -12,6 +12,9 @@
       - newton:
           branch: newton-14.0
           branches: "newton-.*"
+      - artifacts:
+          branch: artifacts-14.0
+          branches: "artifacts-.*"
       - master:
           branch: master
           branches: "master"
@@ -46,6 +49,8 @@
         context: upgrade
       - series: newton
         context: upgrade
+      - series: artifacts
+        context: upgrade
       - series: master
         context: upgrade
       # Xenial builds are run for newton and above.
@@ -53,6 +58,12 @@
         context: xenial
       - series: mitaka
         context: xenial
+      # Artifacts are currently only built for Trusty
+      - series: artifacts
+        context: xenial
+      # An artifacted ceph deployment is not yet supported
+      - series: artifacts
+        context: ceph
     jobs:
       - 'RPC-AIO_{series}-{context}-{ztrigger}'
 
