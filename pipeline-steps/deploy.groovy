@@ -25,6 +25,7 @@ def deploy_sh(Map args) {
         ['ANSIBLE_FORCE_COLOR=true',
          'ANSIBLE_HOST_KEY_CHECKING=False',
          'TERM=linux',
+         "FORKS=${forks}",
          "ANSIBLE_FORKS=${forks}",
          'ANSIBLE_SSH_RETRIES=3']
       withEnv(environment_vars) {
