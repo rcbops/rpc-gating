@@ -97,7 +97,10 @@ def openstack_ansible(Map args){
         'ANSIBLE_FORCE_COLOR=true',
         'ANSIBLE_HOST_KEY_CHECKING=False',
         "ANSIBLE_FORKS=${forks}",
-        'ANSIBLE_SSH_RETRIES=3'])
+        'ANSIBLE_SSH_RETRIES=3',
+        'ANSIBLE_GIT_RELEASE=ssh_retry', //only used in mitaka and below
+        'ANSIBLE_GIT_REPO="https://github.com/hughsaunders/ansible"' // only used in mitaka and below
+        ])
       {
         sh """#!/bin/bash
           openstack-ansible ${args.playbook} ${args.args}
