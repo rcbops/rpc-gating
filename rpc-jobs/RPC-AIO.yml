@@ -5,16 +5,12 @@
     series:
       - liberty:
           branch: liberty-12.2
-          branches: "liberty-.*"
       - mitaka:
           branch: mitaka-13.1
-          branches: "mitaka-.*"
       - newton:
           branch: newton-14.0
-          branches: "newton-.*"
       - master:
           branch: master
-          branches: "master"
     context:
       - swift
       - ceph:
@@ -37,10 +33,8 @@
     #       sort after series.
     ztrigger:
       - pr:
-          CRON: ""
           USER_VARS: "maas_use_api: false"
-      - periodic:
-          branches: "do_not_build_on_pr"
+      - periodic
     exclude:
       - series: liberty
         context: upgrade
@@ -62,7 +56,6 @@
     DEPLOY_SWIFT: "yes"
     DEPLOY_CEPH: "no"
     DEPLOY_ELK: "yes"
-    CRON: "H H(9-21) * * 1-5"
     USER_VARS: ""
     UPGRADE_FROM_REF: "liberty-12.2"
     STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup"
@@ -110,8 +103,6 @@
               Upgrade
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
-    triggers:
-      - timed: "{CRON}"
     dsl: |
       // CIT Slave node
       node() {{
