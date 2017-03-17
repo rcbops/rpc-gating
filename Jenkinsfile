@@ -3,7 +3,7 @@ node(){
   deleteDir()
   stage("Prepare"){
     checkout scm
-    lint_container = docker.build 'lint'
+    lint_container = docker.build env.BUILD_TAG.toLowerCase()
   }
   lint_container.inside {
     stage("Checkout"){
