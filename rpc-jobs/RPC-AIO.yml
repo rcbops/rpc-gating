@@ -21,7 +21,6 @@
     context:
       - swift
       - ceph:
-          DEPLOY_SWIFT: "no"
           DEPLOY_CEPH: "yes"
           USER_VARS: |
             cinder_cinder_conf_overrides:
