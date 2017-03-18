@@ -20,17 +20,7 @@ def deploy_sh(Map args) {
   common.conditionalStage(
     stage_name: "Deploy RPC w/ Script",
     stage: {
-      forks = common.calc_ansible_forks()
-      environment_vars = args.environment_vars +
-        ['ANSIBLE_FORCE_COLOR=true',
-         'ANSIBLE_HOST_KEY_CHECKING=False',
-         'TERM=linux',
-         "FORKS=${forks}",
-         "ANSIBLE_FORKS=${forks}",
-         'ANSIBLE_SSH_RETRIES=3',
-         'ANSIBLE_GIT_RELEASE=ssh_retry', //only used in mitaka and below
-         'ANSIBLE_GIT_REPO=https://github.com/hughsaunders/ansible' // only used in mitaka and below
-        ]
+      environment_vars = args.environment_vars + common.get_deploy_script_env()
       withEnv(environment_vars) {
         ansiColor('xterm') {
           dir("/opt/rpc-openstack/") {
@@ -48,8 +38,7 @@ def upgrade(Map args) {
   common.conditionalStage(
     stage_name: "Upgrade",
     stage: {
-      environment_vars = args.environment_vars +
-        ['ANSIBLE_FORCE_COLOR=true', 'ANSIBLE_HOST_KEY_CHECKING=False', 'TERM=linux']
+      environment_vars = args.environment_vars + common.get_deploy_script_env()
       withEnv(environment_vars){
         dir("/opt/rpc-openstack/openstack-ansible"){
           sh "git reset --hard"
@@ -57,6 +46,7 @@ def upgrade(Map args) {
         dir("/opt/rpc-openstack"){
           git branch: env.RPC_BRANCH, url: env.RPC_REPO
           sh """
+            env
             git submodule update --init
             scripts/test-upgrade.sh
           """
