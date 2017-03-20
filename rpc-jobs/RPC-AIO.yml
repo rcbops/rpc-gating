@@ -23,7 +23,7 @@
       - ceph:
           DEPLOY_SWIFT: "no"
           DEPLOY_CEPH: "yes"
-          USER_VARS: |
+          CONTEXT_USER_VARS: |
             cinder_cinder_conf_overrides:
                 DEFAULT:
                     default_volume_type: ceph
@@ -41,7 +41,7 @@
     ztrigger:
       - pr:
           CRON: ""
-          USER_VARS: "maas_use_api: false"
+          TRIGGER_USER_VARS: "maas_use_api: false"
       - periodic:
           branches: "do_not_build_on_pr"
     exclude:
@@ -74,7 +74,9 @@
     DEPLOY_CEPH: "no"
     DEPLOY_ELK: "yes"
     CRON: "H H(9-21) * * 1-5"
-    USER_VARS: ""
+    CONTEXT_USER_VARS: ""
+    TRIGGER_USER_VARS: ""
+    SERIES_USER_VARS: ""
     UPGRADE_FROM_REF: "liberty-12.2"
     STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup"
     branch: master
@@ -93,7 +95,10 @@
          DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
          DEPLOY_CEPH: "{DEPLOY_CEPH}"
          DEPLOY_ELK: "{DEPLOY_ELK}"
-         USER_VARS: "{USER_VARS}"
+         USER_VARS: |
+           {CONTEXT_USER_VARS}
+           {SERIES_USER_VARS}
+           {TRIGGER_USER_VARS}
          UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - rpc_gating_params
       - single_use_slave_params:
