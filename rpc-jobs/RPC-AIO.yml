@@ -95,7 +95,10 @@
          DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
          DEPLOY_CEPH: "{DEPLOY_CEPH}"
          DEPLOY_ELK: "{DEPLOY_ELK}"
-         USER_VARS: "{CONTEXT_USER_VARS}\\n{SERIES_USER_VARS}\\n{TRIGGER_USER_VARS}"
+         USER_VARS: |
+           {CONTEXT_USER_VARS}
+           {SERIES_USER_VARS}
+           {TRIGGER_USER_VARS}
          UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - rpc_gating_params
       - single_use_slave_params:
