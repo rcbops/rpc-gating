@@ -44,6 +44,7 @@
       - single_use_slave_params:
          IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
          FLAVOR: "onmetal-io1"
+         REGION: "IAD"
       - string:
           name: OSA_OPS_REPO
           default: https://github.com/openstack/openstack-ansible-ops
