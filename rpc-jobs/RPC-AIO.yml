@@ -87,7 +87,7 @@
     concurrent: true
     properties:
       - build-discarder:
-          num-to-keep: 30
+          num-to-keep: 7
     parameters:
       # See params.yml
       - rpc_params:
