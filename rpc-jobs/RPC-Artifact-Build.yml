@@ -12,22 +12,37 @@
     context:
       - Python
       - Container
+      - Pipeline
     ztrigger:
       - pr:
           CRON: ""
-          STAGES: "Allocate Resources, Connect Slave, Build {context} Artifacts, Cleanup"
+          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Build {context} Artifacts, Cleanup"
       - periodic:
           branches: "do_not_build_on_pr"
-          STAGES: "Allocate Resources, Connect Slave, Build Python Artifacts, Build Container Artifacts, Cleanup"
+          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Build Python Artifacts, Build Container Artifacts, Cleanup"
           PUSH_TO_MIRROR: yes
+    exclude:
+      - context: Python
+        ztrigger: periodic
+      - context: Container
+        ztrigger: periodic
+      - context: Pipeline
+        ztrigger: pr
     jobs:
       - 'RPC-Artifact_Build-{series}-{image}-{context}-{ztrigger}'
 
 - job-template:
     # DEFAULTS
     IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    DEPLOY_SWIFT: "yes"
+    DEPLOY_CEPH: "yes"
+    DEPLOY_ELK: "yes"
     CRON: "H H(9-21) * * 1-5"
-    STAGES: "Allocate Resources, Connect Slave, Build Python Artifacts, Build Container Artifacts, Cleanup"
+    CONTEXT_USER_VARS: ""
+    TRIGGER_USER_VARS: ""
+    SERIES_USER_VARS: ""
+    UPGRADE_FROM_REF: ""
+    STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Build Python Artifacts, Build Container Artifacts, Cleanup"
     branch: artifacts-14.0
     PUSH_TO_MIRROR: "NO"
 
@@ -42,16 +57,14 @@
       # See params.yml
       - rpc_params:
          RPC_BRANCH: "{branch}"
-         # These are only here because the JJB render fails
-         #  if we do not include them. We do not use them
-         #  in the build scripts because we hard set them
-         #  there to ensure that the artifacts build with
-         #  everything.
-         DEPLOY_SWIFT: ""
-         DEPLOY_CEPH: ""
-         DEPLOY_ELK: ""
-         USER_VARS: ""
-         UPGRADE_FROM_REF: ""
+         DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
+         DEPLOY_CEPH: "{DEPLOY_CEPH}"
+         DEPLOY_ELK: "{DEPLOY_ELK}"
+         USER_VARS: |
+           {CONTEXT_USER_VARS}
+           {SERIES_USER_VARS}
+           {TRIGGER_USER_VARS}
+         UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - rpc_gating_params
       - single_use_slave_params:
          IMAGE: "{IMAGE}"
@@ -69,6 +82,7 @@
             Options:
               Allocate Resources
               Connect Slave
+              Prepare Deployment
               Build Python Artifacts
               Build Container Artifacts
               Pause (use to hold instance for investigation before cleanup)
@@ -81,8 +95,9 @@
         dir("rpc-gating") {{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
             common = load 'pipeline-steps/common.groovy'
-            artifact_build = load 'pipeline-steps/artifact_build.groovy'
             pubcloud = load 'pipeline-steps/pubcloud.groovy'
+            aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
+            artifact_build = load 'pipeline-steps/artifact_build.groovy'
         }}
         if (env.STAGES.contains("Build Python Artifacts")) {{
           pubcloud.runonpubcloud {{
@@ -92,6 +107,7 @@
               environment_vars = [
                 "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
               ]
+              aio_prepare.prepare()
               artifact_build.python(environment_vars: environment_vars)
             }} catch (e) {{
               print(e)
@@ -109,6 +125,7 @@
               environment_vars = [
                 "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
               ]
+              aio_prepare.prepare()
               artifact_build.python(environment_vars: environment_vars)
             }} catch (e) {{
               print(e)

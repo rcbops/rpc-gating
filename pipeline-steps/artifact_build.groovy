@@ -33,3 +33,5 @@ def container(Map args) {
     } // stage
   ) // conditionalStage
 }
+
+return this
