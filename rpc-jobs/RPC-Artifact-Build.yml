@@ -92,7 +92,7 @@
               environment_vars = [
                 "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
               ]
-              artifact_build.python()
+              artifact_build.python(environment_vars: environment_vars)
             }} catch (e) {{
               print(e)
               throw e
@@ -109,7 +109,7 @@
               environment_vars = [
                 "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
               ]
-              artifact_build.python()
+              artifact_build.python(environment_vars: environment_vars)
             }} catch (e) {{
               print(e)
               throw e
