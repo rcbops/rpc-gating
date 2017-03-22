@@ -24,8 +24,9 @@
 - job-template:
     name: 'OnMetal_Multi_Node_AIO_{series}-{context}'
     project-type: workflow
-    build-discarder:
-      days-to-keep: 30
+    properties:
+      - build-discarder:
+          days-to-keep: 7
     concurrent: true
     triggers:
       - timed: "H H(0-8) * * 1-5"
