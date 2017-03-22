@@ -1,0 +1,121 @@
+- project:
+    name: 'RPC-Artifact_Build-Jobs'
+    # Note: branch is the branch for periodics to build
+    #       branches is the branch pattern to match for PR Jobs.
+    series:
+      - artifacts:
+          branch: artifacts-14.0
+          branches: "artifacts-.*"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    context:
+      - Python
+      - Container
+    ztrigger:
+      - pr:
+          CRON: ""
+          STAGES: "Allocate Resources, Connect Slave, Build {context} Artifacts, Cleanup"
+      - periodic:
+          branches: "do_not_build_on_pr"
+          STAGES: "Allocate Resources, Connect Slave, Build Python Artifacts, Build Container Artifacts, Cleanup"
+          PUSH_TO_MIRROR: yes
+    jobs:
+      - 'RPC-Artifact_Build-{series}-{image}-{context}-{ztrigger}'
+
+- job-template:
+    # DEFAULTS
+    IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    CRON: "H H(9-21) * * 1-5"
+    STAGES: "Allocate Resources, Connect Slave, Build Python Artifacts, Build Container Artifacts, Cleanup"
+    branch: artifacts-14.0
+    PUSH_TO_MIRROR: "NO"
+
+    # TEMPLATE
+    name: 'RPC-Artifact_Build-{series}-{image}-{context}-{ztrigger}'
+    project-type: workflow
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      # See params.yml
+      - rpc_params:
+         RPC_BRANCH: "{branch}"
+         # These are only here because the JJB render fails
+         #  if we do not include them. We do not use them
+         #  in the build scripts because we hard set them
+         #  there to ensure that the artifacts build with
+         #  everything.
+         DEPLOY_SWIFT: ""
+         DEPLOY_CEPH: ""
+         DEPLOY_ELK: ""
+         USER_VARS: ""
+         UPGRADE_FROM_REF: ""
+      - rpc_gating_params
+      - single_use_slave_params:
+         IMAGE: "{IMAGE}"
+         FLAVOR: "performance2-15"
+         REGION: "DFW"
+      - string:
+          name: PUSH_TO_MIRROR
+          default: "{PUSH_TO_MIRROR}"
+          description: "Set this to YES if you want to push the newly built artifacts to rpc-repo."
+      - string:
+          name: STAGES
+          default: "{STAGES}"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Allocate Resources
+              Connect Slave
+              Build Python Artifacts
+              Build Container Artifacts
+              Pause (use to hold instance for investigation before cleanup)
+              Cleanup
+    triggers:
+      - timed: "{CRON}"
+    dsl: |
+      // CIT Slave node
+      node() {{
+        dir("rpc-gating") {{
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            artifact-build = load 'pipeline-steps/artifact-build.groovy'
+            common = load 'pipeline-steps/common.groovy'
+            pubcloud = load 'pipeline-steps/pubcloud.groovy'
+        }}
+        if (env.STAGES.contains("Build Python Artifacts")) {{
+          pubcloud.runonpubcloud {{
+            // try within pubcloud node so we can archive archive_artifacts
+            // after a failure, before the node is cleaned up.
+            try {{
+              environment_vars = [
+                "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
+              ]
+              artifact-build.python()
+            }} catch (e) {{
+              print(e)
+              throw e
+            }} finally {{
+              common.archive_artifacts()
+            }}
+          }} // pubcloud slave
+        }} // if
+        if (env.STAGES.contains("Build Container Artifacts")) {{
+          pubcloud.runonpubcloud {{
+            // try within pubcloud node so we can archive archive_artifacts
+            // after a failure, before the node is cleaned up.
+            try {{
+              environment_vars = [
+                "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
+              ]
+              artifact-build.python()
+            }} catch (e) {{
+              print(e)
+              throw e
+            }} finally {{
+              common.archive_artifacts()
+            }}
+          }} // pubcloud slave
+        }} // if
+      }} // cit node
