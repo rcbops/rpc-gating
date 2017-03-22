@@ -22,7 +22,7 @@ from jenkinsapi.jenkins import Jenkins
 def create_node(jenkins, host_ip, name, credential_description, labels=None,
                 remote_root_dir=None):
     node_dict = {
-        "num_executors": 15,
+        "num_executors": 2,
         "remote_fs": remote_root_dir or "/var/lib/jenkins",
         "labels": labels or "",
         "exclusive": True,
