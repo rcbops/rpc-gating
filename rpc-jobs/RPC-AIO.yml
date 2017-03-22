@@ -104,6 +104,7 @@
       - single_use_slave_params:
          IMAGE: "{IMAGE}"
          FLAVOR: "performance2-15"
+         REGION: "DFW"
       - tempest_params:
          TEMPEST_TEST_SETS: "scenario defcore cinder_backup"
          RUN_TEMPEST_OPTS: "--serial"
