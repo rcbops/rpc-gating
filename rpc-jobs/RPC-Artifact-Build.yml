@@ -80,8 +80,8 @@
       node() {{
         dir("rpc-gating") {{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            artifact_build = load 'pipeline-steps/artifact_build.groovy'
             common = load 'pipeline-steps/common.groovy'
+            artifact_build = load 'pipeline-steps/artifact_build.groovy'
             pubcloud = load 'pipeline-steps/pubcloud.groovy'
         }}
         if (env.STAGES.contains("Build Python Artifacts")) {{
