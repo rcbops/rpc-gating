@@ -1,0 +1,29 @@
+---
+- name: Enable trusty-backports
+  tags: packages
+  lineinfile:
+    dest: /etc/apt/sources.list
+    regexp: '^deb http.*trusty-backports.*'
+    line: 'deb http://mirror.rackspace.com/ubuntu trusty-backports main restricted universe multiverse'
+    state: present
+
+- name: Updating packages
+  tags: packages
+  apt:
+    update_cache: yes
+    cache_valid_time: 600
+  register: pkgs
+  until: pkgs|success
+  retries: 3
+
+- name: Install packages
+  tags: packages
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 600
+  register: pkgs
+  until: pkgs|success
+  retries: 3
+  with_items: '{{ install }}'

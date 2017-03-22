@@ -1,0 +1,710 @@
+#!/usr/bin/env python
+# Copyright 2014, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pypi imports
+import requests
+
+# ansible imports
+from ansible.module_utils.basic import *
+
+DOCUMENTATION = '''
+---
+module: razor
+short_description:
+    - Manage razor server and nodes
+description:
+    - This module uses razor to manage a cluster of servers
+version_added: "1.6.2"
+author: Solomon Wagner
+requirements:
+    - "razor-server"
+    - "python-requests"
+options:
+    return_code:
+        description:
+            - Allow for return codes other than 0 when executing commands
+            - This is a comma seperated list of acceptable return codes
+        default: 0
+    url:
+        description:
+            - the full url for the razor api
+        required: True
+        default: http://localhost:8080/api
+    command:
+        description:
+            - Operation for the module to perform, Currently available
+        choices:
+            - list-nodes
+            - get-node
+            - reinstall-node
+    name:
+        description:
+            - Name of the node in razor
+'''
+
+EXAMPLES = """
+# Get the list of nodes
+- razor:
+    url: http://localhost:8080/api
+    command: list-nodes
+
+# Issue reinstall node command
+- razor:
+    url: http://razor:8080/api
+    command: reinstall-node
+    name: node01
+"""
+
+COMMAND_MAP = {
+    'list-brokers': {
+        'command': 'list_brokers',
+        'extension': '/collections/brokers',
+        'variables': None
+    },
+    'list-commands': {
+        'command': 'list_commands',
+        'extension': '/collections/commands',
+        'variables': None
+    },
+    'list-events': {
+        'command': 'list_events',
+        'extension': '/collections/events',
+        'variables': None
+    },
+    'list-hooks': {
+        'command': 'list_hooks',
+        'extension': '/collections/hooks',
+        'variables': None
+    },
+    'list-nodes': {
+        'command': 'list_nodes',
+        'extension': '/collections/nodes',
+        'variables': None
+    },
+    'list-policies': {
+        'command': 'list_policies',
+        'extension': '/collections/policies',
+        'variables': None
+    },
+    'list-repos': {
+        'command': 'list_repos',
+        'extension': '/collections/repos',
+        'variables': None
+    },
+    'list-tags': {
+        'command': 'list_tags',
+        'extension': '/collections/tags',
+        'variables': None
+    },
+    'get-broker': {
+        'command': 'get_broker',
+        'extension': '/collections/brokers/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-command': {
+        'command': 'get_command',
+        'extension': '/collections/commands/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-event': {
+        'command': 'get_event',
+        'extension': '/collections/events/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-hook': {
+        'command': 'get_hook',
+        'extension': '/collections/hooks/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-node': {
+        'command': 'get_node',
+        'extension': '/collections/nodes/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-policy': {
+        'command': 'get_policy',
+        'extension': '/collections/policies/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-repo': {
+        'command': 'get_repo',
+        'extension': '/collections/repos/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-tag': {
+        'command': 'get_tag',
+        'extension': '/collections/tags/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'get-task': {
+        'command': 'get_task',
+        'extension': '/collections/tasks/%(name)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'add-policy-tag': {
+        'command': 'add_policy_tag',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'tag': True,
+            'rule': True
+        }
+    },
+    'create-broker': {
+        'command': 'create_broker',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'broker-type': True,
+            'configuration': True
+        }
+    },
+    'create-hook': {
+        'command': 'create_hook',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'hook-type': True,
+            'configuration': True
+        }
+    },
+    'create-policy': {
+        'command': 'create_policy',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'hostname': True,
+            'root-password': False,
+            'enabled': False,
+            'max-count': False,
+            'before': False,
+            'after': False,
+            'tags': False,
+            'repo': True,
+            'broker': False,
+            'task': True,
+            'node-metadata': False
+        }
+    },
+    'create-repo': {
+        'command': 'create_repo',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'url': True,
+            'iso-url': True,
+            'no-content': False,
+            'task': False
+        }
+    },
+    'create-tag': {
+        'command': 'create_tag',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'rule': True
+        }
+    },
+    'create-task': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'os': True,
+            'template': True,
+            'boot-seq': True
+        }
+    },
+    'delete-broker': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'delete-hook': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'delete-node': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'delete-policy': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'delete-repo': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'delete-tag': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'force': False
+        }
+    },
+    'disable-policy': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'enable-policy': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'modify-node-metadata': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'node': True,
+            'update': False,
+            'remove': False,
+            'clear': False,
+            'no-replace': False
+        }
+    },
+    'modify-policy-max-count': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'max-count': True
+        }
+    },
+    'move-policy': {
+        'command': 'move_policy',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'before': True,
+            'after': True
+        }
+    },
+    'reboot-node': {
+        'command': 'reboot_node',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'register-node': {
+        'command': 'register_node',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'installed': True,
+            'hw-info': False
+        }
+    },
+    'reinstall-node': {
+        'command': 'reinstall_node',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True
+        }
+    },
+    'remove-node-metadata': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'node': True,
+            'key': True,
+            'all': False
+        }
+    },
+    'remove-policy-tag': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'tag': True
+        }
+    },
+    'set-node-desired-power-state': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'to': True
+        }
+    },
+    'set-node-hw-info': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'node': True,
+            'hw-info': True
+        }
+    },
+    'set-node-ipmi-credentials': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'ipmi-hostname': True,
+            'ipmi-username': True,
+            'ipmi-password': True
+        }
+    },
+    'update-node-metadata': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'node': True,
+            'key': True,
+            'value': True,
+            'no-replace': False
+        }
+    },
+    'update-tag-rule': {
+        'command': '',
+        'extension': '/commands/%(command)s',
+        'variables': {
+            'name': True,
+            'rule': True,
+            'force': False
+        }
+    }
+}
+
+
+class ManageRazor(object):
+
+    def __init__(self, module):
+        """ Manage Razor via Ansible """
+        self.state_change = False
+        self.url = module.params['url']
+
+        # Load Ansible Module
+        self.module = module
+
+    @staticmethod
+    def _facts(facts):
+        """Return a dict for our Ansible facts.
+
+        :param facts: ``dict``  Dict with data to return
+        """
+        return {'razor_facts': facts}
+
+    def _get_vars(self, variables, required=None):
+        """Return a dict of all variables as found within the module.
+
+        :param variables: ``list``  List of all variables that are
+                                    available to use within the
+                                    Razor Command.
+        :param required: ``list``  Name of variables that are required.
+        """
+        return_dict = {}
+        for variable in variables:
+            return_dict[variable] = self.module.params.get(variable)
+        else:
+            if isinstance(required, list):
+                for var_name in required:
+                    check = return_dict.get(var_name)
+                    if check is None:
+                        self.failure(
+                            error='Missing [ %s ] from Task or found a'
+                                  'None value' % var_name,
+                            rc=000,
+                            msg='variables %s - available params [ %s ]'
+                                % (variables, self.module.params)
+                        )
+            return return_dict
+
+    def failure(self, error, rc, msg):
+        """Return a Failure when running an Ansible command.
+
+        :param error: ``str``  Error that occurred.
+        :param rc: ``int``     Return code while executing an Ansible command.
+        :param msg: ``str``    Message to report.
+        """
+        self.module.fail_json(msg=msg, rc=rc, err=error)
+
+    def command_router(self):
+        """ Run the command as its provided to the module """
+        command_name = self.module.params['command']
+
+        # check to mae sure the command exists
+        if command_name not in COMMAND_MAP:
+            self.failure(
+                error='No Command Found',
+                rc=2,
+                msg='Command [ %s ] was not found.' % command_name
+                )
+
+        action_command = COMMAND_MAP[command_name]['command']
+        if hasattr(self, '%s' % action_command):
+
+            # Gather variables / extension for command
+            variables_dict = COMMAND_MAP[command_name]['variables']
+            variables = []
+            required_vars = []
+            if variables_dict is not None:
+                # save the variable keys as a list of variables
+                variables = COMMAND_MAP[command_name]['variables'].keys()
+                for key, value in variables_dict.iteritems():
+                    if value is True:
+                        required_vars.append(key)
+
+            # get action and run
+            action = getattr(self, '%s' % action_command)
+            facts = action(variables=variables,
+                           required_vars=required_vars)
+
+            # check return
+            if facts is None:
+                self.module.exit_json(changed=self.state_change)
+            else:
+                self.module.exit_json(
+                    changed=self.state_change,
+                    ansible_facts=facts
+                )
+        else:
+            self.failure(
+                error='Command not in ManageRazor class',
+                rc=2,
+                msg='Method [ %s ] was not found.' % command_name
+            )
+
+    def list_nodes(self, variables=None, required_vars=None):
+        """ Lists all available nodes
+
+        This will return 'None' if no nodes are found.
+
+        :param variables: ``List``  List of all variables that are available
+                                    with the Razor command.
+        :param required_vars: ``List``  List of razor command
+                                        required variables
+        """
+        # Build out request headers
+        headers = {'content-type': 'application/json'}
+
+        # build out extension
+        extension = '%s' % COMMAND_MAP['list-nodes']['extension']
+
+        # Build out request URL
+        url = '%(url)s%(extension)s' % dict(url=self.url, extension=extension)
+
+        # issue api request
+        r = requests.get(url, headers=headers)
+
+        if r.status_code == requests.codes.ok:
+            self.module.exit_json(
+                cmd=url,
+                stdout=r.json()['items'],
+                changed=False,
+                stderr=False,
+                rc=0
+            )
+        else:
+            self.failure(
+                error='Bad Request',
+                rc=2,
+                msg='Invalid request, url, or server error'
+            )
+
+    def get_node(self, variables, required_vars):
+        """ Gets a nodes information
+
+        :param variables: ``List`` List of variables available to
+                                   the razor command
+        :param required_vars: ``List`` List of required varibles for
+                                       the razor command
+        """
+        # Build out the request headers
+        headers = {'content-type': 'application/json'}
+
+        # Build out request body
+        body = self._get_vars(variables, required=required_vars)
+
+        # build out extension
+        extension = ('%s' %
+                     COMMAND_MAP['get-node']['extension'] %
+                     {'name': body['name']})
+
+        # Build out request URL
+        url = '%(url)s%(extension)s' % dict(url=self.url, extension=extension)
+
+        # issue api request
+        r = requests.get(url, headers=headers)
+
+        # add return value work here
+        if r.status_code == requests.codes.ok:
+            self.module.exit_json(
+                cmd=url,
+                stdout="%s found" % r.json()['name'],
+                changed=True,
+                stderr=False,
+                rc=0
+            )
+        else:
+            self.failure(
+                error='Bad Request',
+                rc=2,
+                msg=r.json()['error']
+            )
+
+    def reboot_node(self, variables, required_vars):
+        """Issues a reboot node command
+
+        This will return 'None' if the node is not found.
+
+        :param variables: ``list``  List of all variables that are available
+                                    with the Razor command.
+        :param required_vars: ``list``  List of all required variables for the
+                                        Razor command.
+        """
+        # Build out request headers
+        headers = {'content-type': 'application/json'}
+
+        # Build out the request body and headers
+        body = self._get_vars(variables, required=required_vars)
+
+        # build out extension
+        extension = ('%s' %
+                     COMMAND_MAP['reboot-node']['extension'] %
+                     {'command': self.module.params['command']})
+
+        # build out request url
+        url = '%(url)s%(extension)s' % dict(url=self.url, extension=extension)
+
+        # issue api request
+        r = requests.post(url, data=json.dumps(body), headers=headers)
+
+        # add return value work here
+        if r.status_code == requests.codes.accepted:
+            self.module.exit_json(
+                cmd='%s with body %s' % (url, body),
+                stdout=r.json()['result'],
+                changed=True,
+                stderr=False,
+                rc=0
+            )
+        else:
+            self.failure(
+                error='Bad Request',
+                rc=2,
+                msg=r.json()['error']
+            )
+
+    def reinstall_node(self, variables, required_vars):
+        """Issues a reinstall node command
+
+        This will return 'None' if the node is not found.
+
+        :param variables: ``list``  List of all variables that are available
+                                    with the Razor command.
+        :param required_vars: ``list``  List of all required variables for the
+                                        Razor command.
+        """
+        # Build out request headers
+        headers = {'content-type': 'application/json'}
+
+        # Build out the request body and headers
+        body = self._get_vars(variables, required=required_vars)
+
+        # build out extension
+        extension = ('%s' %
+                     COMMAND_MAP['reinstall-node']['extension'] %
+                     {'command': self.module.params['command']})
+
+        # build out request url
+        url = '%(url)s%(extension)s' % dict(url=self.url, extension=extension)
+
+        # issue api request
+        r = requests.post(url, data=json.dumps(body), headers=headers)
+
+        # add return value work here
+        if r.status_code == requests.codes.accepted:
+            self.module.exit_json(
+                cmd='%s with body %s' % (url, body),
+                stdout=r.json()['result'],
+                changed=True,
+                stderr=False,
+                rc=0
+            )
+        else:
+            self.failure(
+                error='Bad Request',
+                rc=2,
+                msg=r.json()['error']
+            )
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            command=dict(
+                required=True,
+                choices=COMMAND_MAP.keys()
+            ),
+            url=dict(
+                required=True
+            ),
+            return_code=dict(
+                type='str',
+                default=0
+            ),
+            name=dict(
+                required=False
+            )
+        ),
+        supports_check_mode=False
+    )
+
+    mr = ManageRazor(module=module)
+    return_code = module.params.get('return_code', '').split(',')
+    module.params['return_code'] = return_code
+    mr.command_router()
+
+if __name__ == '__main__':
+        main()

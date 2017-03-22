@@ -1,0 +1,61 @@
+---
+{% set infra = groups[lab_name + '-infrastructure'] %}
+{% set swift = groups[lab_name + '-swift'] %}
+global_overrides:
+  swift:
+    part_power: {{ swift_config.part_power }}
+    weight: {{ swift_config.weight }}
+    repl_number: {{ swift_config.repl_number }}
+    min_part_hours: {{ swift_config.min_part_hours }}
+{% if swift_config.region is defined %}
+    region: {{ swift_config.region }}
+{% endif %}
+{% if swift_config.storage_network is defined %}
+    storage_network: '{{ swift_config.storage_network }}'
+{% endif %}
+{% if swift_config.replication_network is defined %}
+    replication_network: '{{ swift_config.replication_network }}'
+{% endif %}
+    drives:
+{% for drive in swift_config.drives %}
+      - name: {{ drive.name }}
+{% endfor %}
+    mount_point: {{ swift_config.mount_point }}
+    account: {{ swift_config.account }}
+    container: {{ swift_config.container }}
+    storage_policies:
+{% for storage_policy in swift_config.storage_policies %}
+      - policy:
+          name: {{ storage_policy.name }}
+          index: {{ storage_policy.index }}
+{% if storage_policy.default is defined %}
+          default: {{ storage_policy.default }}
+{% endif %}
+{% if storage_policy.repl_number is defined %}
+          repl_number: {{ storage_policy.repl_number }}
+{% endif %}
+{% if storage_policy.depreciated is defined %}
+          depreciated: {{ storage_policy.depreciated }}
+{% endif %}
+{% endfor %}
+
+swift-proxy_hosts:
+{% for host in infra %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+    container_vars:
+      swift_proxy_vars:
+        read_affinity: 'r{{ swift_config.region }}=100'
+        write_affinity: 'r{{ swift_config.region }}'
+        write_affinity_node_count: '2 * replicas'
+{% endfor %}
+
+swift_hosts:
+{% for host in swift %}
+  {{ host }}:
+    ip: {{ hostvars[host]["ansible_ssh_host"] }}
+    container_vars:
+      swift_vars:
+        zone: {{ hostvars[host]["zone"] }}
+        region: {{ swift_config.region }}
+{% endfor %}

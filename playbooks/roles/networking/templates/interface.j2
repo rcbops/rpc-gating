@@ -1,0 +1,9 @@
+auto {{item.name}}
+{% if item.type is defined %}
+iface {{item.name}} inet {{item.type}}
+{% if item.directives is defined %}
+{% for directive in item.directives %}
+    {{directive}}
+{% endfor %}
+{% endif %}
+{% endif %}

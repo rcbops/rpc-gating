@@ -1,0 +1,52 @@
+---
+- hosts: all
+  tags:
+    - prepare
+    - packages
+  roles:
+    - packages
+
+- hosts: all
+  tags:
+    - prepare
+    - networking
+  roles:
+    - networking
+
+- hosts: cinder
+  tags:
+    - prepare
+    - volumes
+  roles:
+    - volumes
+
+- hosts: swift
+  tags:
+    - prepare
+    - swift
+  roles:
+    - swift-mounts
+
+- hosts: deployment
+  tags:
+    - configure
+  roles:
+    - { role: configure-rpc, when: product == "rpc-openstack" }
+
+- hosts: deployment
+  tags:
+    - configure
+  roles:
+    - configure-swift
+
+- hosts: deployment
+  tags:
+    - configure
+  roles:
+    - { role: configure-ceph, when: rpc_ceph is defined }
+
+- hosts: all
+  tags:
+    - reboot
+  roles:
+    - reboot

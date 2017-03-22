@@ -1,0 +1,8 @@
+---
+- name: Add volume groups
+  lvg:
+    vg: "{{ item.name }}"
+    pvs: "{{ item.device | join(',') }}"
+    pesize: 8
+    state: present
+  with_items: '{{ vgs }}'

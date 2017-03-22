@@ -1,0 +1,10 @@
+# /etc/network/interfaces
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+{% for item in networking %}
+source /etc/network/interfaces.d/{{ item.name }}.cfg
+{% endfor %}
+# include any OSA-configured interfaces, like lxcbr0
+source /etc/network/interfaces.d/*.cfg

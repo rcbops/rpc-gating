@@ -1,0 +1,24 @@
+{% extends "{{ config_prefix }}_user_config.j2" %}
+{% block lvm %}
+container_vars:
+  cinder_backends:
+    limit_container_types: cinder_volume
+    lvm:
+      volume_group: {{ volume_group }}
+      driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+      backend_name: LVM_iSCSI
+{% endblock %}
+{% block netapp %}
+container_vars:
+  cinder_backends:
+    limit_container_type: cinder_volume
+    netapp:
+      netapp_storage_family: ontap_7mode
+      netapp_storage_protocol: iscsi
+      netapp_server_hostname: "{{ cinder_netapp_hostname }}"
+      netapp_server_port: 80
+      netapp_login: "{{ cinder_netapp_username }}"
+      netapp_password: "{{ cinder_netapp_password }}"
+      driver: cinder.volume.drivers.netapp.common.NetAppDriver
+      backend_name: NETAPP_iSCSI
+{% endblock %}
