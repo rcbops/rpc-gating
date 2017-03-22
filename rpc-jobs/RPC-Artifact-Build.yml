@@ -80,7 +80,7 @@
       node() {{
         dir("rpc-gating") {{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            artifact-build = load 'pipeline-steps/artifact-build.groovy'
+            artifact_build = load 'pipeline-steps/artifact-build.groovy'
             common = load 'pipeline-steps/common.groovy'
             pubcloud = load 'pipeline-steps/pubcloud.groovy'
         }}
@@ -92,7 +92,7 @@
               environment_vars = [
                 "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
               ]
-              artifact-build.python()
+              artifact_build.python()
             }} catch (e) {{
               print(e)
               throw e
@@ -109,7 +109,7 @@
               environment_vars = [
                 "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
               ]
-              artifact-build.python()
+              artifact_build.python()
             }} catch (e) {{
               print(e)
               throw e
