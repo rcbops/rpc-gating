@@ -17,6 +17,10 @@
         - string:
             name: JJB_BRANCH
             default: master
+        - bool:
+            name: DELETE_OLD
+            description: "Remove jobs that are no longer defined."
+            default: false
     scm:
         - git:
             url: $JJB_REPO
@@ -56,6 +60,9 @@
 
             if [ "$IGNORE_CACHE" = "true" ]; then
                 JJB_ARGS="--ignore-cache"
+            fi
+            if [ "$DELETE_OLD" = "true" ]; then
+                JJB_ARGS+=" --delete-old"
             fi
 
             jenkins-jobs --conf jenkins_jobs.ini \
