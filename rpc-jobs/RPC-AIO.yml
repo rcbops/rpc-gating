@@ -150,7 +150,7 @@
         */
         if ("{ztrigger}" == "pr" ){{
           env.RPC_REPO = env.ghprbAuthorRepoGitUrl
-          env.RPC_BRANCH = "origin/pr/${{ghprbPullId}}/merge" #matches the refspec in aio_prepare.groovy
+          env.RPC_BRANCH = "origin/pr/${{ghprbPullId}}/merge" // matches the refspec in aio_prepare.groovy
           print("""Triggered by PR: ${{ghprbPullLink}} RPC_REPO: ${{RPC_REPO}} Branch: ${{RPC_BRANCH}}""")
         }}
         dir("rpc-gating") {{
