@@ -1,4 +1,9 @@
 - property:
+    name: rpc-gating-github
+    properties:
+      - github:
+          url: https://github.com/rcbops/rpc-gating
+- property:
     name: rpc-openstack-github
     properties:
       - github:
