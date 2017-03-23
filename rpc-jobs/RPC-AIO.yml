@@ -129,9 +129,29 @@
               Cleanup
     triggers:
       - timed: "{CRON}"
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_cit_all.*|.*recheck_cit_{context}.*'
+          only-trigger-phrase: false
+          white-list-target-branches:
+            - "{branches}"
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/{context}'
+
     dsl: |
       // CIT Slave node
       node() {{
+        /* if job is triggered by PR, then we need to set RPC_REPO and
+          RPC_BRANCH using the env vars supplied by ghprb. Ztrigger is a
+          jjb variable so uses single braces.
+        */
+        if ("{ztrigger}" == "pr" ){{
+          env.RPC_REPO = env.ghprbAuthorRepoGitUrl
+          env.RPC_BRANCH = "origin/pr/${{ghprbPullId}}/merge" #matches the refspec in aio_prepare.groovy
+          print("""Triggered by PR: ${{ghprbPullLink}} RPC_REPO: ${{RPC_REPO}} Branch: ${{RPC_BRANCH}}""")
+        }}
         dir("rpc-gating") {{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
             common = load 'pipeline-steps/common.groovy'
