@@ -1,4 +1,24 @@
 - job:
+    name: 'Merge-Trigger-JJB'
+    project-type: freestyle
+    logrotate:
+      daysToKeep: 30
+    scm:
+        - git:
+            url: "https://github.com/rcbops/rpc-gating"
+            branches:
+                - master
+    properties:
+      - rpc-gating-github
+    triggers:
+      - github # triggered post merge, not on PR
+    builders:
+    builders:
+      - trigger-builds:
+        - project: "Jenkins-Job-Builder"
+
+
+- job:
     name: 'Jenkins-Job-Builder'
     description: Creates and updates jobs with Jenkins Job Builder.
     logrotate:
@@ -11,22 +31,18 @@
         - bool:
             name: IGNORE_CACHE
             description: "Ignore cache when updating jobs."
-        - string:
-            name: JJB_REPO
-            default: https://github.com/rcbops/rpc-gating
-        - string:
-            name: JJB_BRANCH
-            default: master
         - bool:
             name: DELETE_OLD
             description: "Remove jobs that are no longer defined."
-            default: false
+            default: true
+        - rpc_gating_params
+    # Variables used in the scm plugin are expanded when the job is triggered
+    # by user or pr, but not on branch merge.
     scm:
         - git:
-            url: $JJB_REPO
+            url: $RPC_GATING_REPO
             branches:
-                - $JJB_BRANCH
-            skip-tag: true
+                - $RPC_GATING_BRANCH
             wipe-workspace: false
     wrappers:
       - credentials-binding:
