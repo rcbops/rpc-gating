@@ -1,0 +1,5 @@
+- property:
+    name: rpc-openstack-github
+    properties:
+      - github:
+          url: https://github.com/rcbops/rpc-openstack

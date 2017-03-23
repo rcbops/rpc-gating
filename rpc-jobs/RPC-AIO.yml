@@ -88,6 +88,7 @@
     properties:
       - build-discarder:
           num-to-keep: 30
+      - rpc-openstack-github
     parameters:
       # See params.yml
       - rpc_params:
