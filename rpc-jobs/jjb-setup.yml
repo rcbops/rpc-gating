@@ -13,7 +13,6 @@
     triggers:
       - github # triggered post merge, not on PR
     builders:
-    builders:
       - trigger-builds:
         - project: "Jenkins-Job-Builder"
 
