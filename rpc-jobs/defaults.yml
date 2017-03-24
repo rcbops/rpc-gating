@@ -1,0 +1,16 @@
+- defaults:
+    # single_use_slave_params
+    name: global
+    IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    FLAVOR: "performance2-15"
+    REGION: "dfw"
+    # rpc_params
+    DEPLOY_SWIFT: "yes"
+    DEPLOY_CEPH: "no"
+    DEPLOY_ELK: "yes"
+    # Misc
+    CRON: "H H(9-21) * * 1-5"
+    CONTEXT_USER_VARS: ""
+    TRIGGER_USER_VARS: ""
+    SERIES_USER_VARS: ""
+    UPGRADE_FROM_REF: "liberty-12.2"

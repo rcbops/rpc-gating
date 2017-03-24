@@ -70,15 +70,6 @@
 
 - job-template:
     # DEFAULTS
-    IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
-    DEPLOY_SWIFT: "yes"
-    DEPLOY_CEPH: "no"
-    DEPLOY_ELK: "yes"
-    CRON: "H H(9-21) * * 1-5"
-    CONTEXT_USER_VARS: ""
-    TRIGGER_USER_VARS: ""
-    SERIES_USER_VARS: ""
-    UPGRADE_FROM_REF: "liberty-12.2"
     STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup"
     branch: master
     NUM_TO_KEEP: 30
@@ -107,8 +98,8 @@
       - rpc_gating_params
       - single_use_slave_params:
          IMAGE: "{IMAGE}"
-         FLAVOR: "performance2-15"
-         REGION: "DFW"
+         FLAVOR: "{FLAVOR}"
+         REGION: "{REGION}"
       - tempest_params:
          TEMPEST_TEST_SETS: "scenario defcore cinder_backup"
          RUN_TEMPEST_OPTS: "--serial"
