@@ -77,10 +77,10 @@
                 JJB_ARGS="--ignore-cache"
             fi
             if [ "$DELETE_OLD" = "true" ]; then
-                JJB_ARGS+=" --delete-old"
+                UPDATE_ARGS="--delete-old"
             fi
 
             jenkins-jobs --conf jenkins_jobs.ini \
                          --user $JENKINS_USER \
                          --password $JENKINS_API_PASSWORD \
-                         $JJB_ARGS update $JOBS
+                         $JJB_ARGS update $UPDATE_ARGS $JOBS
