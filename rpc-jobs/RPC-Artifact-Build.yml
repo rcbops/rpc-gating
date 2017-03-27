@@ -20,7 +20,7 @@
       - periodic:
           branches: "do_not_build_on_pr"
           STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Build Python Artifacts, Build Container Artifacts, Cleanup"
-          PUSH_TO_MIRROR: yes
+          PUSH_TO_MIRROR: "YES"
     exclude:
       - context: Python
         ztrigger: periodic
