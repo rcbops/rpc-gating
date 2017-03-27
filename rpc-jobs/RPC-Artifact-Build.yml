@@ -55,16 +55,8 @@
           num-to-keep: 30
     parameters:
       # See params.yml
-      - rpc_params:
+      - rpc_repo_params:
          RPC_BRANCH: "{branch}"
-         DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
-         DEPLOY_CEPH: "{DEPLOY_CEPH}"
-         DEPLOY_ELK: "{DEPLOY_ELK}"
-         USER_VARS: |
-           {CONTEXT_USER_VARS}
-           {SERIES_USER_VARS}
-           {TRIGGER_USER_VARS}
-         UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - rpc_gating_params
       - single_use_slave_params:
          IMAGE: "{IMAGE}"

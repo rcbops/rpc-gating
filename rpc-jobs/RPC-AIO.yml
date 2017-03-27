@@ -91,8 +91,9 @@
       - rpc-openstack-github
     parameters:
       # See params.yml
-      - rpc_params:
+      - rpc_repo_params:
          RPC_BRANCH: "{branch}"
+      - rpc_deploy_params:
          DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
          DEPLOY_CEPH: "{DEPLOY_CEPH}"
          DEPLOY_ELK: "{DEPLOY_ELK}"

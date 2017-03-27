@@ -20,7 +20,7 @@
             as container names includes the host name.
 
 - parameter:
-    name: rpc_params
+    name: rpc_repo_params
     parameters:
       - string:
           name: "RPC_REPO"
@@ -28,6 +28,10 @@
       - string:
           name: "RPC_BRANCH"
           default: "{RPC_BRANCH}"
+
+- parameter:
+    name: rpc_deploy_params
+    parameters:
       - string:
           name: "DEPLOY_SWIFT"
           default: "{DEPLOY_SWIFT}"

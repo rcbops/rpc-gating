@@ -1,0 +1,34 @@
+- job:
+    name: 'rpc-gating-lint'
+    project-type: workflow
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_all.*|.*recheck_lint.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/lint'
+    properties:
+      - rpc-gating-github
+    dsl: |
+      node(){
+        deleteDir()
+        stage("Prepare"){
+          git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
+          lint_container = docker.build env.BUILD_TAG.toLowerCase()
+        }
+        lint_container.inside {
+          stage("Checkout"){
+            git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
+          }
+          stage("Lint"){
+            withEnv([
+              'RPC_GATING_LINT_USE_VENV=no'
+            ]){
+              sh "./lint.sh 2>&1"
+            }// withenv
+          }// stage
+        }// inside
+      }// node
