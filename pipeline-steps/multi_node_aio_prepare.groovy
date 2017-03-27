@@ -6,26 +6,28 @@ def prepare() {
     common.conditionalStage(
       stage_name: 'Prepare Multi-Node AIO',
       stage: {
-        common.run_script(
-          script: 'build.sh',
-          environment_vars: [
-            "PARTITION_HOST=${env.PARTITION_HOST}",
-            "NETWORK_BASE=172.29",
-            "DNS_NAMESERVER=8.8.8.8",
-            "OVERRIDE_SOURCES=true",
-            "DEVICE_NAME=vda",
-            "DEFAULT_NETWORK=eth0",
-            "VM_DISK_SIZE=252",
-            "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
-            "DEFAULT_KERNEL=${env.DEFAULT_KERNEL}",
-            "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
-            "SETUP_HOST=true",
-            "SETUP_VIRSH_NET=true",
-            "VM_IMAGE_CREATE=true",
-            "DEPLOY_OSA=true",
-            "PRE_CONFIG_OSA=true",
-            "RUN_OSA=false"]
-        )
+        timeout(time: 45, unit: "MINUTES"){
+          common.run_script(
+            script: 'build.sh',
+            environment_vars: [
+              "PARTITION_HOST=${env.PARTITION_HOST}",
+              "NETWORK_BASE=172.29",
+              "DNS_NAMESERVER=8.8.8.8",
+              "OVERRIDE_SOURCES=true",
+              "DEVICE_NAME=vda",
+              "DEFAULT_NETWORK=eth0",
+              "VM_DISK_SIZE=252",
+              "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
+              "DEFAULT_KERNEL=${env.DEFAULT_KERNEL}",
+              "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
+              "SETUP_HOST=true",
+              "SETUP_VIRSH_NET=true",
+              "VM_IMAGE_CREATE=true",
+              "DEPLOY_OSA=true",
+              "PRE_CONFIG_OSA=true",
+              "RUN_OSA=false"]
+          ) //run_script
+        } //timeout
       } //stage
     ) //conditionalStage
   } //dir
