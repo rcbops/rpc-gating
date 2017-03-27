@@ -118,7 +118,7 @@
                 "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
               ]
               aio_prepare.prepare()
-              artifact_build.python(environment_vars: environment_vars)
+              artifact_build.container(environment_vars: environment_vars)
             }} catch (e) {{
               print(e)
               throw e
