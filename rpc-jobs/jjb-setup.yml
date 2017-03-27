@@ -1,21 +1,19 @@
 - job:
     name: 'Merge-Trigger-JJB'
-    project-type: freestyle
+    project-type: workflow
     logrotate:
-      daysToKeep: 30
-    scm:
-        - git:
-            url: "https://github.com/rcbops/rpc-gating"
-            branches:
-                - master
+      daysToKeep: 14
     properties:
       - rpc-gating-github
     triggers:
       - github # triggered post merge, not on PR
-    builders:
-      - trigger-builds:
-        - project: "Jenkins-Job-Builder"
-
+    dsl: |
+      node(){
+        stage('Run Jenkins Job Builder') {
+          git branch: "master", url: "https://github.com/rcbops/rpc-gating"
+          build job: "Jenkins-Job-Builder"
+        } // stage
+      } // node
 
 - job:
     name: 'Jenkins-Job-Builder'
