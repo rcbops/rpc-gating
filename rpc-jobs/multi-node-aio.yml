@@ -74,8 +74,7 @@
             Allocate Resources, Connect Slave, Prepare Multi-Node AIO,
              Prepare RPC Configs, Deploy RPC w/ Script, Prepare MaaS,
              Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests,
-             Prepare Horizon Selenium, Horizon Tests, Prepare Kibana Selenium,
-             Kibana Tests, Holland, Cleanup
+             Prepare Kibana Selenium, Kibana Tests, Holland, Cleanup
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
