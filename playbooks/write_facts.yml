@@ -1,0 +1,12 @@
+- hosts: job_nodes
+  remote_user: root
+  vars:
+    region: "{{ lookup('env', 'REGION') }}"
+  tasks:
+    # NOTE(mattt): We explicitly write facts for all job_nodes here
+    #              so that we can use the rax-related facts later
+    - name: Get instance info
+      delegate_to: localhost
+      rax_facts:
+        name: "{{ inventory_hostname }}"
+        region: "{{ region }}"

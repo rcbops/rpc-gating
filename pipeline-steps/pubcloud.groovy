@@ -34,7 +34,8 @@ def create(Map args){
         withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
-                        "drop_ssh_auth_keys.yml"],
+                        "drop_ssh_auth_keys.yml",
+                        "write_facts.yml"],
             venv: ".venv",
             args: [
               "-i inventory",
@@ -126,12 +127,12 @@ def delPubCloudSlave(Map args){
   common.conditionalStep(
     step_name: 'Cleanup',
     step: {
-      ssh_slave.destroy()
       cleanup (
         instance_name: instance_name,
         server_name: instance_name,
         region: env.REGION,
       )
+      ssh_slave.destroy()
     } //stage
   ) //conditionalStage
 }

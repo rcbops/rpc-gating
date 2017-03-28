@@ -42,13 +42,14 @@ def destroy(){
       passwordVariable: "JENKINS_API_KEY"
     )
   ]){
-    dir("rpc-gating/scripts"){
-      sh """
-        . ../playbooks/.venv/bin/activate
-        pip install jenkinsapi
-        python jenkins_node.py \
-          delete --name "${instance_name}"
-      """
+    dir("rpc-gating/playbooks"){
+      common.venvPlaybook(
+        playbooks: ["destroy-jenkins-slave.yml"],
+        venv: ".venv",
+        args: [
+          "-i inventory"
+        ]
+      )
     } //dir
   } //withCredentials
 } //call
