@@ -81,6 +81,16 @@
               Cleanup
     triggers:
       - timed: "{CRON}"
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_cit_all.*|.*recheck_cit_artifact_{image}_{context}.*'
+          only-trigger-phrase: false
+          white-list-target-branches:
+            - "{branches}"
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/artifact-{image}-{context}'
     dsl: |
       // CIT Slave node
       node() {{
