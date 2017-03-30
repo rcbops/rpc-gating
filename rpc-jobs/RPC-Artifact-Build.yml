@@ -10,18 +10,20 @@
       - trusty:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     context:
+      - Apt
       - Python
       - Container
       - Pipeline
     ztrigger:
       - pr:
           CRON: ""
-          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Build {context} Artifacts, Cleanup"
+          STAGES: "Allocate Resources, Connect Slave, Build {context} Artifacts, Cleanup"
       - periodic:
           branches: "do_not_build_on_pr"
-          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Build Python Artifacts, Build Container Artifacts, Cleanup"
           PUSH_TO_MIRROR: "YES"
     exclude:
+      - context: Apt
+        ztrigger: periodic
       - context: Python
         ztrigger: periodic
       - context: Container
@@ -42,7 +44,7 @@
     TRIGGER_USER_VARS: ""
     SERIES_USER_VARS: ""
     UPGRADE_FROM_REF: ""
-    STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Build Python Artifacts, Build Container Artifacts, Cleanup"
+    STAGES: "Build Apt Artifacts, Allocate Resources, Connect Slave, Build Python Artifacts, Build Container Artifacts, Cleanup"
     branch: artifacts-14.0
     PUSH_TO_MIRROR: "NO"
 
@@ -74,7 +76,7 @@
             Options:
               Allocate Resources
               Connect Slave
-              Prepare Deployment
+              Build Apt Artifacts
               Build Python Artifacts
               Build Container Artifacts
               Pause (use to hold instance for investigation before cleanup)
@@ -92,49 +94,21 @@
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'CIT/artifact-{image}-{context}'
     dsl: |
-      // CIT Slave node
+      node('ArtifactBuilder2') {{
+        dir("rpc-gating") {{
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            common = load 'pipeline-steps/common.groovy'
+            artifact_build = load 'pipeline-steps/artifact_build.groovy'
+        }}
+        artifact_build.apt()
+      }} // node ArtifactBuilder2
       node() {{
         dir("rpc-gating") {{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
             common = load 'pipeline-steps/common.groovy'
             pubcloud = load 'pipeline-steps/pubcloud.groovy'
-            aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
             artifact_build = load 'pipeline-steps/artifact_build.groovy'
         }}
-        if (env.STAGES.contains("Build Python Artifacts")) {{
-          pubcloud.runonpubcloud {{
-            // try within pubcloud node so we can archive archive_artifacts
-            // after a failure, before the node is cleaned up.
-            try {{
-              environment_vars = [
-                "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
-              ]
-              aio_prepare.prepare()
-              artifact_build.python(environment_vars: environment_vars)
-            }} catch (e) {{
-              print(e)
-              throw e
-            }} finally {{
-              common.archive_artifacts()
-            }}
-          }} // pubcloud slave
-        }} // if
-        if (env.STAGES.contains("Build Container Artifacts")) {{
-          pubcloud.runonpubcloud {{
-            // try within pubcloud node so we can archive archive_artifacts
-            // after a failure, before the node is cleaned up.
-            try {{
-              environment_vars = [
-                "PUSH_TO_MIRROR=${{PUSH_TO_MIRROR}}",
-              ]
-              aio_prepare.prepare()
-              artifact_build.container(environment_vars: environment_vars)
-            }} catch (e) {{
-              print(e)
-              throw e
-            }} finally {{
-              common.archive_artifacts()
-            }}
-          }} // pubcloud slave
-        }} // if
-      }} // cit node
+        artifact_build.python()
+        artifact_build.container()
+      }} // node
