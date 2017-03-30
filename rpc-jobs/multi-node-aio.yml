@@ -47,6 +47,15 @@
             build job: 'OnMetal_Multi_Node_AIO_{series}-xenial-post-merge'
           }}
         }} // stage
+        stage('Push to rpc-openstack'){{
+         sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){{
+           sh """
+             mkdir -p ~/.ssh
+             ssh-keyscan github.com >> ~/.ssh/known_hosts
+             git push -f git@github.com:rcbops/rpc-openstack HEAD:omna-approved-{series}
+             """
+         }} // sshagent
+        }} // stage
       }} // node
 
 - job-template:
