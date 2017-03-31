@@ -21,6 +21,7 @@
       - periodic:
           branches: "do_not_build_on_pr"
           PUSH_TO_MIRROR: "YES"
+          NUM_TO_KEEP: 10
     exclude:
       - context: Apt
         ztrigger: periodic
@@ -47,6 +48,7 @@
     STAGES: "Build Apt Artifacts, Allocate Resources, Connect Slave, Build Python Artifacts, Build Container Artifacts, Cleanup"
     branch: artifacts-14.0
     PUSH_TO_MIRROR: "NO"
+    NUM_TO_KEEP: 30
 
     # TEMPLATE
     name: 'RPC-Artifact_Build-{series}-{image}-{context}-{ztrigger}'
@@ -54,7 +56,7 @@
     concurrent: false
     properties:
       - build-discarder:
-          num-to-keep: 30
+          num-to-keep: {NUM_TO_KEEP}
     parameters:
       # See params.yml
       - rpc_repo_params:
