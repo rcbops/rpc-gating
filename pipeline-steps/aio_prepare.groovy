@@ -2,7 +2,7 @@ def prepare(){
   common.conditionalStage(
     stage_name: "Prepare Deployment",
     stage: {
-      prepareRpcGit()
+      common.prepareRpcGit()
       ansiColor('xterm'){
         dir("/opt/rpc-openstack"){
           withEnv( common.get_deploy_script_env() + [
