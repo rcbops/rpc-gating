@@ -15,21 +15,59 @@
           DEFAULT_IMAGE: "16.04.2"
       - trusty:
           DEFAULT_IMAGE: "14.04.5"
+    trigger:
+      - periodic:
+          CRON: "H H(0-8) * * 1-5"
+      - post-merge:
+          CRON: ""
     exclude:
       - series: mitaka
         context: xenial
     jobs:
-      - 'OnMetal_Multi_Node_AIO_{series}-{context}'
+      - 'OnMetal_Multi_Node_AIO_{series}-{context}-{trigger}'
+      - 'OnMetal_Multi_Node_AIO_Merge_Trigger_{series}'
 
 - job-template:
-    name: 'OnMetal_Multi_Node_AIO_{series}-{context}'
+    name: 'OnMetal_Multi_Node_AIO_Merge_Trigger_{series}'
     project-type: workflow
     properties:
       - build-discarder:
           days-to-keep: 7
+      - rpc-openstack-github
     concurrent: true
     triggers:
-      - timed: "H H(0-8) * * 1-5"
+      - github
+    dsl: |
+      node(){{
+        stage('OnMetal Multi-Node AIO') {{
+          git branch: "{branch}", url: "https://github.com/rcbops/rpc-openstack"
+          if("{series}" == "mitaka"){{
+            build job: 'OnMetal_Multi_Node_AIO_mitaka-trusty-post-merge'
+          }} else {{
+            build job: 'OnMetal_Multi_Node_AIO_{series}-xenial-post-merge'
+          }}
+        }} // stage
+        stage('Push to rpc-openstack'){{
+         sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){{
+           sh """
+             mkdir -p ~/.ssh
+             ssh-keyscan github.com >> ~/.ssh/known_hosts
+             git push -f git@github.com:rcbops/rpc-openstack HEAD:omna-approved-{series}
+             """
+         }} // sshagent
+        }} // stage
+      }} // node
+
+- job-template:
+    name: 'OnMetal_Multi_Node_AIO_{series}-{context}-{trigger}'
+    project-type: workflow
+    properties:
+      - build-discarder:
+          days-to-keep: 7
+      - rpc-openstack-github
+    concurrent: true
+    triggers:
+      - timed: "{CRON}"
     parameters:
       - rpc_gating_params
       - string:
