@@ -56,7 +56,7 @@
     concurrent: false
     properties:
       - build-discarder:
-          num-to-keep: {NUM_TO_KEEP}
+          num-to-keep: "{NUM_TO_KEEP}"
     parameters:
       # See params.yml
       - rpc_repo_params:
