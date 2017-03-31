@@ -178,14 +178,16 @@ def run_script(Map args) {
 
 /* Run a stage if the stage name is contained in an env var
  * Args:
+ *   - conditional: Boolean indicating whether the stage is
+                    conditional (True) or compulsory (False)
  *   - stage_name: String name of this stage
  *   - stage: Closure to execute
  * Environment:
  *    - STAGES: String list of stages that should be run
  */
-def conditionalStage(Map args){
+def runStage(Boolean conditional = False, Map args){
   stage(args.stage_name){
-    if (env.STAGES.contains(args.stage_name)){
+    if ((!args.conditional) || ((args.conditional) && (env.STAGES.contains(args.stage_name)))){
         print "Stage Start: ${args.stage_name}"
         args.stage()
         print "Stage Complete: ${args.stage_name}"
@@ -197,18 +199,20 @@ def conditionalStage(Map args){
 
 /* Run a step if the step name is contained in an env var
  * Args:
+ *   - conditional: Boolean indicating whether the stage is
+                    conditional (True) or compulsory (False)
  *   - step_name: String name of this stage
  *   - step: Closure to execute
  * Environment:
  *    - STAGES: String list of steps that should be run
  *
- * The difference between this and conditionalStage is that
+ * The difference between this and runStage is that
  * this doesn't wrap the step in a stage block. This is useful
  * for cleanup jobs which confuse the jenkins visualisation when
  * run in a stage.
  */
-def conditionalStep(Map args){
-  if (env.STAGES.contains(args.step_name)){
+def runStep(Boolean conditional = False, Map args){
+  if ((!args.conditional) || ((args.conditional) && (env.STAGES.contains(args.step_name)))){
       print "Step Start: ${args.step_name}"
       args.step()
       print "Step Complete: ${args.step_name}"

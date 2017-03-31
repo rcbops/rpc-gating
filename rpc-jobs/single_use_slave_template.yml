@@ -12,14 +12,11 @@
       - rpc_gating_params
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Cleanup"
+          default: ""
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
-              Allocate Resources
-              Connect Slave
               Pause (use to hold instance for investigation before cleanup)
-              Cleanup
     dsl: |
       // CIT Slave node
       node(){

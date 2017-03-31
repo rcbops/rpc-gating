@@ -1,8 +1,9 @@
 def webhooks(){
   instance_name = "WEBHOOK-PROXY"
   pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Webhooks",
+    conditional: True,
     stage:{
       withCredentials([
         file(
@@ -69,7 +70,7 @@ EOF
               """
         } //withCredentials
       } //node
-    }) //conditionalStage
+    }) //runStage
   pubCloudSlave.delPubCloudSlave()
 } //func
 return this

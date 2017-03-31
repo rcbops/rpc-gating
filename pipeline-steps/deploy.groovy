@@ -1,6 +1,7 @@
 def deploy(){
-  common.conditionalStep(
+  common.runStep(
     step_name: "Deploy",
+    conditional: True,
     step: {
       playbooks = common._parse_json_string(json_text: env.PLAYBOOKS)
       print(playbooks)
@@ -13,12 +14,13 @@ def deploy(){
         } //stage
       } // for
     } //  step
-  ) //conditionalStep
+  ) //runStep
 }
 
 def deploy_sh(Map args) {
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Deploy RPC w/ Script",
+    conditional: True,
     stage: {
       environment_vars = args.environment_vars + common.get_deploy_script_env()
       withEnv(environment_vars) {
@@ -31,12 +33,13 @@ def deploy_sh(Map args) {
         } // ansiColor
       } // withEnv
     } // stage
-  ) // conditionalStage
+  ) // runStage
 }
 
 def upgrade(Map args) {
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Upgrade",
+    conditional: True,
     stage: {
       environment_vars = args.environment_vars + common.get_deploy_script_env()
       withEnv(environment_vars){
@@ -53,7 +56,7 @@ def upgrade(Map args) {
         } // dir
       } // withEnv
     } // stage
-  ) // conditionalStage
+  ) // runStage
 }
 
 def addChecksumRule(){

@@ -3,8 +3,9 @@ def prepare() {
     git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
   }
   dir("openstack-ansible-ops/multi-node-aio") {
-    common.conditionalStage(
+    common.runStage(
       stage_name: 'Prepare Multi-Node AIO',
+      conditional: True,
       stage: {
         timeout(time: 45, unit: "MINUTES"){
           common.run_script(
@@ -29,10 +30,11 @@ def prepare() {
           ) //run_script
         } //timeout
       } //stage
-    ) //conditionalStage
+    ) //runStage
   } //dir
-  common.conditionalStage(
+  common.runStage(
     stage_name: 'Prepare RPC Configs',
+    conditional: True,
     stage: {
       dir("/opt/rpc-openstack") {
         git branch: env.RPC_BRANCH, url: env.RPC_REPO
@@ -53,7 +55,7 @@ def prepare() {
         deployment_type: "onmetal"
       )
     } //stage
-  ) //conditionalStage
+  ) //runStage
 }
 
 return this;
