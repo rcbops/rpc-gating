@@ -89,7 +89,7 @@
     concurrent: true
     properties:
       - build-discarder:
-          num-to-keep: {NUM_TO_KEEP}
+          num-to-keep: "{NUM_TO_KEEP}"
       - rpc-openstack-github
     parameters:
       # See params.yml
