@@ -44,6 +44,7 @@
           TRIGGER_USER_VARS: "maas_use_api: false"
       - periodic:
           branches: "do_not_build_on_pr"
+          NUM_TO_KEEP: 10
     exclude:
       - series: liberty
         context: upgrade
@@ -80,6 +81,7 @@
     UPGRADE_FROM_REF: "liberty-12.2"
     STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup"
     branch: master
+    NUM_TO_KEEP: 30
 
     # TEMPLATE
     name: 'RPC-AIO_{series}-{context}-{ztrigger}'
@@ -87,7 +89,7 @@
     concurrent: true
     properties:
       - build-discarder:
-          num-to-keep: 30
+          num-to-keep: {NUM_TO_KEEP}
       - rpc-openstack-github
     parameters:
       # See params.yml
