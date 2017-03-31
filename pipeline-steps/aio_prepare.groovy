@@ -2,28 +2,9 @@ def prepare(){
   common.conditionalStage(
     stage_name: "Prepare Deployment",
     stage: {
-      dir("/opt/rpc-openstack"){
-        if (env.STAGES.contains("Upgrade")) {
-          branch = env.UPGRADE_FROM_REF
-        } else {
-          branch = env.RPC_BRANCH
-        }
-        // checkout used instead of git as a custom refspec is required
-        // to checkout pull requests
-        checkout([$class: 'GitSCM',
-          branches: [[name: branch ]],
-          doGenerateSubmoduleConfigurations: false,
-          extensions: [[$class: 'CleanCheckout']],
-          submoduleCfg: [],
-          userRemoteConfigs: [
-            [
-              url: RPC_REPO,
-              refspec: '+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*'
-            ]
-          ]
-        ])
-        sh "git submodule update --init"
-        ansiColor('xterm'){
+      prepareRpcGit()
+      ansiColor('xterm'){
+        dir("/opt/rpc-openstack"){
           withEnv( common.get_deploy_script_env() + [
             "DEPLOY_AIO=yes",
             "DEPLOY_OA=no",
@@ -34,9 +15,9 @@ def prepare(){
             sh """#!/bin/bash
             scripts/deploy.sh
             """
-          } //env
-        } //color
-      } //dir
+          } // env
+        } // dir
+      } // ansiColor
       common.prepareConfigs(
         deployment_type: "aio"
       )

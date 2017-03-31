@@ -331,6 +331,29 @@ def prepareConfigs(Map args){
   } //withCredentials
 }
 
-
+def prepareRpcGit(){
+  dir("/opt/rpc-openstack"){
+    if (env.STAGES.contains("Upgrade")) {
+      branch = env.UPGRADE_FROM_REF
+    } else {
+      branch = env.RPC_BRANCH
+    } // if
+    // checkout used instead of git as a custom refspec is required
+    // to checkout pull requests
+    checkout([$class: 'GitSCM',
+      branches: [[name: branch ]],
+      doGenerateSubmoduleConfigurations: false,
+      extensions: [[$class: 'CleanCheckout']],
+      submoduleCfg: [],
+      userRemoteConfigs: [
+        [
+          url: RPC_REPO,
+          refspec: '+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*'
+        ]
+      ]
+    ]) // checkout
+    sh "git submodule update --init"
+  } // dir
+}
 
 return this
