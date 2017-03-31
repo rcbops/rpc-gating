@@ -45,6 +45,33 @@ def apt() {
   ) // conditionalStage
 }
 
+def git() {
+  common.conditionalStage(
+    stage_name: "Build Git Artifacts",
+    stage: {
+      pubcloud.runonpubcloud {
+        try {
+          withCredentials(get_rpc_repo_creds()) {
+            common.prepareRpcGit()
+            ansiColor('xterm') {
+              dir("/opt/rpc-openstack/") {
+                sh """#!/bin/bash
+                scripts/artifacts-building/git/build-git-artifacts.sh
+                """
+              } // dir
+            } // ansiColor
+          } // withCredentials
+        } catch (e) {
+          print(e)
+          throw e
+        } finally {
+          common.archive_artifacts()
+        }
+      } // pubcloud slave
+    } // stage
+  ) // conditionalStage
+}
+
 def python() {
   common.conditionalStage(
     stage_name: "Build Python Artifacts",

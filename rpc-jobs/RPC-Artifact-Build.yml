@@ -10,6 +10,7 @@
       - trusty:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     context:
+      - Git
       - Apt
       - Python
       - Container
@@ -17,12 +18,18 @@
     ztrigger:
       - pr:
           CRON: ""
-          STAGES: "Allocate Resources, Connect Slave, Build {context} Artifacts, Cleanup"
+          STAGES: >-
+            Build {context} Artifacts,
+            Allocate Resources,
+            Connect Slave,
+            Cleanup
       - periodic:
           branches: "do_not_build_on_pr"
           PUSH_TO_MIRROR: "YES"
           NUM_TO_KEEP: 10
     exclude:
+      - context: Git
+        ztrigger: periodic
       - context: Apt
         ztrigger: periodic
       - context: Python
@@ -45,7 +52,14 @@
     TRIGGER_USER_VARS: ""
     SERIES_USER_VARS: ""
     UPGRADE_FROM_REF: ""
-    STAGES: "Build Apt Artifacts, Allocate Resources, Connect Slave, Build Python Artifacts, Build Container Artifacts, Cleanup"
+    STAGES: >-
+      Build Apt Artifacts,
+      Build Git Artifacts,
+      Build Python Artifacts,
+      Build Container Artifacts,
+      Allocate Resources,
+      Connect Slave,
+      Cleanup
     branch: artifacts-14.0
     PUSH_TO_MIRROR: "NO"
     NUM_TO_KEEP: 30
@@ -57,6 +71,7 @@
     properties:
       - build-discarder:
           num-to-keep: "{NUM_TO_KEEP}"
+      - rpc-openstack-github
     parameters:
       # See params.yml
       - rpc_repo_params:
@@ -67,22 +82,35 @@
          FLAVOR: "performance2-15"
          REGION: "DFW"
       - string:
+          name: ANSIBLE_PARAMETERS
+          default: "-v"
+          description: "Change the Ansible parameters for the playbook execution."
+      - string:
+          name: PULL_FROM_MIRROR
+          default: "YES"
+          description: "Set this to NO to skip downloading existing data from rpc-repo. This may cause the loss of existing artifacts on rpc-repo. USE WITH CAUTION!"
+      - string:
+          name: REPLACE_ARTIFACTS
+          default: "NO"
+          description: "Set this to YES if you want to replace any existing artifacts for the current release with those built in this job."
+      - string:
           name: PUSH_TO_MIRROR
           default: "{PUSH_TO_MIRROR}"
-          description: "Set this to YES if you want to push the newly built artifacts to rpc-repo."
+          description: "Set this to YES if you want to push any changes made in this job to rpc-repo."
       - string:
           name: STAGES
           default: "{STAGES}"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
-              Allocate Resources
-              Connect Slave
               Build Apt Artifacts
+              Build Git Artifacts
               Build Python Artifacts
               Build Container Artifacts
+              Allocate Resources (used to create an instance)
+              Connect Slave (used to connect to the instance)
               Pause (use to hold instance for investigation before cleanup)
-              Cleanup
+              Cleanup (used to clean up the instance)
     triggers:
       - timed: "{CRON}"
       - github-pull-request:
@@ -111,6 +139,7 @@
             pubcloud = load 'pipeline-steps/pubcloud.groovy'
             artifact_build = load 'pipeline-steps/artifact_build.groovy'
         }}
+        artifact_build.git()
         artifact_build.python()
         artifact_build.container()
       }} // node
