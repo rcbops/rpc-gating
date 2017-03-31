@@ -1,6 +1,7 @@
 def holland(){
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Holland",
+    conditional: True,
     stage: {
       //TODO: move test_holland into RPC to avoid this mess.
       dir("rpc-gating"){
@@ -16,7 +17,7 @@ def holland(){
         path: "/opt/rpc-openstack/rpcd/playbooks"
       )
     } //stage
-  ) //conditionalStage
+  ) //runStage
 }
 
 return this

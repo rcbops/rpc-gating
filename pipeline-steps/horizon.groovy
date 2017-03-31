@@ -1,14 +1,16 @@
 def horizon_integration(){
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Prepare Horizon Selenium",
+    conditional: True,
     stage: {
       if (env.RPC_BRANCH.contains("mitaka") || env.RPC_BRANCH.contains("r13.")) {
         mitaka_prep()
       }
     }
   )
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Horizon Tests",
+    conditional: True,
     stage: {
       if (env.RPC_BRANCH.contains("mitaka") || env.RPC_BRANCH.contains("r13.")) {
         mitaka_tests()

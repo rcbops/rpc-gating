@@ -1,12 +1,14 @@
 def kibana(){
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Prepare Kibana Selenium",
+    conditional: True,
     stage: {
       kibana_prep()
     }
   )
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Kibana Tests",
+    conditional: True,
     stage: {
       kibana_tests()
     }

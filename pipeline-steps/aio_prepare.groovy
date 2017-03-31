@@ -1,6 +1,7 @@
 def prepare(){
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Prepare Deployment",
+    conditional: True,
     stage: {
       prepareRpcGit()
       ansiColor('xterm'){

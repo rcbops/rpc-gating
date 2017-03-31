@@ -1,6 +1,7 @@
 def python(Map args) {
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Build Python Artifacts",
+    conditional: True,
     stage: {
       withEnv(args.environment_vars) {
         withCredentials([
@@ -31,12 +32,13 @@ def python(Map args) {
         } // withCredentials
       } // withEnv
     } // stage
-  ) // conditionalStage
+  ) // runStage
 }
 
 def container(Map args) {
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Build Container Artifacts",
+    conditional: True,
     stage: {
       withEnv(args.environment_vars) {
         withCredentials([
@@ -67,7 +69,7 @@ def container(Map args) {
         } // withCredentials
       } // withEnv
     } // stage
-  ) // conditionalStage
+  ) // runStage
 }
 
 return this

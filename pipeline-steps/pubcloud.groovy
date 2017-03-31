@@ -96,7 +96,7 @@ def cleanup(Map args){
 
 def getPubCloudSlave(Map args){
   ssh_slave = load 'rpc-gating/pipeline-steps/ssh_slave.groovy'
-  common.conditionalStage(
+  common.runStage(
     stage_name: 'Allocate Resources',
     stage: {
       create (
@@ -108,8 +108,8 @@ def getPubCloudSlave(Map args){
         keyname: "jenkins",
       )
     } //stage
-  ) //conditionalStages
-  common.conditionalStage(
+  ) //runStages
+  common.runStage(
     stage_name: "Connect Slave",
     stage: {
       ssh_slave.connect()
@@ -117,13 +117,14 @@ def getPubCloudSlave(Map args){
 }
 def delPubCloudSlave(Map args){
   ssh_slave = load 'rpc-gating/pipeline-steps/ssh_slave.groovy'
-  common.conditionalStep(
+  common.runStep(
     step_name: "Pause",
+    conditional: True,
     step: {
       input message: "Continue?"
     }
   )
-  common.conditionalStep(
+  common.runStep(
     step_name: 'Cleanup',
     step: {
       ssh_slave.destroy()
@@ -133,7 +134,7 @@ def delPubCloudSlave(Map args){
         region: env.REGION,
       )
     } //stage
-  ) //conditionalStage
+  ) //runStage
 }
 
 /* One func entrypoint to run a script on a single use slave */

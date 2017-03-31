@@ -19,14 +19,12 @@
           default: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - string:
           name: STAGES
-          default: "Allocate Resources, Connect Slave, Webhooks"
+          default: "Webhooks"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
-              Allocate Resources
-              Connect Slave
               Webhooks
-              Cleanup
+              Pause (use to hold instance for investigation before cleanup)
 
     dsl: |
       node(){

@@ -1,6 +1,7 @@
 def prepare(Map args) {
-  common.conditionalStage(
+  common.runStage(
     stage_name: 'Prepare MaaS',
+    conditional: True,
     stage: {
       withCredentials([
         string(
@@ -35,31 +36,33 @@ def prepare(Map args) {
         } // dir
       } // withCredentials
     } // stage
-  ) // conditionalStage
+  ) // runStage
 }
 
 def deploy() {
-  common.conditionalStage(
+  common.runStage(
     stage_name: 'Setup MaaS',
+    conditional: True,
     stage: {
       common.openstack_ansible(
         path: '/opt/rpc-openstack/rpcd/playbooks',
         playbook: 'setup-maas.yml'
       ) //openstack_ansible
     } //stage
-  ) //conditionalStage
+  ) //runStage
 }
 
 def verify() {
-  common.conditionalStage(
+  common.runStage(
     stage_name: 'Verify MaaS',
+    conditional: True,
     stage: {
       common.openstack_ansible(
         path: '/opt/rpc-openstack/rpcd/playbooks',
         playbook: 'verify-maas.yml'
       ) //openstack_ansible
     } //stage
-  ) //conditionalStage
+  ) //runStage
 }
 
 return this;

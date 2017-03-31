@@ -31,14 +31,16 @@ def tempest(Map args){
     wrapper = ""
     copy_cmd = "cp -p "
   }
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Install Tempest",
+    conditional: True,
     stage: {
       tempest_install()
     }
   )
-  common.conditionalStage(
+  common.runStage(
     stage_name: "Tempest Tests",
+    conditional: True,
     stage: {
       try{
         def result = tempest_run(wrapper: wrapper)
@@ -61,7 +63,7 @@ def tempest(Map args){
         junit allowEmptyResults: true, testResults: '*tempest*.xml'
       } //finally
     } //stage
-  ) //conditionalStage
+  ) //runStage
 } //func
 
 
