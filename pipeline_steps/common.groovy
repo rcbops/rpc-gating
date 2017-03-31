@@ -188,7 +188,11 @@ def conditionalStage(Map args){
   stage(args.stage_name){
     if (env.STAGES.contains(args.stage_name)){
         print "Stage Start: ${args.stage_name}"
-        args.stage()
+        ansiColor('xterm') {
+          timestamps(){
+            args.stage()
+          } //timestamps
+        } //ansiColor
         print "Stage Complete: ${args.stage_name}"
     } else {
       print "Skipped: ${args.stage_name}"
@@ -211,7 +215,11 @@ def conditionalStage(Map args){
 def conditionalStep(Map args){
   if (env.STAGES.contains(args.step_name)){
       print "Step Start: ${args.step_name}"
-      args.step()
+      ansiColor('xterm') {
+        timestamps(){
+          args.step()
+        } // timestamps
+      } // ansiColor
       print "Step Complete: ${args.step_name}"
   } else {
     print "Skipped: ${args.step_name}"

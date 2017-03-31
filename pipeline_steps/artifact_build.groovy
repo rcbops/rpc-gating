@@ -33,13 +33,11 @@ def apt() {
     stage: {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit(branch: env.RPC_BRANCH)
-        ansiColor('xterm') {
-          dir("/opt/rpc-openstack/") {
-            sh """#!/bin/bash
-            scripts/artifacts-building/apt/build-apt-artifacts.sh
-            """
-          } // dir
-        } // ansiColor
+        dir("/opt/rpc-openstack/") {
+          sh """#!/bin/bash
+          scripts/artifacts-building/apt/build-apt-artifacts.sh
+          """
+        } // dir
       } // withCredentials
     } // stage
   ) // conditionalStage
@@ -53,13 +51,11 @@ def git() {
         try {
           withCredentials(get_rpc_repo_creds()) {
             common.prepareRpcGit(branch: env.RPC_BRANCH)
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/git/build-git-artifacts.sh
-                """
-              } // dir
-            } // ansiColor
+            dir("/opt/rpc-openstack/") {
+              sh """#!/bin/bash
+              scripts/artifacts-building/git/build-git-artifacts.sh
+              """
+            } // dir
           } // withCredentials
         } catch (e) {
           print(e)
@@ -80,13 +76,11 @@ def python() {
         try {
           withCredentials(get_rpc_repo_creds()) {
             common.prepareRpcGit(branch: env.RPC_BRANCH)
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/python/build-python-artifacts.sh
-                """
-              } // dir
-            } // ansiColor
+            dir("/opt/rpc-openstack/") {
+              sh """#!/bin/bash
+              scripts/artifacts-building/python/build-python-artifacts.sh
+              """
+            } // dir
           } // withCredentials
         } catch (e) {
           print(e)
@@ -107,13 +101,11 @@ def container() {
         try {
           withCredentials(get_rpc_repo_creds()) {
             common.prepareRpcGit(branch: env.RPC_BRANCH)
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/containers/build-process.sh
-                """
-              } // dir
-            } // ansiColor
+            dir("/opt/rpc-openstack/") {
+              sh """#!/bin/bash
+              scripts/artifacts-building/containers/build-process.sh
+              """
+            } // dir
           } // withCredentials
         } catch (e) {
           print(e)
