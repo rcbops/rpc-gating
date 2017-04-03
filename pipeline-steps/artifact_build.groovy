@@ -32,7 +32,7 @@ def apt() {
     stage_name: "Build Apt Artifacts",
     stage: {
       withCredentials(get_rpc_repo_creds()) {
-        common.prepareRpcGit()
+        common.prepareRpcGit(branch: env.RPC_BRANCH)
         ansiColor('xterm') {
           dir("/opt/rpc-openstack/") {
             sh """#!/bin/bash
@@ -52,7 +52,7 @@ def git() {
       pubcloud.runonpubcloud {
         try {
           withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit()
+            common.prepareRpcGit(branch: env.RPC_BRANCH)
             ansiColor('xterm') {
               dir("/opt/rpc-openstack/") {
                 sh """#!/bin/bash
@@ -79,7 +79,7 @@ def python() {
       pubcloud.runonpubcloud {
         try {
           withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit()
+            common.prepareRpcGit(branch: env.RPC_BRANCH)
             ansiColor('xterm') {
               dir("/opt/rpc-openstack/") {
                 sh """#!/bin/bash
@@ -106,7 +106,7 @@ def container() {
       pubcloud.runonpubcloud {
         try {
           withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit()
+            common.prepareRpcGit(branch: env.RPC_BRANCH)
             ansiColor('xterm') {
               dir("/opt/rpc-openstack/") {
                 sh """#!/bin/bash
