@@ -146,59 +146,61 @@
 
     dsl: |
       // CIT Slave node
-      node() {{
-        /* if job is triggered by PR, then we need to set RPC_REPO and
-          RPC_BRANCH using the env vars supplied by ghprb. Ztrigger is a
-          jjb variable so uses single braces.
-        */
-        if ("{ztrigger}" == "pr" ){{
-          env.RPC_REPO = "https://github.com/${{env.ghprbGhRepository}}.git"
-          env.RPC_BRANCH = "origin/pr/${{ghprbPullId}}/merge" //matches the refspec in aio_prepare.groovy
-          print("""Triggered by PR: ${{ghprbPullLink}} RPC_REPO: ${{RPC_REPO}} Branch: ${{RPC_BRANCH}}""")
-        }}
-        dir("rpc-gating") {{
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline-steps/common.groovy'
-            pubcloud = load 'pipeline-steps/pubcloud.groovy'
-            aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
-            deploy = load 'pipeline-steps/deploy.groovy'
-            tempest = load 'pipeline-steps/tempest.groovy'
-            holland = load 'pipeline-steps/holland.groovy'
-            maas = load 'pipeline-steps/maas.groovy'
-        }}
-        pubcloud.runonpubcloud {{
-          // try within pubcloud node so we can archive archive_artifacts
-          // after a failure, before the node is cleaned up.
-          try {{
-            environment_vars = [
-              "DEPLOY_HAPROXY=yes",
-              "DEPLOY_AIO=no",
-              "DEPLOY_MAAS=no",
-              "DEPLOY_TEMPEST=no",
-              "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
-              "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
-              "DEPLOY_ELK=${{DEPLOY_ELK}}",
-              ]
-            aio_prepare.prepare()
-            deploy.deploy_sh(environment_vars: environment_vars)
-            deploy.addChecksumRule()
-            maas.deploy()
-            maas.verify()
-            tempest.tempest()
-            holland.holland()
-            if (env.STAGES.contains("Upgrade")) {{
-              deploy.upgrade(environment_vars: environment_vars)
+      timeout(time: 8, unit: 'HOURS'){{
+        node() {{
+          /* if job is triggered by PR, then we need to set RPC_REPO and
+            RPC_BRANCH using the env vars supplied by ghprb. Ztrigger is a
+            jjb variable so uses single braces.
+          */
+          if ("{ztrigger}" == "pr" ){{
+            env.RPC_REPO = "https://github.com/${{env.ghprbGhRepository}}.git"
+            env.RPC_BRANCH = "origin/pr/${{ghprbPullId}}/merge" //matches the refspec in aio_prepare.groovy
+            print("""Triggered by PR: ${{ghprbPullLink}} RPC_REPO: ${{RPC_REPO}} Branch: ${{RPC_BRANCH}}""")
+          }}
+          dir("rpc-gating") {{
+              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+              common = load 'pipeline-steps/common.groovy'
+              pubcloud = load 'pipeline-steps/pubcloud.groovy'
+              aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
+              deploy = load 'pipeline-steps/deploy.groovy'
+              tempest = load 'pipeline-steps/tempest.groovy'
+              holland = load 'pipeline-steps/holland.groovy'
+              maas = load 'pipeline-steps/maas.groovy'
+          }}
+          pubcloud.runonpubcloud {{
+            // try within pubcloud node so we can archive archive_artifacts
+            // after a failure, before the node is cleaned up.
+            try {{
+              environment_vars = [
+                "DEPLOY_HAPROXY=yes",
+                "DEPLOY_AIO=no",
+                "DEPLOY_MAAS=no",
+                "DEPLOY_TEMPEST=no",
+                "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
+                "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
+                "DEPLOY_ELK=${{DEPLOY_ELK}}",
+                ]
+              aio_prepare.prepare()
+              deploy.deploy_sh(environment_vars: environment_vars)
               deploy.addChecksumRule()
               maas.deploy()
               maas.verify()
               tempest.tempest()
               holland.holland()
+              if (env.STAGES.contains("Upgrade")) {{
+                deploy.upgrade(environment_vars: environment_vars)
+                deploy.addChecksumRule()
+                maas.deploy()
+                maas.verify()
+                tempest.tempest()
+                holland.holland()
+              }}
+            }} catch (e) {{
+              print(e)
+              throw e
+            }} finally {{
+              common.archive_artifacts()
             }}
-          }} catch (e) {{
-            print(e)
-            throw e
-          }} finally {{
-            common.archive_artifacts()
-          }}
-        }} //pubcloud slave
-      }} // cit node
+          }} //pubcloud slave
+        }} // cit node
+      }} // timeout
