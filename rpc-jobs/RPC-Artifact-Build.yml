@@ -7,8 +7,7 @@
           branch: artifacts-14.0
           branches: "artifacts-.*"
     image:
-      - trusty:
-          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+      - trusty
     context:
       - Git
       - Apt
@@ -43,15 +42,6 @@
 
 - job-template:
     # DEFAULTS
-    IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
-    DEPLOY_SWIFT: "yes"
-    DEPLOY_CEPH: "yes"
-    DEPLOY_ELK: "yes"
-    CRON: "H H(9-21) * * 1-5"
-    CONTEXT_USER_VARS: ""
-    TRIGGER_USER_VARS: ""
-    SERIES_USER_VARS: ""
-    UPGRADE_FROM_REF: ""
     STAGES: >-
       Build Apt Artifacts,
       Build Git Artifacts,
@@ -79,8 +69,8 @@
       - rpc_gating_params
       - single_use_slave_params:
          IMAGE: "{IMAGE}"
-         FLAVOR: "performance2-15"
-         REGION: "DFW"
+         FLAVOR: "{FLAVOR}"
+         REGION: "{REGION}"
       - string:
           name: ANSIBLE_PARAMETERS
           default: "-v"
