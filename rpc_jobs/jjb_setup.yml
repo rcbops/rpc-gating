@@ -31,7 +31,7 @@
         - bool:
             name: DELETE_OLD
             description: "Remove jobs that are no longer defined."
-            default: true
+            default: false
         - rpc_gating_params
     # Variables used in the scm plugin are expanded when the job is triggered
     # by user or pr, but not on branch merge.
