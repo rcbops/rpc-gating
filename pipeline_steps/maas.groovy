@@ -24,7 +24,7 @@ def prepare(Map args) {
           common.install_ansible()
           withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
             common.venvPlaybook(
-              playbooks: ['aio-maas-entities.yml'],
+              playbooks: ['aio_maas_entities.yml'],
               venv: ".venv",
               args: [
                 "-e server_name=\"${args.instance_name}\""

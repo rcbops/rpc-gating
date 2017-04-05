@@ -7,4 +7,3 @@ class Main implements Runnable {
   void run(){
   }
 }
-

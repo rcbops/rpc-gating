@@ -25,7 +25,7 @@ check_jjb(){
     || { echo "jenkins-jobs unavailble, please install jenkins-job-builder from pip"
          return
        }
-  jenkins-jobs test -r rpc-jobs >/dev/null \
+  jenkins-jobs test -r rpc_jobs >/dev/null \
     && echo "JJB Syntax ok" \
     || { echo "JJB Syntax fail"; rc=1; }
 }
@@ -37,7 +37,7 @@ check_groovy(){
        }
   grc=0
   while read scriptf
-  do groovy -classpath pipeline-steps $scriptf || grc=1
+  do groovy -classpath pipeline_steps $scriptf || grc=1
   done < <(find ${fargs[@]} -name \*.groovy \! -name NonCPS.groovy \! -name add_jenkins_cred.groovy)
 
   if [[ $grc == 0 ]]
@@ -75,7 +75,7 @@ check_python(){
   do
     python -m py_compile  $script \
       && echo "Python syntax ok: $script" \
-      || { echo "Bash syntax fail $script"; rc=1; }
+      || { echo "Python syntax fail $script"; rc=1; }
   done < <(find ${fargs[@]} -iname \*.py)
 }
 

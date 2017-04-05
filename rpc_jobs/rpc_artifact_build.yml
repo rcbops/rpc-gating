@@ -1,5 +1,5 @@
 - project:
-    name: 'RPC-Artifact_Build-Jobs'
+    name: 'RPC-Artifact-Build-Jobs'
     # Note: branch is the branch for periodics to build
     #       branches is the branch pattern to match for PR Jobs.
     series:
@@ -38,7 +38,7 @@
       - context: Pipeline
         ztrigger: pr
     jobs:
-      - 'RPC-Artifact_Build-{series}-{image}-{context}-{ztrigger}'
+      - 'RPC-Artifact-Build_{series}-{image}-{context}-{ztrigger}'
 
 - job-template:
     # DEFAULTS
@@ -55,7 +55,7 @@
     NUM_TO_KEEP: 30
 
     # TEMPLATE
-    name: 'RPC-Artifact_Build-{series}-{image}-{context}-{ztrigger}'
+    name: 'RPC-Artifact-Build_{series}-{image}-{context}-{ztrigger}'
     project-type: workflow
     concurrent: false
     properties:
@@ -118,17 +118,17 @@
       node('ArtifactBuilder2') {{
         dir("rpc-gating") {{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline-steps/common.groovy'
-            artifact_build = load 'pipeline-steps/artifact_build.groovy'
+            common = load 'pipeline_steps/common.groovy'
+            artifact_build = load 'pipeline_steps/artifact_build.groovy'
         }}
         artifact_build.apt()
       }} // node ArtifactBuilder2
       node() {{
         dir("rpc-gating") {{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline-steps/common.groovy'
-            pubcloud = load 'pipeline-steps/pubcloud.groovy'
-            artifact_build = load 'pipeline-steps/artifact_build.groovy'
+            common = load 'pipeline_steps/common.groovy'
+            pubcloud = load 'pipeline_steps/pubcloud.groovy'
+            artifact_build = load 'pipeline_steps/artifact_build.groovy'
         }}
         artifact_build.git()
         artifact_build.python()

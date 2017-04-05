@@ -152,13 +152,13 @@
           }}
           dir("rpc-gating") {{
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline-steps/common.groovy'
-              pubcloud = load 'pipeline-steps/pubcloud.groovy'
-              aio_prepare = load 'pipeline-steps/aio_prepare.groovy'
-              deploy = load 'pipeline-steps/deploy.groovy'
-              tempest = load 'pipeline-steps/tempest.groovy'
-              holland = load 'pipeline-steps/holland.groovy'
-              maas = load 'pipeline-steps/maas.groovy'
+              common = load 'pipeline_steps/common.groovy'
+              pubcloud = load 'pipeline_steps/pubcloud.groovy'
+              aio_prepare = load 'pipeline_steps/aio_prepare.groovy'
+              deploy = load 'pipeline_steps/deploy.groovy'
+              tempest = load 'pipeline_steps/tempest.groovy'
+              holland = load 'pipeline_steps/holland.groovy'
+              maas = load 'pipeline_steps/maas.groovy'
           }}
           pubcloud.runonpubcloud {{
             // try within pubcloud node so we can archive archive_artifacts
