@@ -20,6 +20,11 @@
       retries: 120
       delay: 60
 
+    - name: Fail if the required number of instances aren't available
+      fail:
+        msg: "At least one public cloud instance failed to start :("
+      when: rax.success|length < count
+
     - name: Write inventory
       copy:
         content: |
