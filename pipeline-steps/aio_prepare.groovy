@@ -2,7 +2,11 @@ def prepare(){
   common.conditionalStage(
     stage_name: "Prepare Deployment",
     stage: {
-      common.prepareRpcGit()
+      if (env.STAGES.contains("Upgrade")) {
+        common.prepareRpcGit(branch: env.UPGRADE_FROM_REF)
+      } else {
+        common.prepareRpcGit(branch: env.RPC_BRANCH)
+      } // if
       ansiColor('xterm'){
         dir("/opt/rpc-openstack"){
           withEnv( common.get_deploy_script_env() + [
