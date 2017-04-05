@@ -19,5 +19,7 @@
         wait_timeout: 900
         auto_increment: no
         region: "{{ region }}"
-      when: get_rax_facts |success
+      when:
+        - get_rax_facts|success
+        - rax_metadata is not defined or (rax_metadata is defined and not rax_metadata.preserve|default(false)|bool)
 
