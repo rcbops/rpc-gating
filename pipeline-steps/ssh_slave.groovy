@@ -45,7 +45,7 @@ def destroy(){
     dir("rpc-gating/scripts"){
       sh """
         . ../playbooks/.venv/bin/activate
-        pip install -c constraints.txt jenkinsapi
+        pip install -c ../constraints.txt jenkinsapi
         python jenkins_node.py \
           delete --name "${instance_name}"
       """
