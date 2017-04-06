@@ -55,7 +55,7 @@
                 virtualenv -p /opt/rh/python27/root/usr/bin/python .venv
             fi
             source .venv/bin/activate
-
+            pip install 'pip==9.0.1'
             pip install -c constraints.txt jenkins-job-builder
 
             cat > jenkins_jobs.ini << EOF
