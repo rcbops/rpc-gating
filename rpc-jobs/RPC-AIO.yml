@@ -24,6 +24,7 @@
           DEPLOY_SWIFT: "no"
           DEPLOY_CEPH: "yes"
           CONTEXT_USER_VARS: |
+            ceph_stable_release: "hammer"
             cinder_cinder_conf_overrides:
                 DEFAULT:
                     default_volume_type: ceph
