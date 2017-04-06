@@ -1,5 +1,5 @@
 - job:
-    name: Single_Use_Slave_Example
+    name: Single-Use-Slave-Example
     project-type: workflow
     concurrent: true
     parameters:
@@ -25,8 +25,8 @@
       node(){
         dir("rpc-gating"){
           git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-          pubcloud = load 'pipeline-steps/pubcloud.groovy'
-          common = load 'pipeline-steps/common.groovy'
+          pubcloud = load 'pipeline_steps/pubcloud.groovy'
+          common = load 'pipeline_steps/common.groovy'
         }
         pubcloud.runonpubcloud {
           sh """

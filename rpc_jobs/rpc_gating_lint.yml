@@ -1,5 +1,5 @@
 - job:
-    name: 'rpc-gating-lint'
+    name: 'RPC-Gating-Lint'
     project-type: workflow
     triggers:
       - github-pull-request:

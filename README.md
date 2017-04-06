@@ -2,10 +2,10 @@
 
 ## Repo Layout
 
- - rpc-jobs: JJB Job definitions
- - pipeline-steps: Groovy Functions for use in pipelines
+ - rpc_jobs: JJB Job definitions
+ - pipeline_steps: Groovy Functions for use in pipelines
  - playbooks: Ansible Playbooks
- - scripts: Bash scripts
+ - scripts: Bash and Python scripts
 
 
 ## Git Hooks
@@ -15,3 +15,21 @@
    - groovy (apt/groovy2)
    - jenkins-jobs (pip/jenkins-job-builder)
    - ansible-playbook (pip/ansible)
+
+
+## Naming Conventions
+### Files
+- Use `_` as the word delimiter
+- All lowercase
+- Examples:
+  - `jjb_setup.yml`
+  - `pipeline_steps`
+
+### Jobs
+- Use `-` as the word delimiter
+- Use `_` between a job name and the [job template variables](https://docs.openstack.org/infra/jenkins-job-builder/definition.html#job-template)
+- Use standard capitalization rules, template variables can be an exception to this
+- Examples:
+  - `RPC-AIO_{series}-{context}-{ztrigger}`
+  - `RPC-AIO_master-swift-periodic`
+  - `Merge-Trigger-JJB`

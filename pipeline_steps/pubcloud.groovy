@@ -95,7 +95,7 @@ def cleanup(Map args){
 
 
 def getPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline-steps/ssh_slave.groovy'
+  ssh_slave = load 'rpc-gating/pipeline_steps/ssh_slave.groovy'
   common.conditionalStage(
     stage_name: 'Allocate Resources',
     stage: {
@@ -116,7 +116,7 @@ def getPubCloudSlave(Map args){
   })
 }
 def delPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline-steps/ssh_slave.groovy'
+  ssh_slave = load 'rpc-gating/pipeline_steps/ssh_slave.groovy'
   common.conditionalStep(
     step_name: "Pause",
     step: {

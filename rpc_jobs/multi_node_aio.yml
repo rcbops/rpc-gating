@@ -24,11 +24,11 @@
       - series: mitaka
         context: xenial
     jobs:
-      - 'OnMetal_Multi_Node_AIO_{series}-{context}-{trigger}'
-      - 'OnMetal_Multi_Node_AIO_Merge_Trigger_{series}'
+      - 'OnMetal-Multi-Node-AIO_{series}-{context}-{trigger}'
+      - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
 
 - job-template:
-    name: 'OnMetal_Multi_Node_AIO_Merge_Trigger_{series}'
+    name: 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
     project-type: workflow
     properties:
       - build-discarder:
@@ -42,9 +42,9 @@
         stage('OnMetal Multi-Node AIO') {{
           git branch: "{branch}", url: "https://github.com/rcbops/rpc-openstack"
           if("{series}" == "mitaka"){{
-            build job: 'OnMetal_Multi_Node_AIO_mitaka-trusty-post-merge'
+            build job: 'OnMetal-Multi-Node-AIO_mitaka-trusty-post-merge'
           }} else {{
-            build job: 'OnMetal_Multi_Node_AIO_{series}-xenial-post-merge'
+            build job: 'OnMetal-Multi-Node-AIO_{series}-xenial-post-merge'
           }}
         }} // stage
         stage('Push to rpc-openstack'){{
@@ -59,7 +59,7 @@
       }} // node
 
 - job-template:
-    name: 'OnMetal_Multi_Node_AIO_{series}-{context}-{trigger}'
+    name: 'OnMetal-Multi-Node-AIO_{series}-{context}-{trigger}'
     project-type: workflow
     properties:
       - build-discarder:
@@ -139,15 +139,15 @@
         try {{
           dir("rpc-gating"){{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
-            common = load 'pipeline-steps/common.groovy'
-            multi_node_aio_prepare = load 'pipeline-steps/multi_node_aio_prepare.groovy'
-            deploy = load 'pipeline-steps/deploy.groovy'
-            maas = load 'pipeline-steps/maas.groovy'
-            tempest = load 'pipeline-steps/tempest.groovy'
-            horizon = load 'pipeline-steps/horizon.groovy'
-            kibana = load 'pipeline-steps/kibana.groovy'
-            holland = load 'pipeline-steps/holland.groovy'
+            pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
+            common = load 'pipeline_steps/common.groovy'
+            multi_node_aio_prepare = load 'pipeline_steps/multi_node_aio_prepare.groovy'
+            deploy = load 'pipeline_steps/deploy.groovy'
+            maas = load 'pipeline_steps/maas.groovy'
+            tempest = load 'pipeline_steps/tempest.groovy'
+            horizon = load 'pipeline_steps/horizon.groovy'
+            kibana = load 'pipeline_steps/kibana.groovy'
+            holland = load 'pipeline_steps/holland.groovy'
           }}
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)

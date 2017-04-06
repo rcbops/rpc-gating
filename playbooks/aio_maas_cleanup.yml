@@ -16,4 +16,4 @@
       - "compute1.{{ server_name }}"
       - "loadbalancer1.{{ server_name }}"
   roles:
-    - { role: maas-entities, state: 'present'}
+    - { role: maas_entities, state: 'absent'}

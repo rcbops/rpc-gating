@@ -32,9 +32,9 @@
       node(){
           dir("rpc-gating"){
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline-steps/common.groovy'
-              pubCloudSlave = load 'pipeline-steps/pubcloud.groovy'
-              webhooks = load 'pipeline-steps/webhooks.groovy'
+              common = load 'pipeline_steps/common.groovy'
+              pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
+              webhooks = load 'pipeline_steps/webhooks.groovy'
           }
           webhooks.webhooks()
       } // cit node
