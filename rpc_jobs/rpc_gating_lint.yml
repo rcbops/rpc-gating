@@ -1,6 +1,7 @@
 - job:
     name: 'RPC-Gating-Lint'
     project-type: workflow
+    concurrent: true
     triggers:
       - github-pull-request:
           org-list:
