@@ -23,7 +23,7 @@ def install_ansible(){
     # These pip commands cannot be combined into one.
     pip install -U six packaging appdirs
     pip install -U setuptools pip
-    pip install -U ansible pyrax
+    pip install -c ${env.WORKSPACE}/rpc-gating/constraints.txt -U ansible pyrax
 
     mkdir -p rpc-gating/playbooks/roles
     ansible-galaxy install -r ${env.WORKSPACE}/rpc-gating/role_requirements.yml -p ${env.WORKSPACE}/rpc-gating/playbooks/roles

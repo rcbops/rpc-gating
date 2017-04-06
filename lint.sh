@@ -17,7 +17,7 @@ install(){
   fi
   . $venv/bin/activate
   which jenkins-jobs >/dev/null \
-    || pip install jenkins-job-builder ansible
+    || pip install -c constraints.txt jenkins-job-builder ansible
 }
 
 check_jjb(){

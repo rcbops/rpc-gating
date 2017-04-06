@@ -10,6 +10,7 @@
           only-trigger-phrase: false
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'CIT/lint'
+          cancel-builds-on-update: true
     properties:
       - rpc-gating-github
     dsl: |
