@@ -54,6 +54,18 @@
           name: PARTITION_HOST
           default: true
           description: Enable partitioning of host data disk device
+      - string:
+          name: DATA_DISK_DEVICE
+          default: "{DATA_DISK_DEVICE}"
+          description: The data disk to use for VMs (if unset the largest unpartitioned device will be used)
+      - string:
+          name: MULTI_NODE_AIO_DIR
+          default: "multi-node-aio"
+          description: |
+            The directory to trigger build.sh from
+            Options:
+              multi-node-aio
+              multi-node-aio-xenial-ansible
 
 - parameter:
     name: rpc_deploy_params

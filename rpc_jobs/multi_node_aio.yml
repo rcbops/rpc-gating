@@ -83,6 +83,7 @@
       - osa_ops_params:
           OPENSTACK_ANSIBLE_BRANCH: "{OPENSTACK_ANSIBLE_BRANCH}"
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
+          DATA_DISK_DEVICE: "sdb"
       - string:
           name: STAGES
           default: |
