@@ -42,6 +42,7 @@
         - python-dev
         - python-pip
         - build-essential
+        - libssl-dev
 
     - name: Create Jenkins user
       user:

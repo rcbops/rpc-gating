@@ -270,7 +270,7 @@ def archive_artifacts(){
     done < <(lxc-ls)
 
     # compress to reduce storage space requirements
-    tar cvjf "\$d".tar.bz2 \$d > artifact_index.txt
+    tar cjf "\$d".tar.bz2 \$d
     """
   } catch (e){
     print(e)
@@ -278,11 +278,44 @@ def archive_artifacts(){
   } finally{
     // still worth trying to archiveArtifacts even if some part of
     // artifact collection failed.
-    archiveArtifacts(
-      allowEmptyArchive: true,
-      artifacts: "artifacts_${env.BUILD_TAG}.tar.bz2,artifact_index.txt"
-    )
+      pubcloud.uploadToCloudFiles(
+        container: "jenkins_logs",
+        src: "${env.WORKSPACE}/artifacts_${env.BUILD_TAG}.tar.bz2",
+        html_report_dest: "${env.WORKSPACE}/artifacts_report/index.html")
+      publishHTML(
+        allowMissing: true,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: 'artifacts_report',
+        reportFiles: 'index.html',
+        reportName: 'Build Artifact Links'
+      )
+    sh """
+    rm -rf artifacts_\${BUILD_TAG}
+    rm -f artifacts_${env.BUILD_TAG}.tar.bz2
+    """
   }
+}
+
+def get_cloud_creds(){
+  return [
+    string(
+      credentialsId: "dev_pubcloud_username",
+      variable: "PUBCLOUD_USERNAME"
+    ),
+    string(
+      credentialsId: "dev_pubcloud_api_key",
+      variable: "PUBCLOUD_API_KEY"
+    ),
+    string(
+      credentialsId: "dev_pubcloud_tenant_id",
+      variable: "PUBCLOUD_TENANT_ID"
+    ),
+    file(
+      credentialsId: 'id_rsa_cloud10_jenkins_file',
+      variable: 'JENKINS_SSH_PRIVKEY'
+    )
+  ]
 }
 
 def writePyraxCfg(Map args){
@@ -301,20 +334,7 @@ api_key = ${args.api_key}
 }
 
 def prepareConfigs(Map args){
-  withCredentials([
-    string(
-      credentialsId: "dev_pubcloud_username",
-      variable: "PUBCLOUD_USERNAME"
-    ),
-    string(
-      credentialsId: "dev_pubcloud_api_key",
-      variable: "PUBCLOUD_API_KEY"
-    ),
-    string(
-      credentialsId: "dev_pubcloud_tenant_id",
-      variable: "PUBCLOUD_TENANT_ID"
-    )
-    ]){
+  withCredentials(get_cloud_creds()){
       dir("rpc-gating"){
         git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
       } //dir
@@ -359,5 +379,6 @@ def prepareRpcGit(Map args){
 def docker_cache_workaround(){
    sh "touch -t 201704100000 *.txt"
 }
+
 
 return this

@@ -1,0 +1,8 @@
+<html>
+<body>
+<a href="{{ public_container.container_urls.url }}/{{ src | basename }}">{{ src | basename }}</a>
+<div style="white-space: pre">
+{{ artifact_description | default("") }}
+</div>
+</body>
+</html>
