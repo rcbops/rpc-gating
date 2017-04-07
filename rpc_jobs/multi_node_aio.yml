@@ -77,23 +77,15 @@
           name: "RPC_BRANCH"
           default: "{branch}"
       - tempest_params:
-         TEMPEST_TEST_SETS: "scenario defcore api"
-         RUN_TEMPEST_OPTS: ""
-         TESTR_OPTS: "--concurrency 3"
+          TEMPEST_TEST_SETS: "scenario defcore api"
+          RUN_TEMPEST_OPTS: ""
+          TESTR_OPTS: "--concurrency 3"
       - single_use_slave_params:
-         IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
-         FLAVOR: "onmetal-io1"
-         REGION: "IAD"
-      - string:
-          name: OSA_OPS_REPO
-          default: https://github.com/openstack/openstack-ansible-ops
-      - string:
-          name: OSA_OPS_BRANCH
-          default: master
-      - string:
-          name: OPENSTACK_ANSIBLE_BRANCH
-          default: "{OPENSTACK_ANSIBLE_BRANCH}"
-          description: Openstack Ansible branch to use in setup
+          IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+          FLAVOR: "onmetal-io1"
+          REGION: "IAD"
+      - osa_ops_params:
+          OPENSTACK_ANSIBLE_BRANCH: "{OPENSTACK_ANSIBLE_BRANCH}"
       - string:
           name: DEFAULT_IMAGE
           default: "{DEFAULT_IMAGE}"
