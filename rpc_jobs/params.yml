@@ -30,6 +30,20 @@
           default: "{RPC_BRANCH}"
 
 - parameter:
+    name: osa_ops_params
+    parameters:
+      - string:
+          name: OSA_OPS_REPO
+          default: https://github.com/openstack/openstack-ansible-ops
+      - string:
+          name: OSA_OPS_BRANCH
+          default: master
+      - string:
+          name: OPENSTACK_ANSIBLE_BRANCH
+          default: "{OPENSTACK_ANSIBLE_BRANCH}"
+          description: Openstack Ansible branch to use in setup
+
+- parameter:
     name: rpc_deploy_params
     parameters:
       - string:
