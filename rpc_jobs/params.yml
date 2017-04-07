@@ -42,6 +42,18 @@
           name: OPENSTACK_ANSIBLE_BRANCH
           default: "{OPENSTACK_ANSIBLE_BRANCH}"
           description: Openstack Ansible branch to use in setup
+      - string:
+          name: DEFAULT_IMAGE
+          default: "{DEFAULT_IMAGE}"
+          description: Version of Ubuntu image to use for VMs (14.04.5 or 16.04.2)
+      - string:
+          name: DEFAULT_KERNEL
+          default: "4.4.0-66"
+          description: Ubuntu Kernal Version to use for VMs (4.4.0-66, 3.13.0-34, etc.)
+      - bool:
+          name: PARTITION_HOST
+          default: true
+          description: Enable partitioning of host data disk device
 
 - parameter:
     name: rpc_deploy_params
