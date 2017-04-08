@@ -70,12 +70,6 @@
       - timed: "{CRON}"
     parameters:
       - rpc_gating_params
-      - string:
-          name: "RPC_REPO"
-          default: "https://github.com/rcbops/rpc-openstack"
-      - string:
-          name: "RPC_BRANCH"
-          default: "{branch}"
       - tempest_params:
           TEMPEST_TEST_SETS: "scenario defcore api"
           RUN_TEMPEST_OPTS: ""
@@ -84,20 +78,11 @@
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
           FLAVOR: "onmetal-io1"
           REGION: "IAD"
+      - rpc_repo_params:
+          RPC_BRANCH: "{branch}"
       - osa_ops_params:
           OPENSTACK_ANSIBLE_BRANCH: "{OPENSTACK_ANSIBLE_BRANCH}"
-      - string:
-          name: DEFAULT_IMAGE
-          default: "{DEFAULT_IMAGE}"
-          description: Version of Ubuntu image to use for VMs (14.04.5 or 16.04.2)
-      - string:
-          name: DEFAULT_KERNEL
-          default: "4.4.0-66"
-          description: Ubuntu Kernal Version to use for VMs (4.4.0-66, 3.13.0-34, etc.)
-      - bool:
-          name: PARTITION_HOST
-          default: true
-          description: Enable partitioning of host data disk device
+          DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
       - string:
           name: STAGES
           default: |
