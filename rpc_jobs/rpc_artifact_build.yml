@@ -21,7 +21,8 @@
             Build {context} Artifacts,
             Allocate Resources,
             Connect Slave,
-            Cleanup
+            Cleanup,
+            Destroy Slave
       - periodic:
           branches: "do_not_build_on_pr"
           PUSH_TO_MIRROR: "YES"
@@ -49,7 +50,8 @@
       Build Container Artifacts,
       Allocate Resources,
       Connect Slave,
-      Cleanup
+      Cleanup,
+      Destroy Slave
     branch: artifacts-14.0
     PUSH_TO_MIRROR: "NO"
     NUM_TO_KEEP: 30
@@ -101,6 +103,7 @@
               Connect Slave (used to connect to the instance)
               Pause (use to hold instance for investigation before cleanup)
               Cleanup (used to clean up the instance)
+              Destroy Slave (used to destroy the jenkins slave)
     triggers:
       - timed: "{CRON}"
       - github-pull-request:

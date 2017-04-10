@@ -27,6 +27,7 @@
               Connect Slave
               Webhooks
               Cleanup
+              Destroy Slave
 
     dsl: |
       node(){
