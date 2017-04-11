@@ -352,4 +352,12 @@ def prepareRpcGit(Map args){
   } // dir
 }
 
+/* Set mtime to a constant value as git doesn't track mtimes but
+ * docker 1.7 does, this causes cache invalidation when files are
+ * added.
+ */
+def docker_cache_workaround(){
+   sh "touch -t 201704100000 *.txt"
+}
+
 return this
