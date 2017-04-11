@@ -1,6 +1,7 @@
 - job:
     name: 'RPC-Gating-Lint'
     project-type: workflow
+    concurrent: true
     triggers:
       - github-pull-request:
           org-list:
@@ -18,6 +19,8 @@
         deleteDir()
         stage("Prepare"){
           git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
+          common = load 'pipeline_steps/common.groovy'
+          common.docker_cache_workaround()
           lint_container = docker.build env.BUILD_TAG.toLowerCase()
         }
         lint_container.inside {
