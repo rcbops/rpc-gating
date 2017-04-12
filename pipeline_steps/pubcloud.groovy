@@ -109,11 +109,7 @@ def getPubCloudSlave(Map args){
       )
     } //stage
   ) //conditionalStages
-  common.conditionalStage(
-    stage_name: "Connect Slave",
-    stage: {
-      ssh_slave.connect()
-  })
+  ssh_slave.connect()
 }
 def delPubCloudSlave(Map args){
   ssh_slave = load 'rpc-gating/pipeline_steps/ssh_slave.groovy'
@@ -126,7 +122,6 @@ def delPubCloudSlave(Map args){
   common.conditionalStep(
     step_name: 'Cleanup',
     step: {
-      ssh_slave.destroy()
       cleanup (
         instance_name: instance_name,
         server_name: instance_name,
@@ -134,6 +129,7 @@ def delPubCloudSlave(Map args){
       )
     } //stage
   ) //conditionalStage
+  ssh_slave.destroy()
 }
 
 /* One func entrypoint to run a script on a single use slave */
