@@ -44,7 +44,8 @@ def main():
             if cred.username == c['username']:
                 if c['type'] == 'text':
                     add_cred(
-                        jenkins_url, jenkins_ssh_key, c['type'], c['username'], cred.password
+                        jenkins_url, jenkins_ssh_key, c['type'], c['username'],
+                        cred.password
                     )
                 elif c['type'] == 'file':
                     secret_path = os.path.join(tmp_dir, c['filename'])
@@ -52,7 +53,8 @@ def main():
                     secret_file.write(cred.password)
                     secret_file.close()
                     add_cred(
-                        jenkins_url, jenkins_ssh_key, c['type'], c['username'], secret_path
+                        jenkins_url, jenkins_ssh_key, c['type'], c['username'],
+                        secret_path
                     )
                     # The temp workspace should get cleaned up when the build
                     # finishes, but let's just remove the secret file anyway

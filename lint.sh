@@ -16,8 +16,7 @@ install(){
     virtualenv $venv
   fi
   . $venv/bin/activate
-  which jenkins-jobs >/dev/null \
-    || pip install -c constraints.txt jenkins-job-builder ansible
+  pip install -c constraints.txt -r test-requirements.txt >/dev/null
 }
 
 check_jjb(){
@@ -71,12 +70,9 @@ check_bash(){
 }
 
 check_python(){
-  while read script
-  do
-    python -m py_compile  $script \
-      && echo "Python syntax ok: $script" \
-      || { echo "Python syntax fail $script"; rc=1; }
-  done < <(find ${fargs[@]} -iname \*.py)
+  flake8 --exclude=.lintvenv . \
+    && echo "Python syntax ok" \
+    || { echo "Python syntax fail"; rc=1; }
 }
 
 [[ ${RPC_GATING_LINT_USE_VENV:-yes} == yes ]] && install
