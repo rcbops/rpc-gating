@@ -1,0 +1,57 @@
+- job:
+    name: 'Periodic-Cleanup'
+    project-type: workflow
+    parameters:
+      - string:
+          name: "INSTANCE_AGE_LIMIT"
+          default: "48"
+          description: |
+            Hours. Instances older than this will be removed.
+      - string:
+          name: "INSTANCE_PREFIX"
+          default: "ra"
+          description: |
+            Only instances whose names match the supplied prefix will be cleaned
+            up.
+      - string:
+          name: "REGION"
+          default: "DFW"
+          description: |
+            Only instances in the specified region will be cleaned up.
+      - rpc_gating_params
+    triggers:
+      - timed: "H * * * *"
+    properties:
+      - build-discarder:
+          days-to-keep: 3
+    dsl: |
+      node(){
+        deleteDir()
+        stage("Prepare"){
+          dir("rpc-gating") {
+              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+              common = load 'pipeline_steps/common.groovy'
+              common.docker_cache_workaround()
+              container = docker.build env.BUILD_TAG.toLowerCase()
+          }
+        }
+        container.inside {
+          stage("Checkout"){
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+          }
+          stage("Public Cloud Cleanup"){
+            withCredentials([
+              string(
+                credentialsId: "dev_pubcloud_username",
+                variable: "PUBCLOUD_USERNAME"
+              ),
+              string(
+                credentialsId: "dev_pubcloud_api_key",
+                variable: "PUBCLOUD_API_KEY"
+              ),
+            ]){
+              sh "python scripts/periodic_cleanup.py"
+            }
+          }
+        }
+      }

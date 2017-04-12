@@ -2,3 +2,4 @@ ansible
 jenkins-job-builder
 jenkinsapi
 pyrax
+python-dateutil
