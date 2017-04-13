@@ -4,7 +4,7 @@
     parameters:
       - string:
           name: "INSTANCE_AGE_LIMIT"
-          default: "48"
+          default: "12"
           description: |
             Hours. Instances older than this will be removed.
       - string:
