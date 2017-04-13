@@ -11,20 +11,7 @@
  */
 def create(Map args){
   withEnv(["RAX_REGION=${args.region}"]){
-    withCredentials([
-      string(
-        credentialsId: "dev_pubcloud_username",
-        variable: "PUBCLOUD_USERNAME"
-      ),
-      string(
-        credentialsId: "dev_pubcloud_api_key",
-        variable: "PUBCLOUD_API_KEY"
-      ),
-      file(
-        credentialsId: 'id_rsa_cloud10_jenkins_file',
-        variable: 'JENKINS_SSH_PRIVKEY'
-      )
-    ]){
+    withCredentials(common.get_cloud_creds()){
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
@@ -53,20 +40,7 @@ def create(Map args){
  */
 def cleanup(Map args){
   withEnv(['ANSIBLE_FORCE_COLOR=true']){
-    withCredentials([
-      string(
-        credentialsId: "dev_pubcloud_username",
-        variable: "PUBCLOUD_USERNAME"
-      ),
-      string(
-        credentialsId: "dev_pubcloud_api_key",
-        variable: "PUBCLOUD_API_KEY"
-      ),
-      file(
-        credentialsId: 'id_rsa_cloud10_jenkins_file',
-        variable: 'jenkins_ssh_privkey'
-      )
-    ]){
+    withCredentials(common.get_cloud_creds()){
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
@@ -146,6 +120,33 @@ def runonpubcloud(body){
   }finally {
     delPubCloudSlave(instance_name: instance_name)
   }
+}
+
+def uploadToCloudFiles(Map args){
+  withCredentials(common.get_cloud_creds()) {
+    dir("rpc-gating"){
+      git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+    }
+    dir("rpc-gating/playbooks") {
+      common.install_ansible()
+      pyrax_cfg = common.writePyraxCfg(
+        username: env.PUBCLOUD_USERNAME,
+        api_key: env.PUBCLOUD_API_KEY
+      )
+      withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
+        common.venvPlaybook(
+          playbooks: ["upload_to_cloud_files.yml"],
+          venv: ".venv",
+          vars: [
+            container: args.container,
+            src: args.src,
+            html_report_dest: args.html_report_dest,
+            description_file: args.description_file
+          ]
+        ) // venvPlaybook
+      } // withEnv
+    } // dir
+  } // withCredentials
 }
 
 return this

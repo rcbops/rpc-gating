@@ -2,20 +2,7 @@ def prepare(Map args) {
   common.conditionalStage(
     stage_name: 'Prepare MaaS',
     stage: {
-      withCredentials([
-        string(
-          credentialsId: "dev_pubcloud_username",
-          variable: "PUBCLOUD_USERNAME"
-        ),
-        string(
-          credentialsId: "dev_pubcloud_api_key",
-          variable: "PUBCLOUD_API_KEY"
-        ),
-        string(
-          credentialsId: "dev_pubcloud_tenant_id",
-          variable: "PUBCLOUD_TENANT_ID"
-        )
-      ]){
+      withCredentials(common.get_cloud_creds()){
         dir("rpc-gating/playbooks"){
           pyrax_cfg = common.writePyraxCfg(
             username: env.PUBCLOUD_USERNAME,

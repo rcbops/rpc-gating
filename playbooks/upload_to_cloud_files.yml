@@ -1,0 +1,37 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Create a public Cloud Files container
+      rax_files:
+        container: "{{ container }}"
+        public: yes
+        region: "DFW"
+      register: public_container
+
+    - name: Upload file to Cloud Files
+      rax_files_objects:
+        container: "{{ container }}"
+        region: "DFW"
+        expires: 2592000
+        method: put
+        src: "{{ src }}"
+
+    - name: Read artifact description file
+      set_fact:
+        artifact_description: "{{ lookup('file', description_file) }}"
+      no_log: True
+      when:
+        - description_file is defined
+        - description_file != None
+
+    - name: Create artifact report location if doesn't exist
+      file:
+        path: "{{ html_report_dest | dirname }}"
+        state: directory
+
+    - name: Generate HTML report with file URL
+      template:
+        src: cloudfiles.html.j2
+        dest: "{{ html_report_dest }}"
