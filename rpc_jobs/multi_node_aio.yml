@@ -71,7 +71,7 @@
     parameters:
       - rpc_gating_params
       - tempest_params:
-          TEMPEST_TEST_SETS: "scenario defcore api"
+          TEMPEST_TEST_SETS: "all"
           RUN_TEMPEST_OPTS: ""
           TESTR_OPTS: "--concurrency 3"
       - single_use_slave_params:

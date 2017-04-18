@@ -4,6 +4,7 @@ gating_overrides_file: "/etc/openstack_deploy/user_zzz_gating_variables.yml"
 default_gating_overrides:
   maas_notification_plan: npTechnicalContactsEmail
   nova_virt_type: qemu
+  nova_cross_az_attach: True
   rackspace_cloud_auth_url: "https://identity.api.rackspacecloud.com/v2.0/"
   rackspace_cloud_tenant_id: "{{lookup('env', 'PUBCLOUD_TENANT_ID')}}"
   rackspace_cloud_username: "{{lookup('env', 'PUBCLOUD_USERNAME')}}"
@@ -21,3 +22,4 @@ default_gating_overrides:
       reseller_admin_role: ResellerAdmin
     compute-feature-enabled:
       personality: false
+      attach_encrypted_volume: false
