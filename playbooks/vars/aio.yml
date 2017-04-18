@@ -16,9 +16,6 @@ gating_overrides:
       sha256: "ec1120a9310ac3987feee4e3c5108d5d0fd0e594c4283804c17d673ebb2d3769"
     - url: "{{ '{{' }}cirros_tgz_url{{ '}}' }}"
       sha256: "95e77c7deaf0f515f959ffe329918d5dd23e417503d1d45e926a888853c90710"
-  tempest_tempest_conf_overrides:
-    volume-feature-enabled:
-      snapshot: true
 
   # Ensure raw_multi_journal is False for upgrades.
   # This is because of the way migrate-yaml.py behaves with the
