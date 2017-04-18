@@ -4,12 +4,15 @@
       - mitaka:
           branch: mitaka-13.1
           OPENSTACK_ANSIBLE_BRANCH: "stable/mitaka"
+          TEST_SET: "scenario defcore api heat_api smoke"
       - newton:
           branch: newton-14.0
           OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
+          TEST_SET: "all"
       - master:
           branch: master
           OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
+          TEST_SET: "all"
     context:
       - xenial:
           DEFAULT_IMAGE: "16.04.2"
@@ -71,7 +74,7 @@
     parameters:
       - rpc_gating_params
       - tempest_params:
-          TEMPEST_TEST_SETS: "all"
+          TEMPEST_TEST_SETS: "{TEST_SET}"
           RUN_TEMPEST_OPTS: ""
           TESTR_OPTS: "--concurrency 3"
       - single_use_slave_params:
