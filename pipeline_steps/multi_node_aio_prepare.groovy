@@ -2,7 +2,7 @@ def prepare() {
   dir("openstack-ansible-ops") {
     git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
   }
-  dir("openstack-ansible-ops/multi-node-aio") {
+  dir("openstack-ansible-ops/${env.MULTI_NODE_AIO_DIR}") {
     common.conditionalStage(
       stage_name: 'Prepare Multi-Node AIO',
       stage: {
@@ -25,7 +25,8 @@ def prepare() {
               "VM_IMAGE_CREATE=true",
               "DEPLOY_OSA=true",
               "PRE_CONFIG_OSA=true",
-              "RUN_OSA=false"]
+              "RUN_OSA=false",
+              "DATA_DISK_DEVICE=${env.DATA_DISK_DEVICE}"]
           ) //run_script
         } //timeout
       } //stage
