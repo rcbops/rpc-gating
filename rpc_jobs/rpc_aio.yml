@@ -32,7 +32,7 @@
             cinder_service_backup_program_enabled: true
             tempest_service_available_swift: false
       - upgrade:
-          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Upgrade, Cleanup, Destroy Slave"
+          STAGES: "Clear Workspace, Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Upgrade, Cleanup, Destroy Slave"
       - xenial:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
 
@@ -82,7 +82,7 @@
 
 - job-template:
     # DEFAULTS
-    STAGES: "Clear Workspace, Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup"
+    STAGES: "Clear Workspace, Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup, Destroy Slave"
     branch: master
     NUM_TO_KEEP: 30
 
