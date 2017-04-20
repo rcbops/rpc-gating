@@ -207,9 +207,9 @@
               }}
             }} catch (e) {{
               print(e)
+              common.submit_ara()
               throw e
             }} finally {{
-              common.submit_ara()
               common.archive_artifacts()
             }}
           }} //pubcloud slave
