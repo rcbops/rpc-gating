@@ -131,6 +131,7 @@
             horizon = load 'pipeline_steps/horizon.groovy'
             kibana = load 'pipeline_steps/kibana.groovy'
             holland = load 'pipeline_steps/holland.groovy'
+            github = load 'pipeline_steps/github.groovy'
           }}
           instance_name = common.gen_instance_name()
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
@@ -174,6 +175,10 @@
           }}// public cloud node
         }} catch (e){{
             currentBuild.result = 'FAILURE'
+            if("{trigger}" == "post-merge"){{
+              github.create_issue(env.BUILD_TAG,
+                                  env.BUILD_URL)
+            }}
             throw e
         }} finally {{
             pubCloudSlave.delPubCloudSlave(instance_name: instance_name)
