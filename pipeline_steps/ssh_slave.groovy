@@ -23,6 +23,7 @@ def connect(){
         dir("rpc-gating/playbooks"){
           common.venvPlaybook(
             playbooks: ["setup_jenkins_slave.yml"],
+            venv: ".venv",
             args: [
               "-i inventory",
               "--limit job_nodes",

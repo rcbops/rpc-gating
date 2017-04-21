@@ -22,6 +22,7 @@ def create(Map args){
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
                         "drop_ssh_auth_keys.yml"],
+            venv: ".venv",
             args: [
               "-i inventory",
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""

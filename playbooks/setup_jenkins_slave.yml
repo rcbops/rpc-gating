@@ -45,11 +45,11 @@
     - name: Start slave
       delegate_to: localhost
       shell: |
-        cd  {{ lookup('env', 'WORKSPACE') }}
+        cd  {{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks
         . .venv/bin/activate
         pip install 'pip==9.0.1'
-        pip install -c rpc-gating/constraints.txt jenkinsapi
-        python rpc-gating/scripts/jenkins_node.py \
+        pip install -c {{ lookup('env', 'WORKSPACE') }}/rpc-gating/constraints.txt jenkinsapi
+        python ../scripts/jenkins_node.py \
           create \
           --name {{inventory_hostname}} \
           --ip {{ansible_host}} \
