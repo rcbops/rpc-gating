@@ -22,11 +22,13 @@ def deploy_sh(Map args) {
     stage: {
       environment_vars = args.environment_vars + common.get_deploy_script_env()
       withEnv(environment_vars) {
-        dir("/opt/rpc-openstack/") {
-          sh """#!/bin/bash
-          scripts/deploy.sh
-          """
-        } // dir
+        ansiColor('xterm') {
+          dir("/opt/rpc-openstack/") {
+            sh """#!/bin/bash
+            scripts/deploy.sh
+            """
+          } // dir
+        } // ansiColor
       } // withEnv
     } // stage
   ) // conditionalStage
