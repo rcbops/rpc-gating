@@ -7,10 +7,9 @@ default_gating_overrides:
   # NOTE(mkam): Setting nova_cross_az_attach to avoid volume test failures caused by:
   # https://bugs.launchpad.net/nova/+bug/1648324
   nova_cross_az_attach: True
-  rackspace_cloud_auth_url: "https://identity.api.rackspacecloud.com/v2.0/"
-  rackspace_cloud_tenant_id: "{{lookup('env', 'PUBCLOUD_TENANT_ID')}}"
-  rackspace_cloud_username: "{{lookup('env', 'PUBCLOUD_USERNAME')}}"
-  rackspace_cloud_api_key: "{{lookup('env', 'PUBCLOUD_API_KEY')}}"
+  maas_auth_method: "token"
+  maas_auth_token: "{{lookup('env', 'MAAS_AUTH_TOKEN')}}"
+  maas_api_url: "{{lookup('env', 'MAAS_API_URL')}}"
   tempest_swift_container_sync: False
   tempest_swift_discoverable_apis:
     - bulk

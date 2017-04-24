@@ -340,14 +340,20 @@ def prepareConfigs(Map args){
       } //dir
       dir("rpc-gating/playbooks"){
         common.install_ansible()
-        common.venvPlaybook(
-          playbooks: ["aio_config.yml"],
-          venv: ".venv",
-          args: [
-            "-i inventory",
-            "--extra-vars \"@vars/${args.deployment_type}.yml\""
-          ]
-        )
+        withCredentials(common.get_cloud_creds()) {
+          String venv = "${env.WORKSPACE}/rpc-gating/playbooks/.venv"
+          List maas_vars = maas.get_maas_token_and_url(env.PUBCLOUD_USERNAME, env.PUBCLOUD_API_KEY, env.REGION, venv)
+          withEnv(maas_vars) {
+            common.venvPlaybook(
+              playbooks: ["aio_config.yml"],
+              venv: ".venv",
+              args: [
+                "-i inventory",
+                "--extra-vars \"@vars/${args.deployment_type}.yml\""
+              ]
+            )
+          }
+        }
       } //dir
   } //withCredentials
 }
