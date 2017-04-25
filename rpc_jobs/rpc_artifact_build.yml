@@ -7,7 +7,8 @@
           branch: artifacts-14.0
           branches: "artifacts-.*"
     image:
-      - trusty
+      - trusty:
+          IMAGE: "Ubuntu 14.04.4 LTS prepared for RPC deployment"
     context:
       - Git
       - Apt
