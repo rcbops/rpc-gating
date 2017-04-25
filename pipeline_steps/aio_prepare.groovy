@@ -3,9 +3,9 @@ def prepare(){
     stage_name: "Prepare Deployment",
     stage: {
       if (env.STAGES.contains("Upgrade")) {
-        common.prepareRpcGit(branch: env.UPGRADE_FROM_REF)
+        common.prepareRpcGit(env.UPGRADE_FROM_REF)
       } else {
-        common.prepareRpcGit(branch: env.RPC_BRANCH)
+        common.prepareRpcGit()
       } // if
       ansiColor('xterm'){
         dir("/opt/rpc-openstack"){
