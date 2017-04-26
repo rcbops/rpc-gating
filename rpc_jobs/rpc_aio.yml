@@ -29,7 +29,6 @@
                 DEFAULT:
                     default_volume_type: ceph
             cinder_service_backup_driver: cinder.backup.drivers.ceph
-            cinder_service_backup_program_enabled: true
             tempest_service_available_swift: false
       - upgrade:
           STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Upgrade, Cleanup, Destroy Slave"

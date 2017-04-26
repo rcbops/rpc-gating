@@ -25,3 +25,6 @@ default_gating_overrides:
     compute-feature-enabled:
       personality: false
       attach_encrypted_volume: false
+    volume-feature-enabled:
+      snapshot: true
+  cinder_service_backup_program_enabled: true
