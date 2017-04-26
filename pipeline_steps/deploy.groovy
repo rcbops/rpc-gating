@@ -43,7 +43,7 @@ def upgrade(Map args) {
         dir("/opt/rpc-openstack/openstack-ansible"){
           sh "git reset --hard"
         }
-        common.prepareRpcGit(branch: env.RPC_BRANCH)
+        common.prepareRpcGit()
         dir("/opt/rpc-openstack"){
           sh """
             scripts/test-upgrade.sh

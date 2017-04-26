@@ -142,15 +142,6 @@
       // CIT Slave node
       timeout(time: 8, unit: 'HOURS'){{
         node() {{
-          /* if job is triggered by PR, then we need to set RPC_REPO and
-            RPC_BRANCH using the env vars supplied by ghprb. Ztrigger is a
-            jjb variable so uses single braces.
-          */
-          if ("{ztrigger}" == "pr" ){{
-            env.RPC_REPO = "https://github.com/${{env.ghprbGhRepository}}.git"
-            env.RPC_BRANCH = "origin/pr/${{ghprbPullId}}/merge" //matches the refspec in aio_prepare.groovy
-            print("""Triggered by PR: ${{ghprbPullLink}} RPC_REPO: ${{RPC_REPO}} Branch: ${{RPC_BRANCH}}""")
-          }}
           dir("rpc-gating") {{
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
               common = load 'pipeline_steps/common.groovy'

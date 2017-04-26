@@ -352,18 +352,34 @@ def prepareConfigs(Map args){
   } //withCredentials
 }
 
-def prepareRpcGit(Map args){
+def prepareRpcGit(branch = "auto"){
   dir("/opt/rpc-openstack"){
+
+    if (branch == "auto"){
+      /* if job is triggered by PR, then we need to set RPC_REPO and
+         RPC_BRANCH using the env vars supplied by ghprb.
+      */
+      if ( env.ghprbPullId != null ){
+        env.RPC_REPO = "https://github.com/${env.ghprbGhRepository}.git"
+        branch = "origin/pr/${env.ghprbPullId}/merge"
+        print("Triggered by PR: ${env.ghprbPullLink}")
+      } else {
+        branch = env.RPC_BRANCH
+      }
+    }
+
+    print("Repo: ${env.RPC_REPO} Branch: ${branch}")
+
     // checkout used instead of git as a custom refspec is required
     // to checkout pull requests
     checkout([$class: 'GitSCM',
-      branches: [[name: args.branch]],
+      branches: [[name: branch]],
       doGenerateSubmoduleConfigurations: false,
       extensions: [[$class: 'CleanCheckout']],
       submoduleCfg: [],
       userRemoteConfigs: [
         [
-          url: RPC_REPO,
+          url: env.RPC_REPO,
           refspec: '+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*'
         ]
       ]
