@@ -352,8 +352,8 @@ def prepareConfigs(Map args){
   } //withCredentials
 }
 
-def prepareRpcGit(branch = "auto"){
-  dir("/opt/rpc-openstack"){
+def prepareRpcGit(branch = "auto", dest = "/opt"){
+  dir("${dest}/rpc-openstack"){
 
     if (branch == "auto"){
       /* if job is triggered by PR, then we need to set RPC_REPO and

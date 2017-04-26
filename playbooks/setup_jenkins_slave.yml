@@ -1,7 +1,74 @@
 ---
 - hosts: job_nodes
   user: root
+  vars:
+    rpc_release_file_name: "{{ lookup('env', 'WORKSPACE') ~ '/rpc-openstack/rpcd/etc/openstack_deploy/user_rpco_variables_defaults.yml' }}"
+    rpco_mirror_base_url: "http://rpc-repo.rackspace.com"
+    rpco_mirror_apt_filename: "rpco"
+    rpco_gpg_key_location: "{{ rpco_mirror_base_url }}/apt-mirror/"
+    rpco_gpg_key_name: "rcbops-release-signing-key.asc"
+    rpco_gpg_key_id: 52AA252F
   tasks:
+
+    # Check whether a file exists to help determine the
+    # rpc_release, as the job may not include a checkout
+    # of rpc-openstack.
+    - name: Check if release file name exists
+      stat:
+        path: "{{ rpc_release_file_name }}"
+      register: _release_file
+      delegate_to: localhost
+
+    # We then want to check the value of the rpc_release
+    # variable in the file. It may be a bit of jinja, or
+    # not exist, or be a real value. These edge cases are
+    # needed to protect against due to the many releases
+    # tested by the gate and the varied approaches across
+    # them all.
+    # If the value is of the form r<major>.<minor>.<patch>
+    # and optionally including a release candidate suffix
+    # then we have a valid version.
+    - name: Determine rpc_release value
+      shell: |
+        RPC_RELEASE=$(awk '/^rpc_release/ { print $2; }' {{ rpc_release_file_name }} | sed 's/"//g')
+        if [[ ! ${RPC_RELEASE} =~ ^r[0-9]+\.[0-9]+\.[0-9]+(rc[0-9]+)?$ ]]; then
+          RPC_RELEASE="none"
+        fi
+        echo ${RPC_RELEASE}
+      args:
+        executable: "/bin/bash"
+      register: _release_value
+      delegate_to: localhost
+      when:
+        - _release_file.stat.exists
+
+    # If the release file exists, and we have a valid value
+    # then add an apt key & source for the artifacts repo for
+    # that version.
+    # This ensures that builds using the restricted starting
+    # apt configuration for an artifacted build are able to
+    # install the JRE package below which is only available
+    # in the ubuntu-updates repo.
+    - name: Configure the apt artifact repo key
+      apt_key:
+        id:  "{{ rpco_gpg_key_id }}"
+        url: "{{ rpco_gpg_key_location }}{{ rpco_gpg_key_name }}"
+        state: present
+      when:
+        - _release_file.stat.exists
+        - _release_value.stdout != "none"
+
+    - name: Configure the apt artifact source
+      apt_repository:
+        repo: |-
+          deb {{ rpco_mirror_base_url }}/apt-mirror/integrated {{ _release_value.stdout }}-{{ ansible_distribution_release }} main
+        state: present
+        update_cache: yes
+        filename: "{{ rpco_mirror_apt_filename }}"
+      when:
+        - _release_file.stat.exists
+        - _release_value.stdout != "none"
+
     - name: Install apt packages
       apt:
         pkg: "{{ item }}"
