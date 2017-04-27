@@ -59,19 +59,22 @@
           TESTR_OPTS: ""
       - string:
           name: STAGES
-          default: "Connect Slave, Prepare Multi-Node AIO, Prepare RPC Configs, Deploy RPC w/ Script, Destroy Slave"
+          default: "Connect Slave, Prepare LEM AIO, Prepare Multi-Node AIO, Prepare RPC Configs, Deploy RPC w/ Script, Install Tempest, Tempest Tests, Prepare Kibana Selenium, Kibana Tests, Holland, Destroy Slave"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
               Connect Slave
-              Prepare Deployment
+              Prepare LEM AIO
+              Prepare Multi-Node AIO
+              Prepare RPC Configs
               Deploy RPC w/ Script
               Setup MaaS
               Verify MaaS
               Install Tempest
               Tempest Tests
+              Prepare Kibana Selenium
+              Kibana Tests
               Holland (test holland mysql backup)
-              Upgrade
               Destroy Slave
       - string:
           name: INSTANCE_NAME
@@ -99,6 +102,7 @@
               tempest = load 'pipeline_steps/tempest.groovy'
               holland = load 'pipeline_steps/holland.groovy'
               maas = load 'pipeline_steps/maas.groovy'
+              kibana = load 'pipeline_steps/kibana.groovy'
           }}
           dir("rpc-gating/playbooks") {{
             writeFile file: "inventory/hosts", text: "[job_nodes]\n${{INSTANCE_NAME}} ansible_host=${{INSTANCE_IP}}\n"
@@ -106,9 +110,14 @@
           }}
           ssh_slave.connect()
           node(INSTANCE_NAME) {{
-            sh """
-               lvcreate -n aio -L250G lxc
-            """
+            common.conditionalStage(
+              stage_name: 'Prepare LEM AIO',
+              stage: {{
+                sh """
+                   lvcreate -n aio -L250G lxc
+                """
+              }} //stage
+            ) //conditionalStage
             multi_node_aio_prepare.prepare()
             deploy.deploy_sh(
               environment_vars: [
@@ -128,6 +137,7 @@
             maas.deploy()
             maas.verify()
             tempest.tempest(vm: "infra1")
+            kibana.kibana()
             holland.holland()
           }} // hardware node
           ssh_slave.destroy()
