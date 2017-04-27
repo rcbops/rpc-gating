@@ -151,6 +151,14 @@
               holland = load 'pipeline_steps/holland.groovy'
               maas = load 'pipeline_steps/maas.groovy'
           }}
+          // We need to checkout the rpc-openstack repo on the CIT Slave
+          // so that we can cater for builds on the more restricted images
+          // used for artifact-based builds.
+          if (env.STAGES.contains("Upgrade")) {{
+            common.prepareRpcGit(env.UPGRADE_FROM_REF, env.WORKSPACE)
+          }} else {{
+            common.prepareRpcGit("auto", env.WORKSPACE)
+          }} // if
           pubcloud.runonpubcloud {{
             // try within pubcloud node so we can archive archive_artifacts
             // after a failure, before the node is cleaned up.

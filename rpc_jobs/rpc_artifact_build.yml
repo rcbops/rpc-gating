@@ -134,6 +134,10 @@
             pubcloud = load 'pipeline_steps/pubcloud.groovy'
             artifact_build = load 'pipeline_steps/artifact_build.groovy'
         }}
+        // We need to checkout the rpc-openstack repo on the CIT Slave
+        // so that we can cater for builds on the more restricted images
+        // used for artifact-based builds.
+        common.prepareRpcGit("auto", env.WORKSPACE)
         artifact_build.git()
         artifact_build.python()
         artifact_build.container()
