@@ -31,7 +31,21 @@
             cinder_service_backup_driver: cinder.backup.drivers.ceph
             tempest_service_available_swift: false
       - upgrade:
-          STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Upgrade, Cleanup, Destroy Slave"
+          STAGES: >-
+            Allocate Resources,
+            Connect Slave,
+            Prepare Deployment,
+            Deploy RPC w/ Script,
+            Setup MaaS,
+            Verify MaaS,
+            Install Tempest,
+            Tempest Tests,
+            Prepare Kibana Selenium,
+            Kibana Tests,
+            Holland,
+            Upgrade,
+            Cleanup,
+            Destroy Slave
       - xenial:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
 
@@ -70,7 +84,20 @@
 
 - job-template:
     # DEFAULTS
-    STAGES: "Allocate Resources, Connect Slave, Prepare Deployment, Deploy RPC w/ Script, Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Cleanup, Destroy Slave"
+    STAGES: >-
+      Allocate Resources,
+      Connect Slave,
+      Prepare Deployment,
+      Deploy RPC w/ Script,
+      Setup MaaS,
+      Verify MaaS,
+      Install Tempest,
+      Tempest Tests,
+      Prepare Kibana Selenium,
+      Kibana Tests,
+      Holland,
+      Cleanup,
+      Destroy Slave
     branch: master
     NUM_TO_KEEP: 30
 
@@ -118,6 +145,8 @@
               Verify MaaS
               Install Tempest
               Tempest Tests
+              Prepare Kibana Selenium
+              Kibana Tests
               Holland (test holland mysql backup)
               Upgrade
               Pause (use to hold instance for investigation before cleanup)
@@ -150,6 +179,7 @@
               tempest = load 'pipeline_steps/tempest.groovy'
               holland = load 'pipeline_steps/holland.groovy'
               maas = load 'pipeline_steps/maas.groovy'
+              kibana = load 'pipeline_steps/kibana.groovy'
           }}
           // We need to checkout the rpc-openstack repo on the CIT Slave
           // so that we can cater for builds on the more restricted images
@@ -178,6 +208,7 @@
               maas.deploy()
               maas.verify()
               tempest.tempest()
+              kibana.kibana()
               holland.holland()
               if (env.STAGES.contains("Upgrade")) {{
                 deploy.upgrade(environment_vars: environment_vars)
@@ -185,6 +216,7 @@
                 maas.deploy()
                 maas.verify()
                 tempest.tempest()
+                kibana.kibana()
                 holland.holland()
               }}
             }} catch (e) {{
