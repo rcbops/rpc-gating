@@ -70,3 +70,5 @@ def irr_archive_artifacts(){
     """
   }
 }
+
+return this;
