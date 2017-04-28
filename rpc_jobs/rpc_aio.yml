@@ -159,6 +159,9 @@
           }} else {{
             common.prepareRpcGit("auto", env.WORKSPACE)
           }} // if
+          if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
+            return
+          }}
           pubcloud.runonpubcloud {{
             // try within pubcloud node so we can archive archive_artifacts
             // after a failure, before the node is cleaned up.
