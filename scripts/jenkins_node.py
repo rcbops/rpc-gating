@@ -43,6 +43,25 @@ def delete_node(jenkins, name):
     jenkins.delete_node(nodename=name)
 
 
+def delete_inactive_nodes(jenkins, instance_prefix):
+    for node_id, node in jenkins.get_nodes().iteritems():
+        # Ignore nodes that are coming online for the first time
+        # which won't have an offline cause.
+        if (node_id.startswith(instance_prefix) and not node.is_online()
+            and node.poll(tree="offlineCauseReason")
+                    .get("offlineCauseReason")):
+            print("Deleting inactive Jenkins node {}".format(node_id))
+            jenkins.delete_node(node_id)
+
+
+def get_jenkins_client():
+    username = os.environ.get("JENKINS_USERNAME")
+    password = os.environ.get("JENKINS_API_KEY")
+    jenkins_url = os.environ.get(
+        "JENKINS_URL", "https://rpc.jenkins.cit.rackspace.net/")
+    return Jenkins(baseurl=jenkins_url, username=username, password=password)
+
+
 if __name__ == "__main__":
     description = "Adds or deletes a Jenkins node via the Jenkins API"
     parser = argparse.ArgumentParser(description=description)
@@ -56,11 +75,7 @@ if __name__ == "__main__":
                         help="Path to use as the home directory on the node")
     args = parser.parse_args()
 
-    username = os.environ.get("JENKINS_USERNAME")
-    password = os.environ.get("JENKINS_API_KEY")
-    jenkins_url = (os.environ.get("JENKINS_URL") or
-                   "https://rpc.jenkins.cit.rackspace.net/")
-    j = Jenkins(baseurl=jenkins_url, username=username, password=password)
+    j = get_jenkins_client()
 
     if args.action == "create":
         create_node(jenkins=j, host_ip=args.ip, name=args.name,

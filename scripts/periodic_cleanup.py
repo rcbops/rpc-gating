@@ -10,6 +10,7 @@ from dateutil.tz import tzutc
 import os
 
 import pyrax
+import jenkins_node
 
 
 def get_env_vars():
@@ -56,5 +57,11 @@ if __name__ == "__main__":
     cleanup_instances(
         cs_client=cs,
         age_limit=args["age_limit"],
+        instance_prefix=args["instance_prefix"],
+    )
+
+    jenkins_client = jenkins_node.get_jenkins_client()
+    jenkins_node.delete_inactive_nodes(
+        jenkins=jenkins_client,
         instance_prefix=args["instance_prefix"],
     )
