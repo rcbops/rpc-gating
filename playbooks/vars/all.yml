@@ -27,11 +27,6 @@ default_gating_overrides:
       attach_encrypted_volume: false
     volume-feature-enabled:
       snapshot: true
-  # NOTE(mattt): This functionality is currently broken on multi-node
-  #              deployments, disabling until this is addressed in
-  #              openstack-ansible-os_cinder
-  cinder_service_backup_program_enabled: false
-  #
   # This is being increased from the default of 85 as the default value may be
   # too low for the liberty->mitaka upgrade job where more space is used by
   # additional packages, venvs, logs, etc.

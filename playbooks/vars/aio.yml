@@ -30,3 +30,4 @@ gating_overrides:
   raw_multi_journal: false
   journal_size: 1024
   osd_directory: true
+  cinder_service_backup_program_enabled: true

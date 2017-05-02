@@ -6,3 +6,7 @@ gating_overrides:
   memory_used_percentage_critical_threshold: 99.5
   net_max_speed: 1000
   lb_name: "{{ lookup('env', 'NODE_NAME') }}"
+  # NOTE(mattt): This functionality is currently broken on multi-node
+  #              deployments, disabling until this is addressed in
+  #              openstack-ansible-os_cinder
+  cinder_service_backup_program_enabled: false
