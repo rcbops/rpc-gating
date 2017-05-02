@@ -138,6 +138,7 @@
           node(instance_name){{
             multi_node_aio_prepare.prepare()
             deploy.deploy_sh(
+              vm: "deploy1",
               environment_vars: [
                 "DEPLOY_HAPROXY=yes",
                 "DEPLOY_ELK=yes",
@@ -146,28 +147,24 @@
                 "DEPLOY_MAAS=no"
                 ]
             ) // deploy_sh
+            multi_node_aio_prepare.multi_node_aio_networking()
             parallel(
               "maas": {{
-                node(){{
-                  dir("rpc-gating"){{
-                    git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-                  }}
-                  maas.prepare(instance_name: instance_name)
-                }}
-                maas.deploy()
-                maas.verify()
+                maas.prepare(instance_name: instance_name)
+                maas.deploy("deploy1")
+                maas.verify("deploy1")
               }},
               "tempest": {{
-                tempest.tempest(vm: "infra1")
+                tempest.tempest("infra1", "deploy1")
               }},
               "horizon": {{
                 horizon.horizon_integration()
               }},
               "kibana": {{
-                kibana.kibana()
+                kibana.kibana("deploy1")
               }},
               "holland": {{
-                holland.holland()
+                holland.holland("deploy1")
               }}
             ) // parallel
           }}// public cloud node
