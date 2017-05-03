@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
-# This script deletes instances whose name starts with "ra" if they are in
-# error state or older than AGE_LIMIT hours.
+# This script deletes instances whose name matches a supplied pattern if they
+# are in error state or older than AGE_LIMIT hours.
 
 
 import datetime
 import dateutil.parser
 from dateutil.tz import tzutc
 import os
+import re
 
 import pyrax
 import jenkins_node
@@ -17,7 +18,7 @@ def get_env_vars():
     env_vars = {}
 
     env_vars["age_limit"] = int(os.environ.get("INSTANCE_AGE_LIMIT", 48))
-    env_vars["instance_prefix"] = os.environ.get("INSTANCE_PREFIX", "ra")
+    env_vars["instance_prefix"] = os.environ.get("INSTANCE_PREFIX")
     if not env_vars["instance_prefix"]:
         raise ValueError("INSTANCE_PREFIX must not be empty")
 
@@ -34,7 +35,7 @@ def cleanup_instances(cs_client, age_limit, instance_prefix):
 
     prefixed_servers = (
         server for server in cs_client.servers.list()
-        if server.name.startswith(instance_prefix)
+        if re.match(instance_prefix, server.name)
     )
 
     for server in prefixed_servers:
