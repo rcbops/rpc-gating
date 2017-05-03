@@ -1,0 +1,112 @@
+- job:
+    name: Deploy-Temp-Jenkins
+    project-type: workflow
+    concurrent: true
+    parameters:
+      # Default params are provided by macro, add any extra params, or
+      # params you want to override the defaults for.
+      - single_use_slave_params:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          FLAVOR: "performance2-15"
+          REGION: "DFW"
+      - rpc_gating_params
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Connect Slave, Pause, Cleanup, Destroy Slave"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Allocate Resources
+              Connect Slave
+              Pause (use to hold instance for investigation before cleanup)
+              Cleanup
+              Destroy Slave
+    dsl: |
+      try{
+        node('master'){
+          // get plugin list
+          withCredentials([
+            usernamePassword(
+              credentialsId: "service_account_jenkins_api_creds",
+              usernameVariable: "PROD_JENKINS_USERNAME",
+              passwordVariable: "PROD_JENKINS_API_KEY"
+            )
+          ]){
+            sh """
+              curl \
+                -s \
+                -k \
+                -u${PROD_JENKINS_USERNAME}:${PROD_JENKINS_API_KEY} \
+                "https://localhost/pluginManager/api/json?depth=1"  \
+                |jq '.plugins[].shortName' -r > plugins.txt
+            """
+          }
+
+          // Prepare Stash Dir
+          sh """
+            mkdir -p config
+            cp /var/lib/jenkins/*.xml config
+            cp plugins.txt config
+            rm config/config.xml #not applicable to temp instances
+          """
+          stash name: "config", include: "config"
+        }
+        // CIT Slave node
+        node(){
+          dir("rpc-gating"){
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            pubcloud = load 'pipeline_steps/pubcloud.groovy'
+            common = load 'pipeline_steps/common.groovy'
+          }
+          pubcloud.runonpubcloud {
+            unstash name: "config"
+            dir("rpc-gating"){
+              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            }
+            common.install_ansible()
+            withCredentials([
+              usernamePassword(
+                credentialsId: "temp_jenkins_admin_user_pass",
+                usernameVariable: "jenkins_admin_username",
+                passwordVariable: "jenkins_admin_password"
+              ),
+              string(
+                credentialsId: 'rpc-jenkins-svc-github-pat',
+                variable: 'pat'
+              )
+            ]){
+              dir(rpc-gating/playbooks){
+                common.venvPlaybook(
+                  playbooks: ["deploy_jenkins.yml"],
+                  vars: [
+                    "jenkins_admin_username": env.jenkins_admin_username,
+                    "jenkins_admin_password": env.jenkins_admin_password
+                  ]
+                )
+              }
+            }
+            /* This notification must be within the runonpubcloud block
+             * otherwise it won't reach the user till after cleanup.
+             * Password in slack is an acceptable risk because These
+             * are throwaway instances.
+             */
+            url = readFile('jenkins_ui_link')
+            echo "UI LINK: ${url}"
+            slackSend(
+              color: 'good',
+              message: """Temp Jenkins Deployed
+                UI: ${url}
+                user: ${env.jenkins_admin_username}
+                pass: ${env.jenkins_admin_password}
+                Please continue the following build to cleanup when finished: ${env.BUILD_URL}"
+              """
+            )
+          }
+        }
+      }catch (e){
+        //slackSend(
+        //  color: 'danger',
+        //  message: "Failed to deploy temp jenkins :( ${env.BUILD_URL}"
+        //)
+        throw e
+      }

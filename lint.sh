@@ -3,7 +3,7 @@
 rc=0
 venv=.lintvenv
 # exclude venv and git dir from linting
-fargs=(. -not -path \*${venv}\* -not -path \*.git\*)
+fargs=(. -not -path \*${venv}\* -not -path \*.git\* -not -path \*geerlingguy\*)
 
 trap cleanup EXIT
 cleanup(){

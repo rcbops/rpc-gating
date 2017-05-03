@@ -14,12 +14,13 @@ def create_issue(
     sh """#!/bin/bash -xe
       cd ${env.WORKSPACE}
       . .venv/bin/activate
-      python rpc-gating/scripts/ghutils.py create_issue\
-        --tag '$tag'\
-        --link '$link'\
+      python rpc-gating/scripts/ghutils.py \
         --org '$org'\
         --repo '$repo'\
         --pat '$pat'\
+        create_issue\
+        --tag '$tag'\
+        --link '$link'\
         --label '$label'
     """
   }

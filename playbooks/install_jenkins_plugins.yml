@@ -16,6 +16,10 @@
         follow_redirects: all
         #status_code: 302
   tasks:
+    - name: Install packages
+      yum:
+        name: jq
+        state: present
     - name: Install plugins
       jenkins_plugin:
         name: "{{ item }}"
