@@ -154,5 +154,6 @@
             holland.holland()
           }} // hardware node
           ssh_slave.destroy()
+          maas.entity_cleanup(instance_name: instance_name)
         }} // cit node
       }} // timeout

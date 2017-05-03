@@ -11,7 +11,7 @@ def prepare(Map args) {
           common.install_ansible()
           withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
             common.venvPlaybook(
-              playbooks: ['aio_maas_entities.yml'],
+              playbooks: ['multi_node_aio_maas_entities.yml'],
               venv: ".venv",
               args: [
                 "-e server_name=\"${args.instance_name}\""
@@ -62,5 +62,31 @@ cd ${env.WORKSPACE}/rpc-gating/scripts
   )
   return token_url.trim().tokenize(" ")
 }
+
+def entity_cleanup(Map args){
+  common.conditionalStep(
+    step_name: 'Cleanup',
+    step: {
+      withCredentials(common.get_cloud_creds()) {
+        dir("rpc-gating/playbooks") {
+          common.install_ansible()
+          pyrax_cfg = common.writePyraxCfg(
+            username: env.PUBCLOUD_USERNAME,
+            api_key: env.PUBCLOUD_API_KEY
+          )
+          withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
+            common.venvPlaybook(
+              playbooks: ['multi_node_aio_maas_cleanup.yml'],
+              venv: ".venv",
+              vars: [
+                "server_name": args.instance_name,
+              ]
+            )
+          } // withEnv
+        } // directory
+      } //withCredentials
+    } // step
+  ) // conditionalStep
+} //call
 
 return this;
