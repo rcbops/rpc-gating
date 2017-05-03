@@ -109,8 +109,8 @@ def delPubCloudSlave(Map args){
 /* One func entrypoint to run a script on a single use slave */
 def runonpubcloud(body){
   instance_name = common.gen_instance_name()
-  getPubCloudSlave(instance_name: instance_name)
   try{
+    getPubCloudSlave(instance_name: instance_name)
     node(instance_name){
       body()
     }
