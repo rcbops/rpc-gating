@@ -416,5 +416,23 @@ def docker_cache_workaround(){
    sh "touch -t 201704100000 *.txt"
 }
 
+def is_doc_update_pr(git_dir) {
+  is_doc_update_pr = false
+  if (env.ghprbPullId != null) {
+    dir(git_dir) {
+      def output = sh(script: """#!/bin/bash
+      git show --stat=400,400 | awk '/\\|/{print \$1}' \
+        | egrep -v -e '.*md\$' -e '.*rst\$' -e '^releasenotes/' \
+        || echo "Skipping build as only documentation changes were detected"
+      """, returnStdout: true)
+      print output
+      is_doc_update_pr = output.contains("Skipping build as only documentation changes were detected")
+    }
+  }
+  if(!is_doc_update_pr){
+    print "Not a documentation only change or not triggered by a pull request. Continuing..."
+  }
+  return is_doc_update_pr
+}
 
 return this

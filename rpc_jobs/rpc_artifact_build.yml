@@ -138,6 +138,9 @@
         // so that we can cater for builds on the more restricted images
         // used for artifact-based builds.
         common.prepareRpcGit("auto", env.WORKSPACE)
+        if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
+          return
+        }}
         artifact_build.git()
         artifact_build.python()
         artifact_build.container()
