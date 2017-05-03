@@ -192,6 +192,7 @@
               }}
             }} catch (e) {{
               print(e)
+              common.submit_ara()
               throw e
             }} finally {{
               common.archive_artifacts()
