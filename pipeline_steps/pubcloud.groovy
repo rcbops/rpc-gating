@@ -49,8 +49,7 @@ def cleanup(Map args){
         )
         withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
           common.venvPlaybook(
-            playbooks: ['aio_maas_cleanup.yml',
-                        'cleanup_pubcloud.yml'],
+            playbooks: ['cleanup_pubcloud.yml'],
             venv: ".venv",
             args: [
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",

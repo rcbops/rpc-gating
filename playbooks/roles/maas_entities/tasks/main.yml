@@ -8,3 +8,7 @@
       label: "{{ item }}"
       region: "{{ lookup('env', 'REGION') }}"
   with_items: "{{ entity_labels }}"
+  register: rax
+  until: rax|success
+  retries: 3
+  delay: 5
