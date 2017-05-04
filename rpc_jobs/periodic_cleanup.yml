@@ -49,6 +49,11 @@
                 credentialsId: "dev_pubcloud_api_key",
                 variable: "PUBCLOUD_API_KEY"
               ),
+              usernamePassword(
+                credentialsId: "service_account_jenkins_api_creds",
+                usernameVariable: "JENKINS_USERNAME",
+                passwordVariable: "JENKINS_API_KEY"
+              ),
             ]){
               sh "python scripts/periodic_cleanup.py"
             }
