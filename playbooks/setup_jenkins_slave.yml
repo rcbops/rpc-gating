@@ -122,3 +122,7 @@
           --ip {{ansible_host}} \
           --creds "SSH Creds for Jenkins instances in public cloud." \
           --labels single_use_slave
+      register: jenkins_response
+      until: jenkins_response|success
+      retries: 5
+      delay: 10
