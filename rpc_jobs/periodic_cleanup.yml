@@ -9,10 +9,10 @@
             Hours. Instances older than this will be removed.
       - string:
           name: "INSTANCE_PREFIX"
-          default: "ra"
+          default: "ra|ri"
           description: |
-            Only instances whose names match the supplied prefix will be cleaned
-            up.
+            Only instances whose names match the supplied prefix pattern will
+            be cleaned up.
       - string:
           name: "REGION"
           default: "DFW"

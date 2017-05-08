@@ -15,6 +15,7 @@ limitations under the License.
 """
 import argparse
 import os
+import re
 
 from jenkinsapi.jenkins import Jenkins
 
@@ -47,9 +48,9 @@ def delete_inactive_nodes(jenkins, instance_prefix):
     for node_id, node in jenkins.get_nodes().iteritems():
         # Ignore nodes that are coming online for the first time
         # which won't have an offline cause.
-        if (node_id.startswith(instance_prefix) and not node.is_online()
+        if (re.match(instance_prefix, node_id) and not node.is_online()
             and node.poll(tree="offlineCauseReason")
-                    .get("offlineCauseReason")):
+                .get("offlineCauseReason")):
             print("Deleting inactive Jenkins node {}".format(node_id))
             jenkins.delete_node(node_id)
 
