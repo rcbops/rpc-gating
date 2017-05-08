@@ -33,6 +33,9 @@ def apt() {
     stage: {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit()
+        if(common.is_doc_update_pr("${env.WORKSPACE}/rpc-openstack")){
+          return
+        }
         ansiColor('xterm') {
           dir("/opt/rpc-openstack/") {
             sh """#!/bin/bash
@@ -53,6 +56,9 @@ def git() {
         try {
           withCredentials(get_rpc_repo_creds()) {
             common.prepareRpcGit()
+            if(common.is_doc_update_pr("${env.WORKSPACE}/rpc-openstack")){
+              return
+            }
             ansiColor('xterm') {
               dir("/opt/rpc-openstack/") {
                 sh """#!/bin/bash
@@ -80,6 +86,9 @@ def python() {
         try {
           withCredentials(get_rpc_repo_creds()) {
             common.prepareRpcGit()
+            if(common.is_doc_update_pr("${env.WORKSPACE}/rpc-openstack")){
+              return
+            }
             ansiColor('xterm') {
               dir("/opt/rpc-openstack/") {
                 sh """#!/bin/bash
@@ -107,6 +116,9 @@ def container() {
         try {
           withCredentials(get_rpc_repo_creds()) {
             common.prepareRpcGit()
+            if(common.is_doc_update_pr("${env.WORKSPACE}/rpc-openstack")){
+              return
+            }
             ansiColor('xterm') {
               dir("/opt/rpc-openstack/") {
                 sh """#!/bin/bash
