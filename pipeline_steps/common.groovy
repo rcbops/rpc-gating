@@ -3,7 +3,8 @@ import groovy.json.JsonOutput
 
 // Install ansible on a jenkins slave
 def install_ansible(){
-  sh """#!/bin/bash
+  sh """#!/bin/bash -xe
+    cd ${env.WORKSPACE}
     if [[ ! -d ".venv" ]]; then
       if ! which virtualenv; then
         pip install virtualenv
@@ -24,10 +25,13 @@ def install_ansible(){
     pip install -U six packaging appdirs
     pip install -U setuptools
     pip install 'pip==9.0.1'
-    pip install -c ${env.WORKSPACE}/rpc-gating/constraints.txt -U ansible pyrax
+    pip install \
+      -U \
+      -c rpc-gating/constraints.txt \
+      -r rpc-gating/requirements.txt
 
     mkdir -p rpc-gating/playbooks/roles
-    ansible-galaxy install -r ${env.WORKSPACE}/rpc-gating/role_requirements.yml -p ${env.WORKSPACE}/rpc-gating/playbooks/roles
+    ansible-galaxy install -r rpc-gating/role_requirements.yml -p rpc-gating/playbooks/roles
   """
 }
 
@@ -40,11 +44,9 @@ def install_ansible(){
  *  playbooks: list of playbook filenames
  *  vars: dict of vars to be passed to ansible as overrides
  *  args: list of string args to pass to ansible-playbook
- *  venv: path to venv to activate before runing ansible-playbook.
  */
 def venvPlaybook(Map args){
-  withEnv(['ANSIBLE_FORCE_COLOR=true',
-           'ANSIBLE_HOST_KEY_CHECKING=False']){
+  withEnv(common.get_deploy_script_env()){
     ansiColor('xterm'){
       if (!('vars' in args)){
         args.vars=[:]
@@ -52,16 +54,13 @@ def venvPlaybook(Map args){
       if (!('args' in args)){
         args.args=[]
       }
-      if (!('venv' in args)){
-        args.venv = ".venv"
-      }
       for (def i=0; i<args.playbooks.size(); i++){
         playbook = args.playbooks[i]
         vars_file="vars.${playbook.split('/')[-1]}"
         write_json(file: vars_file, obj: args.vars)
-        sh """
+        sh """#!/bin/bash -x
           which scl && source /opt/rh/python27/enable
-          . ${args.venv}/bin/activate
+          . ${env.WORKSPACE}/.venv/bin/activate
           ansible-playbook -v ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
       } //for
@@ -120,8 +119,8 @@ def openstack_ansible(Map args){
           sh """#!/bin/bash
           openstack-ansible ${args.playbook} ${args.args}
           """
-        } //withEnv
-      } //dir
+        }
+      }
     } else {
       def export_vars = ""
       for (e in full_env) {
@@ -132,8 +131,9 @@ def openstack_ansible(Map args){
         '${export_vars} cd ${args.path}; openstack-ansible ${args.playbook} ${args.args}'
       """
     }
-  } //colour
+  }
 }
+
 
 /*
  * JsonSluperClassic and JsonOutput are not serializable, so they
@@ -355,12 +355,10 @@ def prepareConfigs(Map args){
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         withCredentials(common.get_cloud_creds()) {
-          String venv = "${env.WORKSPACE}/rpc-gating/playbooks/.venv"
-          List maas_vars = maas.get_maas_token_and_url(env.PUBCLOUD_USERNAME, env.PUBCLOUD_API_KEY, env.REGION, venv)
+          List maas_vars = maas.get_maas_token_and_url(env.PUBCLOUD_USERNAME, env.PUBCLOUD_API_KEY, env.REGION)
           withEnv(maas_vars) {
             common.venvPlaybook(
               playbooks: ["aio_config.yml"],
-              venv: ".venv",
               args: [
                 "-i inventory",
                 "--extra-vars \"@vars/${args.deployment_type}.yml\""

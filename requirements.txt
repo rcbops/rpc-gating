@@ -3,3 +3,5 @@ jenkins-job-builder
 jenkinsapi
 pyrax
 python-dateutil
+click
+github3.py

@@ -22,7 +22,6 @@ def create(Map args){
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
                         "drop_ssh_auth_keys.yml"],
-            venv: ".venv",
             args: [
               "-i inventory",
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
@@ -50,7 +49,6 @@ def cleanup(Map args){
         withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
           common.venvPlaybook(
             playbooks: ['cleanup_pubcloud.yml'],
-            venv: ".venv",
             args: [
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
             ],
@@ -135,7 +133,6 @@ def uploadToCloudFiles(Map args){
       withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
         common.venvPlaybook(
           playbooks: ["upload_to_cloud_files.yml"],
-          venv: ".venv",
           vars: [
             container: args.container,
             src: args.src,

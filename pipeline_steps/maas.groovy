@@ -12,7 +12,6 @@ def prepare(Map args) {
           withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
             common.venvPlaybook(
               playbooks: ['multi_node_aio_maas_entities.yml'],
-              venv: ".venv",
               args: [
                 "-e server_name=\"${args.instance_name}\""
               ],
@@ -51,11 +50,11 @@ def verify(vm=null) {
   ) //conditionalStage
 }
 
-List get_maas_token_and_url(String username, String api_key, String region, String venv) {
+List get_maas_token_and_url(String username, String api_key, String region) {
   def token_url = sh (
     script: """#!/bin/bash
 cd ${env.WORKSPACE}/rpc-gating/scripts
-. ${venv}/bin/activate
+. ${env.WORKSPACE}/.venv/bin/activate
 ./get_maas_token_and_url.py --username ${username} --api-key ${api_key} --region ${region}
 """,
     returnStdout: true,
@@ -77,7 +76,6 @@ def entity_cleanup(Map args){
           withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
             common.venvPlaybook(
               playbooks: ['multi_node_aio_maas_cleanup.yml'],
-              venv: ".venv",
               vars: [
                 "server_name": args.instance_name,
               ]
