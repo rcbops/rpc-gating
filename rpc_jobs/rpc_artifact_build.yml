@@ -121,26 +121,35 @@
           status-context: 'CIT/artifact-{image}-{context}'
           cancel-builds-on-update: true
     dsl: |
-      node('ArtifactBuilder2') {{
-        dir("rpc-gating") {{
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline_steps/common.groovy'
-            artifact_build = load 'pipeline_steps/artifact_build.groovy'
-        }}
-        artifact_build.apt()
-      }} // node ArtifactBuilder2
       node() {{
-        dir("rpc-gating") {{
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline_steps/common.groovy'
-            pubcloud = load 'pipeline_steps/pubcloud.groovy'
-            artifact_build = load 'pipeline_steps/artifact_build.groovy'
-        }}
+        currentBuild.result = "SUCCESS"
         // We need to checkout the rpc-openstack repo on the CIT Slave
         // so that we can cater for builds on the more restricted images
         // used for artifact-based builds.
         common.prepareRpcGit("auto", env.WORKSPACE)
-        artifact_build.git()
-        artifact_build.python()
-        artifact_build.container()
+        try {{
+          node('ArtifactBuilder2') {{
+            dir("rpc-gating") {{
+                git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+                common = load 'pipeline_steps/common.groovy'
+                artifact_build = load 'pipeline_steps/artifact_build.groovy'
+            }}
+            artifact_build.apt()
+          }} // node ArtifactBuilder2
+            dir("rpc-gating") {{
+                git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+                common = load 'pipeline_steps/common.groovy'
+                pubcloud = load 'pipeline_steps/pubcloud.groovy'
+                artifact_build = load 'pipeline_steps/artifact_build.groovy'
+            }}
+            artifact_build.git()
+            artifact_build.python()
+            artifact_build.container()
+        }} catch (e) {{
+          print e
+          currentBuild.result = "FAILURE"
+          throw e
+        }} finally {{
+          common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
+        }}
       }} // node

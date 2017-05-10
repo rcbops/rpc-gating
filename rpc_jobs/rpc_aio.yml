@@ -169,6 +169,7 @@
 
     dsl: |
       // CIT Slave node
+      currentBuild.result = 'SUCCESS'
       timeout(time: 8, unit: 'HOURS'){{
         node() {{
           dir("rpc-gating") {{
@@ -226,9 +227,11 @@
               }}
             }} catch (e) {{
               print(e)
+              currentBuild.result = 'FAILURE'
               throw e
             }} finally {{
               common.archive_artifacts()
+              common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
             }}
           }} //pubcloud slave
         }} // cit node
