@@ -146,14 +146,15 @@
             ) // deploy_sh
             multi_node_aio_prepare.multi_node_aio_networking()
             node(){{
-            maas.prepare(instance_name: instance_name)
-            maas.deploy()
-            maas.verify()
-            tempest.tempest("infra1", "deploy1")
-            kibana.kibana("deploy1")
-            holland.holland()
-          }} // hardware node
-          ssh_slave.destroy()
-          maas.entity_cleanup(instance_name: instance_name)
-        }} // cit node
-      }} // timeout
+              maas.prepare(instance_name: instance_name)
+              maas.deploy()
+              maas.verify()
+              tempest.tempest("infra1", "deploy1")
+              kibana.kibana("deploy1")
+              holland.holland()
+            }}
+            ssh_slave.destroy()
+            maas.entity_cleanup(instance_name: instance_name)
+          }}
+        }}
+      }}
