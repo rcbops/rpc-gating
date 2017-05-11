@@ -150,7 +150,7 @@
             maas.deploy()
             maas.verify()
             tempest.tempest("infra1", "deploy1")
-            kibana.kibana("deploy1")
+            kibana.kibana(env.RPC_BRANCH, "deploy1")
             holland.holland()
           }} // hardware node
           ssh_slave.destroy()

@@ -1,21 +1,21 @@
-def kibana(vm=null){
+def kibana(branch, vm=null){
   common.conditionalStage(
     stage_name: "Prepare Kibana Selenium",
     stage: {
-      kibana_prep()
+      kibana_prep(branch)
     }
   )
   common.conditionalStage(
     stage_name: "Kibana Tests",
     stage: {
-      kibana_tests(vm)
+      kibana_tests(branch, vm)
     }
   )
 }
 
-def kibana_prep(){
+def kibana_prep(branch){
   dir("kibana-selenium") {
-    git url: "https://github.com/rcbops-qe/kibana-selenium.git", branch: "master"
+    git url: "https://github.com/rcbops-qe/kibana-selenium.git", branch: "${branch}"
 
     sh """#!/bin/bash
       # The phantomjs package on 16.04 is buggy, see:
@@ -42,10 +42,10 @@ def kibana_prep(){
   }
 }
 
-def kibana_tests(vm=null){
+def kibana_tests(branch, vm=null){
   try {
     dir("kibana-selenium") {
-      git url: "https://github.com/rcbops-qe/kibana-selenium.git", branch: "master"
+      git url: "https://github.com/rcbops-qe/kibana-selenium.git", branch: "${branch}"
 
       if(vm != null){
         sh """#!/bin/bash
@@ -62,7 +62,9 @@ def kibana_tests(vm=null){
         export PATH=\$PATH:./phantomjs-2.1.1-linux-x86_64/bin
         # Remove any existing screenshots from old runs
         rm -f *.png
-        python conf-gen.py --secure --password-file /etc/openstack_deploy/user_rpco_secrets.yml \
+
+        export PASSWORD=\$(grep -Ir kibana_password /etc/openstack_deploy/ | tail -1 | sed 's/.*\\: //')
+        python conf-gen.py --secure --password \$PASSWORD \
           --vip-file /etc/openstack_deploy/openstack_user_config.yml
         nosetests -sv --with-xunit testrepo/kibana/kibana.py
       """

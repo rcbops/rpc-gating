@@ -13,4 +13,4 @@
     CONTEXT_USER_VARS: ""
     TRIGGER_USER_VARS: ""
     SERIES_USER_VARS: ""
-    UPGRADE_FROM_REF: "liberty-12.2"
+    UPGRADE_FROM_REF: ""

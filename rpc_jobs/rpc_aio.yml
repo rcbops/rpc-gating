@@ -46,6 +46,7 @@
             Upgrade,
             Cleanup,
             Destroy Slave
+          UPGRADE_FROM_REF: "liberty-12.2"
       - xenial:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
 
@@ -211,7 +212,8 @@
               maas.deploy()
               maas.verify()
               tempest.tempest()
-              kibana.kibana()
+              kibana_branch = env.UPGRADE_FROM_REF ?: env.RPC_BRANCH
+              kibana.kibana(kibana_branch)
               holland.holland()
               if (env.STAGES.contains("Upgrade")) {{
                 deploy.upgrade(environment_vars: environment_vars)
@@ -219,7 +221,7 @@
                 maas.deploy()
                 maas.verify()
                 tempest.tempest()
-                kibana.kibana()
+                kibana.kibana(env.RPC_BRANCH)
                 holland.holland()
               }}
             }} catch (e) {{
