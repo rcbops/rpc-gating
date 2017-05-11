@@ -266,6 +266,7 @@ def gen_instance_name(){
 def archive_artifacts(){
   try{
     sh """#!/bin/bash
+    echo "Archiving logs and configs..."
     d="artifacts_\${BUILD_TAG}"
     mkdir -p \$d
 
@@ -279,12 +280,16 @@ def archive_artifacts(){
     while read c
     do
       mkdir -p \$d/\$c/log
-      cp -rp /openstack/log/\$c/* \$d/\$c/log ||:
-      cp -rp /var/lib/lxc/\$c/rootfs/etc \$d/\$c ||:
+      cp -rp /openstack/log/\$c/* \$d/\$c/log 2>/dev/null ||:
+      cp -rp /var/lib/lxc/\$c/rootfs/etc \$d/\$c 2>/dev/null ||:
+      cp -rp /var/lib/lxc/\$c/delta0/etc \$d/\$c 2>/dev/null ||:
     done < <(lxc-ls)
 
     # compress to reduce storage space requirements
+    ARTIFACT_SIZE=\$(du -sh \$d | cut -f1)
+    echo "Compressing \$ARTIFACT_SIZE of artifact files..."
     tar cjf "\$d".tar.bz2 \$d
+    echo "Compression complete."
     """
   } catch (e){
     print(e)
@@ -292,6 +297,7 @@ def archive_artifacts(){
   } finally{
     // still worth trying to archiveArtifacts even if some part of
     // artifact collection failed.
+      print "Uploading artifacts to Cloud Files..."
       pubcloud.uploadToCloudFiles(
         container: "jenkins_logs",
         src: "${env.WORKSPACE}/artifacts_${env.BUILD_TAG}.tar.bz2",
