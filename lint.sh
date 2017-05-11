@@ -29,23 +29,31 @@ check_jjb(){
     || { echo "JJB Syntax fail"; rc=1; }
 }
 
+# This pulls job.dsl from jjb templates so they can be checked for groovy syntax
+extract_groovy_from_jjb(){
+  mkdir -p tmp_groovy
+  for jjbfile in rpc_jobs/*.yml
+  do
+    scripts/extract_dsl.py --jjbfile "${jjbfile}" --outdir tmp_groovy
+  done
+}
+
 check_groovy(){
   which groovy > /dev/null \
     || { echo "groovy unavailble, please install groovy (apt:groovy2 brew:groovy)"
          return
        }
-  grc=0
-  while read scriptf
-  do groovy -classpath pipeline_steps $scriptf || grc=1
-  done < <(find ${fargs[@]} -name \*.groovy \! -name NonCPS.groovy \! -name add_jenkins_cred.groovy)
+  extract_groovy_from_jjb
+  groovy scripts/syntax.groovy pipeline_steps/*.groovy tmp_groovy/*.groovy
 
-  if [[ $grc == 0 ]]
+  if [[ $? == 0 ]]
   then
     echo "Groovy syntax ok"
   else
     echo "Groovy syntax fail"
     rc=1
   fi
+  rm -rf tmp_groovy
 }
 
 check_ansible(){
@@ -85,6 +93,8 @@ check_python
 if [[ $rc == 0 ]]
 then
   echo -e "\n**********************\nAll syntax checks passed :)\n**********************\n"
+else
+  echo -e "\n----------------------\nSyntax check fail :(\n----------------------\n"
 fi
 
 exit $rc
