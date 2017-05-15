@@ -4,13 +4,13 @@
     #       branches is the branch pattern to match for PR Jobs.
     series:
       - artifacts:
-          branch: artifacts-14.0
-          branches: "artifacts-.*"
+          branch: artifacts
+          branches: "artifacts.*"
     image:
       - trusty:
-          IMAGE: "Ubuntu 14.04.4 LTS prepared for RPC deployment"
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
       - xenial:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     context:
       - Git
       - Apt
