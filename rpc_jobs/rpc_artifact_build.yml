@@ -153,5 +153,6 @@
           throw e
         }} finally {{
           common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
+          common.delete_workspace()
         }}
       }} // node

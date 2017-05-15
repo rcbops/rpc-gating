@@ -108,7 +108,8 @@
       // CIT Slave node
       timeout(time: 8, unit: 'HOURS'){{
         node() {{
-          dir("rpc-gating") {{
+          try {{
+            dir("rpc-gating") {{
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
               common = load 'pipeline_steps/common.groovy'
               ssh_slave = load 'pipeline_steps/ssh_slave.groovy'
@@ -118,43 +119,49 @@
               holland = load 'pipeline_steps/holland.groovy'
               maas = load 'pipeline_steps/maas.groovy'
               kibana = load 'pipeline_steps/kibana.groovy'
-          }}
-          dir("rpc-gating/playbooks") {{
-            writeFile file: "inventory/hosts", text: "[job_nodes]\n${{INSTANCE_NAME}} ansible_host=${{INSTANCE_IP}}\n"
-            common.install_ansible()
-          }}
-          ssh_slave.connect()
-          node(INSTANCE_NAME) {{
-            common.conditionalStage(
-              stage_name: 'Prepare LEM AIO',
-              stage: {{
-                sh """
-                   lvcreate -n aio -L250G lxc
-                """
-              }} //stage
-            ) //conditionalStage
-            multi_node_aio_prepare.prepare()
-            deploy.deploy_sh(
-              vm: "deploy1",
-              environment_vars: [
-                "DEPLOY_HAPROXY=yes",
-                "DEPLOY_ELK=yes",
-                "DEPLOY_TEMPEST=no",
-                "DEPLOY_AIO=no",
-                "DEPLOY_MAAS=no"
-                ]
-            ) // deploy_sh
-            multi_node_aio_prepare.multi_node_aio_networking()
-            node(){{
-              maas.prepare(instance_name: instance_name)
-              maas.deploy()
-              maas.verify()
-              tempest.tempest("infra1", "deploy1")
-              kibana.kibana(env.RPC_BRANCH, "deploy1")
-              holland.holland()
             }}
-            ssh_slave.destroy()
-            maas.entity_cleanup(instance_name: instance_name)
-          }}
-        }}
-      }}
+            dir("rpc-gating/playbooks") {{
+              writeFile file: "inventory/hosts", text: "[job_nodes]\n${{INSTANCE_NAME}} ansible_host=${{INSTANCE_IP}}\n"
+              common.install_ansible()
+            }}
+            ssh_slave.connect()
+            node(INSTANCE_NAME) {{
+              common.conditionalStage(
+                stage_name: 'Prepare LEM AIO',
+                stage: {{
+                  sh """
+                     lvcreate -n aio -L250G lxc
+                  """
+                }} //stage
+              ) //conditionalStage
+              multi_node_aio_prepare.prepare()
+              deploy.deploy_sh(
+                vm: "deploy1",
+                environment_vars: [
+                  "DEPLOY_HAPROXY=yes",
+                  "DEPLOY_ELK=yes",
+                  "DEPLOY_TEMPEST=no",
+                  "DEPLOY_AIO=no",
+                  "DEPLOY_MAAS=no"
+                  ]
+              ) // deploy_sh
+              multi_node_aio_prepare.multi_node_aio_networking()
+              node(){{
+                maas.prepare(instance_name: instance_name)
+                maas.deploy()
+                maas.verify()
+                tempest.tempest("infra1", "deploy1")
+                kibana.kibana(env.RPC_BRANCH, "deploy1")
+                holland.holland()
+              }}
+              ssh_slave.destroy()
+              maas.entity_cleanup(instance_name: instance_name)
+            }} // lem node
+          }} catch (e){{
+              print e
+              throw e
+          }} finally {{
+              common.delete_workspace()
+          }} // try
+        }} // cit node
+      }} // timeout
