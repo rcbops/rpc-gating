@@ -12,3 +12,6 @@ gating_overrides:
   #              openstack-ansible-os_cinder
   cinder_service_backup_program_enabled: false
   maas_external_ip_address: "{{ ansible_default_ipv4.address }}"
+  tempest_testr_opts:
+    - '--concurrency 3'
+  tempest_run_tempest_opts: []

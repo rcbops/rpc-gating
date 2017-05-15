@@ -33,3 +33,6 @@ gating_overrides:
   # UG-615 disabling for now due to upstream bug on service restarts
   # https://github.com/rcbops/rpc-openstack/issues/2258
   cinder_service_backup_program_enabled: false
+  tempest_test_sets: "scenario defcore"
+  tempest_run_tempest_opts:
+    - "--serial"
