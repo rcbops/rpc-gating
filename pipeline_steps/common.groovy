@@ -439,4 +439,49 @@ def is_doc_update_pr(git_dir) {
   return is_doc_update_pr
 }
 
+/* Look for JIRA issue key in commit messages for commits in the source branch
+ * that aren't in the target branch.
+ * This function uses environment variables injected by github pull request
+ * builder and so can only be used for PR triggered jobs
+ */
+def get_jira_issue_key(repo_path="rpc-openstack"){
+  def key_regex = "^[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"
+  dir(repo_path){
+    commit_titles = sh(
+      returnStdout: true,
+      script: "git log --pretty=%s origin/${ghprbTargetBranch}..${ghprbSourceBranch}").split('\n')
+    print("looking for Jira issue keys in the following commits: ${commit_titles}")
+    for (def i=0; i<=commit_titles.size(); i++){
+      try{
+        key = (commit_titles[i] =~ key_regex)[0]
+        print ("Found Jira Issue Key: ${key}")
+        return key
+      } catch (e){
+        continue
+      }
+    }
+    throw new Exception("""
+Attempting to add a comment to the relevant JIRA issue, but a JIRA Issue key
+was not found in any of the commits introduced by ${repo_path}:${ghprbSourceBranch}""")
+  }
+}
+
+/* Attempt to add a jira comment, but don't fail if ghprb env vars are missing
+ * or no Jira issue key is present in commit titles
+ */
+def safe_jira_comment(body, repo_path="rpc-openstack"){
+  if (env.ghprbTargetBranch == null){
+    print ("Not a PR job, so not attempting to add a Jira comment")
+    return
+  }
+  try{
+    key = get_jira_issue_key(repo_path)
+    jiraComment(issueKey: key,
+                body: body)
+    print "Jira Comment Added: [${key}] ${body}"
+  } catch (e){
+    print ("Error while attempting to add a build result comment to a JIRA issue: ${e}")
+  }
+}
+
 return this
