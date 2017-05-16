@@ -3,6 +3,7 @@ def run_irr_tests() {
     stage_name: "Run IRR Tests",
     stage: {
       pubcloud.runonpubcloud {
+        currentBuild.result="SUCCESS"
         try {
           ansiColor('xterm') {
             dir("${env.WORKSPACE}/${env.ghprbGhRepository}") {
@@ -26,8 +27,10 @@ def run_irr_tests() {
           } // ansiColor
         } catch (e) {
           print(e)
+          currentBuild.result="FAILURE"
           throw e
         } finally {
+          common.safe_jira_comment("${currentBuild.result}: [${env.BUILD_TAG}|${env.BUILD_URL}]")
           irr_archive_artifacts()
         }
       } // pubcloud slave
