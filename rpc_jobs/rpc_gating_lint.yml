@@ -15,24 +15,35 @@
     properties:
       - rpc-gating-github
     dsl: |
+      currentBuild.result = 'SUCCESS'
       node(){
-        deleteDir()
-        stage("Prepare"){
-          git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
-          common = load 'pipeline_steps/common.groovy'
-          common.docker_cache_workaround()
-          lint_container = docker.build env.BUILD_TAG.toLowerCase()
-        }
-        lint_container.inside {
-          stage("Checkout"){
+        try{
+          deleteDir()
+          stage("Prepare"){
             git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
+            common = load 'pipeline_steps/common.groovy'
+            common.docker_cache_workaround()
+            lint_container = docker.build env.BUILD_TAG.toLowerCase()
           }
-          stage("Lint"){
-            withEnv([
-              'RPC_GATING_LINT_USE_VENV=no'
-            ]){
-              sh "./lint.sh 2>&1"
-            }// withenv
-          }// stage
-        }// inside
-      }// node
+          lint_container.inside {
+            stage("Checkout"){
+              git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
+            }
+            stage("Lint"){
+              withEnv([
+                'RPC_GATING_LINT_USE_VENV=no'
+              ]){
+                sh "./lint.sh 2>&1"
+              }// withenv
+            }// stage
+          }// inside
+        } catch (e){
+          print(e)
+          currentBuild.result = 'FAILURE'
+          throw e
+        } finally {
+          common.safe_jira_comment(
+            "${currentBuild.result}: [${env.BUILD_TAG}|${env.BUILD_URL}]",
+            env.WORKSPACE)
+        }
+      }
