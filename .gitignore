@@ -3,3 +3,5 @@
 *.pyc
 .lintvenv
 playbooks/roles/geerlingguy.nginx/
+playbooks/roles/jnv.unattended-upgrades/
+playbooks/roles/willshersystems.sshd/

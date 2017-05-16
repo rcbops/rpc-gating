@@ -13,7 +13,11 @@ def webhooks(){
           credentialsId: "github_webhook_proxy_basic_auth",
           usernameVariable: "webhookproxy_user",
           passwordVariable: "webhookproxy_pass"
-        )
+        ),
+        string(
+          credentialsId: "SSH_IP_ADDRESS_WHITELIST",
+          variable: "SSH_IP_ADDRESS_WHITELIST"
+        ),
       ]){
         dir('rpc-gating/playbooks'){
           common.venvPlaybook(
