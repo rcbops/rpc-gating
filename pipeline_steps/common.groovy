@@ -493,4 +493,26 @@ def delete_workspace() {
   }
 }
 
+def create_jira_issue(project="UG", tag=env.BUILD_TAG, link=env.BUILD_URL, type="Task"){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    sh """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      . .venv/bin/activate
+      python rpc-gating/scripts/jirautils.py create_issue\
+        --tag '$tag'\
+        --link '$link'\
+        --project '$project'\
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        --type '$type'
+    """
+  }
+}
+
 return this
