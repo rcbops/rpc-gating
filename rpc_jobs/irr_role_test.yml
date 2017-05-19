@@ -81,12 +81,16 @@
       // CIT Slave node
       timeout(time: 2, unit: 'HOURS'){{
         node() {{
-          dir("rpc-gating") {{
+          try {{
+            dir("rpc-gating") {{
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
               common = load 'pipeline_steps/common.groovy'
               pubcloud = load 'pipeline_steps/pubcloud.groovy'
               irr_role_tests = load 'pipeline_steps/irr_role_tests.groovy'
+            }}
+            irr_role_tests.run_irr_tests()
+          }} finally {{
+            common.delete_workspace()
           }}
-          irr_role_tests.run_irr_tests()
         }} // cit node
       }} // timeout

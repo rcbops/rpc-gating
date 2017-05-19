@@ -486,4 +486,11 @@ def safe_jira_comment(body, repo_path="rpc-openstack"){
   }
 }
 
+def delete_workspace() {
+  dir(env.WORKSPACE) {
+    print "Deleting workspace..."
+    deleteDir()
+  }
+}
+
 return this
