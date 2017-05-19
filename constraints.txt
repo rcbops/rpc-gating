@@ -18,6 +18,7 @@ iso8601==0.1.11
 jenkins-job-builder==2.0.0.0b1
 jenkinsapi==0.3.3
 Jinja2==2.9.6
+jira==1.0.10
 keyring==10.3.1
 keystoneauth1==2.19.0
 MarkupSafe==1.0

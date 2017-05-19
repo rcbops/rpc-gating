@@ -5,3 +5,4 @@ pyrax
 python-dateutil
 click
 github3.py
+jira
