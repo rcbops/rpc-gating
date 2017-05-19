@@ -22,12 +22,10 @@ def install_ansible(){
     source .venv/bin/activate
 
     # These pip commands cannot be combined into one.
-    # Using --no-cache-dir temporarily to avoid jobs from hanging during installation (UG-606)
+    pip install -U six packaging appdirs
+    pip install -U setuptools
     pip install 'pip==9.0.1'
-    pip install --no-cache-dir -U six packaging appdirs
-    pip install --no-cache-dir -U setuptools
     pip install \
-      --no-cache-dir \
       -U \
       -c rpc-gating/constraints.txt \
       -r rpc-gating/requirements.txt
