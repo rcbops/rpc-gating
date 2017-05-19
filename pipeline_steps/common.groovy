@@ -22,10 +22,10 @@ def install_ansible(){
     source .venv/bin/activate
 
     # These pip commands cannot be combined into one.
-    pip install -U six packaging appdirs
-    pip install -U setuptools
-    pip install 'pip==9.0.1'
+    pip install --index-url https://pypi.python.org/simple pip==9.0.1 setuptools==33.1.1
+    pip install --isolated -c rpc-gating/constraints.txt six packaging appdirs
     pip install \
+      --isolated \
       -U \
       -c rpc-gating/constraints.txt \
       -r rpc-gating/requirements.txt
