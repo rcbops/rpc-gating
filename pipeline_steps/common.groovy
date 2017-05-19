@@ -513,4 +513,16 @@ def create_jira_issue(project="UG", tag=env.BUILD_TAG, link=env.BUILD_URL, type=
   }
 }
 
+String get_current_git_sha(String repo_path) {
+  String sha = ""
+  dir(repo_path) {
+    sha = sh(
+      returnStdout: true,
+      script: "git rev-parse --verify HEAD",
+    ).trim()
+  }
+  print("Current SHA for '${repo_path}' is '${sha}'.")
+  return sha
+}
+
 return this

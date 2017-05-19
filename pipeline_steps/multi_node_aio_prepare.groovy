@@ -2,6 +2,8 @@ def prepare() {
   common.conditionalStage(
     stage_name: 'Prepare Multi-Node AIO',
     stage: {
+      common.prepareRpcGit(env.RPC_BRANCH)
+      String osa_commit = common.get_current_git_sha("/opt/rpc-openstack/openstack-ansible")
       dir("openstack-ansible-ops") {
         git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
       }
@@ -24,7 +26,7 @@ def prepare() {
               "VM_DISK_SIZE=252",
               "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
               "DEFAULT_KERNEL=${env.DEFAULT_KERNEL}",
-              "OSA_BRANCH=${env.OPENSTACK_ANSIBLE_BRANCH}",
+              "OSA_BRANCH=${osa_commit}",
               "SETUP_HOST=true",
               "SETUP_VIRSH_NET=true",
               "VM_IMAGE_CREATE=true",
@@ -42,7 +44,6 @@ def prepare() {
   common.conditionalStage(
     stage_name: 'Prepare RPC Configs',
     stage: {
-      common.prepareRpcGit(env.RPC_BRANCH)
       common.prepareConfigs(
         deployment_type: "onmetal"
       )
