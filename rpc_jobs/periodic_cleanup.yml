@@ -27,10 +27,18 @@
     dsl: |
       node(){
         deleteDir()
-        stage("Prepare"){
-          dir("rpc-gating") {
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
+        dir("rpc-gating") {
+          stage("Prepare"){
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            common = load 'pipeline_steps/common.groovy'
+          }
+          stage("Cleanup Jenkins Workspaces"){
+            sh "scripts/workspace_cleanup.sh"
+          }
+          stage("Cleanup Docker Objects"){
+            sh "scripts/docker_cleanup.sh"
+          }
+          stage("Docker Build"){
               common.docker_cache_workaround()
               container = docker.build env.BUILD_TAG.toLowerCase()
           }
@@ -58,11 +66,5 @@
               sh "python scripts/periodic_cleanup.py"
             }
           }
-        }
-        stage("Cleanup Docker Objects"){
-          sh "rpc-gating/scripts/docker_cleanup.sh"
-        }
-        stage("Cleanup Jenkins Workspaces"){
-          sh "rpc-gating/scripts/workspace_cleanup.sh"
         }
       }
