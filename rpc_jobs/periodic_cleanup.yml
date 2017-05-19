@@ -59,4 +59,10 @@
             }
           }
         }
+        stage("Cleanup Docker Objects"){
+          sh "rpc-gating/scripts/docker_cleanup.sh"
+        }
+        stage("Cleanup Jenkins Workspaces"){
+          sh "rpc-gating/scripts/workspace_cleanup.sh"
+        }
       }
