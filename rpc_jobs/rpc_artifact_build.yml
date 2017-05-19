@@ -135,14 +135,19 @@
         }}
         common.prepareRpcGit("auto", env.WORKSPACE)
         try {{
-          node('ArtifactBuilder2') {{
-            dir("rpc-gating") {{
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
-              artifact_build = load 'pipeline_steps/artifact_build.groovy'
-            }}
-            artifact_build.apt()
-          }} // node ArtifactBuilder2
+          common.conditionalStage(
+            stage_name: "Build Apt Artifacts",
+            stage: {{
+              node('ArtifactBuilder2') {{
+                dir("rpc-gating") {{
+                  git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+                  common = load 'pipeline_steps/common.groovy'
+                  artifact_build = load 'pipeline_steps/artifact_build.groovy'
+                }}
+                artifact_build.apt()
+              }} // node ArtifactBuilder2
+            }} // stage
+          ) // conditionalStage
           // continuing on CIT slave
           artifact_build.git()
           artifact_build.python()
