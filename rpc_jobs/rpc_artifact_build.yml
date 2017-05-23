@@ -3,9 +3,12 @@
     # Note: branch is the branch for periodics to build
     #       branches is the branch pattern to match for PR Jobs.
     series:
-      - artifacts:
-          branch: artifacts
-          branches: "artifacts.*"
+      - master:
+          branch: master
+          branches: "master"
+      - newton:
+          branch: newton-14.1
+          branches: "newton-14.1.*"
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"

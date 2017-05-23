@@ -9,12 +9,12 @@
       - mitaka:
           branch: mitaka-13.1
           branches: "mitaka-.*"
-      - newton:
+      - newton140:
           branch: newton-14.0
-          branches: "newton-.*"
-      - artifacts:
-          branch: artifacts-14.0
-          branches: "artifacts-.*"
+          branches: "newton-14.0.*"
+      - newton141:
+          branch: newton-14.1
+          branches: "newton-14.1.*"
       - master:
           branch: master
           branches: "master"
@@ -48,7 +48,7 @@
             Destroy Slave
           UPGRADE_FROM_REF: "liberty-12.2"
       - xenial:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
 
     # NOTE: Hugh tested this and found that ztrigger overrides series and
     #       trigger doesn't, which is odd because both trigger and ztrigger
@@ -101,7 +101,7 @@
       Destroy Slave
     branch: master
     NUM_TO_KEEP: 30
-
+    IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
     # TEMPLATE
     name: 'RPC-AIO_{series}-{context}-{ztrigger}'
     project-type: workflow
