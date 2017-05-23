@@ -185,8 +185,8 @@
               kibana = load 'pipeline_steps/kibana.groovy'
             }}
             // We need to checkout the rpc-openstack repo on the CIT Slave
-            // so that we can cater for builds on the more restricted images
-            // used for artifact-based builds.
+            // so that we can check whether the patch is a docs-only patch
+            // before allocating resources unnecessarily.
             if (env.STAGES.contains("Upgrade")) {{
               common.prepareRpcGit(env.UPGRADE_FROM_REF, env.WORKSPACE)
             }} else {{

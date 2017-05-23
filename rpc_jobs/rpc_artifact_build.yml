@@ -127,16 +127,12 @@
       // CIT slave
       node() {{
         currentBuild.result = "SUCCESS"
-        // We need to checkout the rpc-openstack repo on the CIT Slave
-        // so that we can cater for builds on the more restricted images
-        // used for artifact-based builds.
         dir("rpc-gating") {{
           git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
           common = load 'pipeline_steps/common.groovy'
           pubcloud = load 'pipeline_steps/pubcloud.groovy'
           artifact_build = load 'pipeline_steps/artifact_build.groovy'
         }}
-        common.prepareRpcGit("auto", env.WORKSPACE)
         try {{
           common.conditionalStage(
             stage_name: "Build Apt Artifacts",
