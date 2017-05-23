@@ -4,6 +4,8 @@
       # IRR REPOS ARE ADDED HERE
       - rpc_maas:
           irr_repo_url: https://github.com/rcbops/rpc-maas
+      - rpc-role-logstash:
+          irr_repo_url: https://github.com/rcbops/rpc-role-logstash
     series:
       # Note: branches is the branch pattern to match for PR Jobs.
       - master:
