@@ -176,8 +176,7 @@
         }} catch (e){{
             currentBuild.result = 'FAILURE'
             if("{trigger}" == "post-merge"){{
-              github.create_issue(env.BUILD_TAG,
-                                  env.BUILD_URL)
+              common.create_jira_issue()
             }}
             throw e
         }} finally {{
