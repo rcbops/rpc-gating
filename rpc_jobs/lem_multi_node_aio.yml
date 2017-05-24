@@ -40,6 +40,8 @@
           num-to-keep: "{NUM_TO_KEEP}"
       - rpc-openstack-github
     parameters:
+      - kibana_selenium_params:
+          KIBANA_SELENIUM_BRANCH: "{branch}"
       # See params.yml
       - rpc_repo_params:
           RPC_BRANCH: "{branch}"
@@ -147,7 +149,7 @@
                 maas.deploy()
                 maas.verify()
                 tempest.tempest("infra1", "deploy1")
-                kibana.kibana(env.RPC_BRANCH, "deploy1")
+                kibana.kibana(env.KIBANA_SELENIUM_BRANCH, "deploy1")
                 holland.holland()
               }}
               ssh_slave.destroy()

@@ -106,6 +106,8 @@
       - rpc-openstack-github
     parameters:
       # See params.yml
+      - kibana_selenium_params:
+         KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_repo_params:
          RPC_BRANCH: "{branch}"
       - rpc_deploy_params:
@@ -208,7 +210,7 @@
                 maas.deploy()
                 maas.verify()
                 tempest.tempest()
-                kibana_branch = env.UPGRADE_FROM_REF ?: env.RPC_BRANCH
+                kibana_branch = env.UPGRADE_FROM_REF ?: env.KIBANA_SELENIUM_BRANCH
                 kibana.kibana(kibana_branch)
                 holland.holland()
                 if (env.STAGES.contains("Upgrade")) {{
@@ -217,7 +219,7 @@
                   maas.deploy()
                   maas.verify()
                   tempest.tempest()
-                  kibana.kibana(env.RPC_BRANCH)
+                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                   holland.holland()
                 }}
               }} catch (e) {{

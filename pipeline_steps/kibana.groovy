@@ -15,7 +15,7 @@ def kibana(branch, vm=null){
 
 def kibana_prep(branch){
   dir("kibana-selenium") {
-    git url: "https://github.com/rcbops-qe/kibana-selenium.git", branch: "${branch}"
+    git url: env.KIBANA_SELENIUM_REPO, branch: "${branch}"
 
     sh """#!/bin/bash
       # The phantomjs package on 16.04 is buggy, see:
@@ -45,7 +45,7 @@ def kibana_prep(branch){
 def kibana_tests(branch, vm=null){
   try {
     dir("kibana-selenium") {
-      git url: "https://github.com/rcbops-qe/kibana-selenium.git", branch: "${branch}"
+      git url: env.KIBANA_SELENIUM_REPO, branch: "${branch}"
 
       if(vm != null){
         sh """#!/bin/bash
