@@ -129,7 +129,7 @@
          FLAVOR: "{FLAVOR}"
          REGION: "{REGION}"
       - tempest_params:
-         TEMPEST_TEST_SETS: "scenario defcore cinder_backup"
+         TEMPEST_TEST_SETS: "scenario defcore"
          RUN_TEMPEST_OPTS: "--serial"
          TESTR_OPTS: ""
       - string:
