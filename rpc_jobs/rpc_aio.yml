@@ -80,6 +80,12 @@
       # An artifacted ceph deployment is not yet supported
       - series: artifacts
         context: ceph
+      # We must exclude all jobs that run on trusty from running off
+      # the master branch. Ocata does not support trusty.
+      - series: master
+        context: ceph
+      - series: master
+        context: swift
     jobs:
       - 'RPC-AIO_{series}-{context}-{ztrigger}'
 

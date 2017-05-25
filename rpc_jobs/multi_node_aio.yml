@@ -26,6 +26,9 @@
     exclude:
       - series: mitaka
         context: xenial
+      # The master+trusty must be exlucded in preperation for Ocata
+      - series: master
+        context: trusty
     jobs:
       - 'OnMetal-Multi-Node-AIO_{series}-{context}-{trigger}'
       - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'

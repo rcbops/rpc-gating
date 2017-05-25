@@ -27,6 +27,9 @@
       # Xenial builds are run for newton and above.
       - series: mitaka
         context: xenial
+      # The master+trusty must be exlucded in preperation for Ocata
+      - series: master
+        context: trusty
     jobs:
       - 'LEM-Multi-Node-AIO_{series}-{context}-{ztrigger}'
 
