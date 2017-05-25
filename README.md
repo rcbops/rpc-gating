@@ -30,6 +30,6 @@
 - Use `_` between a job name and the [job template variables](https://docs.openstack.org/infra/jenkins-job-builder/definition.html#job-template)
 - Use standard capitalization rules, template variables can be an exception to this
 - Examples:
-  - `RPC-AIO_{series}-{context}-{ztrigger}`
-  - `RPC-AIO_master-swift-periodic`
+  - `RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}`
+  - `RPC-AIO_master-xenial-deploy-swift-periodic`
   - `Merge-Trigger-JJB`
