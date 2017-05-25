@@ -1,0 +1,40 @@
+---
+- name: "Configure SSHD"
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "{{item.regexp}}"
+    line: "{{item.line}}"
+  with_items:
+    - regexp: "GatewayPorts"
+      line: "GatewayPorts no"
+    - regexp: "PasswordAuthentication"
+      line: "PasswordAuthentication no"
+    - regexp: "ClientAliveInterval"
+      line: "ClientAliveInterval 15"
+
+- name: "restart sshd"
+  service:
+    name: sshd
+    state: restarted
+
+- name: Install apt packages
+  apt:
+    pkg: "{{ item }}"
+    state: installed
+    update_cache: yes
+  with_items:
+    - ufw
+
+- name: Reset UFW
+  ufw:
+    state: reset
+
+- name: Allow ssh
+  ufw:
+    rule: allow
+    port: 22
+
+- name: Enable firewall
+  ufw:
+    state: enabled
+    policy: deny

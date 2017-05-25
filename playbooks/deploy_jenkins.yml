@@ -1,0 +1,45 @@
+---
+- name: Deploy Jenkins
+  hosts: localhost
+  user: root
+  vars:
+    jenkins_http_port: 8080
+    jenkins_credentials:
+      url_username: "{{ jenkins_admin_username }}"
+      url_password: "{{ jenkins_admin_password }}"
+      url: "http://localhost:{{jenkins_http_port}}/"
+  pre_tasks:
+    - include: tasks/instance_lockdown.yml
+    - name: Allow Jenkins UI
+      ufw:
+        rule: allow
+        port: "{{jenkins_http_port}}"
+  roles:
+    - role: geerlingguy.jenkins
+  tasks:
+    - name: "Write link file"
+      copy:
+        content: "http://{{ansible_default_ipv4}}:{{jenkins_http_port}}/"
+        dest: "{{lookup('env', 'WORKSPACE')}}/jenkins_ui_link"
+    - name: Install plugins
+      jenkins_plugin:
+        name: "{{ item }}"
+        params: "{{ jenkins_credentials }}"
+      with_file:
+        - "{{lookup('env','WORKSPACE')}}/config/plugins.txt"
+    - name: Move config into place
+      shell: |
+        cp "{{lookup('env', 'WORKSPACE')}}/config/* /var/lib/jenkins"
+    - name: Restart Jenkins
+      service:
+        name: jenkins
+        state: restarted
+    - name: Add webhooks
+      shell: |
+        python {{lookup('env', 'WORKSPACE')}}/rpc-gating/scripts/ghutils.py \
+          --org rcbops\
+          --repo rpc-openstack\
+          --pat $pat\
+          create_webhook\
+          --name "Hook-${BUILD_TAG}"\
+          --hooktargeturl "$(cat {{lookup('env', 'WORKSPACE')}}/jenkins_ui_link)/ghprbhook/)"
