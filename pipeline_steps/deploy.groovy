@@ -34,7 +34,7 @@ def deploy_sh(Map args) {
             for ( e in environment_vars ) {
               export_vars += "export ${e}; "
             }
-            sh """#!/bin/bash 
+            sh """#!/bin/bash
             sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} \
               '${export_vars} cd /opt/rpc-openstack; scripts/deploy.sh'
             """
@@ -45,11 +45,11 @@ def deploy_sh(Map args) {
   ) // conditionalStage
 }
 
-def upgrade(Map args) {
+def upgrade(String stage_name, String upgrade_script, List env_vars) {
   common.conditionalStage(
-    stage_name: "Upgrade",
+    stage_name: stage_name,
     stage: {
-      environment_vars = args.environment_vars + common.get_deploy_script_env()
+      environment_vars = env_vars + common.get_deploy_script_env()
       withEnv(environment_vars){
         dir("/opt/rpc-openstack/openstack-ansible"){
           sh "git reset --hard"
@@ -57,12 +57,20 @@ def upgrade(Map args) {
         common.prepareRpcGit()
         dir("/opt/rpc-openstack"){
           sh """
-            scripts/test-upgrade.sh
+            scripts/$upgrade_script
           """
         } // dir
       } // withEnv
     } // stage
   ) // conditionalStage
+}
+
+def upgrade_major(Map args) {
+  upgrade("Major Upgrade", "test-upgrade.sh", args.environment_vars)
+}
+
+def upgrade_leapfrog(Map args) {
+  upgrade("Leapfrog Upgrade", "leapfrog/ubuntu14-leapfrog.sh", args.environment_vars)
 }
 
 def addChecksumRule(){
