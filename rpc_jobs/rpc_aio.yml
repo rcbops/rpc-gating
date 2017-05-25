@@ -63,9 +63,9 @@
     exclude:
       - series: liberty
         context: upgrade
-      - series: newton
+      - series: newton140
         context: upgrade
-      - series: artifacts
+      - series: newton141
         context: upgrade
       - series: master
         context: upgrade
@@ -74,12 +74,6 @@
         context: xenial
       - series: mitaka
         context: xenial
-      # Artifacts are currently only built for Trusty
-      - series: artifacts
-        context: xenial
-      # An artifacted ceph deployment is not yet supported
-      - series: artifacts
-        context: ceph
     jobs:
       - 'RPC-AIO_{series}-{context}-{ztrigger}'
 
