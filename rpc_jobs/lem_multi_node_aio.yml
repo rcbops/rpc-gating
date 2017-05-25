@@ -5,13 +5,10 @@
     series:
       - mitaka:
           branch: mitaka-13.1
-          OPENSTACK_ANSIBLE_BRANCH: "stable/mitaka"
       - newton:
           branch: newton-14.0
-          OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
       - master:
           branch: master
-          OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
     context:
       - trusty:
           DEFAULT_IMAGE: "14.04.5"
@@ -48,7 +45,6 @@
           RPC_BRANCH: "{branch}"
       - rpc_gating_params
       - osa_ops_params:
-          OPENSTACK_ANSIBLE_BRANCH: "{OPENSTACK_ANSIBLE_BRANCH}"
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "mapper/lxc-aio"
       - rpc_repo_params:

@@ -3,15 +3,12 @@
     series:
       - mitaka:
           branch: mitaka-13.1
-          OPENSTACK_ANSIBLE_BRANCH: "stable/mitaka"
           TEST_SET: "scenario defcore api heat_api smoke"
       - newton:
           branch: newton-14.0
-          OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
           TEST_SET: "all"
       - master:
           branch: master
-          OPENSTACK_ANSIBLE_BRANCH: "stable/newton"
           TEST_SET: "all"
     context:
       - xenial:
@@ -84,7 +81,6 @@
       - rpc_repo_params:
           RPC_BRANCH: "{branch}"
       - osa_ops_params:
-          OPENSTACK_ANSIBLE_BRANCH: "{OPENSTACK_ANSIBLE_BRANCH}"
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "sdb"
       - string:
