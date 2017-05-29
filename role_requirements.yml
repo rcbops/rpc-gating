@@ -1,2 +1,6 @@
 ---
 - geerlingguy.nginx
+- src: "jnv.unattended-upgrades"
+  version: "v1.3.0"
+- src: "willshersystems.sshd"
+  version: "v0.5"

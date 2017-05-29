@@ -1,31 +1,15 @@
 ---
-- name: Configure Webhook Proxy Node
+- name: Secure Webhook Proxy Node
   hosts: job_nodes
   user: root
   vars:
-    github_cidr: "192.30.252.0/22"
+    ip_address_whitelist: "{{ lookup('env', 'SSH_IP_ADDRESS_WHITELIST') }}"
   pre_tasks:
-    - name: "Configure SSHD"
-      lineinfile:
-        dest: /etc/ssh/sshd_config
-        regexp: "{{item.regexp}}"
-        line: "{{item.line}}"
-      with_items:
-        - regexp: "GatewayPorts"
-          line: "GatewayPorts no"
-        - regexp: "PasswordAuthentication"
-          line: "PasswordAuthentication no"
-        - regexp: "ClientAliveInterval"
-          line: "ClientAliveInterval 15"
-
     - name: Install apt packages
       apt:
-        pkg: "{{ item }}"
+        pkg: "ufw"
         state: installed
         update_cache: yes
-      with_items:
-        - apache2-utils
-        - ufw
 
     - name: Reset UFW
       ufw:
@@ -35,6 +19,43 @@
       ufw:
         rule: allow
         port: 22
+        src: "{{ item }}"
+      with_items: "{{ ip_address_whitelist }}"
+
+    - name: Enable firewall
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Add RPC public keys to authorized_keys
+      authorized_key:
+        user: "root"
+        key: "{{ lookup('file', lookup('env', 'WORKSPACE')+'/rpc-gating/keys/rcb.keys') }}"
+        state: "present"
+  roles:
+    - role: willshersystems.sshd
+      sshd:
+        ListenAddress:
+          - "0.0.0.0"
+        PasswordAuthentication: "no"
+        X11Forwarding: "no"
+        PrintLastLog: "no"
+        GatewayPorts: "no"
+        ClientAliveInterval: 15
+        Compression: "yes"
+    - role: jnv.unattended-upgrades
+
+- name: Configure Webhook Proxy Node
+  hosts: job_nodes
+  user: root
+  vars:
+    github_cidr: "192.30.252.0/22"
+  pre_tasks:
+    - name: Install apt packages
+      apt:
+        pkg: "apache2-utils"
+        state: installed
+        update_cache: yes
 
     # The nginx instance for basic auth listens on 80
     # the ssh tunnels listens on 8888 but is not open to the public.
@@ -44,21 +65,11 @@
         port: 80
         src: "{{github_cidr}}"
 
-    - name: Enable firewall
-      ufw:
-        state: enabled
-        policy: deny
-
     - name: Write ip file
       delegate_to: localhost
       copy:
         dest: "{{WORKSPACE}}/instance_address"
         content: "{{ansible_default_ipv4.address}}"
-
-    - name: "restart sshd"
-      service:
-        name: sshd
-        state: restarted
 
     - name: "create htpasswd file"
       shell: |
