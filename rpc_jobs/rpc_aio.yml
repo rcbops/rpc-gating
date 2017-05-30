@@ -3,6 +3,9 @@
     # Note: branch is the branch for periodics to build
     #       branches is the branch pattern to match for PR Jobs.
     series:
+      - kilo:
+          branch: kilo
+          branches: "kilo.*"
       - liberty:
           branch: liberty-12.2
           branches: "liberty-.*"
@@ -30,7 +33,7 @@
                     default_volume_type: ceph
             cinder_service_backup_driver: cinder.backup.drivers.ceph
             tempest_service_available_swift: false
-      - upgrade:
+      - majorupgrade:
           STAGES: >-
             Allocate Resources,
             Connect Slave,
@@ -43,10 +46,20 @@
             Prepare Kibana Selenium,
             Kibana Tests,
             Holland,
-            Upgrade,
+            Major Upgrade,
             Cleanup,
             Destroy Slave
           UPGRADE_FROM_REF: "liberty-12.2"
+      - leapfrogupgrade:
+          STAGES: >-
+            Allocate Resources,
+            Connect Slave,
+            Prepare Deployment,
+            Deploy RPC w/ Script,
+            Leapfrog Upgrade,
+            Cleanup,
+            Destroy Slave
+          UPGRADE_FROM_REF: "kilo"
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
 
@@ -61,19 +74,43 @@
           branches: "do_not_build_on_pr"
           NUM_TO_KEEP: 10
     exclude:
+      - series: kilo
+        context: majorupgrade
       - series: liberty
-        context: upgrade
+        context: majorupgrade
       - series: newton140
-        context: upgrade
+        context: majorupgrade
       - series: newton141
-        context: upgrade
+        context: majorupgrade
       - series: master
-        context: upgrade
-      # Xenial builds are run for newton and above.
+        context: majorupgrade
+      # Xenial builds are run for newton and above
+      # as it is not supported distro before newton.
+      - series: kilo
+        context: xenial
       - series: liberty
         context: xenial
       - series: mitaka
         context: xenial
+      # Leapfrog upgrades are only run for newton141
+      # as the upgrade method is not supported for any
+      # other target distro.
+      - series: kilo
+        context: leapfrogupgrade
+      - series: liberty
+        context: leapfrogupgrade
+      - series: mitaka
+        context: leapfrogupgrade
+      - series: newton140
+        context: leapfrogupgrade
+      - series: master
+        context: leapfrogupgrade
+      # Ceph builds are not run for kilo at this time
+      # as ceph deployment is not supported for
+      # newton (yet) and the purpose of executing
+      # kilo builds is for the leapfrog upgrade tests.
+      - series: kilo
+        context: ceph
     jobs:
       - 'RPC-AIO_{series}-{context}-{ztrigger}'
 
@@ -145,7 +182,8 @@
               Prepare Kibana Selenium
               Kibana Tests
               Holland (test holland mysql backup)
-              Upgrade
+              Major Upgrade
+              Leapfrog Upgrade
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
               Destroy Slave
@@ -183,7 +221,7 @@
             // We need to checkout the rpc-openstack repo on the CIT Slave
             // so that we can check whether the patch is a docs-only patch
             // before allocating resources unnecessarily.
-            if (env.STAGES.contains("Upgrade")) {{
+            if (env.STAGES.contains("Major Upgrade") || env.STAGES.contains("Leapfrog Upgrade")) {{
               common.prepareRpcGit(env.UPGRADE_FROM_REF, env.WORKSPACE)
             }} else {{
               common.prepareRpcGit("auto", env.WORKSPACE)
@@ -213,14 +251,16 @@
                 kibana_branch = env.UPGRADE_FROM_REF ?: env.KIBANA_SELENIUM_BRANCH
                 kibana.kibana(kibana_branch)
                 holland.holland()
-                if (env.STAGES.contains("Upgrade")) {{
-                  deploy.upgrade(environment_vars: environment_vars)
+                if (env.STAGES.contains("Major Upgrade")) {{
+                  deploy.upgrade_major(environment_vars: environment_vars)
                   deploy.addChecksumRule()
                   maas.deploy()
                   maas.verify()
                   tempest.tempest()
                   kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                   holland.holland()
+                }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
+                  deploy.upgrade_leapfrog(environment_vars: environment_vars)
                 }}
               }} catch (e) {{
                 print(e)
