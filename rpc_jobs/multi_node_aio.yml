@@ -69,6 +69,8 @@
     triggers:
       - timed: "{CRON}"
     parameters:
+      - kibana_selenium_params:
+          KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_gating_params
       - tempest_params:
           TEMPEST_TEST_SETS: "{TEST_SET}"
@@ -162,7 +164,7 @@
                 horizon.horizon_integration()
               }},
               "kibana": {{
-                kibana.kibana(env.RPC_BRANCH, "deploy1")
+                kibana.kibana(env.KIBANA_SELENIUM_BRANCH, "deploy1")
               }},
               "holland": {{
                 holland.holland("deploy1")
