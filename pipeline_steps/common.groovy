@@ -21,6 +21,9 @@ def install_ansible(){
     cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
     source .venv/bin/activate
 
+    # UG-613 change TMPDIR to directory with more space
+    export PREV_TMPDIR=\$TMPDIR
+    export TMPDIR="/var/lib/jenkins/tmp"
     # These pip commands cannot be combined into one.
     pip install --index-url https://pypi.python.org/simple pip==9.0.1 setuptools==33.1.1
     pip install --isolated -c rpc-gating/constraints.txt six packaging appdirs
@@ -30,6 +33,7 @@ def install_ansible(){
       -c rpc-gating/constraints.txt \
       -r rpc-gating/requirements.txt
 
+    export TMPDIR=\$PREV_TMPDIR
     mkdir -p rpc-gating/playbooks/roles
     ansible-galaxy install -r rpc-gating/role_requirements.yml -p rpc-gating/playbooks/roles
   """
