@@ -35,6 +35,9 @@
           stage("Cleanup Jenkins Workspaces"){
             sh "scripts/workspace_cleanup.sh"
           }
+          stage("Cleanup Jenkins TMP Dir"){
+            sh "scripts/tmp_cleanup.sh"
+          }
           stage("Cleanup Docker Objects"){
             sh "scripts/docker_cleanup.sh"
           }
