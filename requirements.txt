@@ -6,3 +6,6 @@ python-dateutil
 click
 github3.py
 jira
+six
+packaging
+appdirs

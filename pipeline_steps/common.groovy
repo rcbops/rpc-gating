@@ -5,6 +5,7 @@ import groovy.json.JsonOutput
 def install_ansible(){
   sh """#!/bin/bash -xe
     cd ${env.WORKSPACE}
+
     if [[ ! -d ".venv" ]]; then
       if ! which virtualenv; then
         pip install virtualenv
@@ -17,6 +18,7 @@ def install_ansible(){
         virtualenv .venv
       fi
     fi
+
     # hack the selinux module into the venv
     cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
     source .venv/bin/activate
@@ -24,9 +26,14 @@ def install_ansible(){
     # UG-613 change TMPDIR to directory with more space
     export PREV_TMPDIR=\$TMPDIR
     export TMPDIR="/var/lib/jenkins/tmp"
-    # These pip commands cannot be combined into one.
-    pip install --index-url https://pypi.python.org/simple pip==9.0.1 setuptools==33.1.1
-    pip install --isolated -c rpc-gating/constraints.txt six packaging appdirs
+
+    # UG-612 Install pip, setuptools, and wheel on the host
+    CURL_CMD="curl --silent --show-error --retry 5"
+    OUTPUT_FILE="get-pip.py"
+    \${CURL_CMD} https://bootstrap.pypa.io/get-pip.py > \${OUTPUT_FILE} ||\
+    \${CURL_CMD} https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py > \${OUTPUT_FILE}
+    python \${OUTPUT_FILE} --isolated pip setuptools wheel -c rpc-gating/constraints.txt
+    # Installing pip packages necessary
     pip install \
       --isolated \
       -U \
