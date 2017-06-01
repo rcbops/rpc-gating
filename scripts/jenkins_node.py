@@ -13,9 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from __future__ import print_function
+
+
 import argparse
 import os
 import re
+
 
 from jenkinsapi.jenkins import Jenkins
 
@@ -51,8 +55,16 @@ def delete_inactive_nodes(jenkins, instance_prefix):
         if (re.match(instance_prefix, node_id) and not node.is_online()
             and node.poll(tree="offlineCauseReason")
                 .get("offlineCauseReason")):
-            print("Deleting inactive Jenkins node {}".format(node_id))
-            jenkins.delete_node(node_id)
+            try:
+                print("Deleting inactive Jenkins node {}...".format(node_id),
+                      end="")
+                jenkins.delete_node(node_id)
+                print("[OK]")
+            except Exception as e:
+                print("Failed to delete {node}, error: {error}".format(
+                    node=node_id,
+                    error=e.message
+                ))
 
 
 def get_jenkins_client():

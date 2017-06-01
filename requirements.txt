@@ -9,3 +9,4 @@ jira
 six
 packaging
 appdirs
+rackspace_monitoring
