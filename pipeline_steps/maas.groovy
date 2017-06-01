@@ -50,12 +50,12 @@ def verify(vm=null) {
   ) //conditionalStage
 }
 
-List get_maas_token_and_url(String username, String api_key, String region) {
+List get_maas_token_and_url(String username, String api_key) {
   def token_url = sh (
     script: """#!/bin/bash
 cd ${env.WORKSPACE}/rpc-gating/scripts
 . ${env.WORKSPACE}/.venv/bin/activate
-./get_maas_token_and_url.py --username ${username} --api-key ${api_key} --region ${region}
+./maasutils.py --username ${username} --api-key ${api_key} get_token_url
 """,
     returnStdout: true,
   )

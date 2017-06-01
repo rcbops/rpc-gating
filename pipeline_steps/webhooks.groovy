@@ -14,6 +14,15 @@ def webhooks(){
           usernameVariable: "webhookproxy_user",
           passwordVariable: "webhookproxy_pass"
         ),
+        usernamePassword(
+          credentialsId: "jira_user_pass",
+          usernameVariable: "JIRA_USER",
+          passwordVariable: "JIRA_PASS"
+        ),
+        string(
+          credentialsId: "RACKSPACE_WEBHOOK_TOKEN",
+          variable: "RACKSPACE_WEBHOOK_TOKEN"
+        ),
         string(
           credentialsId: "SSH_IP_ADDRESS_WHITELIST",
           variable: "SSH_IP_ADDRESS_WHITELIST"
@@ -22,7 +31,7 @@ def webhooks(){
         dir('rpc-gating/playbooks'){
           common.venvPlaybook(
             playbooks: [
-              "webhooks.yml"
+              "webhooks.yml",
             ],
             args: [
               "-i inventory",

@@ -78,9 +78,16 @@ check_bash(){
 }
 
 check_python(){
-  flake8 --exclude=.lintvenv . \
+  flake8 --exclude=.lintvenv,webhooktranslator . \
     && echo "Python syntax ok" \
     || { echo "Python syntax fail"; rc=1; }
+}
+
+check_webhooktranslator(){
+    pushd webhooktranslator
+    tox && echo "Webhook Translator Unit tests pass" \
+      || { echo "Webhook Translator Unit tests fail"; rc=1; }
+    popd
 }
 
 [[ ${RPC_GATING_LINT_USE_VENV:-yes} == yes ]] && install
@@ -89,6 +96,7 @@ check_groovy
 check_ansible
 check_bash
 check_python
+check_webhooktranslator
 
 if [[ $rc == 0 ]]
 then

@@ -1,0 +1,107 @@
+{
+   "event_id": "acOne:enOne:alOne:chOne:1326910500000:WARNING",
+   "log_entry_id": "6da55310-4200-11e1-aaaf-cd4c8801b6b1",
+   "details": {
+       "target": null,
+       "timestamp": 1326905540481,
+       "metrics": {
+           "tt_firstbyte": {
+               "type": "I",
+               "data": 2,
+               "unit": "milliseconds"
+           },
+           "duration": {
+               "type": "I",
+               "data": 2,
+               "unit": "milliseconds"
+           },
+           "bytes": {
+               "type": "i",
+               "data": 17,
+               "unit": "bytes"
+           },
+           "tt_connect": {
+               "type": "I",
+               "data": 0,
+               "unit": "milliseconds"
+           },
+           "code": {
+               "type": "s",
+               "data": "200",
+               "unit": "unknown"
+           }
+       },
+       "state": "WARNING",
+       "status": "warn.",
+       "txn_id": "sometransaction",
+       "collector_address_v4": "127.0.0.1",
+       "collector_address_v6": null,
+       "observations": [
+           {
+               "monitoring_zone_id": "mzOne",
+               "state": "WARNING",
+               "status": "warn.",
+               "timestamp": 1326905540481,
+               "collectorState": "UP"
+           }
+       ]
+   },
+   "entity": {
+       "id": "enOne",
+       "label": "entity one",
+       "ip_addresses": {
+           "default": "127.0.0.1"
+       },
+       "metadata": null,
+       "managed": false,
+       "uri": null,
+       "agent_id": null,
+       "created_at": 1326905540481,
+       "updated_at": 1326905540481
+   },
+   "check": {
+       "id": "chOne",
+       "label": "ch a",
+       "type": "remote.http",
+       "details": {
+           "url": "http://www.foo.com",
+           "body": "b",
+           "method": "GET",
+           "follow_redirects": true,
+           "include_body": false
+       },
+       "monitoring_zones_poll": [
+           "mzOne"
+       ],
+       "timeout": 30,
+       "period": 60,
+       "target_alias": "default",
+       "target_hostname": "",
+       "target_resolver": "",
+       "disabled": false,
+       "metadata": null,
+       "confd_name": null,
+       "confd_hash": null,
+       "active_suppressions": null,
+       "scheduled_suppressions": null,
+       "created_at": 1326905540481,
+       "updated_at": 1326905540481
+   },
+   "alarm": {
+       "id": "alOne",
+       "label": "Alarm 1",
+       "check_id": "chOne",
+       "entity_id": "enOne",
+       "criteria": "if (metric[\"t\"] >= 2.1) { return WARNING } return WARNING",
+       "disabled": false,
+       "notification_plan_id": "npOne",
+       "metadata": null,
+       "confd_name": null,
+       "confd_hash": null,
+       "active_suppressions": null,
+       "scheduled_suppressions": null,
+       "created_at": 1326905540481,
+       "updated_at": 1326905540481
+       },
+       "tenant_id": "91111"
+}

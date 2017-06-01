@@ -365,7 +365,7 @@ def prepareConfigs(Map args){
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         withCredentials(common.get_cloud_creds()) {
-          List maas_vars = maas.get_maas_token_and_url(env.PUBCLOUD_USERNAME, env.PUBCLOUD_API_KEY, env.REGION)
+          List maas_vars = maas.get_maas_token_and_url(env.PUBCLOUD_USERNAME, env.PUBCLOUD_API_KEY)
           withEnv(maas_vars) {
             common.venvPlaybook(
               playbooks: ["aio_config.yml"],

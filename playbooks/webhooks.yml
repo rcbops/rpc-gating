@@ -1,4 +1,18 @@
 ---
+# This node is used for two webhook related functions:
+
+# 1. Proxy webhooks from public Github to internal Jenkins.
+#    The jenkins master maintains a ssh tunnel to the webhook proxy (whp)
+#    node. The whp runs nginx which receives and authenticates requests
+#    from Github then forwards them to Jenkins via the ssh tunnel.
+
+# 2. Receive webhooks from MaaS and create JIRA issues.
+#    Maas can send webhooks but not in a format that JIRA understands.
+#    There is a small flask app called webhooktranslator that receives
+#    webhooks from MaaS, extracts relevant info and uses that to create
+#    Jira issues.
+
+
 - name: Secure Webhook Proxy Node
   hosts: job_nodes
   user: root
@@ -49,37 +63,104 @@
   hosts: job_nodes
   user: root
   vars:
-    github_cidr: "192.30.252.0/22"
+    GITHUB_CIDR: "192.30.252.0/22"
+    GITHUB_HOOK_PORT: 80
+
+    RPC_GATING_REPO: "{{ lookup('env', 'RPC_GATING_REPO') }}"
+    RPC_GATING_BRANCH: "{{ lookup('env', 'RPC_GATING_BRANCH') }}"
+    RPC_GATING_DIR: /opt/rpc-gating
+
+    WHT_DIR: "{{RPC_GATING_DIR}}/webhooktranslator"
+    WHT_VENV_DIR: /opt/venv_webhooktranslator
+    WHT_SOCK: /run/webhooktranslator.sock
+    WHT_PORT: 5000
+
+    RACKSPACE_WEBHOOK_TOKEN: "{{ lookup('env', 'RACKSPACE_WEBHOOK_TOKEN') }}"
+    JIRA_USER: "{{ lookup('env', 'JIRA_USER') }}"
+    JIRA_PASSWORD: "{{ lookup('env', 'JIRA_PASS') }}"
+    JIRA_PROJECT: "{{ lookup('env', 'JIRA_PROJECT') }}"
+
   pre_tasks:
-    - name: Install apt packages
-      apt:
-        pkg: "apache2-utils"
-        state: installed
-        update_cache: yes
-
-    # The nginx instance for basic auth listens on 80
-    # the ssh tunnels listens on 8888 but is not open to the public.
-    - name: Allow webhooks
-      ufw:
-        rule: allow
-        port: 80
-        src: "{{github_cidr}}"
-
+    # used by webhooks.groovy to create the ssh tunnel script
     - name: Write ip file
       delegate_to: localhost
       copy:
         dest: "{{WORKSPACE}}/instance_address"
         content: "{{ansible_default_ipv4.address}}"
 
+    # Setup webhook translator
+
+    - name: Install virtualenv tool
+      pip:
+        name: "virtualenv"
+
+    - name: Clone rpc-gating
+      git:
+        repo: "{{ RPC_GATING_REPO }}"
+        version: "{{ RPC_GATING_BRANCH }}"
+        dest: "{{ RPC_GATING_DIR }}"
+
+    - name: Install webhooktranslator
+      pip:
+        virtualenv: "{{ WHT_VENV_DIR }}"
+        name: "{{ WHT_DIR }}"
+
+    - name: Template webhooktranslator service definition
+      template:
+        src: webhooktranslator_service.j2
+        dest: /lib/systemd/system/webhooktranslator.service
+
+    - name: Template webhooktranslator socket definition
+      template:
+        src: webhooktranslator_socket.j2
+        dest: /lib/systemd/system/webhooktranslator.socket
+
+    # Nginx forwards FCGI requests to a unix socket (WHT_SOCK)
+    # Systemd creates this socket and starts webhooktranslator.service
+    # when that socket receives a connection
+    - name: Load and Enable webhooktranslator systemd service
+      systemd:
+        enabled: yes
+        service: webhooktranslator.service
+        daemon_reload: yes
+
+    - name: Load and Enable webhooktranslator systemd socket activator
+      systemd:
+        enabled: yes
+        state: started
+        service: webhooktranslator.socket
+        daemon_reload: yes
+
+    - name: Allow Webhook Translator
+      ufw:
+        rule: allow
+        port: "{{ WHT_PORT }}"
+
+    # The nginx instance for basic auth listens on 80
+    # the ssh tunnels listens on 8888 but is not open to the public.
+    - name: Allow Github webhooks
+      ufw:
+        rule: allow
+        port: "{{ GITHUB_HOOK_PORT }}"
+        src: "{{GITHUB_CIDR }}"
+
+    # Configure Nginx. (apache2-utils only used to create htpasswd file)
+
+    - name: Install apt packages
+      apt:
+        pkg: "apache2-utils"
+        state: installed
+        update_cache: yes
+
     - name: "create htpasswd file"
       shell: |
         cd ~jenkins
-        htpasswd -cb .htpasswd {{webhookproxy_user}} {{webhookproxy_pass}}
+        htpasswd -cb .htpasswd {{ webhookproxy_user }} {{ webhookproxy_pass }}
   roles:
     - role: geerlingguy.nginx
       nginx_remove_default_vhost: true
       nginx_vhosts:
-        - listen: 80
+        - listen: "{{ GITHUB_HOOK_PORT }}"
           server_name: "webhookproxy"
           root: "/dev/null"
           extra_parameters: |
@@ -90,4 +171,17 @@
               proxy_pass https://localhost:8888;
               # Don't pass auth header on to jenkins.
               proxy_set_header Authorization "";
+            }
+        - listen: "{{ WHT_PORT }}"
+          server_name: "webhooktranslator"
+          root: "/dev/null"
+          extra_parameters: |
+            location = /wht { rewrite ^ /wht/ last; }
+            location /wht { try_files $uri @wht; }
+            location @wht {
+                include fastcgi_params;
+                fastcgi_split_path_info ^(/wht)(.*)$;
+                fastcgi_param PATH_INFO $fastcgi_path_info;
+                fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+                fastcgi_pass unix:{{ WHT_SOCK }};
             }

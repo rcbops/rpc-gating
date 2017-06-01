@@ -18,6 +18,12 @@
           name: IMAGE
           default: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - string:
+          name: JIRA_PROJECT
+          default: UG
+          description: |
+            Jira project code. Issues will be created in this project
+            for MaaS alerts
+      - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Webhooks"
           description: |
