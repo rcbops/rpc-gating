@@ -4,8 +4,11 @@
       - mitaka:
           branch: mitaka-13.1
           TEST_SET: "scenario defcore api heat_api smoke"
-      - newton:
+      - newton140:
           branch: newton-14.0
+          TEST_SET: "all"
+      - newton141:
+          branch: newton-14.1
           TEST_SET: "all"
       - master:
           branch: master
