@@ -25,4 +25,32 @@ def create_issue(
   }
 }
 
+def create_pull_request(
+    body,
+    change_branch,
+    base_branch="master",
+    title="[master] Update OSA SHA",
+    org="rcbops",
+    repo="rpc-openstack"){
+  withCredentials([
+    string(
+      credentialsId: 'rpc-jenkins-svc-github-pat',
+      variable: 'pat'
+    )
+  ]){
+    sh """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      . .venv/bin/activate
+      python rpc-gating/scripts/ghutils.py create_pull_request\
+        --org '$org'\
+        --repo '$repo'\
+        --pat '$pat'\
+        --body '$body'\
+        --title '$title'\
+        --branch '$base_branch'\
+        --head '$change_branch'
+    """
+  }
+}
+
 return this;

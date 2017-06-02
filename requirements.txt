@@ -6,3 +6,4 @@ python-dateutil
 click
 github3.py
 jira
+osa-differ

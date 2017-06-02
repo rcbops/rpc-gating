@@ -1,0 +1,92 @@
+- job:
+    name: 'OSA-SHA-Update-PR'
+    project-type: workflow
+    logrotate:
+      daysToKeep: 14
+    parameters:
+        - string:
+            name: OSA_REPO
+            default: "https://github.com/openstack/openstack-ansible"
+        - string:
+            name: OSA_BRANCH
+            default: "stable/newton"
+        - string:
+            name: "RPC_REPO"
+            default: "https://github.com/rcbops/rpc-openstack"
+        - string:
+            name: "RPC_BRANCH"
+            default: "master"
+        - rpc_gating_params
+    dsl: |
+      node(){
+        deleteDir()
+        dir("rpc-gating") {
+          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+          common = load 'pipeline_steps/common.groovy'
+        }
+
+        def OSA_SHA;
+        def RPC_OSA_SHA;
+        stage('Compare OSA SHA') {
+          dir("rpc-openstack") {
+            common.prepareRpcGit(env.RPC_BRANCH, env.WORKSPACE)
+            OSA_SHA = sh(
+              script: "git ls-remote ${env.OSA_REPO} ${env.OSA_BRANCH} | awk '{ print \$1 }' | tr -d '\n'",
+              returnStdout: true)
+            print "OSA ${env.OSA_BRANCH} SHA: ${OSA_SHA}"
+            RPC_OSA_SHA = sh(
+              script: "git submodule status | awk '{ print \$1 }' | tr -d '\n'",
+              returnStdout: true)
+            print "OSA submodule SHA in RPC branch ${env.RPC_BRANCH}: ${RPC_OSA_SHA}"
+
+            if(OSA_SHA == RPC_OSA_SHA) {
+              print "OSA SHA is up to date."
+              return
+            }
+          } // dir
+        } // stage
+
+        def osa_diff = "";
+        stage('Generate OSA SHA Diff') {
+          dir("osa-differ"){
+          sh """#!/bin/bash
+            if [[ ! -d ".venv" ]]; then
+              source /opt/rh/python27/enable
+              virtualenv --python=/opt/rh/python27/root/usr/bin/python .venv
+            fi
+            source .venv/bin/activate
+            pip install osa-differ
+            osa-differ "${RPC_OSA_SHA}" "${OSA_SHA}" -d "${env.WORKSPACE}/osa-differ" --file osa_diff.md
+          """
+          osa_diff = sh(
+            script: "cat osa_diff.md",
+            returnStdout: true)
+          } // dir
+        } // stage
+
+        stage('Open Pull Request') {
+          dir("rpc-openstack"){
+            def branch = "jenkins-osa-sha-${BUILD_NUMBER}"
+            sh """#!/bin/bash
+            cd openstack-ansible
+            git fetch
+            git checkout ${OSA_SHA}
+
+            cd ..
+            git checkout -b ${branch}
+            git add .
+            git commit -m "[master] Update OSA SHA"
+            git push origin ${branch}
+            """
+
+            common.create_pull_request(
+              osa_diff,
+              change_branch="${branch}",
+              base_branch="${RPC_BRANCH}",
+              title="[${RPC_BRANCH}] Update OSA SHA",
+              org="rcbops",
+              repo="rpc-openstack")
+          } //dir
+        } // stage
+
+      } // node
