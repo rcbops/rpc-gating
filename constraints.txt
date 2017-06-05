@@ -39,6 +39,7 @@ oslo.utils==3.25.0
 packaging==16.8
 paramiko==2.1.2
 pbr==1.10.0
+pip==9.0.1
 positional==1.1.1
 prettytable==0.7.2
 pyasn1==0.2.3
@@ -60,6 +61,7 @@ rax-default-network-flags-python-novaclient-ext==0.4.0
 rax-scheduled-images-python-novaclient-ext==0.3.1
 requests==2.10.0
 rfc3986==0.4.1
+setuptools==33.1.1
 simplejson==3.10.0
 six==1.10.0
 stevedore==1.19.1
