@@ -6,6 +6,17 @@
       - kilo:
           branch: kilo
           branches: "kilo.*"
+          STAGES: >-
+            Allocate Resources,
+            Connect Slave,
+            Prepare Deployment,
+            Deploy RPC w/ Script,
+            Setup MaaS,
+            Install Tempest,
+            Tempest Tests,
+            Holland,
+            Cleanup,
+            Destroy Slave
       - liberty:
           branch: liberty-12.2
           branches: "liberty-.*"
