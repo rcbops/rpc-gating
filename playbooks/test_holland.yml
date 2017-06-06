@@ -3,8 +3,12 @@
 - hosts: galera
   user: root
   vars:
-    rpc_release: "{{ lookup('pipe', 'cd /opt/rpc-openstack && git describe --tags --abbrev=0') }}"
-    holland_venv_bin: "/openstack/venvs/holland-{{ rpc_release }}/bin"
+    # This fallback for when rpc_release is not defined is to cater for older releases
+    # where rpc_release is not available as a variable, but is instead derived by the
+    # execution of a module. If we are no longer testing branches older than Newton,
+    # the fallback mechanism can be removed.
+    latest_tag: "{{ lookup('pipe', 'cd /opt/rpc-openstack && git describe --tags --abbrev=0') }}"
+    holland_venv_bin: "/openstack/venvs/holland-{{ rpc_release | default(latest_tag) }}/bin"
   tasks:
     - name: Test for holland venv
       stat:
