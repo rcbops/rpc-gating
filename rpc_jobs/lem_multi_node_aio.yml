@@ -51,10 +51,6 @@
           DATA_DISK_DEVICE: "mapper/lxc-aio"
       - rpc_repo_params:
           RPC_BRANCH: "{branch}"
-      - tempest_params:
-          TEMPEST_TEST_SETS: "scenario defcore cinder_backup"
-          RUN_TEMPEST_OPTS: "--serial"
-          TESTR_OPTS: ""
       - string:
           name: STAGES
           default: |
@@ -148,7 +144,7 @@
                 maas.prepare(instance_name: instance_name)
                 maas.deploy()
                 maas.verify()
-                tempest.tempest("infra1", "deploy1")
+                tempest.tempest("deploy1")
                 kibana.kibana(env.KIBANA_SELENIUM_BRANCH, "deploy1")
                 holland.holland()
               }}

@@ -172,10 +172,6 @@
          IMAGE: "{IMAGE}"
          FLAVOR: "{FLAVOR}"
          REGION: "{REGION}"
-      - tempest_params:
-         TEMPEST_TEST_SETS: "scenario defcore"
-         RUN_TEMPEST_OPTS: "--serial"
-         TESTR_OPTS: ""
       - string:
           name: STAGES
           default: "{STAGES}"

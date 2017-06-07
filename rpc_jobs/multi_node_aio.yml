@@ -3,16 +3,20 @@
     series:
       - mitaka:
           branch: mitaka-13.1
-          TEST_SET: "scenario defcore api heat_api smoke"
+          USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
       - newton140:
           branch: newton-14.0
-          TEST_SET: "all"
+          USER_VARS: |
+            tempest_test_sets: 'all'
       - newton141:
           branch: newton-14.1
-          TEST_SET: "all"
+          USER_VARS: |
+            tempest_test_sets: 'all'
       - master:
           branch: master
-          TEST_SET: "all"
+          USER_VARS: |
+            tempest_test_sets: 'all'
     context:
       - xenial:
           DEFAULT_IMAGE: "16.04.2"
@@ -75,10 +79,6 @@
       - kibana_selenium_params:
           KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_gating_params
-      - tempest_params:
-          TEMPEST_TEST_SETS: "{TEST_SET}"
-          RUN_TEMPEST_OPTS: ""
-          TESTR_OPTS: "--concurrency 3"
       - single_use_slave_params:
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
           FLAVOR: "onmetal-io1"
@@ -88,6 +88,10 @@
       - osa_ops_params:
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "sdb"
+      - text:
+          name: "USER_VARS"
+          default: "{USER_VARS}"
+          description: "OSA/RPC USER_VARS to inject for this build"
       - string:
           name: STAGES
           default: |
@@ -161,7 +165,7 @@
                 maas.verify("deploy1")
               }},
               "tempest": {{
-                tempest.tempest("infra1", "deploy1")
+                tempest.tempest("deploy1")
               }},
               "horizon": {{
                 horizon.horizon_integration()

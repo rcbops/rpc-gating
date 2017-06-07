@@ -1,21 +1,20 @@
 def tempest_install(vm=null){
   // NOTE(mkam): Can remove ANSIBLE_CACHE_PLUGIN when we no longer gate stable/mitaka
+  // NOTE(alextricity25): --skip-tags needs to be used here because tags cannot be used
+  // with included roles in earlier versions of Ansible. Such that used in Mitaka
   common.openstack_ansible(
     vm: vm,
-    playbook: "os-tempest-install.yml",
-    path: "/opt/rpc-openstack/openstack-ansible/playbooks",
+    playbook: "../../scripts/run_tempest.yml",
+    args: "--skip-tags tempest_execute_tests",
+    path: "/opt/rpc-openstack/rpcd/playbooks",
     environment_vars: ["ANSIBLE_CACHE_PLUGIN=memory"]
   )
 }
 
 def tempest_run(wrapper="") {
   def output = sh (script: """#!/bin/bash
-  utility_container="\$(${wrapper} lxc-ls |grep -m1 utility)"
-    ${wrapper} lxc-attach \
-      --keep-env \
-      -n \$utility_container \
-      -- /opt/openstack_tempest_gate.sh \
-      ${env.TEMPEST_TEST_SETS}
+  ${wrapper} 'cd /opt/rpc-openstack/rpcd/playbooks && openstack-ansible \
+    ../../scripts/run_tempest.yml -t tempest_execute_tests -vv'
   """, returnStdout: true)
   print output
   return output
@@ -25,11 +24,10 @@ def tempest_run(wrapper="") {
 /* if tempest install fails, don't bother trying to run or collect test results
  * however if running fails, we should still collect the failed results
  */
-def tempest(infra_vm=null, deploy_vm=null){
-  if (infra_vm != null) {
-    wrapper = "sudo ssh -T -oStrictHostKeyChecking=no ${infra_vm} \
-                RUN_TEMPEST_OPTS=\\\"${env.RUN_TEMPEST_OPTS}\\\" TESTR_OPTS=\\\"${env.TESTR_OPTS}\\\" "
-    copy_cmd = "scp -o StrictHostKeyChecking=no -p  -r infra1:"
+def tempest(deploy_vm=null){
+  if (deploy_vm != null) {
+    wrapper = "sudo ssh -T -oStrictHostKeyChecking=no ${deploy_vm}"
+    copy_cmd = "scp -o StrictHostKeyChecking=no -p  -r \$(${wrapper} \"cd /opt/rpc-openstack/openstack-ansible/playbooks && ansible utility[0] -m command -a 'echo {{ physical_host }}' | grep -Ev 'Variable files|utility'\"):"
   } else{
     wrapper = ""
     copy_cmd = "cp -p "
