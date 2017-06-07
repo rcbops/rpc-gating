@@ -17,12 +17,10 @@ def holland(vm=null){
         sh "scp -o StrictHostKeyChecking=no -p rpc-gating/playbooks/test_holland.yml ${vm}:/opt/rpc-openstack/rpcd/playbooks"
       }
 
-      // NOTE(mkam): Can remove ANSIBLE_CACHE_PLUGIN when we no longer gate stable/mitaka
       common.openstack_ansible(
         vm: vm,
         playbook: "test_holland.yml",
-        path: "/opt/rpc-openstack/rpcd/playbooks",
-        environment_vars: ["ANSIBLE_CACHE_PLUGIN=memory"]
+        path: "/opt/rpc-openstack/rpcd/playbooks"
       )
     } //stage
   ) //conditionalStage
