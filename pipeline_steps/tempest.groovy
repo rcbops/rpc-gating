@@ -12,9 +12,14 @@ def tempest_install(vm=null){
 }
 
 def tempest_run(wrapper="") {
+  tempest_cmd = "cd /opt/rpc-openstack/rpcd/playbooks && openstack-ansible ../../scripts/run_tempest.yml -t tempest_execute_tests -vv"
+  if (wrapper != "") {
+    tempest_cmd_wrapped = "${wrapper} '${tempest_cmd}'"
+  } else {
+    tempest_cmd_wrapped = tempest_cmd
+  }
   def output = sh (script: """#!/bin/bash
-  ${wrapper} 'cd /opt/rpc-openstack/rpcd/playbooks && openstack-ansible \
-    ../../scripts/run_tempest.yml -t tempest_execute_tests -vv'
+  ${tempest_cmd_wrapped}
   """, returnStdout: true)
   print output
   return output
