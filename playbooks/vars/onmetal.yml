@@ -15,3 +15,4 @@ gating_overrides:
   tempest_testr_opts:
     - '--concurrency 3'
   tempest_run_tempest_opts: []
+  staging_host: repo-infra_hosts
