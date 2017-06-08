@@ -9,13 +9,13 @@
             Hours. Instances older than this will be removed.
       - string:
           name: "INSTANCE_PREFIX"
-          default: "ra|ri"
+          default: "ra|ri|om"
           description: |
             Only instances whose names match the supplied prefix pattern will
             be cleaned up.
       - string:
-          name: "REGION"
-          default: "DFW"
+          name: "REGIONS"
+          default: "DFW IAD"
           description: |
             Only instances in the specified region will be cleaned up.
       - rpc_gating_params

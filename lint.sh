@@ -78,7 +78,7 @@ check_bash(){
 }
 
 check_python(){
-  flake8 --exclude=.lintvenv . \
+  flake8 --exclude=.lintvenv,webhooktranslator . \
     && echo "Python syntax ok" \
     || { echo "Python syntax fail"; rc=1; }
 }
