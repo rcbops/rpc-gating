@@ -12,53 +12,6 @@
 #    webhooks from MaaS, extracts relevant info and uses that to create
 #    Jira issues.
 
-
-- name: Secure Webhook Proxy Node
-  hosts: job_nodes
-  user: root
-  vars:
-    ip_address_whitelist: "{{ lookup('env', 'SSH_IP_ADDRESS_WHITELIST') }}"
-  pre_tasks:
-    - name: Install apt packages
-      apt:
-        pkg: "ufw"
-        state: installed
-        update_cache: yes
-
-    - name: Reset UFW
-      ufw:
-        state: reset
-
-    - name: Allow ssh
-      ufw:
-        rule: allow
-        port: 22
-        src: "{{ item }}"
-      with_items: "{{ ip_address_whitelist }}"
-
-    - name: Enable firewall
-      ufw:
-        state: enabled
-        policy: deny
-
-    - name: Add RPC public keys to authorized_keys
-      authorized_key:
-        user: "root"
-        key: "{{ lookup('file', lookup('env', 'WORKSPACE')+'/rpc-gating/keys/rcb.keys') }}"
-        state: "present"
-  roles:
-    - role: willshersystems.sshd
-      sshd:
-        ListenAddress:
-          - "0.0.0.0"
-        PasswordAuthentication: "no"
-        X11Forwarding: "no"
-        PrintLastLog: "no"
-        GatewayPorts: "no"
-        ClientAliveInterval: 15
-        Compression: "yes"
-    - role: jnv.unattended-upgrades
-
 - name: Configure Webhook Proxy Node
   hosts: job_nodes
   user: root

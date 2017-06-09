@@ -193,7 +193,7 @@
            {TRIGGER_USER_VARS}
          UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - rpc_gating_params
-      - single_use_slave_params:
+      - instance_params:
          IMAGE: "{IMAGE}"
          FLAVOR: "{FLAVOR}"
          REGION: "{REGION}"

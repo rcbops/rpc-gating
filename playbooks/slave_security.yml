@@ -1,0 +1,37 @@
+  - name: Secure Slave
+    hosts: job_nodes
+    user: root
+    vars:
+      ip_address_whitelist: "{{ lookup('env', 'SSH_IP_ADDRESS_WHITELIST') }}"
+    pre_tasks:
+      - name: Install apt packages
+        apt:
+          pkg: "ufw"
+          state: installed
+          update_cache: yes
+
+      - name: Reset UFW
+        ufw:
+          state: reset
+
+      - name: Allow ssh from whitelist
+        ufw:
+          rule: allow
+          port: 22
+          src: "{{ item }}"
+        with_items: "{{ ip_address_whitelist }}"
+        when: ip_address_whitelist != ""
+
+      - name: Allow ssh from all
+        ufw:
+          rule: allow
+          port: 22
+        when: ip_address_whitelist == ""
+
+      - name: Enable firewall
+        ufw:
+          state: enabled
+          policy: deny
+
+    roles:
+      - role: jnv.unattended-upgrades

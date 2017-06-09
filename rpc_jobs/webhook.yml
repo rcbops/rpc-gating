@@ -8,7 +8,7 @@
     parameters:
       # See params.yml
       - rpc_gating_params
-      - single_use_slave_params:
+      - instance_params:
           REGION: IAD
           FLAVOR: "2"
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"

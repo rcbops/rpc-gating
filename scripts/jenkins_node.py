@@ -24,13 +24,13 @@ import re
 from jenkinsapi.jenkins import Jenkins
 
 
-def create_node(jenkins, host_ip, name, credential_description, labels=None,
-                remote_root_dir=None):
+def create_node(jenkins, host_ip, name, credential_description, executors,
+                exclusive, labels=None, remote_root_dir=None):
     node_dict = {
-        "num_executors": 2,
+        "num_executors": executors,
         "remote_fs": remote_root_dir or "/var/lib/jenkins",
         "labels": labels or "",
-        "exclusive": True,
+        "exclusive": exclusive,
         "host": host_ip,
         "port": 22,
         "credential_description": credential_description,
@@ -86,6 +86,11 @@ if __name__ == "__main__":
                         help="Labels to give node separated by spaces")
     parser.add_argument("--remote-dir",
                         help="Path to use as the home directory on the node")
+    parser.add_argument("--executors", help="Number of executors to start",
+                        default=2)
+    parser.add_argument("--exclusive",
+                        help="Enable exclusive mode for this node",
+                        action='store_true')
     args = parser.parse_args()
 
     j = get_jenkins_client()
@@ -93,6 +98,8 @@ if __name__ == "__main__":
     if args.action == "create":
         create_node(jenkins=j, host_ip=args.ip, name=args.name,
                     credential_description=args.creds,
+                    executors=args.executors,
+                    exclusive=args.exclusive,
                     labels=args.labels,
                     remote_root_dir=args.remote_dir)
     elif args.action == "delete":

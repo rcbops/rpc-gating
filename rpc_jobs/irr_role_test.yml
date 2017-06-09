@@ -41,7 +41,7 @@
           url: "{irr_repo_url}"
     parameters:
       - rpc_gating_params
-      - single_use_slave_params:
+      - instance_params:
           IMAGE: "{IMAGE}"
           FLAVOR: "{FLAVOR}"
           REGION: "{REGION}"

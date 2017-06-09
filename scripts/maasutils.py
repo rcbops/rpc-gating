@@ -50,8 +50,19 @@ def set_webhook_token(ctx, webhook_token):
         raise e
 
 
+@click.command()
+@click.option("--label", help="label of entity to get ID for", required=True)
+def get_entity_id(label):
+    mon = pyrax.cloud_monitoring
+    entities = mon.list_entities()
+    for e in entities:
+        if label == e.label:
+            click.echo(e.id)
+
+
 cli.add_command(get_token_url)
 cli.add_command(set_webhook_token)
+cli.add_command(get_entity_id)
 
 
 if __name__ == "__main__":

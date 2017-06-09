@@ -5,7 +5,7 @@
     parameters:
       # Default params are provided by macro, add any extra params, or
       # params you want to override the defaults for.
-      - single_use_slave_params:
+      - instance_params:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           FLAVOR: "performance2-15"
           REGION: "DFW"

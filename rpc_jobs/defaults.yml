@@ -1,5 +1,5 @@
 - defaults:
-    # single_use_slave_params
+    # instance_params
     name: global
     IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     FLAVOR: "performance2-15"
@@ -14,3 +14,10 @@
     TRIGGER_USER_VARS: ""
     SERIES_USER_VARS: ""
     UPGRADE_FROM_REF: ""
+    # jenkins_node_params
+    # See also playbooks/setup_jenkins_slave.yml where these values are
+    # defaulted for jobs that don't include the relevant params.
+    JENKINS_NODE_LABELS: "single_use_slave"
+    JENKINS_NODE_EXECUTORS: "2"
+    jenkins_node_exclusive: true
+    allow_jenkins_sudo: true
