@@ -8,15 +8,11 @@
     parameters:
       # See params.yml
       - rpc_gating_params
-      - string:
-          name: REGION
-          default: "IAD"
-      - string:
-          name: FLAVOR
-          default: "2"
-      - string:
-          name: IMAGE
-          default: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - single_use_slave_params:
+          REGION: IAD
+          FLAVOR: "2"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          INSTANCE_NAME: "WEBHOOK-PROXY"
       - string:
           name: JIRA_PROJECT
           default: UG
