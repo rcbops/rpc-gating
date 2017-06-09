@@ -23,27 +23,24 @@
       - mitaka:
           branch: mitaka-13.1
           branches: "mitaka-.*"
+          UPGRADE_FROM_REF: "liberty-12.2"
       - newton140:
           branch: newton-14.0
           branches: "newton-14.0.*"
       - newton141:
           branch: newton-14.1
           branches: "newton-14.1.*"
+          UPGRADE_FROM_REF: "kilo"
       - master:
           branch: master
           branches: "master"
-    context:
-      - swift
-      - ceph:
-          DEPLOY_SWIFT: "no"
-          DEPLOY_CEPH: "yes"
-          CONTEXT_USER_VARS: |
-            ceph_stable_release: "hammer"
-            cinder_cinder_conf_overrides:
-                DEFAULT:
-                    default_volume_type: ceph
-            cinder_service_backup_driver: cinder.backup.drivers.ceph
-            tempest_service_available_swift: false
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    action:
+      - deploy
       - majorupgrade:
           STAGES: >-
             Allocate Resources,
@@ -60,7 +57,6 @@
             Major Upgrade,
             Cleanup,
             Destroy Slave
-          UPGRADE_FROM_REF: "liberty-12.2"
       - leapfrogupgrade:
           STAGES: >-
             Allocate Resources,
@@ -70,9 +66,18 @@
             Leapfrog Upgrade,
             Cleanup,
             Destroy Slave
-          UPGRADE_FROM_REF: "kilo"
-      - xenial:
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    scenario:
+      - swift
+      - ceph:
+          DEPLOY_SWIFT: "no"
+          DEPLOY_CEPH: "yes"
+          CONTEXT_USER_VARS: |
+            ceph_stable_release: "hammer"
+            cinder_cinder_conf_overrides:
+                DEFAULT:
+                    default_volume_type: ceph
+            cinder_service_backup_driver: cinder.backup.drivers.ceph
+            tempest_service_available_swift: false
 
     # NOTE: Hugh tested this and found that ztrigger overrides series and
     #       trigger doesn't, which is odd because both trigger and ztrigger
@@ -86,44 +91,54 @@
           NUM_TO_KEEP: 10
     exclude:
       - series: kilo
-        context: majorupgrade
+        action: majorupgrade
       - series: liberty
-        context: majorupgrade
+        action: majorupgrade
       - series: newton140
-        context: majorupgrade
+        action: majorupgrade
       - series: newton141
-        context: majorupgrade
+        action: majorupgrade
       - series: master
-        context: majorupgrade
+        action: majorupgrade
       # Xenial builds are run for newton and above
       # as it is not supported distro before newton.
       - series: kilo
-        context: xenial
+        image: xenial
       - series: liberty
-        context: xenial
+        image: xenial
       - series: mitaka
-        context: xenial
+        image: xenial
       # Leapfrog upgrades are only run for newton141
       # as the upgrade method is not supported for any
       # other target distro.
       - series: kilo
-        context: leapfrogupgrade
+        action: leapfrogupgrade
       - series: liberty
-        context: leapfrogupgrade
+        action: leapfrogupgrade
       - series: mitaka
-        context: leapfrogupgrade
+        action: leapfrogupgrade
       - series: newton140
-        context: leapfrogupgrade
+        action: leapfrogupgrade
       - series: master
-        context: leapfrogupgrade
+        action: leapfrogupgrade
       # Ceph builds are not run for kilo at this time
       # as ceph deployment is not supported for
       # newton (yet) and the purpose of executing
       # kilo builds is for the leapfrog upgrade tests.
       - series: kilo
-        context: ceph
+        scenario: ceph
+      # Ceph builds are not run for Xenial at this time
+      # as ceph deployment is not supported for
+      # newton (yet).
+      - image: xenial
+        scenario: ceph
+      # Trusty builds are not executed for master
+      # as Trusty is not a supported distro for
+      # Ocata onwards.
+      - series: master
+        image: trusty
     jobs:
-      - 'RPC-AIO_{series}-{context}-{ztrigger}'
+      - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
 
 - job-template:
     # DEFAULTS
@@ -145,7 +160,7 @@
     NUM_TO_KEEP: 30
     IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
     # TEMPLATE
-    name: 'RPC-AIO_{series}-{context}-{ztrigger}'
+    name: 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
     project-type: workflow
     concurrent: true
     properties:
@@ -200,12 +215,12 @@
           org-list:
             - rcbops
           github-hooks: true
-          trigger-phrase: '.*recheck_cit_all.*|.*recheck_cit_{context}.*'
+          trigger-phrase: '.*recheck_cit_all.*|.*recheck_cit_{image}_{action}_{scenario}.*'
           only-trigger-phrase: false
           white-list-target-branches:
             - "{branches}"
           auth-id: "github_account_rpc_jenkins_svc"
-          status-context: 'CIT/{context}'
+          status-context: 'CIT/{image}-{action}-{scenario}'
           cancel-builds-on-update: true
 
     dsl: |
