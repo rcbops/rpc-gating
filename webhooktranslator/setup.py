@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='webhooktranslator',
     description='Receive alerts from MaaS and create jira issues',
-    url='http://github.com/rcbops/rpc-gating/tree/master/webhooktranslator',
+    url='https://github.com/rcbops/rpc-gating/tree/master/webhooktranslator',
     author='Rackspace Private Cloud Team',
     author_email='hugh@wherenow.org',
     license='Apache',
