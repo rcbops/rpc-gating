@@ -119,7 +119,7 @@ class Cleanup:
             age = current_time - created_time
             errored = server.status == "ERROR"
             if errored or age > max_age:
-                _indp("{i}Deleting {name} Errored: {error} Age: {age}".format(
+                _indp("Deleting {name} Errored: {error} Age: {age}".format(
                     name=server.name, error=errored, age=age))
                 server.delete()
 
