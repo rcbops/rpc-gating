@@ -270,7 +270,7 @@
                 maas.deploy()
                 maas.verify()
                 tempest.tempest()
-                kibana_branch = env.UPGRADE_FROM_REF ?: env.KIBANA_SELENIUM_BRANCH
+                kibana_branch = env.STAGES.contains("Major Upgrade") ? env.UPGRADE_FROM_REF : env.KIBANA_SELENIUM_BRANCH
                 kibana.kibana(kibana_branch)
                 holland.holland()
                 if (env.STAGES.contains("Major Upgrade")) {{
