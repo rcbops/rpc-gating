@@ -6,6 +6,9 @@
       - master:
           branch: master
           branches: "master"
+      - ocata:
+          branch: ocata-15.0
+          branches: "ocata-15.0.*"
       - newton:
           branch: newton-14.1
           branches: "newton-14.1.*"
@@ -49,8 +52,8 @@
         ztrigger: periodic
       - context: Pipeline
         ztrigger: pr
-      # Trusty artifacts are not required after Newton
-      # as Trusty is no longer a supported distro.
+      - series: ocata
+        image: trusty
       - series: master
         image: trusty
     jobs:

@@ -13,6 +13,9 @@
           branch: newton-14.1
           USER_VARS: |
             tempest_test_sets: 'all'
+      - ocata150:
+          branch: ocata-15.0
+          USER_VARS: ""
       - master:
           branch: master
           USER_VARS: |
@@ -30,6 +33,11 @@
     exclude:
       - series: mitaka
         context: xenial
+      # Ocata onwards does not support trusty, so these jobs are excluded
+      - series: ocata150
+        context: trusty
+      - series: master
+        context: trusty
     jobs:
       - 'OnMetal-Multi-Node-AIO_{series}-{context}-{trigger}'
       - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'

@@ -31,6 +31,9 @@
           branch: newton-14.1
           branches: "newton-14.1.*"
           UPGRADE_FROM_REF: "kilo"
+      - ocata150:
+          branch: ocata-15.0
+          branches: "ocata-15.0.*"
       - master:
           branch: master
           branches: "master"
@@ -100,6 +103,8 @@
         action: majorupgrade
       - series: master
         action: majorupgrade
+      - series: ocata
+        action: majorupgrade
       # Xenial builds are run for newton and above
       # as it is not supported distro before newton.
       - series: kilo
@@ -120,6 +125,8 @@
       - series: newton140
         action: leapfrogupgrade
       - series: master
+        action: leapfrogupgrade
+      - series: ocata
         action: leapfrogupgrade
       # Leapfrog upgrades cannot be executed on
       # xenial as it is not possible to install
@@ -146,6 +153,8 @@
       # as Trusty is not a supported distro for
       # Ocata onwards.
       - series: master
+        image: trusty
+      - series: ocata150
         image: trusty
     jobs:
       - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
