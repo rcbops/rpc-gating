@@ -110,7 +110,7 @@
         image: xenial
       # Leapfrog upgrades are only run for newton141
       # as the upgrade method is not supported for any
-      # other target distro.
+      # other target series.
       - series: kilo
         action: leapfrogupgrade
       - series: liberty
@@ -121,11 +121,21 @@
         action: leapfrogupgrade
       - series: master
         action: leapfrogupgrade
+      # Leapfrog upgrades cannot be executed on
+      # xenial as it is not possible to install
+      # the source series (kilo-mitaka) on xenial.
+      - image: xenial
+        action: leapfrogupgrade
       # Ceph builds are not run for kilo at this time
       # as ceph deployment is not supported for
       # newton (yet) and the purpose of executing
       # kilo builds is for the leapfrog upgrade tests.
       - series: kilo
+        scenario: ceph
+      # Ceph builds are not tested for leapfrog upgrades
+      # at this time due to the failure for ceph to
+      # install on kilo.
+      - action: leapfrogupgrade
         scenario: ceph
       # Ceph builds are not run for Xenial at this time
       # as ceph deployment is not supported for
