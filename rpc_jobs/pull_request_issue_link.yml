@@ -1,0 +1,54 @@
+- project:
+    name: 'RPC-Pull-Request-Issue-Link-Jobs'
+    series:
+      - all_branches:
+          branches: ".*"
+    repo:
+      - rpc_openstack:
+          repo_url: "https://github.com/rcbops/rpc-openstack"
+      - rpc_gating:
+          repo_url: "https://github.com/rcbops/rpc-gating"
+    jobs:
+      - 'RPC-Pull-Request-Issue-Link_{repo}'
+
+- job-template:
+    name: 'RPC-Pull-Request-Issue-Link_{repo}'
+    project-type: workflow
+    concurrent: true
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_all.*|.*recheck_issue_link.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/issue-link'
+          cancel-builds-on-update: true
+    properties:
+      - github:
+          url: "{repo_url}"
+    parameters:
+      - rpc_gating_params
+      - string:
+          name: REPO
+          default: "{repo}"
+    dsl: |
+      node() {{
+        deleteDir()
+        if (REPO == "rpc_gating") {{
+          branch = env.ghprbSourceBranch
+          url = env.ghprbAuthorRepoGitUrl
+        }} else {{
+          branch = env.RPC_GATING_BRANCH
+          url = env.RPC_GATING_REPO
+        }}
+        dir("rpc-gating") {{
+          git branch: branch, url: url
+          common = load 'pipeline_steps/common.groovy'
+          github = load 'pipeline_steps/github.groovy'
+          venv = "${{env.WORKSPACE}}/.venv"
+          sh "virtualenv ${{venv}} && . ${{venv}}/bin/activate && pip install -c constraints.txt click github3.py"
+        }}
+        github.add_issue_url_to_pr()
+      }}

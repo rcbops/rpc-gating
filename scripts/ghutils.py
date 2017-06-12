@@ -37,12 +37,71 @@ def create_issue(tag, link, org, repo, pat, label):
     )
 
 
+@click.command()
+@click.option(
+    '--org',
+    help='Github Organisation that owns the target repo',
+    required=True,
+)
+@click.option(
+    '--repo',
+    help='Name of target repo',
+    required=True,
+)
+@click.option(
+    '--pat',
+    help="Github Personal Access Token",
+    required=True,
+)
+@click.option(
+    '--pull-request-number',
+    help="Pull request to update",
+    required=True,
+)
+@click.option(
+    '--issue-key',
+    help='Issue being resolved by pull request',
+    required=True,
+)
+def add_issue_url_to_pr(org, repo, pat, pull_request_number, issue_key):
+    jira_url = "https://rpc-openstack.atlassian.net/browse/"
+    gh = github3.login(token=pat)
+    repo = gh.repository(org, repo)
+    pull_request = repo.pull_request(pull_request_number)
+    current_body = pull_request.body or ""
+
+    issue_text = "Issue: [{key}]({url}{key})".format(
+        url=jira_url,
+        key=issue_key,
+    )
+
+    if issue_text in current_body:
+        click.echo(
+            "Pull request not updated, it already includes issue reference."
+        )
+    else:
+        if current_body:
+            updated_body = "{body}\n\n{issue}".format(
+                body=current_body,
+                issue=issue_text,
+            )
+        else:
+            updated_body = issue_text
+
+        success = pull_request.update(body=updated_body)
+        if success:
+            click.echo("Pull request updated with issue reference.")
+        else:
+            raise Exception("There was a failure updating the pull request.")
+
+
 @click.group()
 def cli():
     pass
 
 
 cli.add_command(create_issue)
+cli.add_command(add_issue_url_to_pr)
 
 if __name__ == "__main__":
     cli()
