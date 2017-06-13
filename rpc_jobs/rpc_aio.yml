@@ -57,6 +57,10 @@
             Major Upgrade,
             Cleanup,
             Destroy Slave
+      # A minimum set of stages is chosen deliberately
+      # to test the convergance of the upgrade itself
+      # without additional complexity. Once this is
+      # working well, additional stages may be added.
       - leapfrogupgrade:
           STAGES: >-
             Allocate Resources,
@@ -66,6 +70,20 @@
             Leapfrog Upgrade,
             Cleanup,
             Destroy Slave
+      # A minimum set of stages is chosen deliberately
+      # to test the convergance of the upgrade itself
+      # without additional complexity. Once this is
+      # working well, additional stages may be added.
+      - minorupgrade:
+          STAGES: >-
+            Allocate Resources,
+            Connect Slave,
+            Prepare Deployment,
+            Deploy RPC w/ Script,
+            Minor Upgrade,
+            Cleanup,
+            Destroy Slave
+          UPGRADE_FROM_REF: "r14.0.0"
     scenario:
       - swift
       - ceph:
@@ -90,6 +108,23 @@
           branches: "do_not_build_on_pr"
           NUM_TO_KEEP: 10
     exclude:
+      # Minor upgrades are only being executed
+      # for newton140->newton141 for now until
+      # the minor upgrade testing process is
+      # stabilised.
+      - series: kilo
+        action: minorupgrade
+      - series: liberty
+        action: minorupgrade
+      - series: mitaka
+        action: minorupgrade
+      - series: newton140
+        action: minorupgrade
+      - series: master
+        action: minorupgrade
+      # Major upgrades are only run for mitaka
+      # for the moment as no other major upgrade
+      # testing or tooling has been implemented.
       - series: kilo
         action: majorupgrade
       - series: liberty
@@ -214,6 +249,7 @@
               Prepare Kibana Selenium
               Kibana Tests
               Holland (test holland mysql backup)
+              Minor Upgrade
               Major Upgrade
               Leapfrog Upgrade
               Pause (use to hold instance for investigation before cleanup)
@@ -253,7 +289,7 @@
             // We need to checkout the rpc-openstack repo on the CIT Slave
             // so that we can check whether the patch is a docs-only patch
             // before allocating resources unnecessarily.
-            if (env.STAGES.contains("Major Upgrade") || env.STAGES.contains("Leapfrog Upgrade")) {{
+            if (env.STAGES.contains("Minor Upgrade") || env.STAGES.contains("Major Upgrade") || env.STAGES.contains("Leapfrog Upgrade")) {{
               common.prepareRpcGit(env.UPGRADE_FROM_REF, env.WORKSPACE)
             }} else {{
               common.prepareRpcGit("auto", env.WORKSPACE)
@@ -280,10 +316,14 @@
                 maas.deploy()
                 maas.verify()
                 tempest.tempest()
+                // TODO(odyssey4me):
+                // Adjust this if selenium tests are ever used for minor/leapfrog upgrades
                 kibana_branch = env.STAGES.contains("Major Upgrade") ? env.UPGRADE_FROM_REF : env.KIBANA_SELENIUM_BRANCH
                 kibana.kibana(kibana_branch)
                 holland.holland()
-                if (env.STAGES.contains("Major Upgrade")) {{
+                if (env.STAGES.contains("Minor Upgrade")) {{
+                  deploy.upgrade_minor(environment_vars: environment_vars)
+                }} else if (env.STAGES.contains("Major Upgrade")) {{
                   deploy.upgrade_major(environment_vars: environment_vars)
                   deploy.addChecksumRule()
                   maas.deploy()
