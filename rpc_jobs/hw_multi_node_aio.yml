@@ -1,5 +1,5 @@
 - project:
-    name: 'LEM-Multi-Node-AIO-Jobs'
+    name: 'HW-Multi-Node-AIO-Jobs'
     # Note: branch is the branch for periodics to build
     #       branches is the branch pattern to match for PR Jobs.
     series:
@@ -25,14 +25,14 @@
       - series: mitaka
         context: xenial
     jobs:
-      - 'LEM-Multi-Node-AIO_{series}-{context}-{ztrigger}'
+      - 'HW-Multi-Node-AIO_{series}-{context}-{ztrigger}'
 
 - job-template:
     # DEFAULTS
     NUM_TO_KEEP: 30
 
     # TEMPLATE
-    name: 'LEM-Multi-Node-AIO_{series}-{context}-{ztrigger}'
+    name: 'HW-Multi-Node-AIO_{series}-{context}-{ztrigger}'
     project-type: workflow
     concurrent: true
     properties:
@@ -55,7 +55,7 @@
           name: STAGES
           default: |
             Connect Slave,
-            Prepare LEM AIO,
+            Prepare HW AIO,
             Prepare Multi-Node AIO,
             Prepare RPC Configs,
             Deploy RPC w/ Script,
@@ -72,7 +72,7 @@
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
               Connect Slave
-              Prepare LEM AIO
+              Prepare HW AIO
               Prepare Multi-Node AIO
               Prepare RPC Configs
               Deploy RPC w/ Script
@@ -121,7 +121,7 @@
             ssh_slave.connect()
             node(INSTANCE_NAME) {{
               common.conditionalStage(
-                stage_name: 'Prepare LEM AIO',
+                stage_name: 'Prepare HW AIO',
                 stage: {{
                   sh """
                      lvcreate -n aio -L250G lxc
@@ -150,7 +150,7 @@
               }}
               ssh_slave.destroy()
               maas.entity_cleanup(instance_name: instance_name)
-            }} // lem node
+            }} // hw node
           }} catch (e){{
               print e
               throw e
