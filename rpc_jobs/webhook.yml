@@ -8,15 +8,17 @@
     parameters:
       # See params.yml
       - rpc_gating_params
+      - single_use_slave_params:
+          REGION: IAD
+          FLAVOR: "2"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          INSTANCE_NAME: "WEBHOOK-PROXY"
       - string:
-          name: REGION
-          default: "IAD"
-      - string:
-          name: FLAVOR
-          default: "2"
-      - string:
-          name: IMAGE
-          default: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          name: JIRA_PROJECT
+          default: UG
+          description: |
+            Jira project code. Issues will be created in this project
+            for MaaS alerts
       - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Webhooks"
