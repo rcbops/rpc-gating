@@ -34,6 +34,11 @@
           PUSH_TO_MIRROR: "YES"
           NUM_TO_KEEP: 10
     exclude:
+      # The periodic jobs must only execute the pipeline in order
+      # to build new artifacts (for new releases) and to ensure
+      # that the pipeline works properly. The PR jobs execute each
+      # part of the pipeline in parallel so that results are
+      # returned as quickly as possible to the developer.
       - context: Git
         ztrigger: periodic
       - context: Apt
@@ -44,6 +49,10 @@
         ztrigger: periodic
       - context: Pipeline
         ztrigger: pr
+      # Trusty artifacts are not required after Newton
+      # as Trusty is no longer a supported distro.
+      - series: master
+        image: trusty
     jobs:
       - 'RPC-Artifact-Build_{series}-{image}-{context}-{ztrigger}'
 
