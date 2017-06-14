@@ -62,6 +62,7 @@ def maas():
         entity = maas_payload['entity']['label']
         check = maas_payload['check']['label']
         alarm = maas_payload['alarm']['label']
+        dash_link = maas_payload['dashboard_link']
     except KeyError as e:
         abort(400, "JSON content missing required key: {}".format(
             e.message
@@ -79,6 +80,8 @@ def maas():
 Alarm {alarm} for entity {entity} is in {state} state.
 The check is {check}.
 
+[Dashboard Link|{dash_link}]
+
 {{code:title=Full Payload from MaaS}}
 {maas_payload}
 {{code}}
@@ -87,6 +90,7 @@ The check is {check}.
             entity=entity,
             state=state,
             check=check,
+            dash_link=dash_link,
             maas_payload=json.dumps(maas_payload,
                                     sort_keys=True,
                                     indent=2,

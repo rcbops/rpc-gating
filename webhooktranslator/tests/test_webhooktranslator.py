@@ -56,9 +56,13 @@ class WebhooktranslatorTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         _, kwargs = mock_create_jira_issue.call_args
         self.assertIn("MaaS Alert:", kwargs['summary'])
-        self.assertIn("WARNING", kwargs['summary'])
+        self.assertIn("CRITICAL", kwargs['summary'])
         self.assertIn("Full Payload", kwargs['description'])
         self.assertIn("alert", kwargs['labels'])
+        self.assertIn(
+            "[Dashboard Link|https://intelligence.rackspace.com/cloud/"
+            "entities/enxAJKN38B/checks/chKzEIrCli/alarm/alL0HLZphj]",
+            kwargs['description'])
 
 
 if __name__ == '__main__':
