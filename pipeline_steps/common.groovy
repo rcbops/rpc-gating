@@ -432,22 +432,28 @@ def docker_cache_workaround(){
 }
 
 def is_doc_update_pr(git_dir) {
-  is_doc_update_pr = false
   if (env.ghprbPullId != null) {
     dir(git_dir) {
-      def output = sh(script: """#!/bin/bash
-      git show --stat=400,400 | awk '/\\|/{print \$1}' \
-        | egrep -v -e '.*md\$' -e '.*rst\$' -e '^releasenotes/' \
-        || echo "Skipping build as only documentation changes were detected"
-      """, returnStdout: true)
-      print output
-      is_doc_update_pr = output.contains("Skipping build as only documentation changes were detected")
+      def rc = sh(
+        script: """#!/bin/bash
+          set -xeu
+          git status 
+          git show --stat=400,400 | awk '/\\|/{print \$1}' \
+            | egrep -v -e '.*md\$' -e '.*rst\$' -e '^releasenotes/'
+        """,
+        returnStatus: true
+      )
+      if (rc==0){
+        print "Not a documentation only change or not triggered by a pull request. Continuing..."
+        return false
+      }else if(rc==1){
+        print "Skipping build as only documentation changes were detected"
+        return true
+      }else if(rc==128){
+        throw new Exception("Directory is not a git repo, cannot check if changes are doc only")
+      }
     }
   }
-  if(!is_doc_update_pr){
-    print "Not a documentation only change or not triggered by a pull request. Continuing..."
-  }
-  return is_doc_update_pr
 }
 
 /* Look for JIRA issue key in commit messages for commits in the source branch
