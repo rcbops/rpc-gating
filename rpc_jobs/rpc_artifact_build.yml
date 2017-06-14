@@ -67,7 +67,7 @@
       Connect Slave,
       Cleanup,
       Destroy Slave
-    branch: artifacts-14.0
+    branch: master
     PUSH_TO_MIRROR: "NO"
     NUM_TO_KEEP: 30
 
@@ -141,6 +141,13 @@
           common = load 'pipeline_steps/common.groovy'
           pubcloud = load 'pipeline_steps/pubcloud.groovy'
           artifact_build = load 'pipeline_steps/artifact_build.groovy'
+        }}
+        // We need to checkout the rpc-openstack repo on the CIT Slave
+        // so that we can check whether the patch is a docs-only patch
+        // before allocating resources unnecessarily.
+        common.prepareRpcGit("auto", env.WORKSPACE)
+        if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
+          return
         }}
         try {{
           common.conditionalStage(
