@@ -3,16 +3,15 @@
 ## Allocate Resources
 * Purpose: Create a node for use by Jenkins. This may be creating a public cloud instance, reserving lab nodes, or some other process.
 * Inputs:
-  * (optional) Node name. Some processes (pub cloud) will need a name, others will have fixed names (eg LEM lab)
+  * (optional) Node name. Some processes (pub cloud) will need a name, others will have fixed names
   * Keys File: A URL to a list of SSH public keys, all keys found at this URL must be added to root's authorised keys on all nodes
 * Outputs:
-  * List of Hostnames/IPs, primary host first (primary IP for LEM servers)
+  * List of Hostnames/IPs, primary host first
   * Detail all created resources, to be read by the cleanup job
   * Includes server UUIDs, monitoring agents/checks
 * Example Implementations:
   * Public cloud instance
   * On Metal Instance
-  * LEM Lab
   * Heat Multi-node
 * Node: CIT Jenkins Slave
 
@@ -34,7 +33,6 @@
 * Purpose: Perform all necessary pre-deployment tasks.
   * Configure networking
   * Install package dependencies.
-    * LEM software (where applicable)
     * Ansible versions, etc.
   * Drop private ssh key so primary node can connect to other nodes (if there are any)
   * Configure devices (loopback, physical) for cinder/swift/ceph
@@ -55,7 +53,6 @@
 * Inputs:
   * Version to deploy
   * Feature enable/disable flags
-  * LEM hardware configuration
 * Example Implementations:
   * OSA
   * RPCO
@@ -101,5 +98,5 @@
 * Purpose: Free all resources used in the job, cleanup anything that will be reused or does not tear down automatically
 * Inputs:
   * Hosts: list of hosts
-  * Resources: File detailing all resources to be removed, created by the corresponding `Allocate Resources` implementation, includes monitoring agents/checks for LEM labs
+  * Resources: File detailing all resources to be removed, created by the corresponding `Allocate Resources` implementation, includes monitoring agents/checks.
 * Node: CIT Jenkins Slave
