@@ -65,6 +65,10 @@ def upgrade(String stage_name, String upgrade_script, List env_vars) {
   ) // conditionalStage
 }
 
+def upgrade_minor(Map args) {
+  upgrade("Minor Upgrade", "deploy.sh", args.environment_vars)
+}
+
 def upgrade_major(Map args) {
   upgrade("Major Upgrade", "test-upgrade.sh", args.environment_vars)
 }
