@@ -28,7 +28,10 @@
     - name: Write inventory
       copy:
         content: |
-          [job_nodes]
+          [job_nodes:children]
+          hosts
+
+          [hosts]
           {% for instance in rax.success %} {{instance.name}} ansible_host={{instance.accessIPv4}}{% endfor %}
         dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory/hosts'
 

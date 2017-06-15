@@ -1,0 +1,11 @@
+  - name: Deploy Docker
+    hosts: job_nodes
+    user: root
+    roles:
+      - mongrelion.docker
+    tasks:
+      - name: "Allow jenkins user access to Docker"
+        user:
+          name: jenkins
+          groups: docker
+          append: yes

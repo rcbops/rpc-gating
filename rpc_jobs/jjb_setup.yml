@@ -1,3 +1,9 @@
+# the github trigger for pipeline/worflow jobs will only trigger for pushes
+# to the branch that was built previously. This means that the job must
+# be run manually once to establish the branch.
+# This is also why there is separate merge trigger job, as it ensures that
+# JJB still runs on pushes to master, even if the JJB job is used to test_client
+# an alternative branch.
 - job:
     name: 'Merge-Trigger-JJB'
     project-type: workflow
@@ -15,11 +21,14 @@
         } // stage
       } // node
 
+# Node CentOS to ensure the CIT slave is used. If a pub cloud ubuntu slave is used,
+# the Jenkins API won't be reachable.
 - job:
     name: 'Jenkins-Job-Builder'
+    project-type: workflow
     description: Creates and updates jobs with Jenkins Job Builder.
-    logrotate:
-        daysToKeep: 20
+    build-discarder:
+        days-to-keep: 20
     parameters:
         - string:
             name: JOBS
@@ -33,52 +42,51 @@
             description: "Remove jobs that are no longer defined."
             default: false
         - rpc_gating_params
-    # Variables used in the scm plugin are expanded when the job is triggered
-    # by user or pr, but not on branch merge.
-    scm:
-        - git:
-            url: $RPC_GATING_REPO
-            branches:
-                - $RPC_GATING_BRANCH
-            wipe-workspace: false
-    wrappers:
-      - credentials-binding:
-          - username-password-separated:
-             credential-id: service_account_jenkins_api_creds
-             username: JENKINS_USER
-             password: JENKINS_API_PASSWORD
-    builders:
-        - shell: |
-            scl enable python27 bash
+    dsl: |
+      node("CentOS"){
+        dir("rpc-gating"){
+          stage('Prepare'){
+            git branch: params.RPC_GATING_BRANCH, url: params.RPC_GATING_REPO
+            common = load 'pipeline_steps/common.groovy'
+            common.create_workspace_venv()
+          }
+          stage('Run JJB'){
+            withCredentials([
+              usernamePassword(
+                credentialsId: "service_account_jenkins_api_creds",
+                usernameVariable: "JENKINS_USER",
+                passwordVariable: "JENKINS_API_PASSWORD"
+              )
+            ]){
+              sh """#!/bin/bash -xe
+                source ../.venv/bin/activate
 
-            if [[ ! -d ".venv" ]]; then
-                virtualenv -p /opt/rh/python27/root/usr/bin/python .venv
-            fi
-            source .venv/bin/activate
-            pip install 'pip==9.0.1'
-            pip install -c constraints.txt jenkins-job-builder
+                cat > jenkins_jobs.ini << EOF
+      [job-builder]
+      ignore_cache=False
+      keep_descriptions=False
+      include_path=.:scripts:~/git/
+      recursive=True
+      exclude=.*manual:./development
+      allow_deplicates=False
 
-            cat > jenkins_jobs.ini << EOF
-            [job-builder]
-            ignore_cache=False
-            keep_descriptions=False
-            include_path=.:scripts:~/git/
-            recursive=True
-            exclude=.*manual:./development
-            allow_deplicates=False
+      [jenkins]
+      url=${JENKINS_URL}
+      EOF
 
-            [jenkins]
-            url=${JENKINS_URL}
-            EOF
+                if [ "$IGNORE_CACHE" = "true" ]; then
+                    JJB_ARGS="--ignore-cache"
+                fi
+                if [ "$DELETE_OLD" = "true" ]; then
+                    UPDATE_ARGS="--delete-old"
+                fi
 
-            if [ "$IGNORE_CACHE" = "true" ]; then
-                JJB_ARGS="--ignore-cache"
-            fi
-            if [ "$DELETE_OLD" = "true" ]; then
-                UPDATE_ARGS="--delete-old"
-            fi
-
-            jenkins-jobs --conf jenkins_jobs.ini \
-                         --user $JENKINS_USER \
-                         --password $JENKINS_API_PASSWORD \
-                         $JJB_ARGS update $UPDATE_ARGS $JOBS
+                jenkins-jobs --conf jenkins_jobs.ini \
+                             --user $JENKINS_USER \
+                             --password $JENKINS_API_PASSWORD \
+                             \$JJB_ARGS update \$UPDATE_ARGS $JOBS
+              """
+            }
+          }
+        }
+      }

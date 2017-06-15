@@ -32,6 +32,7 @@ def webhooks(){
           dir('rpc-gating/playbooks'){
             common.venvPlaybook(
               playbooks: [
+                "slave_security.yml",
                 "webhooks.yml",
               ],
               args: [

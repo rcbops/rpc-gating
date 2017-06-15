@@ -1,30 +1,33 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 
-// Install ansible on a jenkins slave
-def install_ansible(){
+
+def void create_workspace_venv(){
+  print "common.create_workspace_venv"
   sh """#!/bin/bash -xe
     cd ${env.WORKSPACE}
 
+    # Create venv
     if [[ ! -d ".venv" ]]; then
       if ! which virtualenv; then
         pip install virtualenv
       fi
       if which scl
       then
+        # redhat/centos
         source /opt/rh/python27/enable
         virtualenv --python=/opt/rh/python27/root/usr/bin/python .venv
+        # hack the selinux module into the venv
+        cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
       else
         virtualenv .venv
       fi
     fi
 
-    # hack the selinux module into the venv
-    cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
+    # Install Pip
     source .venv/bin/activate
 
     # UG-613 change TMPDIR to directory with more space
-    export PREV_TMPDIR=\$TMPDIR
     export TMPDIR="/var/lib/jenkins/tmp"
 
     # UG-612 Install pip, setuptools, and wheel on the host
@@ -33,17 +36,30 @@ def install_ansible(){
     \${CURL_CMD} https://bootstrap.pypa.io/get-pip.py > \${OUTPUT_FILE} ||\
     \${CURL_CMD} https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py > \${OUTPUT_FILE}
     python \${OUTPUT_FILE} --isolated pip setuptools wheel -c rpc-gating/constraints.txt
-    # Installing pip packages necessary
+
+    # Install rpc-gating requirements
     pip install \
       --isolated \
       -U \
       -c rpc-gating/constraints.txt \
       -r rpc-gating/requirements.txt
+  """
+}
 
-    export TMPDIR=\$PREV_TMPDIR
+def install_ansible_roles(){
+  print "common.install_ansible_roles"
+  sh """#!/bin/bash -xe
+    cd ${env.WORKSPACE}
+    . .venv/bin/activate
     mkdir -p rpc-gating/playbooks/roles
     ansible-galaxy install -r rpc-gating/role_requirements.yml -p rpc-gating/playbooks/roles
   """
+}
+
+// Install ansible on a jenkins slave
+def install_ansible(){
+  create_workspace_venv()
+  install_ansible_roles()
 }
 
 /* Run ansible-playbooks within a venev
@@ -72,7 +88,7 @@ def venvPlaybook(Map args){
         sh """#!/bin/bash -x
           which scl && source /opt/rh/python27/enable
           . ${env.WORKSPACE}/.venv/bin/activate
-          ansible-playbook -v ${args.args.join(' ')} -e@${vars_file} ${playbook}
+          ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
       } //for
     } //color
@@ -248,7 +264,7 @@ def conditionalStep(Map args){
  * Arguments:
  *  string: the string to process
  */
-def acronym(Map args){
+def String acronym(Map args){
   acronym=""
   words=args.string.split("[-_ ]")
   for (def i=0; i<words.size(); i++){
@@ -257,12 +273,17 @@ def acronym(Map args){
   return acronym
 }
 
-def gen_instance_name(){
+def String rand_int_str(max=0xFFFF, base=16){
+  return Integer.toString(Math.abs((new Random()).nextInt(max)), base)
+}
+
+def String gen_instance_name(String prefix="AUTO"){
   if (env.INSTANCE_NAME == "AUTO"){
-    job_name_acronym = common.acronym(string: env.JOB_NAME)
+    if (prefix == "AUTO"){
+      prefix = common.acronym(string: env.JOB_NAME)
+    }
     //4 digit hex string to avoid name colisions
-    rand_str = Integer.toString(Math.abs((new Random()).nextInt(0xFFFF)), 16)
-    instance_name = "${job_name_acronym}-${env.BUILD_NUMBER}-${rand_str}"
+    instance_name = "${prefix}-${env.BUILD_NUMBER}-${rand_int_str()}"
   }
   else {
     instance_name = env.INSTANCE_NAME
@@ -372,7 +393,7 @@ def prepareConfigs(Map args){
       dir("rpc-gating/playbooks"){
         common.install_ansible()
         withCredentials(common.get_cloud_creds()) {
-          List maas_vars = maas.get_maas_token_and_url(env.PUBCLOUD_USERNAME, env.PUBCLOUD_API_KEY)
+          List maas_vars = maas.get_maas_token_and_url()
           withEnv(maas_vars) {
             common.venvPlaybook(
               playbooks: ["aio_config.yml"],

@@ -79,7 +79,7 @@
       - kibana_selenium_params:
           KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_gating_params
-      - single_use_slave_params:
+      - instance_params:
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
           FLAVOR: "onmetal-io1"
           REGION: "IAD"

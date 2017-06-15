@@ -1,6 +1,6 @@
 ---
 - parameter:
-    name: single_use_slave_params
+    name: instance_params
     parameters:
       - string:
           name: REGION
@@ -18,6 +18,38 @@
             Set instance name or "AUTO" to have it generated based on job
             name and build number. Beware the 63 char container name limit
             as container names includes the host name.
+- parameter:
+    name: jenkins_node_params
+    parameters:
+      - string:
+          name: JENKINS_NODE_LABELS
+          default: "{JENKINS_NODE_LABELS}"
+          description: |
+            Number of executors to start on each slave
+      - string:
+          name: JENKINS_NODE_EXECUTORS
+          default: "{JENKINS_NODE_EXECUTORS}"
+          description: |
+            Number of executors to start on each slave
+        # Bool param defaults are converted to lower case :(
+        # https://review.openstack.org/#/c/473828/
+      - bool:
+          name: jenkins_node_exclusive
+          default: "{jenkins_node_exclusive}"
+          description: |
+            Create slave in exclusive mode?
+            An exclusive slave will only be used for jobs that specify its
+            name or labels. A non exclusive node will run jobs that don't
+            specify a name or label. eg node(){{}} blocks. Single use slaves
+            should be exclusive, multi use slaves should not.
+      - bool:
+          name: allow_jenkins_sudo
+          default: "{allow_jenkins_sudo}"
+          description: |
+            Grant the jenkins slave passwordless sudo. This is useful for
+            single use slaves, but must not be set for long running
+            slaves as it will allow jobs to pollute the build environment.
+
 
 - parameter:
     name: rpc_repo_params
@@ -106,3 +138,13 @@
       - string:
           name: "KIBANA_SELENIUM_BRANCH"
           default: "{KIBANA_SELENIUM_BRANCH}"
+
+- parameter:
+    name: rpc_maas_params
+    parameters:
+      - string:
+          name: "RPC_MAAS_REPO"
+          default: "https://github.com/rcbops/rpc-maas"
+      - string:
+          name: "RPC_MAAS_BRANCH"
+          default: "{RPC_MAAS_BRANCH}"

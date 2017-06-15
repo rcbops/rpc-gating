@@ -84,7 +84,7 @@
       - rpc_repo_params:
          RPC_BRANCH: "{branch}"
       - rpc_gating_params
-      - single_use_slave_params:
+      - instance_params:
          IMAGE: "{IMAGE}"
          FLAVOR: "{FLAVOR}"
          REGION: "{REGION}"
