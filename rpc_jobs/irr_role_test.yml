@@ -18,7 +18,7 @@
     # NOTE(cloudnull): Context are used to set the OpenStack series used in the gate.
     context:
       - master:
-          irr_flavor: "general2-15"
+          irr_flavor: "performance2-15"
       - ocata
       - newton
       - mitaka
