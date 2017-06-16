@@ -60,7 +60,7 @@ def maas_utils(List args){
       script: """#!/bin/bash
         cd ${env.WORKSPACE}/rpc-gating/scripts
         . ${env.WORKSPACE}/.venv/bin/activate
-        ./maasutils.py --username ${username} --api-key ${api_key} ${args.join(" ")}
+        ./maasutils.py --username ${env.PUBCLOUD_USERNAME} --api-key ${env.PUBCLOUD_API_KEY} ${args.join(" ")}
       """,
       returnStdout: true
     )
