@@ -28,11 +28,15 @@ def create(Map args){
             ],
             vars: args
           )
-        } // withEnv
-      } // directory
-    } //withCredentials
-  } // withEnv
-} //call
+        }
+        stash (
+          name: "pubcloud_inventory",
+          include: "inventory/hosts"
+        )
+      }
+    }
+  }
+}
 
 
 /* Remove public cloud instances

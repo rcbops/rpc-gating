@@ -62,6 +62,16 @@ def install_ansible(){
   install_ansible_roles()
 }
 
+// check if a venv already exists before running create_workspace_venv
+// useful to avoid re-running venv creation and pip package installation
+def create_workspace_venv_if_doesnt_exist(){
+  dir(WORKSPACE){
+    if (!fileExists('.venv')){
+      create_workspace_venv()
+    }
+  }
+}
+
 /* Run ansible-playbooks within a venev
  * Sadly the standard ansibleplaybook step doesn't allow specifying a custom
  * ansible path. It does allow selection of an ansible tool, but those are
