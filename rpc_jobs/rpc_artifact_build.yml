@@ -16,10 +16,12 @@
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     context:
       - Git
-      - Apt
+      - Apt:
+          allow_concurrent: false
       - Python
       - Container
-      - Pipeline
+      - Pipeline:
+          allow_concurrent: false
     ztrigger:
       - pr:
           CRON: ""
@@ -68,13 +70,14 @@
       Cleanup,
       Destroy Slave
     branch: master
+    allow_concurrent: true
     PUSH_TO_MIRROR: "NO"
     NUM_TO_KEEP: 30
 
     # TEMPLATE
     name: 'RPC-Artifact-Build_{series}-{image}-{context}-{ztrigger}'
     project-type: workflow
-    concurrent: false
+    concurrent: {allow_concurrent}
     properties:
       - build-discarder:
           num-to-keep: "{NUM_TO_KEEP}"
