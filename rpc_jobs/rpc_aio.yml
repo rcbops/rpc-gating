@@ -312,7 +312,6 @@
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
-                deploy.addChecksumRule()
                 maas.deploy()
                 maas.verify()
                 tempest.tempest()
@@ -325,7 +324,6 @@
                   deploy.upgrade_minor(environment_vars: environment_vars)
                 }} else if (env.STAGES.contains("Major Upgrade")) {{
                   deploy.upgrade_major(environment_vars: environment_vars)
-                  deploy.addChecksumRule()
                   maas.deploy()
                   maas.verify()
                   tempest.tempest()

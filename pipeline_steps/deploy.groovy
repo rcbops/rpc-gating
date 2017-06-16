@@ -77,16 +77,4 @@ def upgrade_leapfrog(Map args) {
   upgrade("Leapfrog Upgrade", "leapfrog/ubuntu14-leapfrog.sh", args.environment_vars)
 }
 
-def addChecksumRule(){
-  sh """#!/bin/bash
-    cd /opt/rpc-openstack/rpcd/playbooks
-    ansible neutron_agent \
-      -m command \
-      -a '/sbin/iptables -t mangle -A POSTROUTING -p tcp --sport 80 -j CHECKSUM --checksum-fill'
-    ansible neutron_agent \
-      -m shell \
-      -a 'DEBIAN_FRONTEND=noninteractive apt-get install iptables-persistent'
-  """
-}
-
 return this;
