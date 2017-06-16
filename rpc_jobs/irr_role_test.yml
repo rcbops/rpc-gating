@@ -2,7 +2,7 @@
     name: 'RPC-IRR-Jobs'
     repo:
       # IRR REPOS ARE ADDED HERE
-      - rpc_maas:
+      - rpc-maas:
           irr_repo_url: https://github.com/rcbops/rpc-maas
       - rpc-role-logstash:
           irr_repo_url: https://github.com/rcbops/rpc-role-logstash
@@ -15,8 +15,38 @@
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - trusty:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    # NOTE(cloudnull): Context are used to set the OpenStack series used in the gate.
     context:
-      - base
+      - master:
+          irr_flavor: "general2-15"
+      - ocata
+      - newton
+      - mitaka
+      - liberty
+      - kilo
+    exclude:
+      # NOTE(cloudnull): At present the logstash role only gates on master.
+      - repo: rpc-role-logstash
+        context: ocata
+      - repo: rpc-role-logstash
+        context: newton
+      - repo: rpc-role-logstash
+        context: mitaka
+      - repo: rpc-role-logstash
+        context: liberty
+      - repo: rpc-role-logstash
+        context: kilo
+      # NOTE(cloudnull): The image context is only applied to certain releases.
+      - image: trusty
+        context: master
+      - image: trusty
+        context: ocata
+      - image: xenial
+        context: mitaka
+      - image: xenial
+        context: liberty
+      - image: xenial
+        context: kilo
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
@@ -30,6 +60,8 @@
       Cleanup,
       Destroy Slave
     NUM_TO_KEEP: 30
+    # Flavor name
+    irr_flavor: "general1-8"
     # TEMPLATE
     name: 'RPC-IRR_{repo}-{series}-{image}-{context}'
     project-type: workflow
@@ -43,7 +75,7 @@
       - rpc_gating_params
       - instance_params:
           IMAGE: "{IMAGE}"
-          FLAVOR: "{FLAVOR}"
+          FLAVOR: "{irr_flavor}"
           REGION: "{REGION}"
       - string:
           name: IRR_CONTEXT
@@ -71,7 +103,7 @@
           org-list:
             - rcbops
           github-hooks: true
-          trigger-phrase: '.*recheck_cit_all.*|.*recheck_cit_{repo}_{series}_{image}_{context}.*'
+          trigger-phrase: '.*recheck_cit_{repo}_all.*|.*recheck_cit_{repo}_{series}_{image}_{context}.*'
           only-trigger-phrase: false
           white-list-target-branches:
             - "{branches}"
