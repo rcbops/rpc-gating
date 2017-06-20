@@ -10,3 +10,4 @@ six
 packaging
 appdirs
 rackspace_monitoring
+PyYAML

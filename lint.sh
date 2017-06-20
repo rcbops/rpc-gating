@@ -77,6 +77,20 @@ check_bash(){
   done < <(find ${fargs[@]} -iname \*.sh)
 }
 
+check_naming_standards() {
+  # Limits lint to only gating unique files
+  # Excludes webhooktranslator as it has additional packaging
+  # and it's own tox
+  # Excludes NonCPS.groovy as this filename is required, but
+  # not matching rpc-gating conventions
+  dirs_to_lint="pipeline_steps,rpc_jobs,scripts"
+  exclude_files="NonCPS.groovy"
+  python scripts/lint_naming_conventions.py \
+    --dirs ${dirs_to_lint} --exclude ${exclude_files} \
+    && echo "Naming conventions: OK" \
+    || { echo "Naming conventions: FAIL"; rc=1; }
+}
+
 check_python(){
   flake8 --exclude=.lintvenv,webhooktranslator . \
     && echo "Python syntax ok" \
@@ -96,6 +110,7 @@ check_groovy
 check_ansible
 check_bash
 check_python
+check_naming_standards
 check_webhooktranslator
 
 if [[ $rc == 0 ]]
