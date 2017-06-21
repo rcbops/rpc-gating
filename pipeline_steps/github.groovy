@@ -14,12 +14,13 @@ def create_issue(
     sh """#!/bin/bash -xe
       cd ${env.WORKSPACE}
       . .venv/bin/activate
-      python rpc-gating/scripts/ghutils.py create_issue\
-        --tag '$tag'\
-        --link '$link'\
+      python rpc-gating/scripts/ghutils.py\
         --org '$org'\
         --repo '$repo'\
         --pat '$pat'\
+        create_issue\
+        --tag '$tag'\
+        --link '$link'\
         --label '$label'
     """
   }
@@ -53,10 +54,11 @@ void add_issue_url_to_pr(){
     sh """#!/bin/bash -xe
       cd $env.WORKSPACE
       . .venv/bin/activate
-      python rpc-gating/scripts/ghutils.py add_issue_url_to_pr\
+      python rpc-gating/scripts/ghutils.py\
         --org '$org'\
         --repo '$repo'\
         --pat '$pat'\
+        add_issue_url_to_pr\
         --pull-request-number '$pull_request_number'\
         --issue-key '$issue_key'
     """
