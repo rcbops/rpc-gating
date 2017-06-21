@@ -11,8 +11,8 @@
     allow_jenkins_sudo: "{% set v=lookup('env', 'allow_jenkins_sudo') %}{% if v=='' %}True{% else %}{{v|bool}}{% endif %}"
     jenkins_node_exclusive: "{% set v=lookup('env', 'jenkins_node_exclusive') %}{% if v=='' %}True{% else %}{{v|bool}}{% endif %}"
     # These variables are not booleans so can use the standard default filter
-    jenkins_node_labels: "{% set v=lookup('env', 'JENKINS_NODE_LABELS') %}{% if v=='' %}single_use_slave{% else %}{{v}}{% endif %}"
-    jenkins_node_executors: "{% set v=lookup('env', 'JENKINS_NODE_EXECUTORS') %}{% if v=='' %}2{% else %}{{v}}{% endif %}"
+    jenkins_node_labels: "{{ lookup('env', 'JENKINS_NODE_LABELS')|default('single_use_slave', true) }}"
+    jenkins_node_executors: "{{ lookup('env', 'JENKINS_NODE_EXECUTORS')|default('2', true) }}"
   roles:
     - role: willshersystems.sshd
       sshd:
