@@ -8,6 +8,7 @@ fargs=(. -not -path \*${venv}\* -not -path \*.git\*)
 trap cleanup EXIT
 cleanup(){
   type -t deactivate >/dev/null && deactivate
+  rm -f lint_jjb.ini
 }
 install(){
   which virtualenv >/dev/null \
@@ -24,7 +25,9 @@ check_jjb(){
     || { echo "jenkins-jobs unavailble, please install jenkins-job-builder from pip"
          return
        }
-  jenkins-jobs test -r rpc_jobs >/dev/null \
+  # work around for ip6 issues in docker image used for gating UG-652
+  echo -e "[jenkins]\nurl=http://127.0.0.1:8080" > lint_jjb.ini
+  jenkins-jobs --conf lint_jjb.ini test -r rpc_jobs >/dev/null \
     && echo "JJB Syntax ok" \
     || { echo "JJB Syntax fail"; rc=1; }
 }
