@@ -1,0 +1,44 @@
+- job:
+    name: Test-Internal-Clone
+    project-type: workflow
+    concurrent: true
+    parameters:
+      # Default params are provided by macro, add any extra params, or
+      # params you want to override the defaults for.
+      - instance_params:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          FLAVOR: "performance1-1"
+          REGION: "DFW"
+      - rpc_gating_params
+      - string:
+          name: INTERNAL_GIT_REPO
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Allocate Resources
+              Connect Slave
+              Cleanup
+              Destroy Slave
+
+    dsl: |
+      // CIT Slave node
+      node(){
+        dir("rpc-gating"){
+          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+          pubcloud = load 'pipeline_steps/pubcloud.groovy'
+          common = load 'pipeline_steps/common.groovy'
+        }
+        dir(env.BUILD_ID){
+          dir("test-internal-clone") {
+            git branch: 'master', url: env.INTERNAL_GIT_REPO, credentialsId: 'rpc-jenkins-svc-github-key'
+          }
+          stash includes: 'test-internal-clone/', name: 'test-internal-clone'
+        }
+        pubcloud.runonpubcloud {
+          unstash 'test-internal-clone'
+          sh "ls -al test-internal-clone"
+        } //pubcloud
+      } //cit node
