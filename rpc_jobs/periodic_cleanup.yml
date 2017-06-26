@@ -25,29 +25,58 @@
       - build-discarder:
           days-to-keep: 3
     dsl: |
-      node(){
-        deleteDir()
-        dir("rpc-gating") {
-          stage("Prepare"){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline_steps/common.groovy'
+      // Get list of jenkins slaves
+      @NonCPS
+      def getLongRunningNodes() {
+        return jenkins.model.Jenkins.instance.nodes.grep {
+          // Only return nodes whose name starts with one
+          // of these expressions. Single use slaves won't match
+          // so are filtered out.
+          node -> node.name =~ /^(long-|master|rpc-jenkins-n)/
+        }.collect {
+          // node objects are not serializable so return a list
+          // of names instead :(
+          node -> node.name
+        }
+      }
+
+      // run node cleanups on all nodes
+      def nodes = getLongRunningNodes()
+      def parallel_steps = [:]
+      for (int i=0; i<nodes.size(); i++){
+        nodeName = nodes[i]
+        parallel_steps['node_'+nodeName] = {
+          node(nodeName){
+            stage("Cleanup "+nodeName){
+              deleteDir()
+              dir("rpc-gating") {
+                git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+                common = load 'pipeline_steps/common.groovy'
+                sh "scripts/workspace_cleanup.sh"
+                sh "scripts/tmp_cleanup.sh"
+                sh "scripts/docker_cleanup.sh"
+              }
+            }
           }
-          stage("Cleanup Jenkins Workspaces"){
-            sh "scripts/workspace_cleanup.sh"
-          }
-          stage("Cleanup Jenkins TMP Dir"){
-            sh "scripts/tmp_cleanup.sh"
-          }
-          stage("Cleanup Docker Objects"){
-            sh "scripts/docker_cleanup.sh"
-          }
+        }
+      }
+      parallel parallel_steps
+
+      // run the pubcloud and jenkins node cleanup only on an internal slave
+      node('CentOS'){
+          deleteDir()
+          dir("rpc-gating") {
+            stage("Prepare"){
+              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+              common = load 'pipeline_steps/common.groovy'
+            }
           stage("Docker Build"){
               common.docker_cache_workaround()
               container = docker.build env.BUILD_TAG.toLowerCase()
           }
         }
         container.inside {
-          stage("Checkout"){
+          stage("Docker Checkout"){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
           }
           stage("Public Cloud Cleanup"){
