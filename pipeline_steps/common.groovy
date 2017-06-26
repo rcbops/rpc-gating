@@ -509,8 +509,7 @@ def get_jira_issue_key(repo_path="rpc-openstack"){
       }
     }
     throw new Exception("""
-Attempting to add a comment to the relevant JIRA issue, but a JIRA Issue key
-was not found in any of the commits introduced by ${repo_path}:${ghprbSourceBranch}""")
+No JIRA Issue key was found in any of the commits introduced by ${repo_path}:${ghprbSourceBranch}""")
   }
 }
 
