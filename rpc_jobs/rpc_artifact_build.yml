@@ -71,6 +71,7 @@
       Destroy Slave
     branch: master
     allow_concurrent: true
+    artifacts_flavor: "general1-4"
     PUSH_TO_MIRROR: "NO"
     NUM_TO_KEEP: 30
 
@@ -89,7 +90,7 @@
       - rpc_gating_params
       - instance_params:
          IMAGE: "{IMAGE}"
-         FLAVOR: "{FLAVOR}"
+         FLAVOR: "{artifacts_flavor}"
          REGION: "{REGION}"
       - string:
           name: ANSIBLE_PARAMETERS
