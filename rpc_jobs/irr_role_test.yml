@@ -103,7 +103,7 @@
           org-list:
             - rcbops
           github-hooks: true
-          trigger-phrase: '.*recheck_cit_{repo}_all.*|.*recheck_cit_{repo}_{series}_{image}_{context}.*'
+          trigger-phrase: '.*recheck_cit_all.*|.*recheck_cit_{image}_{context}.*'
           only-trigger-phrase: false
           white-list-target-branches:
             - "{branches}"
