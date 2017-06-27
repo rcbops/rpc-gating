@@ -81,7 +81,13 @@
                     maas_use_api: true,
                     maas_entity_name: instance_name,
                     entity_name: instance_name,
-                    maas_excluded_checks_regex: "disk_utilisation.*"
+                    maas_excluded_checks_regex: "disk_utilisation",
+                    // 5 is the maximum allowed consecutive count
+                    maas_alarm_local_consecutive_count: 5,
+                    maas_memory_used_percentage_warning_threshold: 99.0,
+                    maas_memory_used_percentage_critical_threshold: 99.0,
+                    maas_cpu_idle_percent_avg_warning_threshold: 1.0,
+                    maas_cpu_idle_percent_avg_critical_threshold: 1.0
                   ]
                 ) //venvPlaybook
               } //dir
