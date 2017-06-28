@@ -18,6 +18,7 @@
       - Git
       - Apt:
           allow_concurrent: false
+          PULL_FROM_MIRROR: "NO"
       - Python
       - Container
       - Pipeline:
