@@ -57,6 +57,7 @@
       pip:
         virtualenv: "{{ WHT_VENV_DIR }}"
         name: "{{ WHT_DIR }}"
+        state: forcereinstall
 
     - name: Template webhooktranslator service definition
       template:
@@ -76,6 +77,7 @@
         enabled: yes
         service: webhooktranslator.service
         daemon_reload: yes
+        state: restarted
 
     - name: Load and Enable webhooktranslator systemd socket activator
       systemd:
