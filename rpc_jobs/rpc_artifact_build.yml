@@ -18,6 +18,7 @@
       - Git
       - Apt:
           allow_concurrent: false
+          PULL_FROM_MIRROR: "NO"
       - Python
       - Container
       - Pipeline:
@@ -71,6 +72,7 @@
       Destroy Slave
     branch: master
     allow_concurrent: true
+    PULL_FROM_MIRROR: "YES"
     PUSH_TO_MIRROR: "NO"
     NUM_TO_KEEP: 30
 
@@ -97,7 +99,7 @@
           description: "Change the Ansible parameters for the playbook execution."
       - string:
           name: PULL_FROM_MIRROR
-          default: "YES"
+          default: "{PULL_FROM_MIRROR}"
           description: "Set this to NO to skip downloading existing data from rpc-repo. This may cause the loss of existing artifacts on rpc-repo. USE WITH CAUTION!"
       - string:
           name: REPLACE_ARTIFACTS
