@@ -39,6 +39,8 @@
     series:
       - kilo:
           branch: kilo
+          branches: "newton-14.1.*"
+          UPGRADE_TO_REF: "newton-14.1"
           USER_VARS: |
             tempest_test_sets: 'all'
     context:
@@ -218,8 +220,6 @@
     triggers:
       - timed: "{CRON}"
     parameters:
-      - kibana_selenium_params:
-          KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_gating_params
       - instance_params:
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
@@ -227,6 +227,7 @@
           REGION: "IAD"
       - rpc_repo_params:
           RPC_BRANCH: "{branch}"
+          UPGRADE_TO_REF: "{UPGRADE_TO_REF}"
       - osa_ops_params:
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DEFAULT_KERNEL: "3.13.0-98"
@@ -239,8 +240,7 @@
           name: STAGES
           default: |
             Allocate Resources, Connect Slave, Prepare Multi-Node AIO,
-            Prepare RPC Configs, Deploy RPC w/ Script, Prepare MaaS,
-            Setup MaaS, Verify MaaS, Install Tempest, Tempest Tests, Holland,
+            Prepare RPC Configs, Deploy RPC w/ Script,
             Leapfrog Upgrade, Install Tempest, Tempest Tests, Holland,
             Verify MaaS, Prepare Kibana Selenium, Kibana Tests, Cleanup,
             Destroy Slave
@@ -252,12 +252,6 @@
               Prepare Multi-Node AIO
               Prepare RPC Configs
               Deploy RPC w/ Script
-              Prepare MaaS
-              Setup MaaS
-              Verify MaaS
-              Install Tempest
-              Tempest Tests
-              Holland
               Leapfrog Upgrade
               Install Tempest
               Tempest Tests
@@ -301,28 +295,22 @@
                 ]
             ) // deploy_sh
             multi_node_aio_prepare.multi_node_aio_networking()
+            "maas": {{
+                maas.prepare(instance_name: instance_name)
+                maas.deploy("deploy1")
+            }}
+            //upgrade the repo into UPGRADE_TO_REF branch
+            prepareRpcGit(env.UPGRADE_TO_REF)
+            sh """/bin/bash
+            scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
+            EOF
+            """
+            deploy.upgrade_leapfrog(vm: "deploy1", environment_vars: environment_vars)
             dir("rpc-gating"){{
               // Checkout rpc-gating repo to avoid race conditions in parallel steps
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              sh """/bin/bash
-              scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
-              EOF
               """
             }}
-            parallel(
-              "maas": {{
-                maas.prepare(instance_name: instance_name)
-                maas.deploy("deploy1")
-                maas.verify("deploy1")
-              }},
-              "tempest": {{
-                tempest.tempest("deploy1")
-              }},
-              "holland": {{
-                holland.holland("deploy1")
-              }}
-            ) // parallel
-            deploy.upgrade_leapfrog(vm: "deploy1", environment_vars: environment_vars)
             parallel(
               "maas": {{
                 maas.verify("deploy1")
