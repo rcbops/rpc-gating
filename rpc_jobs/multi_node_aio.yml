@@ -295,10 +295,8 @@
                 ]
             ) // deploy_sh
             multi_node_aio_prepare.multi_node_aio_networking()
-            "maas": {{
-                maas.prepare(instance_name: instance_name)
-                maas.deploy("deploy1")
-            }}
+            maas.prepare(instance_name: instance_name)
+            maas.deploy("deploy1")
             //upgrade the repo into UPGRADE_TO_REF branch
             prepareRpcGit(env.UPGRADE_TO_REF)
             sh """/bin/bash
