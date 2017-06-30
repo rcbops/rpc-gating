@@ -299,7 +299,7 @@
             maas.prepare(instance_name: instance_name)
             maas.deploy("deploy1")
             //upgrade the repo into UPGRADE_TO_REF branch
-            prepareRpcGit(env.UPGRADE_TO_REF)
+            common.prepareRpcGit(env.UPGRADE_TO_REF)
             sh """/bin/bash
             scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
             EOF
