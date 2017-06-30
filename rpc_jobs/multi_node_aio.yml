@@ -302,7 +302,6 @@
             common.prepareRpcGit(env.UPGRADE_TO_REF)
             sh """/bin/bash
             scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
-            EOF
             """
             deploy.upgrade_leapfrog(vm: "deploy1", environment_vars: environment_vars)
             parallel(
