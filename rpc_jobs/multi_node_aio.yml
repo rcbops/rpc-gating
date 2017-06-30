@@ -291,7 +291,8 @@
                 "DEPLOY_ELK=yes",
                 "DEPLOY_TEMPEST=no",
                 "DEPLOY_AIO=no",
-                "DEPLOY_MAAS=no"
+                "DEPLOY_MAAS=no",
+                "FORKS=5"
                 ]
             ) // deploy_sh
             multi_node_aio_prepare.multi_node_aio_networking()
@@ -304,11 +305,6 @@
             EOF
             """
             deploy.upgrade_leapfrog(vm: "deploy1", environment_vars: environment_vars)
-            dir("rpc-gating"){{
-              // Checkout rpc-gating repo to avoid race conditions in parallel steps
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              """
-            }}
             parallel(
               "maas": {{
                 maas.verify("deploy1")

@@ -36,7 +36,7 @@ def deploy_sh(Map args) {
             }
             sh """#!/bin/bash
             sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} \
-              '${export_vars} cd /opt/rpc-openstack; scripts/deploy.sh'
+              '${export_vars} cd /opt/rpc-openstack; FORKS=5; scripts/deploy.sh'
             """
           } // if vm
         } // ansiColor
