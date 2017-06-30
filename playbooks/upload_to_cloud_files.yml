@@ -24,7 +24,7 @@
       no_log: True
       when:
         - description_file is defined
-        - description_file != None
+        - description_file != ""
 
     - name: Create artifact report location if doesn't exist
       file:
