@@ -1,6 +1,7 @@
 def webhooks(){
   instance_name = "WEBHOOK-PROXY"
   pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
+  common.override_inventory()
   try{
     common.conditionalStage(
       stage_name: "Webhooks",

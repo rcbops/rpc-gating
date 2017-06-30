@@ -572,4 +572,31 @@ String get_current_git_sha(String repo_path) {
   return sha
 }
 
+// Create inventory file. Useful for running part of a job against
+// an existing node, where the job expects an inventory file to
+// have been created by the resource allocation step.
+void drop_inventory_file(String content,
+                         String path='rpc-gating/playbooks/inventory/hosts'){
+    dir(env.WORKSPACE){
+      writeFile file: path, text: content
+    }
+}
+
+// Conditional step to drop manually created inventory file
+void override_inventory(){
+  conditionalStep(
+    step_name: "Override Inventory",
+    step:{
+        // This is usually done by the allocate step
+        common.install_ansible()
+        if (env.OVERRIDE_INVENTORY_PATH == null){
+          inventory_path = 'rpc-gating/playbooks/inventory/hosts'
+        } else{
+          inventory_path = env.OVERRIDE_INVENTORY_PATH
+        }
+        drop_inventory_file(env.INVENTORY, inventory_path)
+    }
+  )
+}
+
 return this
