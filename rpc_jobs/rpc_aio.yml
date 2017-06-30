@@ -272,6 +272,11 @@
     dsl: |
       // CIT Slave node
       currentBuild.result = 'SUCCESS'
+      // pass JJB axes through to environment
+      env.SCENARIO = "{scenario}"
+      env.TRIGGER = "{ztrigger}"
+      env.TARGET = "aio"
+      env.ACTION = "{action}"
       timeout(time: 8, unit: 'HOURS'){{
         node() {{
           try {{
