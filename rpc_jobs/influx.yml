@@ -1,0 +1,52 @@
+- job:
+    name: Influx-Setup
+    project-type: workflow
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      # See params.yml
+      - rpc_gating_params
+      - rpc_maas_params:
+          RPC_MAAS_BRANCH: master
+      - instance_params:
+          REGION: IAD
+          FLAVOR: "general1-8"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          INSTANCE_NAME: "INFLUX"
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Connect Slave, Influx"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Override Inventory
+              Allocate Resources
+              Connect Slave
+              Influx
+              Cleanup
+              Destroy Slave
+      - text:
+          name: "INVENTORY"
+          description: |
+            Override inventory. This is useful for reconfiguring the current
+            proxy node instead of building a new one. Should be used with the
+            "Override Inventory" stage insated of Allocate Resources and
+            Connect Slave
+          default: |
+            [job_nodes:children]
+            hosts
+            [log_hosts]
+            node ansible_host=YOUR_IP_HERE
+
+    dsl: |
+      node('CentOS'){
+          dir("rpc-gating"){
+              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+              common = load 'pipeline_steps/common.groovy'
+              pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
+              influx = load 'pipeline_steps/influx.groovy'
+          }
+          influx.setup()
+      } // cit node
