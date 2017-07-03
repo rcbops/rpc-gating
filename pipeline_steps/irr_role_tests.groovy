@@ -20,8 +20,7 @@ def run_irr_tests() {
                   ]
                 ]
               ]) // checkout
-              List maas_vars = maas.get_maas_token_and_url()
-              withEnv(maas_vars) {
+              withCredentials(common.get_cloud_creds()) {
                 sh """#!/bin/bash
                 bash ./run_tests.sh
                 """
