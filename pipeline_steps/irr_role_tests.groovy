@@ -20,9 +20,12 @@ def run_irr_tests() {
                   ]
                 ]
               ]) // checkout
-              sh """#!/bin/bash
-              bash ./run_tests.sh
-              """
+              List maas_vars = maas.get_maas_token_and_url()
+              withEnv(maas_vars) {
+                sh """#!/bin/bash
+                bash ./run_tests.sh
+                """
+              }
             } // dir
           } // ansiColor
         } catch (e) {
