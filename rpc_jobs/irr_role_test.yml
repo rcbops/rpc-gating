@@ -119,7 +119,6 @@
             dir("rpc-gating") {{
               git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
               common = load 'pipeline_steps/common.groovy'
-              maas = load 'pipeline_steps/maas.groovy'
               pubcloud = load 'pipeline_steps/pubcloud.groovy'
               irr_role_tests = load 'pipeline_steps/irr_role_tests.groovy'
             }}
