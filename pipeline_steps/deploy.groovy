@@ -36,7 +36,7 @@ def deploy_sh(Map args) {
             }
             sh """#!/bin/bash
             sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} \
-              '${export_vars} cd /opt/rpc-openstack; scripts/deploy.sh'
+              '${export_vars} cd /opt/rpc-openstack; FORKS=5; scripts/deploy.sh'
             """
           } // if vm
         } // ansiColor
@@ -45,7 +45,7 @@ def deploy_sh(Map args) {
   ) // conditionalStage
 }
 
-def upgrade(String stage_name, String upgrade_script, List env_vars) {
+def upgrade(String stage_name, String upgrade_script, List env_vars, String vm = '') {
   common.conditionalStage(
     stage_name: stage_name,
     stage: {
@@ -55,11 +55,22 @@ def upgrade(String stage_name, String upgrade_script, List env_vars) {
           sh "git reset --hard"
         }
         common.prepareRpcGit()
-        dir("/opt/rpc-openstack"){
-          sh """
-            scripts/$upgrade_script
-          """
-        } // dir
+        if (vm.empty){
+          dir("/opt/rpc-openstack"){
+            sh """
+              scripts/$upgrade_script
+            """
+          } // dir
+        } else {
+            export_vars = ""
+            for ( e in environment_vars ) {
+              export_vars += "export ${e}; "
+            }
+            sh """#!/bin/bash
+            sudo ssh -T -oStrictHostKeyChecking=no ${vm} \
+              '${export_vars} cd /opt/rpc-openstack; scripts/$upgrade_script'
+            """
+          } // if vm
       } // withEnv
     } // stage
   ) // conditionalStage
@@ -74,7 +85,11 @@ def upgrade_major(Map args) {
 }
 
 def upgrade_leapfrog(Map args) {
-  upgrade("Leapfrog Upgrade", "leapfrog/ubuntu14-leapfrog.sh", args.environment_vars)
+  if (!('vm' in args)){
+    upgrade("Leapfrog Upgrade", "leapfrog/ubuntu14-leapfrog.sh", args.environment_vars)
+  } else {
+    upgrade("Leapfrog Upgrade", "leapfrog/ubuntu14-leapfrog.sh", args.environment_vars, args.vm)
+  }
 }
 
 return this;

@@ -34,6 +34,24 @@
       - 'OnMetal-Multi-Node-AIO_{series}-{context}-{trigger}'
       - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
 
+- project:
+    name: 'Leapfrog-Multi-Node-AIO-Jobs'
+    series:
+      - kilo:
+          branch: kilo
+          branches: "newton-14.1.*"
+          UPGRADE_TO_REF: "newton-14.1"
+          USER_VARS: |
+            tempest_test_sets: 'all'
+    context:
+      - trusty:
+          DEFAULT_IMAGE: "14.04.5"
+    trigger:
+      - periodic:
+          CRON: "H H(0-8) * * 1-5"
+    jobs:
+      - 'Leapfrog-OnMetal-Multi-Node-AIO_{series}-{context}-{trigger}'
+
 - job-template:
     name: 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
     project-type: workflow
@@ -182,6 +200,127 @@
             currentBuild.result = 'FAILURE'
             if("{trigger}" == "post-merge"){{
               common.create_jira_issue()
+            }}
+            throw e
+        }} finally {{
+            pubCloudSlave.delPubCloudSlave(instance_name: instance_name)
+            maas.entity_cleanup(instance_name: instance_name)
+            common.delete_workspace()
+        }}
+      }} // cit node
+
+- job-template:
+    name: 'Leapfrog-OnMetal-Multi-Node-AIO_{series}-{context}-{trigger}'
+    project-type: workflow
+    properties:
+      - build-discarder:
+          days-to-keep: 7
+      - rpc-openstack-github
+    concurrent: true
+    triggers:
+      - timed: "{CRON}"
+    parameters:
+      - rpc_gating_params
+      - instance_params:
+          IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+          FLAVOR: "onmetal-io1"
+          REGION: "IAD"
+      - rpc_repo_params:
+          RPC_BRANCH: "{branch}"
+          UPGRADE_TO_REF: "{UPGRADE_TO_REF}"
+      - osa_ops_params:
+          DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
+          DEFAULT_KERNEL: "3.13.0-98"
+          DATA_DISK_DEVICE: "sdb"
+      - text:
+          name: "USER_VARS"
+          default: "{USER_VARS}"
+          description: "OSA/RPC USER_VARS to inject for this build"
+      - string:
+          name: STAGES
+          default: |
+            Allocate Resources, Connect Slave, Prepare Multi-Node AIO,
+            Prepare RPC Configs, Deploy RPC w/ Script,
+            Leapfrog Upgrade, Install Tempest, Tempest Tests, Holland,
+            Verify MaaS, Prepare Kibana Selenium, Kibana Tests, Cleanup,
+            Destroy Slave
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Allocate Resources
+              Connect Slave
+              Prepare Multi-Node AIO
+              Prepare RPC Configs
+              Deploy RPC w/ Script
+              Leapfrog Upgrade
+              Install Tempest
+              Tempest Tests
+              Holland
+              Verify MaaS
+              Prepare Kibana Selenium
+              Kibana Tests
+              Pause (use to hold instance for investigation before cleanup)
+              Cleanup
+              Destroy Slave
+
+    dsl: |
+      node(){{
+        try {{
+          dir("rpc-gating"){{
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
+            common = load 'pipeline_steps/common.groovy'
+            multi_node_aio_prepare = load 'pipeline_steps/multi_node_aio_prepare.groovy'
+            deploy = load 'pipeline_steps/deploy.groovy'
+            maas = load 'pipeline_steps/maas.groovy'
+            tempest = load 'pipeline_steps/tempest.groovy'
+            horizon = load 'pipeline_steps/horizon.groovy'
+            kibana = load 'pipeline_steps/kibana.groovy'
+            holland = load 'pipeline_steps/holland.groovy'
+            github = load 'pipeline_steps/github.groovy'
+          }}
+          instance_name = common.gen_instance_name()
+          pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
+
+          node(instance_name){{
+            multi_node_aio_prepare.prepare()
+            deploy.deploy_sh(
+              vm: "deploy1",
+              environment_vars: [
+                "DEPLOY_HAPROXY=yes",
+                "DEPLOY_ELK=yes",
+                "DEPLOY_TEMPEST=no",
+                "DEPLOY_AIO=no",
+                "DEPLOY_MAAS=no",
+                "FORKS=5"
+                ]
+            ) // deploy_sh
+            multi_node_aio_prepare.multi_node_aio_networking()
+            maas.prepare(instance_name: instance_name)
+            maas.deploy("deploy1")
+            //upgrade the repo into UPGRADE_TO_REF branch
+            common.prepareRpcGit(env.UPGRADE_TO_REF)
+            sh """/bin/bash
+            scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
+            """
+            deploy.upgrade_leapfrog(vm: "deploy1", environment_vars: environment_vars)
+            parallel(
+              "maas": {{
+                maas.verify("deploy1")
+              }},
+              "tempest": {{
+                tempest.tempest("deploy1")
+              }},
+              "holland": {{
+                holland.holland("deploy1")
+              }}
+            ) // parallel
+          }}// public cloud node
+        }} catch (e){{
+            currentBuild.result = 'FAILURE'
+            if("{trigger}" == "post-merge"){{
+              github.create_issue(env.BUILD_TAG,
+                                  env.BUILD_URL)
             }}
             throw e
         }} finally {{

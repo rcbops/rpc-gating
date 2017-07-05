@@ -118,6 +118,10 @@
           name: "UPGRADE_FROM_REF"
           default: "{UPGRADE_FROM_REF}"
           description: "An tag/sha/ref to upgrade from"
+      - string:
+          name: "UPGRADE_TO_REF"
+          default: "{UPGRADE_TO_REF}"
+          description: "An tag/sha/ref to upgrade to"
 
 - parameter:
     name: rpc_gating_params
