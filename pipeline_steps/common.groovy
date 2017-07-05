@@ -504,10 +504,9 @@ def get_jira_issue_key(repo_path="rpc-openstack"){
       print ("Found Jira Issue Key: ${key}")
       return key
     } catch (e){
-      continue
+      throw new Exception("""
+  No JIRA Issue key was found in commit ${repo_path}:${ghprbSourceBranch}""")
     }
-    throw new Exception("""
-No JIRA Issue key was found in commit ${repo_path}:${ghprbSourceBranch}""")
   }
 }
 
