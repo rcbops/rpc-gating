@@ -128,6 +128,7 @@
           dir("rpc-gating"){{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
             pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
+            ssh_slave = load 'pipeline_steps/ssh_slave.groovy'
             common = load 'pipeline_steps/common.groovy'
             multi_node_aio_prepare = load 'pipeline_steps/multi_node_aio_prepare.groovy'
             deploy = load 'pipeline_steps/deploy.groovy'
@@ -139,12 +140,19 @@
             github = load 'pipeline_steps/github.groovy'
           }}
           instance_name = common.gen_instance_name()
+          deploy_node = null
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
 
           node(instance_name){{
             multi_node_aio_prepare.prepare()
+            instance_ip = sh(script: "ip route get 1 | awk '{{print \$NF;exit}}'", returnStdout: true)
+          }} // public cloud node
+
+          deploy_node = "${{instance_name}}-deploy-vm"
+          multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
+
+          node(deploy_node){{
             deploy.deploy_sh(
-              vm: "deploy1",
               environment_vars: [
                 "DEPLOY_HAPROXY=yes",
                 "DEPLOY_ELK=yes",
@@ -160,23 +168,23 @@
             parallel(
               "maas": {{
                 maas.prepare(instance_name: instance_name)
-                maas.deploy("deploy1")
-                maas.verify("deploy1")
+                maas.deploy()
+                maas.verify()
               }},
               "tempest": {{
-                tempest.tempest("deploy1")
+                tempest.tempest()
               }},
               "horizon": {{
                 horizon.horizon_integration()
               }},
               "kibana": {{
-                kibana.kibana(env.KIBANA_SELENIUM_BRANCH, "deploy1")
+                kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
               }},
               "holland": {{
-                holland.holland("deploy1")
+                holland.holland()
               }}
             ) // parallel
-          }}// public cloud node
+          }}// deploy node on public cloud node
         }} catch (e){{
             currentBuild.result = 'FAILURE'
             if("{trigger}" == "post-merge"){{
@@ -186,6 +194,9 @@
         }} finally {{
             pubCloudSlave.delPubCloudSlave(instance_name: instance_name)
             maas.entity_cleanup(instance_name: instance_name)
+            if(deploy_node != null){{
+              ssh_slave.destroy(deploy_node)
+            }}
             common.delete_workspace()
         }}
       }} // cit node

@@ -16,7 +16,7 @@
  * Files:
  *  - playbooks/inventory/hosts
  */
-def connect(){
+def connect(port=22){
   common.conditionalStage(
     stage_name: "Connect Slave",
     stage: {
@@ -43,6 +43,7 @@ def connect(){
               args: [
                 "-i inventory",
                 "--limit job_nodes",
+                "--extra-vars='ansible_port=${port}'",
                 "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
               ]
             )
@@ -55,7 +56,7 @@ def connect(){
 /* Disconnect slave
  * Reads global var: instance_name
  */
-def destroy(){
+def destroy(slave_name){
   common.conditionalStep(
     step_name: 'Destroy Slave',
     step: {
@@ -76,7 +77,7 @@ def destroy(){
               sh """
                 . ${env.WORKSPACE}/.venv/bin/activate
                 python jenkins_node.py \
-                  delete --name "${instance_name}"
+                  delete --name "${slave_name}"
               """
             }
           }

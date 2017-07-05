@@ -115,11 +115,12 @@
               kibana = load 'pipeline_steps/kibana.groovy'
             }}
             dir("rpc-gating/playbooks") {{
-              writeFile file: "inventory/hosts", text: "[job_nodes]\n${{INSTANCE_NAME}} ansible_host=${{INSTANCE_IP}}\n"
+              writeFile file: "inventory/hosts", text: "[job_nodes]\n${{env.INSTANCE_NAME}} ansible_host=${{env.INSTANCE_IP}}\n"
               common.install_ansible()
             }}
             ssh_slave.connect()
-            node(INSTANCE_NAME) {{
+            deploy_node = null
+            node(env.INSTANCE_NAME) {{
               common.conditionalStage(
                 stage_name: 'Prepare HW AIO',
                 stage: {{
@@ -129,8 +130,13 @@
                 }} //stage
               ) //conditionalStage
               multi_node_aio_prepare.prepare()
+            }}
+
+            deploy_node = "${{INSTANCE_NAME}}-deploy-vm"
+            multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
+
+            node(deploy_node) {{
               deploy.deploy_sh(
-                vm: "deploy1",
                 environment_vars: [
                   "DEPLOY_HAPROXY=yes",
                   "DEPLOY_ELK=yes",
@@ -139,21 +145,22 @@
                   "DEPLOY_MAAS=no"
                   ]
               ) // deploy_sh
-              node(){{
-                maas.prepare(instance_name: instance_name)
-                maas.deploy()
-                maas.verify()
-                tempest.tempest("deploy1")
-                kibana.kibana(env.KIBANA_SELENIUM_BRANCH, "deploy1")
-                holland.holland()
-              }}
-              ssh_slave.destroy()
-              maas.entity_cleanup(instance_name: instance_name)
+              maas.prepare(instance_name: instance_name)
+              maas.deploy()
+              maas.verify()
+              tempest.tempest()
+              kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
+              holland.holland()
             }} // hw node
           }} catch (e){{
               print e
               throw e
           }} finally {{
+              ssh_slave.destroy(instance_name)
+              maas.entity_cleanup(instance_name: instance_name)
+              if(deploy_node != null){{
+                ssh_slave.destroy(deploy_node)
+              }}
               common.delete_workspace()
           }} // try
         }} // cit node

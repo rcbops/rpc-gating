@@ -25,14 +25,14 @@ from jenkinsapi.jenkins import Jenkins
 
 
 def create_node(jenkins, host_ip, name, credential_description, executors,
-                exclusive, labels=None, remote_root_dir=None):
+                exclusive, port=22, labels=None, remote_root_dir=None):
     node_dict = {
         "num_executors": executors,
         "remote_fs": remote_root_dir or "/var/lib/jenkins",
         "labels": labels or "",
         "exclusive": exclusive,
         "host": host_ip,
-        "port": 22,
+        "port": port,
         "credential_description": credential_description,
         "retention": "Always",
         "node_description": "{0}".format(host_ip),
@@ -91,6 +91,8 @@ if __name__ == "__main__":
     parser.add_argument("--exclusive",
                         help="Enable exclusive mode for this node",
                         action='store_true')
+    parser.add_argument("--port", help="Port to connect on",
+                        default=22)
     args = parser.parse_args()
 
     j = get_jenkins_client()
@@ -101,6 +103,7 @@ if __name__ == "__main__":
                     executors=args.executors,
                     exclusive=args.exclusive,
                     labels=args.labels,
-                    remote_root_dir=args.remote_dir)
+                    remote_root_dir=args.remote_dir,
+                    port=args.port)
     elif args.action == "delete":
         delete_node(jenkins=j, name=args.name)
