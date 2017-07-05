@@ -7,13 +7,6 @@ def prepare(){
       } else {
         common.prepareRpcGit()
       }
-      // If this branch can prepare its own configs, skip this stage.
-      config_cap_file="${env.WORKSPACE}/rpc-openstack/gating/capabilities/aio_config"
-      if (fileExists(config_cap_file)){
-        print ("Skipping rpc-gating config prep as this is handled in repo."
-               +" Determined by the existence of ${config_cap_file}.")
-        return
-      }
       ansiColor('xterm'){
         dir("/opt/rpc-openstack"){
           withEnv( common.get_deploy_script_env() + [
@@ -26,13 +19,23 @@ def prepare(){
             sh """#!/bin/bash
             scripts/deploy.sh
             """
-          } // env
-        } // dir
-      } // ansiColor
-      common.prepareConfigs(
-        deployment_type: "aio"
-      )
-    } //stage param
+          }
+        }
+      }
+      // If this branch can prepare its own configs, common.prepareConfigs
+      config_cap_file="/opt/rpc-openstack/gating/capabilities/aio_config"
+      if (fileExists(config_cap_file)){
+        print ("Skipping rpc-gating config prep (common.prepareConfigs)"
+               +" as this is handled in repo."
+               +" Determined by the existence of ${config_cap_file}.")
+      } else {
+        print ("${config_cap_file} not found, Deploying config overrides in"
+               + " rpc-gating ")
+        common.prepareConfigs(
+          deployment_type: "aio"
+        )
+      }
+    }
   )
 }
 return this;
