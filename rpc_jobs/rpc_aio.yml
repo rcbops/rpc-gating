@@ -143,11 +143,10 @@
         image: xenial
       - series: mitaka
         image: xenial
-      # Leapfrog upgrades are only run for newton141
+      # Leapfrog upgrades are only run for kilo --> newton141
       # as the upgrade method is not supported for any
       # other target series.
-      - series: kilo
-        action: leapfrogupgrade
+      # the kilo --> newton141 job is triggered by PRs to either branch.
       - series: liberty
         action: leapfrogupgrade
       - series: mitaka
@@ -277,6 +276,7 @@
       env.TRIGGER = "{ztrigger}"
       env.TARGET = "aio"
       env.ACTION = "{action}"
+      env.SERIES = "{series}"
       timeout(time: 8, unit: 'HOURS'){{
         node() {{
           try {{
@@ -291,14 +291,24 @@
               maas = load 'pipeline_steps/maas.groovy'
               kibana = load 'pipeline_steps/kibana.groovy'
             }}
+            // prepare vars for leapfrog upgrade test of changes proposed to kilo
+            // this is a special case as we only usually test upgrades on
+            // changes to the destination branch.
+            if (env.SERIES == "kilo"
+                && env.TRIGGER == "pr"
+                && env.ACTION == "leapfrogupgrade" ){{
+                env.UPGRADE_FROM_REF="origin/pr/${{env.ghprbPullId}}/merge"
+            }}
             // We need to checkout the rpc-openstack repo on the CIT Slave
             // so that we can check whether the patch is a docs-only patch
             // before allocating resources unnecessarily.
-            if (env.STAGES.contains("Minor Upgrade") || env.STAGES.contains("Major Upgrade") || env.STAGES.contains("Leapfrog Upgrade")) {{
+            if (env.STAGES.contains("Minor Upgrade")
+                || env.STAGES.contains("Major Upgrade")
+                || env.STAGES.contains("Leapfrog Upgrade")) {{
               common.prepareRpcGit(env.UPGRADE_FROM_REF, env.WORKSPACE)
             }} else {{
               common.prepareRpcGit("auto", env.WORKSPACE)
-            }} // if
+            }}
             if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
               return
             }}

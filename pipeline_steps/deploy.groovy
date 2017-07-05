@@ -45,7 +45,8 @@ def deploy_sh(Map args) {
   ) // conditionalStage
 }
 
-def upgrade(String stage_name, String upgrade_script, List env_vars) {
+def upgrade(String stage_name, String upgrade_script, List env_vars,
+            String branch = "auto", String dest = "/opt") {
   common.conditionalStage(
     stage_name: stage_name,
     stage: {
@@ -54,7 +55,7 @@ def upgrade(String stage_name, String upgrade_script, List env_vars) {
         dir("/opt/rpc-openstack/openstack-ansible"){
           sh "git reset --hard"
         }
-        common.prepareRpcGit()
+        common.prepareRpcGit(branch, dest)
         dir("/opt/rpc-openstack"){
           sh """
             scripts/$upgrade_script
@@ -74,7 +75,17 @@ def upgrade_major(Map args) {
 }
 
 def upgrade_leapfrog(Map args) {
-  upgrade("Leapfrog Upgrade", "leapfrog/ubuntu14-leapfrog.sh", args.environment_vars)
+  // for a PR to kilo, we don't want to checkout the PR commit at this point
+  // as it's already been used to deploy kilo.
+  branch = "auto"
+  if (env.SERIES == "kilo" && env.TRIGGER == "pr"){
+    branch="newton-14.1"
+  }
+  upgrade("Leapfrog Upgrade",
+          "leapfrog/ubuntu14-leapfrog.sh",
+          args.environment_vars,
+          branch)
+
 }
 
 return this;
