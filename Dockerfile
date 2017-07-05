@@ -1,5 +1,5 @@
 FROM ubuntu
-RUN apt-get update && apt-get install -y groovy2 python-pip build-essential python-dev libssl-dev
+RUN apt-get update && apt-get install -y groovy2 python-pip build-essential python-dev libssl-dev git
 RUN apt-get install -y libffi-dev
 RUN apt-get install -y sudo
 COPY requirements.txt /requirements.txt

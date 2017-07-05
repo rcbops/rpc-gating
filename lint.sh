@@ -107,6 +107,12 @@ check_webhooktranslator(){
     popd
 }
 
+check_jira_issue(){
+  git log --pretty="%B" -1 | grep -P "[a-zA-Z0-9_]+-[1-9][0-9]*" \
+  && echo "Jira issue included in commit pass" \
+  || { echo "Jira issue included in commit fail"; rc=1; }
+}
+
 [[ ${RPC_GATING_LINT_USE_VENV:-yes} == yes ]] && install
 check_jjb
 check_groovy
@@ -115,6 +121,7 @@ check_bash
 check_python
 check_naming_standards
 check_webhooktranslator
+check_jira_issue
 
 if [[ $rc == 0 ]]
 then
