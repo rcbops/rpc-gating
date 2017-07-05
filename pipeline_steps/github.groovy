@@ -33,7 +33,7 @@ def create_issue(
  * Update the description of the current GitHub pull request with a link to
  * the Jira issue.
  */
-void add_issue_url_to_pr(){
+void add_issue_url_to_pr(upstream="upstream"){
   List org_repo = env.ghprbGhRepository.split("/")
   String org = org_repo[0]
   String repo = org_repo[1]
@@ -42,6 +42,11 @@ void add_issue_url_to_pr(){
 
   dir(repo) {
     git branch: env.ghprbSourceBranch, url: env.ghprbAuthorRepoGitUrl
+    sh """#!/bin/bash
+      set -x
+      git remote add ${upstream} https://github.com/${org}/${repo}.git
+      git remote update
+    """
   }
   String issue_key = common.get_jira_issue_key(repo)
 
