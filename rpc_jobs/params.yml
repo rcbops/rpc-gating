@@ -110,6 +110,10 @@
           name: "DEPLOY_ELK"
           default: "{DEPLOY_ELK}"
           description: "Deploy ELK? yes/no"
+      - string:
+          name: "DEPLOY_SUPPORT_ROLE"
+          default: "{DEPLOY_SUPPORT_ROLE}"
+          description: "Deploy support role? yes/no"
       - text:
           name: "USER_VARS"
           default: "{USER_VARS}"
