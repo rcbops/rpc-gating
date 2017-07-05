@@ -37,7 +37,7 @@ def setup(){
           }
           dir('rpc-maas'){
             git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
-            sh """
+            sh """#!/bin/bash
               export INVENTORY="${env.WORKSPACE}/inventory/hosts"
               if ! grep log_hosts $INVENTORY; then
                   echo [log_hosts:children] >> $INVENTORY
