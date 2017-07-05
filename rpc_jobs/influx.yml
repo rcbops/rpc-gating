@@ -16,6 +16,11 @@
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           INSTANCE_NAME: "INFLUX"
       - string:
+          name: FIREWALL_OPEN_PORTS
+          default: "8086, 8088, 8083, 8089"
+          description: |
+            Open Ports on the firewall
+      - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Influx"
           description: |
