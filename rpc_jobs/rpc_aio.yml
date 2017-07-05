@@ -6,10 +6,6 @@
       - kilo:
           branch: kilo
           branches: "kilo.*"
-          # There's no kilo branch on [1], but liberty-12.2 branch seems to
-          # work OK.
-          # [1] https://github.com/rcbops-qe/kibana-selenium.git
-          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
           DEPLOY_TELEGRAF: "yes"
       - liberty:
           branch: liberty-12.2
@@ -60,8 +56,13 @@
       # working well, additional stages may be added.
       - leapfrogupgrade:
           ACTION_STAGES: >-
+            Leapfrog Upgrade,
+            Setup MaaS,
+            Verify MaaS,
             Install Tempest,
-            Leapfrog Upgrade
+            Tempest Tests,
+            Prepare Kibana Selenium,
+            Kibana Tests
           GENERATE_TEST_NETWORKS: "6"
           GENERATE_TEST_SERVERS: "4"
           GENERATE_TEST_VOLUMES: "12"
@@ -298,6 +299,16 @@
               maas = load 'pipeline_steps/maas.groovy'
               kibana = load 'pipeline_steps/kibana.groovy'
             }}
+            // This sets kibana_branch based on STAGES
+            // Note that we do this before the block below since
+            // env.UPGRADE_FROM_ENV gets overwritten
+            if (env.STAGES.contains("Minor Upgrade")
+                || env.STAGES.contains("Major Upgrade")
+                || env.STAGES.contains("Leapfrog Upgrade")) {{
+              kibana_branch = env.UPGRADE_FROM_REF
+            }} else {{
+              kibana_branch = env.KIBANA_SELENIUM_BRANCH
+            }}
             // prepare vars for leapfrog upgrade test of changes proposed to kilo
             // this is a special case as we only usually test upgrades on
             // changes to the destination branch.
@@ -338,9 +349,6 @@
                 maas.deploy()
                 maas.verify()
                 tempest.tempest()
-                // TODO(odyssey4me):
-                // Adjust this if selenium tests are ever used for minor/leapfrog upgrades
-                kibana_branch = env.STAGES.contains("Major Upgrade") ? env.UPGRADE_FROM_REF : env.KIBANA_SELENIUM_BRANCH
                 kibana.kibana(kibana_branch)
                 holland.holland()
                 if (env.STAGES.contains("Minor Upgrade")) {{
@@ -354,6 +362,10 @@
                   holland.holland()
                 }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
                   deploy.upgrade_leapfrog(environment_vars: environment_vars)
+                  maas.deploy()
+                  maas.verify()
+                  tempest.tempest()
+                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                 }}
               }} catch (e) {{
                 print(e)
