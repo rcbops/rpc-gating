@@ -1,0 +1,11 @@
+- name: Secure Slave
+  hosts: job_nodes
+  user: root
+  vars:
+    ports_whitelist: "{{ lookup('env', 'FIREWALL_OPEN_PORTS') }}"
+  tasks:
+    - name: Whitelist ports
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+      with_items: "[ {{ ports_whitelist }} ]"
