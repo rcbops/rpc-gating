@@ -42,7 +42,8 @@ void add_issue_url_to_pr(upstream="upstream"){
 
   dir(repo) {
     git branch: env.ghprbSourceBranch, url: env.ghprbAuthorRepoGitUrl
-    sh """#!/usr/bin/env bash
+    sh """#!/bin/bash
+      set -x
       git remote add ${upstream} https://github.com/${org}/${repo}.git
       git remote update
     """
