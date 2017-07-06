@@ -1,5 +1,5 @@
 def setup(){
-  instance_name = "INFLUX"
+  instance_name = common.gen_instance_name("influx")
   pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
   common.override_inventory()
   try{
@@ -14,6 +14,14 @@ def setup(){
           string(
             credentialsId: "SSH_IP_ADDRESS_WHITELIST",
             variable: "SSH_IP_ADDRESS_WHITELIST"
+          ),
+          string(
+            credentialsId: "INFLUX_METRIC_PASSWORD",
+            variable: "INFLUX_METRIC_PASSWORD"
+          ),
+          string(
+            credentialsId: "INFLUX_ROOT_PASSWORD",
+            variable: "INFLUX_ROOT_PASSWORD"
           ),
         ]){
           dir('rpc-gating'){
@@ -42,7 +50,9 @@ def setup(){
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
             ],
             vars: [
-              WORKSPACE: "${env.WORKSPACE}",
+              WORKSPACE: env.WORKSPACE,
+              influxdb_db_root_password: env.INFLUX_ROOT_PASSWORD,
+              influxdb_db_metric_password: env.INFLUX_METRIC_PASSWORD
             ]
           )
         }

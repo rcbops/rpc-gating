@@ -20,6 +20,24 @@
       retries: 120
       delay: 60
 
+    - name: Display rax output on failure
+      debug:
+        var: rax
+      when:
+        - rax.success|length < count
+
+    - name: Fail on duplicate instance
+      fail:
+        msg: |
+          While nova allows multiple instances with the same name,
+          the ansible rax module will not create an instance if one
+          with the requested name already exists. Please create
+          instances with unique names, using the common.gen_instance_name
+          function
+      when:
+        - rax.success|length < count
+        - rax.instances|length == count
+
     - name: Fail if the required number of instances aren't available
       fail:
         msg: "At least one public cloud instance failed to start :("
@@ -32,7 +50,9 @@
           hosts
 
           [hosts]
-          {% for instance in rax.success %} {{instance.name}} ansible_host={{instance.accessIPv4}}{% endfor %}
+          {% for instance in rax.success %}
+          {{instance.name}} ansible_host={{instance.accessIPv4}} ansible_user=root
+          {% endfor %}
         dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory/hosts'
 
     - name: Wait for SSH to be available on all hosts

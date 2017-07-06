@@ -14,7 +14,6 @@
           REGION: IAD
           FLAVOR: "general1-8"
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-          INSTANCE_NAME: "INFLUX"
       - string:
           name: FIREWALL_OPEN_PORTS
           default: "8086, 8088, 8083, 8089"
