@@ -16,51 +16,37 @@ def setup(){
             variable: "SSH_IP_ADDRESS_WHITELIST"
           ),
         ]){
-          dir(WORKSPACE){
-            unstash "pubcloud_inventory"
-          }
           dir('rpc-gating'){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common.venvPlaybook(
-              playbooks: [
-                "playbooks/slave_security.yml",
-              ],
-              args: [
-                "-i ${env.WORKSPACE}/inventory",
-                "--limit job_nodes",
-                "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
-              ],
-              vars: [
-                WORKSPACE: "${env.WORKSPACE}",
-              ]
-            )
           }
           dir('rpc-maas'){
             git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
             sh """#!/bin/bash
               export INVENTORY="${env.WORKSPACE}/inventory/hosts"
+              mkdir -p \$(dirname \$INVENTORY)
+              cp ${env.WORKSPACE}/rpc-gating/playbooks/inventory/hosts \$INVENTORY
               if ! grep log_hosts \$INVENTORY; then
                   echo [log_hosts:children] >> \$INVENTORY
                   echo job_nodes >> \$INVENTORY
               fi
             """
-            // Run playbooks
-            common.venvPlaybook(
-              playbooks: [
-                "playbooks/maas-tigkstack-influxdb.yml",
-              ],
-              args: [
-                "-i ${env.WORKSPACE}/inventory",
-                "--limit job_nodes",
-                "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
-              ],
-              vars: [
-                WORKSPACE: "${env.WORKSPACE}"
-              ]
-            ) //venvPlaybook
-          } //dir
-        } //withCredentials
-      }) //conditionalStage
+          }
+          common.venvPlaybook(
+            playbooks: [
+              "rpc-gating/playbooks/slave_security.yml",
+              "rpc-maas/playbooks/maas-tigkstack-influxdb.yml",
+            ],
+            args: [
+              "-i ${env.WORKSPACE}/inventory",
+              "--limit job_nodes",
+              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
+            ],
+            vars: [
+              WORKSPACE: "${env.WORKSPACE}",
+            ]
+          )
+        }
+      })
   } catch (e){
     print(e)
     throw e
