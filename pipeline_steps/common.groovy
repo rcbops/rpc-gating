@@ -98,6 +98,7 @@ def venvPlaybook(Map args){
         sh """#!/bin/bash -x
           which scl && source /opt/rh/python27/enable
           . ${env.WORKSPACE}/.venv/bin/activate
+          export ANSIBLE_HOST_KEY_CHECKING=False
           ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
       } //for
