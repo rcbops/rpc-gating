@@ -47,11 +47,12 @@
 
     dsl: |
       node('CentOS'){
-          dir("rpc-gating"){
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
-              pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
-              influx = load 'pipeline_steps/influx.groovy'
-          }
-          influx.setup()
+        deleteDir()
+        dir("rpc-gating"){
+            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            common = load 'pipeline_steps/common.groovy'
+            pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
+            influx = load 'pipeline_steps/influx.groovy'
+        }
+        influx.setup()
       } // cit node
