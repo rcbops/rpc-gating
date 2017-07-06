@@ -56,7 +56,11 @@
       # working well, additional stages may be added.
       - leapfrogupgrade:
           ACTION_STAGES: >-
+            Install Tempest,
             Leapfrog Upgrade
+          GENERATE_TEST_NETWORKS: "6"
+          GENERATE_TEST_SERVERS: "4"
+          GENERATE_TEST_VOLUMES: "12"
       # A minimum set of stages is chosen deliberately
       # to test the convergance of the upgrade itself
       # without additional complexity. Once this is
@@ -234,6 +238,10 @@
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
               Destroy Slave
+      - generate_test_params:
+          GENERATE_TEST_NETWORKS: "{GENERATE_TEST_NETWORKS}"
+          GENERATE_TEST_SERVERS: "{GENERATE_TEST_SERVERS}"
+          GENERATE_TEST_VOLUMES: "{GENERATE_TEST_VOLUMES}"
     triggers:
       - timed: "{CRON}"
       - github-pull-request:

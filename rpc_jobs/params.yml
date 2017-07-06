@@ -152,3 +152,16 @@
       - string:
           name: "RPC_MAAS_BRANCH"
           default: "{RPC_MAAS_BRANCH}"
+
+- parameter:
+    name: generate_test_params
+    parameters:
+      - string:
+          name: "GENERATE_TEST_NETWORKS"
+          default: "{GENERATE_TEST_NETWORKS}"
+      - string:
+          name: "GENERATE_TEST_SERVERS"
+          default: "{GENERATE_TEST_SERVERS}"
+      - string:
+          name: "GENERATE_TEST_VOLUMES"
+          default: "{GENERATE_TEST_VOLUMES}"
