@@ -469,7 +469,7 @@ def is_doc_update_pr(git_dir) {
       def rc = sh(
         script: """#!/bin/bash
           set -xeu
-          git status 
+          git status
           git show --stat=400,400 | awk '/\\|/{print \$1}' \
             | egrep -v -e '.*md\$' -e '.*rst\$' -e '^releasenotes/'
         """,
@@ -494,23 +494,21 @@ def is_doc_update_pr(git_dir) {
  * builder and so can only be used for PR triggered jobs
  */
 def get_jira_issue_key(repo_path="rpc-openstack"){
-  def key_regex = "^[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"
+  def key_regex = "[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"
   dir(repo_path){
-    commit_titles = sh(
+    commits = sh(
       returnStdout: true,
-      script: "git log --pretty=%s origin/${ghprbTargetBranch}..${ghprbSourceBranch}").split('\n')
-    print("looking for Jira issue keys in the following commits: ${commit_titles}")
-    for (def i=0; i<=commit_titles.size(); i++){
-      try{
-        key = (commit_titles[i] =~ key_regex)[0]
-        print ("Found Jira Issue Key: ${key}")
-        return key
-      } catch (e){
-        continue
-      }
+      script: """
+        git log --pretty=%B upstream/${ghprbTargetBranch}..${ghprbSourceBranch}""")
+    print("looking for Jira issue keys in the following commits: ${commits}")
+    try{
+      key = (commits =~ key_regex)[0]
+      print ("First Found Jira Issue Key: ${key}")
+      return key
+    } catch (e){
+      throw new Exception("""
+  No JIRA Issue key were found in commits ${repo_path}:${ghprbSourceBranch}""")
     }
-    throw new Exception("""
-No JIRA Issue key was found in any of the commits introduced by ${repo_path}:${ghprbSourceBranch}""")
   }
 }
 
