@@ -6,17 +6,10 @@
       - kilo:
           branch: kilo
           branches: "kilo.*"
-          STAGES: >-
-            Allocate Resources,
-            Connect Slave,
-            Prepare Deployment,
-            Deploy RPC w/ Script,
-            Setup MaaS,
-            Install Tempest,
-            Tempest Tests,
-            Holland,
-            Cleanup,
-            Destroy Slave
+          # There's no kilo branch on [1], but liberty-12.2 branch seems to
+          # work OK.
+          # [1] https://github.com/rcbops-qe/kibana-selenium.git
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
       - liberty:
           branch: liberty-12.2
           branches: "liberty-.*"
@@ -40,49 +33,37 @@
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     action:
-      - deploy
+      - deploy:
+          ACTION_STAGES: >-
+            Setup MaaS,
+            Verify MaaS,
+            Install Tempest,
+            Tempest Tests,
+            Prepare Kibana Selenium,
+            Kibana Tests
       - majorupgrade:
-          STAGES: >-
-            Allocate Resources,
-            Connect Slave,
-            Prepare Deployment,
-            Deploy RPC w/ Script,
+          ACTION_STAGES: >-
             Setup MaaS,
             Verify MaaS,
             Install Tempest,
             Tempest Tests,
             Prepare Kibana Selenium,
             Kibana Tests,
-            Holland,
-            Major Upgrade,
-            Cleanup,
-            Destroy Slave
+            Major Upgrade
       # A minimum set of stages is chosen deliberately
       # to test the convergance of the upgrade itself
       # without additional complexity. Once this is
       # working well, additional stages may be added.
       - leapfrogupgrade:
-          STAGES: >-
-            Allocate Resources,
-            Connect Slave,
-            Prepare Deployment,
-            Deploy RPC w/ Script,
-            Leapfrog Upgrade,
-            Cleanup,
-            Destroy Slave
+          ACTION_STAGES: >-
+            Leapfrog Upgrade
       # A minimum set of stages is chosen deliberately
       # to test the convergance of the upgrade itself
       # without additional complexity. Once this is
       # working well, additional stages may be added.
       - minorupgrade:
-          STAGES: >-
-            Allocate Resources,
-            Connect Slave,
-            Prepare Deployment,
-            Deploy RPC w/ Script,
-            Minor Upgrade,
-            Cleanup,
-            Destroy Slave
+          ACTION_STAGES: >-
+            Minor Upgrade
           UPGRADE_FROM_REF: "r14.0.0"
     scenario:
       - swift
@@ -107,6 +88,9 @@
       - periodic:
           branches: "do_not_build_on_pr"
           NUM_TO_KEEP: 10
+          TRIGGER_STAGES: >-
+            Holland
+          DEPLOY_SUPPORT_ROLE: "yes"
     exclude:
       # Minor upgrades are only being executed
       # for newton140->newton141 for now until
@@ -186,20 +170,15 @@
 
 - job-template:
     # DEFAULTS
-    STAGES: >-
+    DEFAULT_STAGES: >-
       Allocate Resources,
       Connect Slave,
       Prepare Deployment,
       Deploy RPC w/ Script,
-      Setup MaaS,
-      Verify MaaS,
-      Install Tempest,
-      Tempest Tests,
-      Prepare Kibana Selenium,
-      Kibana Tests,
-      Holland,
       Cleanup,
       Destroy Slave
+    ACTION_STAGES: ""
+    TRIGGER_STAGES: ""
     branch: master
     NUM_TO_KEEP: 30
     IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
@@ -221,6 +200,7 @@
          DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
          DEPLOY_CEPH: "{DEPLOY_CEPH}"
          DEPLOY_ELK: "{DEPLOY_ELK}"
+         DEPLOY_SUPPORT_ROLE: "{DEPLOY_SUPPORT_ROLE}"
          USER_VARS: |
            {CONTEXT_USER_VARS}
            {SERIES_USER_VARS}
@@ -233,7 +213,7 @@
          REGION: "{REGION}"
       - string:
           name: STAGES
-          default: "{STAGES}"
+          default: "{DEFAULT_STAGES}, {ACTION_STAGES}, {TRIGGER_STAGES}"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
@@ -324,6 +304,7 @@
                   "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
                   "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
                   "DEPLOY_ELK=${{DEPLOY_ELK}}",
+                  "DEPLOY_SUPPORT_ROLE=${{DEPLOY_SUPPORT_ROLE}}",
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
