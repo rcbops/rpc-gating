@@ -39,7 +39,8 @@ def setup(){
             args: [
               "-i ${env.WORKSPACE}/inventory",
               "--limit job_nodes",
-              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
+              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+              "-e @rpc-maas/tests/user_rpcm_secrets.yml"
             ],
             vars: [
               WORKSPACE: "${env.WORKSPACE}",
