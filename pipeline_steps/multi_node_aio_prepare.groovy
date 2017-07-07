@@ -1,3 +1,82 @@
+void add_nodes() {
+  sh """#!/usr/bin/env python
+from itertools import chain
+import json
+
+def get_next_octet(start=1, end=255, used=None):
+    if not used:
+        used = set()
+
+    for i in range(start, end):
+        i = str(i)
+        if i not in used:
+            used.add(i)
+            yield i
+
+def add_nodes(config, base_name, number, octets):
+    start = len(config) + 1
+    end = start + number
+    for i in range(start, end):
+        name = "{}{}".format(base_name, i)
+        config[name] = next(octets)
+
+def add_additional_nodes(compute=0, volume=0):
+
+    config = {
+       "infra": {
+            "infra1": "100",
+            "infra2": "101",
+            "infra3": "102"
+       },
+       "logging": {
+           "logging1": "110"
+       },
+       "nova_compute": {
+       },
+       "cinder": {
+       },
+       "swift": {
+           "swift1": "140",
+           "swift2": "141",
+           "swift3": "142"
+       },
+       "deploy": {
+           "deploy1":"150"
+       }
+    }
+
+    used = set(chain(*(v.values() for v in config.values())))
+    octets = get_next_octet(start=100, end=200, used=used)
+
+    add_nodes(
+        config=config["nova_compute"],
+        base_name="compute",
+        number=compute,
+        octets=octets
+    )
+    add_nodes(
+        config=config["cinder"],
+        base_name="cinder",
+        number=volume,
+        octets=octets
+    )
+
+    return config
+
+if __name__ == "__main__":
+    with open("hosts.json", "w") as f:
+        f.write(
+            json.dumps(
+                add_additional_nodes(
+                    compute=${env.COMPUTE_NODES}, volume=${env.VOLUME_NODES}
+                ),
+                indent=4,
+                sort_keys=True,
+            )
+        )
+"""
+}
+
 def prepare() {
   common.conditionalStage(
     stage_name: 'Prepare Multi-Node AIO',
@@ -13,6 +92,8 @@ def prepare() {
       }
       dir("openstack-ansible-ops/${env.MULTI_NODE_AIO_DIR}") {
         timeout(time: 45, unit: "MINUTES") {
+          add_nodes()
+          env.MNAIO_ENTITIES = maas.get_mnaio_entity_names()
           common.run_script(
             script: 'build.sh',
             environment_vars: [

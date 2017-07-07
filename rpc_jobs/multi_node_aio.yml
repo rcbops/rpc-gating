@@ -60,18 +60,26 @@
           GENERATE_TEST_NETWORKS: "0"
           GENERATE_TEST_SERVERS: "0"
           GENERATE_TEST_VOLUMES: "0"
+          COMPUTE_NODES: "2"
+          VOLUME_NODES: "2"
       - small:
           GENERATE_TEST_NETWORKS: "20"
           GENERATE_TEST_SERVERS: "20"
           GENERATE_TEST_VOLUMES: "8"
+          COMPUTE_NODES: "2"
+          VOLUME_NODES: "2"
       - medium:
           GENERATE_TEST_NETWORKS: "50"
           GENERATE_TEST_SERVERS: "50"
           GENERATE_TEST_VOLUMES: "20"
+          COMPUTE_NODES: "5"
+          VOLUME_NODES: "2"
       - large:
           GENERATE_TEST_NETWORKS: "100"
           GENERATE_TEST_SERVERS: "100"
           GENERATE_TEST_VOLUMES: "40"
+          COMPUTE_NODES: "10"
+          VOLUME_NODES: "2"
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
@@ -229,6 +237,14 @@
           GENERATE_TEST_NETWORKS: "{GENERATE_TEST_NETWORKS}"
           GENERATE_TEST_SERVERS: "{GENERATE_TEST_SERVERS}"
           GENERATE_TEST_VOLUMES: "{GENERATE_TEST_VOLUMES}"
+      - string:
+          name: "COMPUTE_NODES"
+          default: "{COMPUTE_NODES}"
+          description: "The number of compute nodes to deploy."
+      - string:
+          name: "VOLUME_NODES"
+          default: "{VOLUME_NODES}"
+          description: "The number of volume nodes to deploy."
 
     dsl: |
       common.shared_slave(){{
