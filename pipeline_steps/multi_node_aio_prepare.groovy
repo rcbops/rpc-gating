@@ -9,11 +9,6 @@ def prepare() {
       }
       dir("openstack-ansible-ops/${env.MULTI_NODE_AIO_DIR}") {
         timeout(time: 45, unit: "MINUTES") {
-          sh """
-          sed -i "s,<memory unit='GiB'>1,<memory unit='GiB'>8," templates/vmnode-config/deploy.openstackci.local.xml
-          sed -i "s,<currentMemory unit='GiB'>1,<currentMemory unit='GiB'>8," templates/vmnode-config/deploy.openstackci.local.xml
-          sed -i "s,<vcpu placement='static'>1,<vcpu placement='static'>10," templates/vmnode-config/deploy.openstackci.local.xml
-          """
           common.run_script(
             script: 'build.sh',
             environment_vars: [
@@ -34,7 +29,9 @@ def prepare() {
               "PRE_CONFIG_OSA=true",
               "RUN_OSA=false",
               "DATA_DISK_DEVICE=${env.DATA_DISK_DEVICE}",
-              "CONFIG_PREROUTING=false"]
+              "CONFIG_PREROUTING=true",
+              "OSA_PORTS=6080 6082 443 80 8443",
+              ]
           ) //run_script
         } //timeout
       } // dir
@@ -67,29 +64,6 @@ EOF
       """
     } //stage
   ) //conditionalStage
-}
-
-/*
- * Post-deploy networking configuration
- */
-def multi_node_aio_networking(){
-  common.conditionalStep(
-    step_name: "Deploy RPC w/ Script",
-    step: {
-      dir("openstack-ansible-ops") {
-        git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
-      }
-      dir("openstack-ansible-ops/${env.MULTI_NODE_AIO_DIR}") {
-        common.run_script(
-          script: 'config-deploy-node.sh',
-          environment_vars: [
-            "DEPLOY_OSA=false",
-            "OSA_PORTS=6080 6082 443 80 8443",
-            "CONFIG_PREROUTING=true"]
-        )
-      }
-    }
-  )
 }
 
 return this;

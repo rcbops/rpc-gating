@@ -139,7 +139,6 @@
                   "DEPLOY_MAAS=no"
                   ]
               ) // deploy_sh
-              multi_node_aio_prepare.multi_node_aio_networking()
               node(){{
                 maas.prepare(instance_name: instance_name)
                 maas.deploy()
