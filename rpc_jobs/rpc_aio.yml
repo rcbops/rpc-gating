@@ -348,6 +348,9 @@
                 print(e)
                 currentBuild.result = 'FAILURE'
                 throw e
+                if (TRIGGER == 'periodic'){{
+                  common.create_jira_issue(project="RO")
+                }}
               }} finally {{
                 common.archive_artifacts()
                 common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
