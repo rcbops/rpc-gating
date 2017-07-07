@@ -9,8 +9,7 @@ def prepare(){
       }
       ansiColor('xterm'){
         dir("/opt/rpc-openstack"){
-          withEnv( common.get_deploy_script_env()
-                   +  maas.get_maas_token_and_url() + [
+          withEnv( common.get_deploy_script_env() + [
             "DEPLOY_AIO=yes",
             "DEPLOY_OA=no",
             "DEPLOY_SWIFT=${env.DEPLOY_SWIFT}",
