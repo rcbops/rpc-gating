@@ -143,6 +143,9 @@
           deploy_node = null
           pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
 
+          // Adds maas token and url to environment
+          // without adding another level of nesting
+          maas.add_maas_env_vars()
           node(instance_name){{
             multi_node_aio_prepare.prepare()
             instance_ip = sh(script: "ip route get 1 | awk '{{print \$NF;exit}}'", returnStdout: true)
