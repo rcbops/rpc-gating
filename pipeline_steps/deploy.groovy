@@ -29,22 +29,11 @@ def deploy_sh(Map args) {
       ]){
         withEnv(environment_vars) {
           ansiColor('xterm') {
-            if (!('vm' in args)){
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/deploy.sh
-                """
-              } // dir
-            } else {
-              export_vars = ""
-              for ( e in environment_vars ) {
-                export_vars += "export ${e}; "
-              }
+            dir("/opt/rpc-openstack/") {
               sh """#!/bin/bash
-              sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} \
-                '${export_vars} cd /opt/rpc-openstack; scripts/deploy.sh'
+              scripts/deploy.sh
               """
-            } // if vm
+            } // dir
           } // ansiColor
         } // withEnv
       } //withCredentials
