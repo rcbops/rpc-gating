@@ -10,6 +10,7 @@
           # work OK.
           # [1] https://github.com/rcbops-qe/kibana-selenium.git
           KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          DEPLOY_TELEGRAF: "yes"
       - liberty:
           branch: liberty-12.2
           branches: "liberty-.*"
@@ -20,13 +21,16 @@
       - newton140:
           branch: newton-14.0
           branches: "newton-14.0.*"
+          DEPLOY_TELEGRAF: "yes"
       - newton141:
           branch: newton-14.1
           branches: "newton-14.1.*"
           UPGRADE_FROM_REF: "kilo"
+          DEPLOY_TELEGRAF: "yes"
       - master:
           branch: master
           branches: "master"
+          DEPLOY_TELEGRAF: "yes"
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
