@@ -154,14 +154,23 @@
       # kilo builds is for the leapfrog upgrade tests.
       - series: kilo
         scenario: ceph
+      # Ceph cluster builds are not supported for
+      # newton. In the future ceph will be a supported
+      # scenario for newton onwards, but it will only
+      # consume the cluster, not deploy it. At that
+      # time the scenario can be added back again.
+      - series: newton140
+        scenario: ceph
+      - series: newton141
+        scenario: ceph
       # Ceph builds are not tested for leapfrog upgrades
       # at this time due to the failure for ceph to
       # install on kilo.
       - action: leapfrogupgrade
         scenario: ceph
       # Ceph builds are not run for Xenial at this time
-      # as ceph deployment is not supported for
-      # newton (yet).
+      # as ceph cluster deployment is not supported for
+      # Xenial using RPC-O.
       - image: xenial
         scenario: ceph
       # Trusty builds are not executed for master
