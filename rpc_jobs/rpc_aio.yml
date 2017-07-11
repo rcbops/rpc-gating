@@ -168,6 +168,12 @@
       # install on kilo.
       - action: leapfrogupgrade
         scenario: ceph
+      # Ceph builds are not tested for minor upgrades
+      # at this time due to the minor upgrades only being
+      # targeted at newton or above, which do not support
+      # the ceph scenario.
+      - action: minorupgrade
+        scenario: ceph
       # Ceph builds are not run for Xenial at this time
       # as ceph cluster deployment is not supported for
       # Xenial using RPC-O.
