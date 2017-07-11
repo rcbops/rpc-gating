@@ -2,7 +2,11 @@ def prepare() {
   common.conditionalStage(
     stage_name: 'Prepare Multi-Node AIO',
     stage: {
-      common.prepareRpcGit(env.RPC_BRANCH)
+      if (env.STAGES.contains("Leapfrog Upgrade")) {
+        common.prepareRpcGit(env.UPGRADE_FROM_REF, "/opt")
+      } else {
+        common.prepareRpcGit("auto", "/opt")
+      }
       String osa_commit = common.get_current_git_sha("/opt/rpc-openstack/openstack-ansible")
       dir("openstack-ansible-ops") {
         git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
