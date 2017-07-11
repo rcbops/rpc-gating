@@ -1,6 +1,20 @@
 - project:
     name: 'Multi-Node-AIO-Jobs'
     series:
+      - kilo:
+          branch: kilo
+          branches: "kilo.*"
+          # There's no kilo branch on [1], but liberty-12.2 branch seems to
+          # work OK.
+          # [1] https://github.com/rcbops-qe/kibana-selenium.git
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+      - liberty:
+          branch: liberty-12.2
+          branches: "liberty-.*"
+          USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
       - mitaka:
           branch: mitaka-13.1
           USER_VARS: |
@@ -13,6 +27,7 @@
           branch: newton-14.1
           USER_VARS: |
             tempest_test_sets: 'all'
+          UPGRADE_FROM_REF: "kilo"
       - master:
           branch: master
           USER_VARS: |
@@ -33,12 +48,44 @@
             Prepare Kibana Selenium,
             Kibana Tests,
             Holland
+      - leapfrogupgrade:
+          ACTION_STAGES: >-
+            Install Tempest,
+            Leapfrog Upgrade
+          GENERATE_TEST_NETWORKS: "6"
+          GENERATE_TEST_SERVERS: "4"
+          GENERATE_TEST_VOLUMES: "12"
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
       - post-merge:
           CRON: ""
     exclude:
+      # Xenial builds are run for newton and above
+      # as it is not supported distro before newton.
+      - series: kilo
+        image: xenial
+      - series: liberty
+        image: xenial
+      - series: mitaka
+        image: xenial
+      # Leapfrog upgrades are only run for kilo --> newton141
+      # as the upgrade method is not supported for any
+      # other target series.
+      # the kilo --> newton141 job is triggered by PRs to either branch.
+      - series: liberty
+        action: leapfrogupgrade
+      - series: mitaka
+        action: leapfrogupgrade
+      - series: newton140
+        action: leapfrogupgrade
+      - series: master
+        action: leapfrogupgrade
+      # Leapfrog upgrades cannot be executed on
+      # xenial as it is not possible to install
+      # the source series (kilo-mitaka) on xenial.
+      - image: xenial
+        action: leapfrogupgrade
       # Xenial builds are run for newton and above
       # as it is not supported distro before newton.
       - series: mitaka
@@ -117,6 +164,10 @@
       - osa_ops_params:
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "sdb"
+      - string:
+          name: "UPGRADE_FROM_REF"
+          default: "{UPGRADE_FROM_REF}"
+          description: "An tag/sha/ref to upgrade from"
       - text:
           name: "USER_VARS"
           default: "{USER_VARS}"
@@ -142,9 +193,14 @@
               Prepare Kibana Selenium
               Kibana Tests
               Holland
+              Leapfrog Upgrade
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
               Destroy Slave
+      - generate_test_params:
+          GENERATE_TEST_NETWORKS: "{GENERATE_TEST_NETWORKS}"
+          GENERATE_TEST_SERVERS: "{GENERATE_TEST_SERVERS}"
+          GENERATE_TEST_VOLUMES: "{GENERATE_TEST_VOLUMES}"
 
     dsl: |
       node(){{
@@ -209,6 +265,9 @@
                 holland.holland()
               }}
             ) // parallel
+            if (env.STAGES.contains("Leapfrog Upgrade")) {{
+              deploy.upgrade_leapfrog(environment_vars: environment_vars)
+            }}
           }}// deploy node on public cloud node
         }} catch (e){{
             currentBuild.result = 'FAILURE'
