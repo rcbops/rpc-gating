@@ -50,17 +50,6 @@ def verify(vm=null) {
   ) //conditionalStage
 }
 
-// Add MaaS vars as properties of the env object
-// This is similar to withEnv but doesn't require
-// another level of nesting.
-void add_maas_env_vars(){
-  List vars = get_maas_token_and_url()
-  for (def i=0; i<vars.size(); i++){
-    kv = vars[i].split('=')
-    env[var[0]] = kv[1]
-  }
-}
-
 List get_maas_token_and_url() {
   return maas_utils(['get_token_url']).trim().tokenize(" ")
 }

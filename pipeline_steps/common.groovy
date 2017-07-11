@@ -397,21 +397,26 @@ api_key = ${args.api_key}
 }
 
 def prepareConfigs(Map args){
-  dir("rpc-gating"){
-    git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-  }
-  dir("rpc-gating/playbooks"){
-    common.install_ansible()
-    withCredentials(common.get_cloud_creds()) {
-      common.venvPlaybook(
-        playbooks: ["aio_config.yml"],
-        args: [
-          "-i inventory",
-          "--extra-vars \"@vars/${args.deployment_type}.yml\""
-        ]
-      )
-    }
-  }
+  withCredentials(get_cloud_creds()){
+      dir("rpc-gating"){
+        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+      } //dir
+      dir("rpc-gating/playbooks"){
+        common.install_ansible()
+        withCredentials(common.get_cloud_creds()) {
+          List maas_vars = maas.get_maas_token_and_url()
+          withEnv(maas_vars) {
+            common.venvPlaybook(
+              playbooks: ["aio_config.yml"],
+              args: [
+                "-i inventory",
+                "--extra-vars \"@vars/${args.deployment_type}.yml\""
+              ]
+            )
+          }
+        }
+      } //dir
+  } //withCredentials
 }
 
 def prepareRpcGit(branch = "auto", dest = "/opt"){
