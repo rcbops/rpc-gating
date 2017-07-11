@@ -66,4 +66,21 @@ EOF
   ) //conditionalStage
 }
 
+def connect_deploy_node(name, instance_ip) {
+  inventory_content = """
+  [job_nodes:children]
+  hosts
+  [hosts]
+  ${name} ansible_port=2222 ansible_host=${instance_ip}
+  """
+  common.drop_inventory_file(inventory_content)
+  dir("rpc-gating/playbooks"){
+    stash (
+      name: "pubcloud_inventory",
+      include: "inventory/hosts"
+    )
+  }
+  ssh_slave.connect(2222)
+}
+
 return this;
