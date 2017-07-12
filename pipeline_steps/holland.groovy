@@ -1,4 +1,4 @@
-def holland(vm=null){
+def holland(){
   common.conditionalStage(
     stage_name: "Holland",
     stage: {
@@ -10,15 +10,10 @@ def holland(vm=null){
       / * recent versions of openstack-ansible allow execution of playbooks
         * from any directory, but that doesn't work all the way back to liberty
         */
-      
-      if (vm == null) {
-        sh "cp rpc-gating/playbooks/test_holland.yml /opt/rpc-openstack/rpcd/playbooks"
-      } else {
-        sh "scp -o StrictHostKeyChecking=no -p rpc-gating/playbooks/test_holland.yml ${vm}:/opt/rpc-openstack/rpcd/playbooks"
-      }
+
+      sh "cp rpc-gating/playbooks/test_holland.yml /opt/rpc-openstack/rpcd/playbooks"
 
       common.openstack_ansible(
-        vm: vm,
         playbook: "test_holland.yml",
         path: "/opt/rpc-openstack/rpcd/playbooks"
       )

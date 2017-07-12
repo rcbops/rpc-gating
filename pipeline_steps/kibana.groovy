@@ -1,4 +1,4 @@
-def kibana(branch, vm=null){
+def kibana(branch){
   common.conditionalStage(
     stage_name: "Prepare Kibana Selenium",
     stage: {
@@ -8,7 +8,7 @@ def kibana(branch, vm=null){
   common.conditionalStage(
     stage_name: "Kibana Tests",
     stage: {
-      kibana_tests(branch, vm)
+      kibana_tests(branch)
     }
   )
 }
@@ -42,20 +42,10 @@ def kibana_prep(branch){
   }
 }
 
-def kibana_tests(branch, vm=null){
+def kibana_tests(branch){
   try {
     dir("kibana-selenium") {
       git url: env.KIBANA_SELENIUM_REPO, branch: "${branch}"
-
-      if(vm != null){
-        sh """#!/bin/bash
-        # Copy credentials from VM to host
-        mkdir -p /etc/openstack_deploy
-        scp -o StrictHostKeyChecking=no -p ${vm}:/etc/openstack_deploy/user_rpco_secrets.yml /etc/openstack_deploy/user_rpco_secrets.yml
-        scp -o StrictHostKeyChecking=no -p ${vm}:/etc/openstack_deploy/openstack_user_config.yml /etc/openstack_deploy/openstack_user_config.yml
-        """
-      }
-
       sh """#!/bin/bash
         source .venv/bin/activate
         export PYTHONPATH=\$(pwd)

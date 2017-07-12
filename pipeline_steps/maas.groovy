@@ -24,12 +24,11 @@ def prepare(Map args) {
   ) // conditionalStage
 }
 
-def deploy(vm=null) {
+def deploy() {
   common.conditionalStage(
     stage_name: 'Setup MaaS',
     stage: {
       common.openstack_ansible(
-        vm: vm,
         path: '/opt/rpc-openstack/rpcd/playbooks',
         playbook: 'setup-maas.yml'
       ) //openstack_ansible
@@ -37,12 +36,11 @@ def deploy(vm=null) {
   ) //conditionalStage
 }
 
-def verify(vm=null) {
+def verify() {
   common.conditionalStage(
     stage_name: 'Verify MaaS',
     stage: {
       common.openstack_ansible(
-        vm: vm,
         path: '/opt/rpc-openstack/rpcd/playbooks',
         playbook: 'verify-maas.yml'
       ) //openstack_ansible

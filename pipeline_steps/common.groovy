@@ -151,23 +151,12 @@ def openstack_ansible(Map args){
   def full_env = args.environment_vars + common.get_deploy_script_env()
 
   ansiColor('xterm'){
-    if (!('vm' in args)) {
-      dir(args.path) {
-        withEnv(full_env){
-          sh """#!/bin/bash
-          openstack-ansible ${args.playbook} ${args.args}
-          """
-        }
+    dir(args.path) {
+      withEnv(full_env){
+        sh """#!/bin/bash
+        openstack-ansible ${args.playbook} ${args.args}
+        """
       }
-    } else {
-      def export_vars = ""
-      for (e in full_env) {
-        export_vars += "export ${e}; "
-      }
-      sh """#!/bin/bash
-      sudo ssh -T -oStrictHostKeyChecking=no ${args.vm} \
-        '${export_vars} cd ${args.path}; openstack-ansible ${args.playbook} ${args.args}'
-      """
     }
   }
 }
