@@ -113,7 +113,7 @@
 
     dsl: |
       // CIT Slave node
-      timeout(time: 2, unit: 'HOURS'){{
+      timeout(time: 3, unit: 'HOURS'){{
         node() {{
           try {{
             dir("rpc-gating") {{
