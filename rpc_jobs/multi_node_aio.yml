@@ -27,6 +27,8 @@
           branch: newton-14.1
           USER_VARS: |
             tempest_test_sets: 'all'
+            lxc_container_vg_name: "USE_DIR_NOT_VG"
+            glance_default_store: "swift"
           UPGRADE_FROM_REF: "kilo"
       - master:
           branch: master
