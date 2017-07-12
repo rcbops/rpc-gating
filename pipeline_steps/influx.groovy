@@ -43,6 +43,7 @@ def setup(){
             playbooks: [
               "rpc-gating/playbooks/slave_security.yml",
               "rpc-maas/playbooks/maas-tigkstack-influxdb.yml",
+              "rpc-maas/playbooks/maas-tigkstack-grafana.yml",
             ],
             args: [
               "-i ${env.WORKSPACE}/inventory",
