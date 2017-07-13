@@ -35,7 +35,7 @@ def prepare() {
               "DATA_DISK_DEVICE=${env.DATA_DISK_DEVICE}",
               "CONFIG_PREROUTING=true",
               "OSA_PORTS=6080 6082 443 80 8443",
-              ]
+              ] + common.get_deploy_script_env()
           ) //run_script
         } //timeout
       } // dir
