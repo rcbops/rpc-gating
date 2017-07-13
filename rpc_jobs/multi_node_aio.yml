@@ -258,6 +258,15 @@
           multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
 
           node(deploy_node){{
+            // MNAIO prevents ANSIBLE_GIT_REPO and ANSIBLE_GIT_RELEASE from being overridden
+            // Re-running bootstrap-ansible.sh to use ssh_retry
+            dir("/opt/rpc-openstack/openstack-ansible") {{
+              withEnv(common.get_deploy_script_env()) {{
+                sh """#!/bin/bash -xe
+                   ./scripts/bootstrap-ansible.sh
+                   """
+              }}
+            }}
             deploy.deploy_sh(
               environment_vars: [
                 "DEPLOY_HAPROXY=yes",
