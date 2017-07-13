@@ -194,6 +194,10 @@
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){{
         try {{
+          // pass JJB axes through to environment
+          env.TRIGGER = "{trigger}"
+          env.TARGET = "mnaio"
+          env.SERIES = "{series}"
           instance_name = common.gen_instance_name()
           deploy_node = null
           pubcloud.getPubCloudSlave(instance_name: instance_name)
@@ -208,10 +212,15 @@
 
           deploy_node = "${{instance_name}}-infra1-vm"
           multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
-          maas.prepare(instance_name: instance_name)
+          maas.prepare(instance_name: deploy_node)
 
           common.use_node(deploy_node){{
             try {{
+              if (env.STAGES.contains("Leapfrog Upgrade")) {{
+                common.prepareRpcGit(env.UPGRADE_FROM_REF, "/opt")
+              }} else {{
+                common.prepareRpcGit("auto", "/opt")
+              }}
               // MNAIO prevents ANSIBLE_GIT_REPO and ANSIBLE_GIT_RELEASE from being overridden
               // Re-running bootstrap-ansible.sh to use ssh_retry
               if (env.STAGES.contains("Deploy RPC w/ Script")) {{
@@ -228,6 +237,13 @@
                 "DEPLOY_TEMPEST=no",
                 "DEPLOY_AIO=no",
               ]
+              // If this branch can prepare its own configs, then prepare during deployment
+              config_cap_file="/opt/rpc-openstack/gating/capabilities/mnaio_config"
+              if (fileExists(config_cap_file)){{
+                environment_vars = environment_vars + "CONFIGURE_MNAIO=yes"
+              }} else {{
+                multi_node_aio_prepare.prepare_configs()
+              }}
               deploy.deploy_sh(
                 environment_vars: environment_vars
               ) // deploy_sh
