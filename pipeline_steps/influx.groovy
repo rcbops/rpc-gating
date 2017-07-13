@@ -6,14 +6,10 @@ def setup(){
     common.conditionalStage(
       stage_name: "Influx",
       stage:{
-        withCredentials([
+        creds = [
           file(
             credentialsId: 'id_rsa_cloud10_jenkins_file',
             variable: 'jenkins_ssh_privkey'
-          ),
-          string(
-            credentialsId: "SSH_IP_ADDRESS_WHITELIST",
-            variable: "SSH_IP_ADDRESS_WHITELIST"
           ),
           string(
             credentialsId: "INFLUX_METRIC_PASSWORD",
@@ -27,7 +23,14 @@ def setup(){
             credentialsId: "GRAFANA_ADMIN_PASSWORD",
             variable: "GRAFANA_ADMIN_PASSWORD"
           ),
-        ]){
+        ]
+        if (env.USE_SSH_WHITELIST == "true"){
+          creds += string(
+            credentialsId: "SSH_IP_ADDRESS_WHITELIST",
+            variable: "SSH_IP_ADDRESS_WHITELIST"
+          )
+        }
+        withCredentials([creds]){
           dir('rpc-gating'){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
           }

@@ -43,6 +43,12 @@
             hosts
             [log_hosts]
             node ansible_host=YOUR_IP_HERE
+      - bool:
+          name: "USE_SSH_WHITELIST"
+          description: |
+            Enable src restriction on SSH connections. Disabling allows
+            connections from anywhere. When enabled SSH connections will
+            only be allowed from RAX bastions and internal Jenkins nodes.
 
     dsl: |
       node('CentOS'){
