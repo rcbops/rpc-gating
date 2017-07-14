@@ -212,6 +212,8 @@
     branch: master
     NUM_TO_KEEP: 30
     IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    DEPLOY_TELEGRAF: "NO"
+    DEPLOY_INFLUX: "NO"
     # TEMPLATE
     name: 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
     project-type: workflow
@@ -223,24 +225,27 @@
     parameters:
       # See params.yml
       - kibana_selenium_params:
-         KIBANA_SELENIUM_BRANCH: "{branch}"
+          KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_repo_params:
-         RPC_BRANCH: "{branch}"
+          RPC_BRANCH: "{branch}"
       - rpc_deploy_params:
-         DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
-         DEPLOY_CEPH: "{DEPLOY_CEPH}"
-         DEPLOY_ELK: "{DEPLOY_ELK}"
-         DEPLOY_SUPPORT_ROLE: "{DEPLOY_SUPPORT_ROLE}"
-         USER_VARS: |
-           {CONTEXT_USER_VARS}
-           {SERIES_USER_VARS}
-           {TRIGGER_USER_VARS}
-         UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
+          DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
+          DEPLOY_CEPH: "{DEPLOY_CEPH}"
+          DEPLOY_ELK: "{DEPLOY_ELK}"
+          DEPLOY_SUPPORT_ROLE: "{DEPLOY_SUPPORT_ROLE}"
+          USER_VARS: |
+            {CONTEXT_USER_VARS}
+            {SERIES_USER_VARS}
+            {TRIGGER_USER_VARS}
+          UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - rpc_gating_params
+      - tigkstack_params:
+          DEPLOY_TELEGRAF: "{DEPLOY_TELEGRAF}"
+          DEPLOY_INFLUX: "{DEPLOY_INFLUX}"
       - instance_params:
-         IMAGE: "{IMAGE}"
-         FLAVOR: "{FLAVOR}"
-         REGION: "{REGION}"
+          IMAGE: "{IMAGE}"
+          FLAVOR: "{FLAVOR}"
+          REGION: "{REGION}"
       - string:
           name: STAGES
           default: "{DEFAULT_STAGES}, {ACTION_STAGES}, {TRIGGER_STAGES}"

@@ -165,3 +165,13 @@
       - string:
           name: "GENERATE_TEST_VOLUMES"
           default: "{GENERATE_TEST_VOLUMES}"
+
+- parameter:
+    name: tigkstack_params
+    parameters:
+      - string:
+          name: "DEPLOY_TELEGRAF"
+          default: "{DEPLOY_TELEGRAF}"
+      - string:
+          name: "DEPLOY_INFLUX"
+          default: "{DEPLOY_INFLUX}"
