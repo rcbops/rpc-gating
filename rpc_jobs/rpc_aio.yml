@@ -148,6 +148,12 @@
         action: leapfrogupgrade
       - series: master
         action: leapfrogupgrade
+      # This combo tests the same thing as
+      # RPC-AIO_newton141-trusty-leapfrogupgrade-swift-periodic and is not
+      # needed
+      - series: kilo
+        action: leapfrogupgrade
+        trigger: periodic
       # Leapfrog upgrades cannot be executed on
       # xenial as it is not possible to install
       # the source series (kilo-mitaka) on xenial.
