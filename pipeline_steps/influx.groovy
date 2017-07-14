@@ -23,6 +23,10 @@ def setup(){
             credentialsId: "INFLUX_ROOT_PASSWORD",
             variable: "INFLUX_ROOT_PASSWORD"
           ),
+          string(
+            credentialsId: "GRAFANA_ADMIN_PASSWORD",
+            variable: "GRAFANA_ADMIN_PASSWORD"
+          ),
         ]){
           dir('rpc-gating'){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
@@ -53,7 +57,8 @@ def setup(){
             vars: [
               WORKSPACE: env.WORKSPACE,
               influxdb_db_root_password: env.INFLUX_ROOT_PASSWORD,
-              influxdb_db_metric_password: env.INFLUX_METRIC_PASSWORD
+              influxdb_db_metric_password: env.INFLUX_METRIC_PASSWORD,
+              grafana_admin_password: env.GRAFANA_ADMIN_PASSWORD
             ]
           )
         }
