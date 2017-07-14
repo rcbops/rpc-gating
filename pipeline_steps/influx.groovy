@@ -40,8 +40,8 @@ def setup(){
               export INVENTORY="${env.WORKSPACE}/inventory/hosts"
               mkdir -p \$(dirname \$INVENTORY)
               cp ${env.WORKSPACE}/rpc-gating/playbooks/inventory/hosts \$INVENTORY
-              if ! grep log_hosts \$INVENTORY; then
-                  echo [log_hosts:children] >> \$INVENTORY
+              if ! grep influx_hosts \$INVENTORY; then
+                  echo [influx_hosts:children] >> \$INVENTORY
                   echo job_nodes >> \$INVENTORY
               fi
             """
