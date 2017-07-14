@@ -21,10 +21,11 @@ def connect(port=22){
     stage_name: "Connect Slave",
     stage: {
       node('CentOS'){
+        deleteDir()
         dir('rpc-gating'){
           git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
         }
-        common.create_workspace_venv_if_doesnt_exist()
+        common.create_workspace_venv()
         withCredentials([
           file(
             credentialsId: 'id_rsa_cloud10_jenkins_file',
@@ -61,10 +62,11 @@ def destroy(slave_name){
     step_name: 'Destroy Slave',
     step: {
       node('CentOS'){
+        deleteDir()
         dir('rpc-gating'){
           git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
         }
-        common.create_workspace_venv_if_doesnt_exist()
+        common.create_workspace_venv()
         withCredentials([
           usernamePassword(
             credentialsId: "service_account_jenkins_api_creds",
