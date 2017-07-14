@@ -30,13 +30,6 @@ def void create_workspace_venv(){
     # UG-613 change TMPDIR to directory with more space
     export TMPDIR="/var/lib/jenkins/tmp"
 
-    # UG-612 Install pip, setuptools, and wheel on the host
-    CURL_CMD="curl --silent --show-error --retry 5"
-    OUTPUT_FILE="get-pip.py"
-    \${CURL_CMD} https://bootstrap.pypa.io/get-pip.py > \${OUTPUT_FILE} ||\
-    \${CURL_CMD} https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py > \${OUTPUT_FILE}
-    python \${OUTPUT_FILE} --isolated pip setuptools wheel -c rpc-gating/constraints.txt
-
     # Install rpc-gating requirements
     pip install \
       --isolated \

@@ -68,6 +68,7 @@ simplejson==3.10.0
 six==1.10.0
 stevedore==1.19.1
 tox==2.7.0
-uritemplate==3.0.0
 uritemplate.py==3.0.2
+uritemplate==3.0.0
+wheel==0.29.0
 wrapt==1.10.10
