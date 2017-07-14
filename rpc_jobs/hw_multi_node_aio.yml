@@ -142,7 +142,8 @@
                   "DEPLOY_ELK=yes",
                   "DEPLOY_TEMPEST=no",
                   "DEPLOY_AIO=no",
-                  "DEPLOY_MAAS=no"
+                  "DEPLOY_MAAS=no",
+                  "DEPLOY_SUPPORT_ROLE=yes"
                   ]
               ) // deploy_sh
               maas.prepare(instance_name: instance_name)
