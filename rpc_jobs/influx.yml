@@ -51,7 +51,7 @@
             only be allowed from RAX bastions and internal Jenkins nodes.
 
     dsl: |
-      node('CentOS'){
+      node(){
         deleteDir()
         dir("rpc-gating"){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
