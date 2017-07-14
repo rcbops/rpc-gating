@@ -10,19 +10,23 @@
           KIBANA_SELENIUM_BRANCH: "liberty-12.2"
           USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
       - liberty:
           branch: liberty-12.2
           branches: "liberty-.*"
           USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
       - mitaka:
           branch: mitaka-13.1
           USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
       - newton140:
           branch: newton-14.0
           USER_VARS: |
             tempest_test_sets: 'all'
+          DEPLOY_TELEGRAF: "yes"
       - newton141:
           branch: newton-14.1
           USER_VARS: |
@@ -31,10 +35,12 @@
             glance_default_store: "swift"
             neutron_legacy_ha_tool_enabled: true
           UPGRADE_FROM_REF: "kilo"
+          DEPLOY_TELEGRAF: "yes"
       - master:
           branch: master
           USER_VARS: |
             tempest_test_sets: 'all'
+          DEPLOY_TELEGRAF: "yes"
     image:
       - xenial:
           DEFAULT_IMAGE: "16.04.2"
@@ -53,6 +59,9 @@
             Holland
       - leapfrogupgrade:
           ACTION_STAGES: >-
+            Prepare MaaS,
+            Setup MaaS,
+            Verify MaaS,
             Install Tempest,
             Leapfrog Upgrade
     resources:
@@ -60,18 +69,26 @@
           GENERATE_TEST_NETWORKS: "0"
           GENERATE_TEST_SERVERS: "0"
           GENERATE_TEST_VOLUMES: "0"
+          COMPUTE_NODES: "2"
+          VOLUME_NODES: "2"
       - small:
           GENERATE_TEST_NETWORKS: "20"
           GENERATE_TEST_SERVERS: "20"
           GENERATE_TEST_VOLUMES: "8"
+          COMPUTE_NODES: "2"
+          VOLUME_NODES: "2"
       - medium:
           GENERATE_TEST_NETWORKS: "50"
           GENERATE_TEST_SERVERS: "50"
           GENERATE_TEST_VOLUMES: "20"
+          COMPUTE_NODES: "5"
+          VOLUME_NODES: "2"
       - large:
           GENERATE_TEST_NETWORKS: "100"
           GENERATE_TEST_SERVERS: "100"
           GENERATE_TEST_VOLUMES: "40"
+          COMPUTE_NODES: "10"
+          VOLUME_NODES: "2"
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
@@ -171,6 +188,8 @@
       Destroy Slave
     ACTION_STAGES: ""
     TRIGGER_STAGES: ""
+    DEPLOY_TELEGRAF: "NO"
+    DEPLOY_INFLUX: "NO"
     properties:
       - build-discarder:
           days-to-keep: 7
@@ -182,6 +201,9 @@
       - kibana_selenium_params:
           KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_gating_params
+      - tigkstack_params:
+          DEPLOY_TELEGRAF: "{DEPLOY_TELEGRAF}"
+          DEPLOY_INFLUX: "{DEPLOY_INFLUX}"
       - instance_params:
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
           FLAVOR: "onmetal-io1"
@@ -228,9 +250,18 @@
           GENERATE_TEST_NETWORKS: "{GENERATE_TEST_NETWORKS}"
           GENERATE_TEST_SERVERS: "{GENERATE_TEST_SERVERS}"
           GENERATE_TEST_VOLUMES: "{GENERATE_TEST_VOLUMES}"
+      - string:
+          name: "COMPUTE_NODES"
+          default: "{COMPUTE_NODES}"
+          description: "The number of compute nodes to deploy."
+      - string:
+          name: "VOLUME_NODES"
+          default: "{VOLUME_NODES}"
+          description: "The number of volume nodes to deploy."
 
     dsl: |
       node(){{
+        deleteDir()
         try {{
           dir("rpc-gating"){{
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
