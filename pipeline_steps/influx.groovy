@@ -30,7 +30,7 @@ def setup(){
             variable: "SSH_IP_ADDRESS_WHITELIST"
           )
         }
-        withCredentials([creds]){
+        withCredentials(creds){
           dir('rpc-gating'){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
           }
