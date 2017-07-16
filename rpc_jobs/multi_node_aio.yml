@@ -52,9 +52,23 @@
           ACTION_STAGES: >-
             Install Tempest,
             Leapfrog Upgrade
-          GENERATE_TEST_NETWORKS: "6"
-          GENERATE_TEST_SERVERS: "4"
-          GENERATE_TEST_VOLUMES: "12"
+    resources:
+      - none:
+          GENERATE_TEST_NETWORKS: "0"
+          GENERATE_TEST_SERVERS: "0"
+          GENERATE_TEST_VOLUMES: "0"
+      - small:
+          GENERATE_TEST_NETWORKS: "20"
+          GENERATE_TEST_SERVERS: "20"
+          GENERATE_TEST_VOLUMES: "8"
+      - medium:
+          GENERATE_TEST_NETWORKS: "50"
+          GENERATE_TEST_SERVERS: "50"
+          GENERATE_TEST_VOLUMES: "20"
+      - large:
+          GENERATE_TEST_NETWORKS: "100"
+          GENERATE_TEST_SERVERS: "100"
+          GENERATE_TEST_VOLUMES: "40"
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
@@ -95,8 +109,18 @@
       # Ocata onwards.
       - series: master
         image: trusty
+      # Resources are currently only used to measure end-user impact of
+      # leapfrog upgrades
+      - action: deploy
+        resources: small
+      - action: deploy
+        resources: medium
+      - action: deploy
+        resources: large
+      - action: leapfrogupgrade
+        resources: none
     jobs:
-      - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
+      - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
       - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
 
 - job-template:
@@ -131,7 +155,7 @@
       }} // node
 
 - job-template:
-    name: 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
+    name: 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
     project-type: workflow
     # DEFAULTS
     DEFAULT_STAGES: >-
