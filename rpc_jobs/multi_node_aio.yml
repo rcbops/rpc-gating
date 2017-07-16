@@ -10,19 +10,23 @@
           KIBANA_SELENIUM_BRANCH: "liberty-12.2"
           USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
       - liberty:
           branch: liberty-12.2
           branches: "liberty-.*"
           USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
       - mitaka:
           branch: mitaka-13.1
           USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
       - newton140:
           branch: newton-14.0
           USER_VARS: |
             tempest_test_sets: 'all'
+          DEPLOY_TELEGRAF: "yes"
       - newton141:
           branch: newton-14.1
           USER_VARS: |
@@ -31,10 +35,12 @@
             glance_default_store: "swift"
             neutron_legacy_ha_tool_enabled: true
           UPGRADE_FROM_REF: "kilo"
+          DEPLOY_TELEGRAF: "yes"
       - master:
           branch: master
           USER_VARS: |
             tempest_test_sets: 'all'
+          DEPLOY_TELEGRAF: "yes"
     image:
       - xenial:
           DEFAULT_IMAGE: "16.04.2"
@@ -179,6 +185,8 @@
       Destroy Slave
     ACTION_STAGES: ""
     TRIGGER_STAGES: ""
+    DEPLOY_TELEGRAF: "NO"
+    DEPLOY_INFLUX: "NO"
     properties:
       - build-discarder:
           days-to-keep: 7
@@ -190,6 +198,9 @@
       - kibana_selenium_params:
           KIBANA_SELENIUM_BRANCH: "{branch}"
       - rpc_gating_params
+      - tigkstack_params:
+          DEPLOY_TELEGRAF: "{DEPLOY_TELEGRAF}"
+          DEPLOY_INFLUX: "{DEPLOY_INFLUX}"
       - instance_params:
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
           FLAVOR: "onmetal-io1"
