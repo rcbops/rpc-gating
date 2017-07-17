@@ -9,9 +9,9 @@ def void create_workspace_venv(){
 
     # Create venv
     if [[ ! -d ".venv" ]]; then
-      if ! which virtualenv; then
-        pip install virtualenv
-      fi
+      requirements="virtualenv==15.1.0"
+      pip install -U "${requirements}" \
+        || pip install --isolated -U "${requirements}"
       if which scl
       then
         # redhat/centos
