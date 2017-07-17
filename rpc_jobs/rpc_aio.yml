@@ -327,6 +327,8 @@
                 && env.TRIGGER == "pr"
                 && env.ACTION == "leapfrogupgrade" ){{
                 env.UPGRADE_FROM_REF="origin/pr/${{env.ghprbPullId}}/merge"
+                kibana_branch = "kilo"
+                env.KIBANA_SELENIUM_BRANCH="newton-14.1"
             }}
             // We need to checkout the rpc-openstack repo on the CIT Slave
             // so that we can check whether the patch is a docs-only patch
