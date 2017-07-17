@@ -141,6 +141,7 @@
     dsl: |
       // CIT slave
       node() {{
+        deleteDir()
         currentBuild.result = "SUCCESS"
         dir("rpc-gating") {{
           git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
@@ -160,16 +161,19 @@
             stage_name: "Build Apt Artifacts",
             stage: {{
               node('ArtifactBuilder2') {{
+                deleteDir()
                 dir("rpc-gating") {{
                   git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
                   common = load 'pipeline_steps/common.groovy'
                   artifact_build = load 'pipeline_steps/artifact_build.groovy'
                 }}
                 artifact_build.apt()
+                deleteDir()
               }} // node ArtifactBuilder2
             }} // stage
           ) // conditionalStage
           // continuing on CIT slave
+          deleteDir()
           artifact_build.git()
           artifact_build.python()
           artifact_build.container()
@@ -181,4 +185,5 @@
           common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
           common.delete_workspace()
         }}
+        deleteDir()
       }} // node
