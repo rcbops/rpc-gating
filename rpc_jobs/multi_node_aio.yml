@@ -59,6 +59,9 @@
             Holland
       - leapfrogupgrade:
           ACTION_STAGES: >-
+            Prepare MaaS,
+            Setup MaaS,
+            Verify MaaS,
             Install Tempest,
             Leapfrog Upgrade
     resources:
