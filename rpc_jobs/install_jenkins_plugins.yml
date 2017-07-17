@@ -6,7 +6,7 @@
       # See params.yml
       - rpc_gating_params
     dsl: |
-      node(){ // CIT slave node
+      common.shared_slave(){ // CIT slave node
         withCredentials([
           usernamePassword(
             credentialsId: "service_account_jenkins_api_creds",
@@ -15,13 +15,6 @@
           )
         ]){
           dir("rpc-gating"){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline_steps/common.groovy'
-            common.install_ansible()
-            sh """#!/bin/bash
-              . ../.venv/bin/activate
-              pip install urllib3==1.18.1
-            """
             common.venvPlaybook(
               playbooks: ["playbooks/install_jenkins_plugins.yml"],
               args: [ "-i inventory" ]

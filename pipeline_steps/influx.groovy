@@ -1,6 +1,6 @@
 def setup(){
   instance_name = common.gen_instance_name("influx")
-  pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
+  pubcloud.getPubCloudSlave(instance_name: instance_name)
   common.override_inventory()
   try{
     common.conditionalStage(
@@ -31,9 +31,6 @@ def setup(){
           )
         }
         withCredentials(creds){
-          dir('rpc-gating'){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-          }
           dir('rpc-maas'){
             git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
             sh """#!/bin/bash
@@ -70,7 +67,7 @@ def setup(){
     print(e)
     throw e
   }finally{
-    pubCloudSlave.delPubCloudSlave()
+    pubcloud.delPubCloudSlave()
   }
 } //func
 return this

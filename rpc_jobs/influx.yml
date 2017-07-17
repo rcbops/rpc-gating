@@ -51,13 +51,6 @@
             only be allowed from RAX bastions and internal Jenkins nodes.
 
     dsl: |
-      node(){
-        deleteDir()
-        dir("rpc-gating"){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline_steps/common.groovy'
-            pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
-            influx = load 'pipeline_steps/influx.groovy'
-        }
+      common.internal_slave(){
         influx.setup()
       } // cit node

@@ -16,14 +16,13 @@
       - rpc-gating-github
     dsl: |
       currentBuild.result = 'SUCCESS'
-      node(){
+      common.shared_slave(){
         try{
-          deleteDir()
           stage("Prepare"){
-            git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
-            common = load 'pipeline_steps/common.groovy'
             common.docker_cache_workaround()
-            lint_container = docker.build env.BUILD_TAG.toLowerCase()
+            dir ('rpc-gating'){
+              lint_container = docker.build env.BUILD_TAG.toLowerCase()
+            }
           }
           lint_container.inside {
             stage("Checkout"){

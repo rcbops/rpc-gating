@@ -3,7 +3,7 @@ import groovy.json.JsonOutput
 
 
 def void create_workspace_venv(){
-  print "common.create_workspace_venv"
+  print "create_workspace_venv"
   sh """#!/bin/bash -xe
     cd ${env.WORKSPACE}
 
@@ -53,7 +53,7 @@ def void create_workspace_venv(){
 }
 
 def install_ansible_roles(){
-  print "common.install_ansible_roles"
+  print "install_ansible_roles"
   sh """#!/bin/bash -xe
     cd ${env.WORKSPACE}
     . .venv/bin/activate
@@ -79,7 +79,7 @@ def install_ansible(){
  *  args: list of string args to pass to ansible-playbook
  */
 def venvPlaybook(Map args){
-  withEnv(common.get_deploy_script_env()){
+  withEnv(get_deploy_script_env()){
     ansiColor('xterm'){
       if (!('vars' in args)){
         args.vars=[:]
@@ -120,7 +120,7 @@ def calc_ansible_forks(){
 to evaluate ${forks} and fail.
 These vars should be set every time deploy.sh or test-upgrade is run
 */
-def get_deploy_script_env(){
+List get_deploy_script_env(){
   forks = calc_ansible_forks()
   return [
     'ANSIBLE_FORCE_COLOR=true',
@@ -144,7 +144,7 @@ def openstack_ansible(Map args){
   if (!('environment_vars' in args)){
     args.environment_vars = []
   }
-  def full_env = args.environment_vars + common.get_deploy_script_env()
+  def full_env = args.environment_vars + get_deploy_script_env()
 
   ansiColor('xterm'){
     dir(args.path) {
@@ -276,7 +276,7 @@ def String rand_int_str(max=0xFFFF, base=16){
 def String gen_instance_name(String prefix="AUTO"){
   if (env.INSTANCE_NAME == "AUTO"){
     if (prefix == "AUTO"){
-      prefix = common.acronym(string: env.JOB_NAME)
+      prefix = acronym(string: env.JOB_NAME)
     }
     //4 digit hex string to avoid name colisions
     instance_name = "${prefix}-${env.BUILD_NUMBER}-${rand_int_str()}"
@@ -345,7 +345,7 @@ def archive_artifacts(){
   }
 }
 
-def get_cloud_creds(){
+List get_cloud_creds(){
   return [
     string(
       credentialsId: "dev_pubcloud_username",
@@ -382,13 +382,9 @@ api_key = ${args.api_key}
 }
 
 def prepareConfigs(Map args){
-  dir("rpc-gating"){
-    git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-  }
   dir("rpc-gating/playbooks"){
-    common.install_ansible()
-    withCredentials(common.get_cloud_creds()) {
-      common.venvPlaybook(
+    withCredentials(get_cloud_creds()) {
+      venvPlaybook(
         playbooks: ["aio_config.yml"],
         args: [
           "-i inventory",
@@ -566,8 +562,6 @@ void override_inventory(){
   conditionalStep(
     step_name: "Override Inventory",
     step:{
-        // This is usually done by the allocate step
-        common.install_ansible()
         if (env.OVERRIDE_INVENTORY_PATH == null){
           inventory_path = 'rpc-gating/playbooks/inventory/hosts'
         } else{
@@ -576,6 +570,41 @@ void override_inventory(){
         drop_inventory_file(env.INVENTORY, inventory_path)
     }
   )
+}
+
+// initialisation steps for nodes
+void use_node(label=null, body){
+  node(label){
+    try {
+      deleteDir()
+      dir("rpc-gating"){
+        if (! env.RPC_GATING_REPO){
+          env.RPC_GATING_REPO="https://github.com/rcbops/rpc-gating"
+        }
+        if (! env.RPC_GATING_BRANCH){
+          env.RPC_GATING_BRANCH="master"
+        }
+        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+      }
+      install_ansible()
+      body()
+    } catch (e){
+      print "Caught exception on ${env.NODE_NAME}: ${e}"
+      throw e
+    } finally {
+      deleteDir()
+    }
+  }
+}
+
+//shortcut functions for a shared slave or internal shared slave
+
+void shared_slave(body){
+  use_node(body)
+}
+
+void internal_slave(body){
+  use_node("CentOS", body)
 }
 
 return this

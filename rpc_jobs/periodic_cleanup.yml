@@ -46,12 +46,9 @@
       for (int i=0; i<nodes.size(); i++){
         nodeName = nodes[i]
         parallel_steps['node_'+nodeName] = {
-          node(nodeName){
+          common.use_node(nodeName){
             stage("Cleanup "+nodeName){
-              deleteDir()
               dir("rpc-gating") {
-                git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-                common = load 'pipeline_steps/common.groovy'
                 sh "scripts/workspace_cleanup.sh"
                 sh "scripts/tmp_cleanup.sh"
                 sh "scripts/docker_cleanup.sh"
@@ -63,18 +60,16 @@
       parallel parallel_steps
 
       // run the pubcloud and jenkins node cleanup only on an internal slave
-      node('CentOS'){
-          deleteDir()
-          dir("rpc-gating") {
-            stage("Prepare"){
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
-            }
+      common.internal_slave(){
+        dir("rpc-gating") {
           stage("Docker Build"){
               common.docker_cache_workaround()
               container = docker.build env.BUILD_TAG.toLowerCase()
           }
         }
+        // container.inside is a docker function that does
+        // not run the same initialisaiton steps as
+        // common.use_node/shared_slave/internal_slave.
         container.inside {
           stage("Docker Checkout"){
             git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO

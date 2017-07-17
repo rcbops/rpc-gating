@@ -8,7 +8,6 @@ def prepare(Map args) {
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY
           )
-          common.install_ansible()
           withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
             common.venvPlaybook(
               playbooks: ['multi_node_aio_maas_entities.yml'],
@@ -82,7 +81,6 @@ def entity_cleanup(Map args){
     step: {
       withCredentials(common.get_cloud_creds()) {
         dir("rpc-gating/playbooks") {
-          common.install_ansible()
           pyrax_cfg = common.writePyraxCfg(
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY

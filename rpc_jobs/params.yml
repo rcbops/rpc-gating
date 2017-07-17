@@ -40,7 +40,7 @@
             Create slave in exclusive mode?
             An exclusive slave will only be used for jobs that specify its
             name or labels. A non exclusive node will run jobs that don't
-            specify a name or label. eg node(){{}} blocks. Single use slaves
+            specify a name or label. eg common.shared_slave(){{}} blocks. Single use slaves
             should be exclusive, multi use slaves should not.
       - bool:
           name: allow_jenkins_sudo

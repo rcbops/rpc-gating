@@ -291,18 +291,8 @@
       env.ACTION = "{action}"
       env.SERIES = "{series}"
       timeout(time: 8, unit: 'HOURS'){{
-        node() {{
+        common.shared_slave() {{
           try {{
-            dir("rpc-gating") {{
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
-              pubcloud = load 'pipeline_steps/pubcloud.groovy'
-              aio_prepare = load 'pipeline_steps/aio_prepare.groovy'
-              deploy = load 'pipeline_steps/deploy.groovy'
-              tempest = load 'pipeline_steps/tempest.groovy'
-              holland = load 'pipeline_steps/holland.groovy'
-              kibana = load 'pipeline_steps/kibana.groovy'
-            }}
             // This sets kibana_branch based on STAGES
             // Note that we do this before the block below since
             // env.UPGRADE_FROM_ENV gets overwritten
