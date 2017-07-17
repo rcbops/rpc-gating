@@ -44,8 +44,6 @@
       - deploy:
           ACTION_STAGES: >-
             Prepare MaaS,
-            Setup MaaS,
-            Verify MaaS,
             Install Tempest,
             Tempest Tests,
             Prepare Kibana Selenium,
@@ -53,6 +51,7 @@
             Holland
       - leapfrogupgrade:
           ACTION_STAGES: >-
+            Prepare MaaS,
             Install Tempest,
             Leapfrog Upgrade
     resources:
@@ -176,7 +175,7 @@
     ACTION_STAGES: ""
     TRIGGER_STAGES: ""
     DEPLOY_SUPPORT_ROLE: "yes"
-    DEPLOY_MAAS: "no"
+    DEPLOY_MAAS: "yes"
     properties:
       - build-discarder:
           days-to-keep: 7
@@ -220,8 +219,6 @@
               Prepare RPC Configs
               Deploy RPC w/ Script
               Prepare MaaS
-              Setup MaaS
-              Verify MaaS
               Install Tempest
               Tempest Tests
               Prepare Horizon Selenium
@@ -266,6 +263,7 @@
 
           deploy_node = "${{instance_name}}-deploy-vm"
           multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
+          maas.prepare(instance_name: instance_name)
 
           common.use_node(deploy_node){{
             // MNAIO prevents ANSIBLE_GIT_REPO and ANSIBLE_GIT_RELEASE from being overridden
@@ -287,11 +285,6 @@
                 ]
             ) // deploy_sh
             parallel(
-              "maas": {{
-                maas.prepare(instance_name: instance_name)
-                maas.deploy()
-                maas.verify()
-              }},
               "tempest": {{
                 tempest.tempest()
               }},
