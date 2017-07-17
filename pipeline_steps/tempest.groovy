@@ -4,7 +4,7 @@ def tempest_install(){
   // with included roles in earlier versions of Ansible. Such that used in Mitaka
   common.openstack_ansible(
     playbook: "../../scripts/run_tempest.yml",
-    args: "--skip-tags tempest_execute_tests",
+    args: '--skip-tags tempest_execute_tests -e \'{"pip_packages":["pip==9.0.1","setuptools==36.2.0","wheel==0.30.0.a0"]}\'',
     path: "/opt/rpc-openstack/rpcd/playbooks",
     environment_vars: ["ANSIBLE_CACHE_PLUGIN=memory"]
   )

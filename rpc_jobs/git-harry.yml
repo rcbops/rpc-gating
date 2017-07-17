@@ -1,5 +1,5 @@
 - project:
-    name: 'Multi-Node-AIO-Jobs'
+    name: 'git-harry-Multi-Node-AIO-Jobs'
     series:
       - kilo:
           branch: kilo
@@ -140,11 +140,11 @@
       - action: leapfrogupgrade
         resources: none
     jobs:
-      - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
-      - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
+      - 'git-harry-OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
+      - 'git-harry-OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
 
 - job-template:
-    name: 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
+    name: 'git-harry-OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
     project-type: workflow
     properties:
       - build-discarder:
@@ -158,9 +158,9 @@
         stage('OnMetal Multi-Node AIO') {{
           git branch: "{branch}", url: "https://github.com/rcbops/rpc-openstack"
           if("{series}" == "mitaka"){{
-            build job: 'OnMetal-Multi-Node-AIO_mitaka-trusty-deploy-post-merge'
+            build job: 'git-harry-OnMetal-Multi-Node-AIO_mitaka-trusty-deploy-post-merge'
           }} else {{
-            build job: 'OnMetal-Multi-Node-AIO_{series}-xenial-deploy-post-merge'
+            build job: 'git-harry-OnMetal-Multi-Node-AIO_{series}-xenial-deploy-post-merge'
           }}
         }} // stage
         stage('Push to rpc-openstack'){{
@@ -175,7 +175,7 @@
       }} // node
 
 - job-template:
-    name: 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
+    name: 'git-harry-OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
     project-type: workflow
     # DEFAULTS
     DEFAULT_STAGES: >-
