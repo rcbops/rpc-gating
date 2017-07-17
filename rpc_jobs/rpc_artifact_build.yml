@@ -173,7 +173,6 @@
             }} // stage
           ) // conditionalStage
           // continuing on CIT slave
-          deleteDir()
           artifact_build.git()
           artifact_build.python()
           artifact_build.container()
