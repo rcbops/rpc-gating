@@ -73,7 +73,7 @@ class Cleanup:
 
         self.username = os.environ["PUBCLOUD_USERNAME"]
         self.api_key = os.environ["PUBCLOUD_API_KEY"]
-        self.regions = os.environ["REGIONS"].split(' ')
+        self.regions = filter(None, re.split('[, ]', os.environ["REGIONS"]))
 
     @log
     def init_rackspace_monitoring(self):

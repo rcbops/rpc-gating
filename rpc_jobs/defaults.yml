@@ -3,7 +3,10 @@
     name: global
     IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     FLAVOR: "performance2-15"
-    REGION: "DFW"
+    # Available Regions: IAD DFW ORD HKG SYD
+    REGIONS: "DFW"
+    FALLBACK_REGIONS: ""
+
     # rpc_params
     DEPLOY_SWIFT: "yes"
     DEPLOY_CEPH: "no"

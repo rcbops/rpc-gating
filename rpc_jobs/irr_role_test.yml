@@ -95,7 +95,8 @@
       - instance_params:
           IMAGE: "{IMAGE}"
           FLAVOR: "{irr_flavor}"
-          REGION: "{REGION}"
+          REGIONS: "ORD"
+          FALLBACK_REGIONS: "DFW IAD ORD HKG SYD"
       - string:
           name: IRR_CONTEXT
           default: "{context}"

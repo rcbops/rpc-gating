@@ -2,8 +2,11 @@
  */
 def cleanup(Map args){
   withCredentials(common.get_cloud_creds()){
-
     dir("rpc-gating/playbooks"){
+      if (!("inventory" in args)){
+        args.inventory = "inventory"
+      }
+      unstash(args.inventory)
       pyrax_cfg = common.writePyraxCfg(
         username: env.PUBCLOUD_USERNAME,
         api_key: env.PUBCLOUD_API_KEY
@@ -12,7 +15,7 @@ def cleanup(Map args){
         common.venvPlaybook(
           playbooks: ['cleanup_pubcloud.yml'],
           args: [
-            "-i inventory",
+            "-i ${args.inventory}",
             "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
           ],
           vars: args
@@ -147,7 +150,9 @@ void add_instance_env_params_to_args(Map args){
   List instance_params=[
     'flavor',
     'image',
-    'region'
+    'regions',
+    'fallback_regions',
+    'instance_name'
   ]
   for (String p in instance_params){
     if (!(p in args)){
@@ -178,8 +183,9 @@ def runonpubcloud(Map args=[:], body){
   args.inventory="inventory.${common.rand_int_str()}"
   args.inventory_path="${WORKSPACE}/rpc-gating/playbooks/${args.inventory}"
   String instance_name = common.gen_instance_name()
+  args.instance_name = instance_name
   try{
-    getPubCloudSlave(args + [instance_name: instance_name])
+    getPubCloudSlave(args)
     common.use_node(instance_name){
       body()
     }
@@ -188,7 +194,7 @@ def runonpubcloud(Map args=[:], body){
     throw e
   }finally {
     try {
-      delPubCloudSlave(instance_name: instance_name)
+      delPubCloudSlave(args)
     } catch (e){
       print "Error while cleaning up, swallowing this exception to prevent "\
             +"cleanup errors from failing the build: ${e}"

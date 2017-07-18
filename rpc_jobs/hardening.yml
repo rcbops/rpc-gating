@@ -29,7 +29,8 @@
       - instance_params:
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
           FLAVOR: "onmetal-io1"
-          REGION: "IAD"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
       - rpc_repo_params:
           RPC_BRANCH: "{branch}"
       - osa_ops_params:

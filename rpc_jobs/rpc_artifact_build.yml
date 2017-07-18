@@ -45,7 +45,8 @@
       - instance_params:
          IMAGE: "{IMAGE}"
          FLAVOR: "general1-4"
-         REGION: "{REGION}"
+         REGIONS: "{REGIONS}"
+         FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
       - string:
           name: ANSIBLE_PARAMETERS
           default: "-v"

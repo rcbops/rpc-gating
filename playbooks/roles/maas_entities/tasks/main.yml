@@ -1,12 +1,12 @@
 ---
 - name: Create or delete entities for each host
-  local_action:
-      module: rax_mon_entity
+  rax_mon_entity:
       username: "{{ lookup('env', 'PUBCLOUD_USERNAME') }}"
       api_key: "{{ lookup('env', 'PUBCLOUD_API_KEY') }}"
       state: "{{ state }}"
       label: "{{ item }}"
-      region: "{{ lookup('env', 'REGION') }}"
+      region: "{{ rax_region }}"
+  delegate_to: localhost
   with_items: "{{ entity_labels }}"
   register: rax
   until: rax|success

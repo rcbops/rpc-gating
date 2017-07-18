@@ -10,7 +10,8 @@
       - rpc_gating_params
       - instance_params:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-          REGION: "IAD"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
           FLAVOR: general1-8
       - jenkins_node_params:
           JENKINS_NODE_LABELS: "pubcloud_multiuse"

@@ -11,7 +11,8 @@
       - rpc_maas_params:
           RPC_MAAS_BRANCH: master
       - instance_params:
-          REGION: IAD
+          REGIONS: IAD
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
           FLAVOR: "general1-8"
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - string:

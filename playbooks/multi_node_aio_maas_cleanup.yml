@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- hosts: job_nodes
   connection: local
+  gather_facts: False
   roles:
     - { role: maas_entities, state: 'absent'}
