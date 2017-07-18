@@ -16,11 +16,11 @@ def void create_workspace_venv(){
       then
         # redhat/centos
         source /opt/rh/python27/enable
-        virtualenv --python=/opt/rh/python27/root/usr/bin/python .venv
+        virtualenv --no-pip --no-setuptools --no-wheel --python=/opt/rh/python27/root/usr/bin/python .venv
         # hack the selinux module into the venv
         cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
       else
-        virtualenv .venv
+        virtualenv --no-pip --no-setuptools --no-wheel .venv
       fi
     fi
 
@@ -30,12 +30,25 @@ def void create_workspace_venv(){
     # UG-613 change TMPDIR to directory with more space
     export TMPDIR="/var/lib/jenkins/tmp"
 
+    # If the pip version we're using is not the same as the constraint then replace it
+    PIP_TARGET="\$(awk -F= '/^pip==/ {print \$3}' rpc-gating/constraints.txt)"
+    VENV_PYTHON=".venv/bin/python"
+    VENV_PIP=".venv/bin/pip"
+    if [[ "\$(\${VENV_PIP} --version)" != "pip \${PIP_TARGET}"* ]]; then
+      # Install a known version of pip, setuptools, and wheel in the venv
+      CURL_CMD="curl --silent --show-error --retry 5"
+      OUTPUT_FILE="get-pip.py"
+      \${CURL_CMD} https://bootstrap.pypa.io/get-pip.py > \${OUTPUT_FILE} \
+        || \${CURL_CMD} https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py > \${OUTPUT_FILE}
+      GETPIP_OPTIONS="pip setuptools wheel --constraint rpc-gating/constraints.txt"
+      \${VENV_PYTHON} \${OUTPUT_FILE} \${GETPIP_OPTIONS} \
+        || \${VENV_PYTHON} \${OUTPUT_FILE} --isolated \${GETPIP_OPTIONS}
+    fi
+
     # Install rpc-gating requirements
-    pip install \
-      --isolated \
-      -U \
-      -c rpc-gating/constraints.txt \
-      -r rpc-gating/requirements.txt
+    PIP_OPTIONS="-c rpc-gating/constraints.txt -r rpc-gating/requirements.txt"
+    \${VENV_PIP} install \${PIP_OPTIONS} \
+      || \${VENV_PIP} install --isolated \${PIP_OPTIONS}
   """
 }
 
