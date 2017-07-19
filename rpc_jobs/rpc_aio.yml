@@ -252,8 +252,6 @@
               Connect Slave
               Prepare Deployment
               Deploy RPC w/ Script
-              Setup MaaS
-              Verify MaaS
               Install Tempest
               Tempest Tests
               Prepare Kibana Selenium
@@ -303,7 +301,6 @@
               deploy = load 'pipeline_steps/deploy.groovy'
               tempest = load 'pipeline_steps/tempest.groovy'
               holland = load 'pipeline_steps/holland.groovy'
-              maas = load 'pipeline_steps/maas.groovy'
               kibana = load 'pipeline_steps/kibana.groovy'
             }}
             // This sets kibana_branch based on STAGES
@@ -346,7 +343,6 @@
                 environment_vars = [
                   "DEPLOY_HAPROXY=yes",
                   "DEPLOY_AIO=no",
-                  "DEPLOY_MAAS=no",
                   "DEPLOY_TEMPEST=no",
                   "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
                   "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
@@ -355,8 +351,6 @@
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
-                maas.deploy()
-                maas.verify()
                 tempest.tempest()
                 kibana.kibana(kibana_branch)
                 holland.holland()
@@ -364,15 +358,11 @@
                   deploy.upgrade_minor(environment_vars: environment_vars)
                 }} else if (env.STAGES.contains("Major Upgrade")) {{
                   deploy.upgrade_major(environment_vars: environment_vars)
-                  maas.deploy()
-                  maas.verify()
                   tempest.tempest()
                   kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                   holland.holland()
                 }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
                   deploy.upgrade_leapfrog(environment_vars: environment_vars)
-                  maas.deploy()
-                  maas.verify()
                   tempest.tempest()
                   kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                 }}
