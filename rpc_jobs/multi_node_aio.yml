@@ -55,6 +55,23 @@
           ACTION_STAGES: >-
             Install Tempest,
             Leapfrog Upgrade
+    resources:
+      - none:
+          GENERATE_TEST_NETWORKS: "0"
+          GENERATE_TEST_SERVERS: "0"
+          GENERATE_TEST_VOLUMES: "0"
+      - small:
+          GENERATE_TEST_NETWORKS: "20"
+          GENERATE_TEST_SERVERS: "20"
+          GENERATE_TEST_VOLUMES: "8"
+      - medium:
+          GENERATE_TEST_NETWORKS: "50"
+          GENERATE_TEST_SERVERS: "50"
+          GENERATE_TEST_VOLUMES: "20"
+      - large:
+          GENERATE_TEST_NETWORKS: "100"
+          GENERATE_TEST_SERVERS: "100"
+          GENERATE_TEST_VOLUMES: "40"
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
@@ -91,8 +108,18 @@
       # the source series (kilo-mitaka) on xenial.
       - image: xenial
         action: leapfrogupgrade
+      # Resources are currently only used to measure end-user impact of
+      # leapfrog upgrades
+      - action: deploy
+        resources: small
+      - action: deploy
+        resources: medium
+      - action: deploy
+        resources: large
+      - action: leapfrogupgrade
+        resources: none
     jobs:
-      - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
+      - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
       - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
 
 - job-template:
@@ -110,9 +137,9 @@
         stage('OnMetal Multi-Node AIO') {{
           git branch: "{branch}", url: "https://github.com/rcbops/rpc-openstack"
           if("{series}" == "mitaka"){{
-            build job: 'OnMetal-Multi-Node-AIO_mitaka-trusty-deploy-post-merge'
+            build job: 'OnMetal-Multi-Node-AIO_mitaka-trusty-deploy-none-post-merge'
           }} else {{
-            build job: 'OnMetal-Multi-Node-AIO_{series}-xenial-deploy-post-merge'
+            build job: 'OnMetal-Multi-Node-AIO_{series}-xenial-deploy-none-post-merge'
           }}
         }} // stage
         stage('Push to rpc-openstack'){{
@@ -127,7 +154,7 @@
       }} // node
 
 - job-template:
-    name: 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
+    name: 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
     project-type: workflow
     # DEFAULTS
     DEFAULT_STAGES: >-
@@ -198,6 +225,10 @@
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
               Destroy Slave
+      - generate_test_params:
+          GENERATE_TEST_NETWORKS: "{GENERATE_TEST_NETWORKS}"
+          GENERATE_TEST_SERVERS: "{GENERATE_TEST_SERVERS}"
+          GENERATE_TEST_VOLUMES: "{GENERATE_TEST_VOLUMES}"
 
     dsl: |
       common.shared_slave(){{
