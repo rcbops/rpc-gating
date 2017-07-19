@@ -1,6 +1,20 @@
 - project:
     name: 'Multi-Node-AIO-Jobs'
     series:
+      - kilo:
+          branch: kilo
+          branches: "kilo.*"
+          # There's no kilo branch on [1], but liberty-12.2 branch seems to
+          # work OK.
+          # [1] https://github.com/rcbops-qe/kibana-selenium.git
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+      - liberty:
+          branch: liberty-12.2
+          branches: "liberty-.*"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
       - mitaka:
           branch: mitaka-13.1
           SERIES_USER_VARS: |
@@ -13,6 +27,10 @@
           branch: newton-14.1
           SERIES_USER_VARS: |
             tempest_test_sets: 'all'
+            lxc_container_vg_name: "USE_DIR_NOT_VG"
+            glance_default_store: "swift"
+            neutron_legacy_ha_tool_enabled: true
+          UPGRADE_FROM_REF: "kilo"
       - master:
           branch: master
           SERIES_USER_VARS: |
@@ -33,6 +51,10 @@
             Prepare Kibana Selenium,
             Kibana Tests,
             Holland
+      - leapfrogupgrade:
+          ACTION_STAGES: >-
+            Install Tempest,
+            Leapfrog Upgrade
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
@@ -41,6 +63,10 @@
     exclude:
       # Xenial builds are run for newton and above
       # as it is not supported distro before newton.
+      - series: kilo
+        image: xenial
+      - series: liberty
+        image: xenial
       - series: mitaka
         image: xenial
       # Trusty builds are not executed for master
@@ -48,6 +74,23 @@
       # Ocata onwards.
       - series: master
         image: trusty
+      # Leapfrog upgrades are only run for kilo --> newton141
+      # as the upgrade method is not supported for any
+      # other target series.
+      # the kilo --> newton141 job is triggered by PRs to either branch.
+      - series: liberty
+        action: leapfrogupgrade
+      - series: mitaka
+        action: leapfrogupgrade
+      - series: newton140
+        action: leapfrogupgrade
+      - series: master
+        action: leapfrogupgrade
+      # Leapfrog upgrades cannot be executed on
+      # xenial as it is not possible to install
+      # the source series (kilo-mitaka) on xenial.
+      - image: xenial
+        action: leapfrogupgrade
     jobs:
       - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
       - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
@@ -129,6 +172,7 @@
             {CONTEXT_USER_VARS}
             {SERIES_USER_VARS}
             {TRIGGER_USER_VARS}
+          UPGRADE_FROM_REF: "{UPGRADE_FROM_REF}"
       - string:
           name: STAGES
           default: "{DEFAULT_STAGES}, {ACTION_STAGES}, {TRIGGER_STAGES}"
@@ -150,6 +194,7 @@
               Prepare Kibana Selenium
               Kibana Tests
               Holland
+              Leapfrog Upgrade
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
               Destroy Slave
@@ -173,6 +218,17 @@
           multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
 
           common.use_node(deploy_node){{
+            // MNAIO prevents ANSIBLE_GIT_REPO and ANSIBLE_GIT_RELEASE from being overridden
+            // Re-running bootstrap-ansible.sh to use ssh_retry
+            if (env.STAGES.contains("Deploy RPC w/ Script")) {{
+              dir("/opt/rpc-openstack/openstack-ansible") {{
+                withEnv(common.get_deploy_script_env()) {{
+                  sh """#!/bin/bash -xe
+                     ./scripts/bootstrap-ansible.sh
+                     """
+                }}
+              }}
+            }}
             deploy.deploy_sh(
               environment_vars: [
                 "DEPLOY_HAPROXY=yes",
@@ -199,6 +255,9 @@
                 holland.holland()
               }}
             ) // parallel
+            if (env.STAGES.contains("Leapfrog Upgrade")) {{
+              deploy.upgrade_leapfrog(environment_vars: environment_vars)
+            }}
           }}// deploy node on public cloud node
         }} catch (e){{
             currentBuild.result = 'FAILURE'

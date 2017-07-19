@@ -2,7 +2,11 @@ def prepare() {
   common.conditionalStage(
     stage_name: 'Prepare Multi-Node AIO',
     stage: {
-      common.prepareRpcGit(env.RPC_BRANCH)
+      if (env.STAGES.contains("Leapfrog Upgrade")) {
+        common.prepareRpcGit(env.UPGRADE_FROM_REF, "/opt")
+      } else {
+        common.prepareRpcGit("auto", "/opt")
+      }
       String osa_commit = common.get_current_git_sha("/opt/rpc-openstack/openstack-ansible")
       dir("openstack-ansible-ops") {
         git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
@@ -56,9 +60,7 @@ def prepare() {
       sudo cp -R /opt/rpc-openstack/openstack-ansible/etc/openstack_deploy /etc
       sudo cp /etc/openstack_deploy/user_variables.yml.bak /etc/openstack_deploy/user_variables.yml
 
-      sudo mv /etc/openstack_deploy/user_secrets.yml /etc/openstack_deploy/user_osa_secrets.yml
-      sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_*_defaults.yml /etc/openstack_deploy
-      sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_rpco_secrets.yml /etc/openstack_deploy
+      sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_*.yml /etc/openstack_deploy
       sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/env.d/* /etc/openstack_deploy/env.d
 EOF
       """
