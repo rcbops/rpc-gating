@@ -1,5 +1,5 @@
 - project:
-    name: 'Multi-Node-AIO-Jobs'
+    name: 'git-harry-Multi-Node-AIO-Jobs'
     series:
       - kilo:
           branch: kilo
@@ -99,11 +99,11 @@
       - series: master
         image: trusty
     jobs:
-      - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
-      - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
+      - 'git-harry-OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
+      - 'git-harry-OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
 
 - job-template:
-    name: 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
+    name: 'git-harry-OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
     project-type: workflow
     properties:
       - build-discarder:
@@ -117,9 +117,9 @@
         stage('OnMetal Multi-Node AIO') {{
           git branch: "{branch}", url: "https://github.com/rcbops/rpc-openstack"
           if("{series}" == "mitaka"){{
-            build job: 'OnMetal-Multi-Node-AIO_mitaka-trusty-deploy-post-merge'
+            build job: 'git-harry-OnMetal-Multi-Node-AIO_mitaka-trusty-deploy-post-merge'
           }} else {{
-            build job: 'OnMetal-Multi-Node-AIO_{series}-xenial-deploy-post-merge'
+            build job: 'git-harry-OnMetal-Multi-Node-AIO_{series}-xenial-deploy-post-merge'
           }}
         }} // stage
         stage('Push to rpc-openstack'){{
@@ -134,7 +134,7 @@
       }} // node
 
 - job-template:
-    name: 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
+    name: 'git-harry-OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{trigger}'
     project-type: workflow
     # DEFAULTS
     DEFAULT_STAGES: >-
@@ -250,8 +250,7 @@
                 "DEPLOY_ELK=yes",
                 "DEPLOY_TEMPEST=no",
                 "DEPLOY_AIO=no",
-                "DEPLOY_MAAS=no",
-                "DEPLOY_SUPPORT_ROLE=yes"
+                "DEPLOY_MAAS=no"
                 ]
             ) // deploy_sh
             dir("rpc-gating"){{
