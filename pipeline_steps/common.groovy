@@ -385,6 +385,7 @@ def prepareConfigs(Map args){
   withCredentials(get_cloud_creds()){
       dir("rpc-gating"){
         git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+        maas = load 'pipeline_steps/maas.groovy'
       } //dir
       dir("rpc-gating/playbooks"){
         common.install_ansible()
