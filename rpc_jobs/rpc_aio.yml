@@ -35,16 +35,12 @@
     action:
       - deploy:
           ACTION_STAGES: >-
-            Setup MaaS,
-            Verify MaaS,
             Install Tempest,
             Tempest Tests,
             Prepare Kibana Selenium,
             Kibana Tests
       - majorupgrade:
           ACTION_STAGES: >-
-            Setup MaaS,
-            Verify MaaS,
             Install Tempest,
             Tempest Tests,
             Prepare Kibana Selenium,
@@ -57,8 +53,6 @@
       - leapfrogupgrade:
           ACTION_STAGES: >-
             Leapfrog Upgrade,
-            Setup MaaS,
-            Verify MaaS,
             Install Tempest,
             Tempest Tests,
             Prepare Kibana Selenium,
@@ -212,6 +206,7 @@
     branch: master
     NUM_TO_KEEP: 30
     IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    DEPLOY_MAAS: "YES"
     DEPLOY_TELEGRAF: "NO"
     DEPLOY_INFLUX: "NO"
     # TEMPLATE
@@ -233,6 +228,7 @@
           DEPLOY_CEPH: "{DEPLOY_CEPH}"
           DEPLOY_ELK: "{DEPLOY_ELK}"
           DEPLOY_SUPPORT_ROLE: "{DEPLOY_SUPPORT_ROLE}"
+          DEPLOY_MAAS: "{DEPLOY_MAAS}"
           USER_VARS: |
             {CONTEXT_USER_VARS}
             {SERIES_USER_VARS}
