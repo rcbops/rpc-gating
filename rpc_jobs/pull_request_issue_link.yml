@@ -34,21 +34,6 @@
           name: REPO
           default: "{repo}"
     dsl: |
-      node() {{
-        deleteDir()
-        if (REPO == "rpc_gating") {{
-          branch = env.ghprbSourceBranch
-          url = env.ghprbAuthorRepoGitUrl
-        }} else {{
-          branch = env.RPC_GATING_BRANCH
-          url = env.RPC_GATING_REPO
-        }}
-        dir("rpc-gating") {{
-          git branch: branch, url: url
-          common = load 'pipeline_steps/common.groovy'
-          github = load 'pipeline_steps/github.groovy'
-          venv = "${{env.WORKSPACE}}/.venv"
-          sh "virtualenv ${{venv}} && . ${{venv}}/bin/activate && pip install -c constraints.txt click github3.py"
-        }}
+      common.shared_slave() {{
         github.add_issue_url_to_pr()
       }}

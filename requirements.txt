@@ -11,3 +11,4 @@ pyrax
 python-dateutil
 rackspace_monitoring
 six
+urllib3

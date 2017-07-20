@@ -70,5 +70,6 @@ stevedore==1.19.1
 tox==2.7.0
 uritemplate.py==3.0.2
 uritemplate==3.0.0
+urllib3==1.18.1
 wheel==0.29.0
 wrapt==1.10.10

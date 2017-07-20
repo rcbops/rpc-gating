@@ -20,12 +20,7 @@ def connect(port=22){
   common.conditionalStage(
     stage_name: "Connect Slave",
     stage: {
-      node('CentOS'){
-        deleteDir()
-        dir('rpc-gating'){
-          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-        }
-        common.create_workspace_venv()
+      common.internal_slave(){
         withCredentials([
           file(
             credentialsId: 'id_rsa_cloud10_jenkins_file',
@@ -61,12 +56,7 @@ def destroy(slave_name){
   common.conditionalStep(
     step_name: 'Destroy Slave',
     step: {
-      node('CentOS'){
-        deleteDir()
-        dir('rpc-gating'){
-          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-        }
-        common.create_workspace_venv()
+      common.internal_slave(){
         withCredentials([
           usernamePassword(
             credentialsId: "service_account_jenkins_api_creds",

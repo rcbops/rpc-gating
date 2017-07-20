@@ -140,15 +140,8 @@
           cancel-builds-on-update: true
     dsl: |
       // CIT slave
-      node() {{
-        deleteDir()
+      common.shared_slave() {{
         currentBuild.result = "SUCCESS"
-        dir("rpc-gating") {{
-          git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-          common = load 'pipeline_steps/common.groovy'
-          pubcloud = load 'pipeline_steps/pubcloud.groovy'
-          artifact_build = load 'pipeline_steps/artifact_build.groovy'
-        }}
         // We need to checkout the rpc-openstack repo on the CIT Slave
         // so that we can check whether the patch is a docs-only patch
         // before allocating resources unnecessarily.
@@ -160,15 +153,8 @@
           common.conditionalStage(
             stage_name: "Build Apt Artifacts",
             stage: {{
-              node('ArtifactBuilder2') {{
-                deleteDir()
-                dir("rpc-gating") {{
-                  git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-                  common = load 'pipeline_steps/common.groovy'
-                  artifact_build = load 'pipeline_steps/artifact_build.groovy'
-                }}
+              common.use_node('ArtifactBuilder2') {{
                 artifact_build.apt()
-                deleteDir()
               }} // node ArtifactBuilder2
             }} // stage
           ) // conditionalStage
@@ -184,5 +170,4 @@
           common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
           common.delete_workspace()
         }}
-        deleteDir()
       }} // node

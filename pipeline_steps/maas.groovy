@@ -8,7 +8,6 @@ def prepare(Map args) {
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY
           )
-          common.install_ansible()
           withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
             common.venvPlaybook(
               playbooks: ['multi_node_aio_maas_entities.yml'],
@@ -48,6 +47,17 @@ def verify() {
   ) //conditionalStage
 }
 
+// Add MaaS vars as properties of the env object
+// This is similar to withEnv but doesn't require
+// another level of nesting.
+void add_maas_env_vars(){
+  List vars = get_maas_token_and_url()
+  for (def i=0; i<vars.size(); i++){
+    kv = vars[i].split('=')
+    env[kv[0]] = kv[1]
+  }
+}
+
 List get_maas_token_and_url() {
   return maas_utils(['get_token_url']).trim().tokenize(" ")
 }
@@ -71,7 +81,6 @@ def entity_cleanup(Map args){
     step: {
       withCredentials(common.get_cloud_creds()) {
         dir("rpc-gating/playbooks") {
-          common.install_ansible()
           pyrax_cfg = common.writePyraxCfg(
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY

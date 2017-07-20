@@ -1,6 +1,6 @@
 def webhooks(){
   instance_name = "WEBHOOK-PROXY"
-  pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
+  pubcloud.getPubCloudSlave(instance_name: instance_name)
   common.override_inventory()
   try{
     common.conditionalStage(
@@ -49,7 +49,7 @@ def webhooks(){
           } //dir
         } //withCredentials
         ip = readFile file: "instance_address"
-        node("master"){
+       common.use_node("master"){
           withCredentials([
             file(
               credentialsId: 'id_rsa_cloud10_jenkins_file',
@@ -90,7 +90,7 @@ EOF
     print(e)
     throw e
   }finally{
-    pubCloudSlave.delPubCloudSlave()
+    pubcloud.delPubCloudSlave()
   }
 } //func
 return this

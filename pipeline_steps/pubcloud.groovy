@@ -13,7 +13,6 @@ def create(Map args){
   withEnv(["RAX_REGION=${args.region}"]){
     withCredentials(common.get_cloud_creds()){
       dir("rpc-gating/playbooks"){
-        common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
           username: env.PUBCLOUD_USERNAME,
           api_key: env.PUBCLOUD_API_KEY
@@ -45,7 +44,6 @@ def cleanup(Map args){
   withEnv(['ANSIBLE_FORCE_COLOR=true']){
     withCredentials(common.get_cloud_creds()){
       dir("rpc-gating/playbooks"){
-        common.install_ansible()
         pyrax_cfg = common.writePyraxCfg(
           username: env.PUBCLOUD_USERNAME,
           api_key: env.PUBCLOUD_API_KEY
@@ -70,7 +68,6 @@ def cleanup(Map args){
 
 
 def getPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline_steps/ssh_slave.groovy'
   common.conditionalStage(
     stage_name: 'Allocate Resources',
     stage: {
@@ -87,7 +84,6 @@ def getPubCloudSlave(Map args){
   ssh_slave.connect()
 }
 def delPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline_steps/ssh_slave.groovy'
   common.conditionalStep(
     step_name: "Pause",
     step: {
@@ -112,7 +108,7 @@ def runonpubcloud(body){
   instance_name = common.gen_instance_name()
   try{
     getPubCloudSlave(instance_name: instance_name)
-    node(instance_name){
+    common.use_node(instance_name){
       body()
     }
   }catch (e){
@@ -125,11 +121,7 @@ def runonpubcloud(body){
 
 def uploadToCloudFiles(Map args){
   withCredentials(common.get_cloud_creds()) {
-    dir("rpc-gating"){
-      git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-    }
     dir("rpc-gating/playbooks") {
-      common.install_ansible()
       pyrax_cfg = common.writePyraxCfg(
         username: env.PUBCLOUD_USERNAME,
         api_key: env.PUBCLOUD_API_KEY

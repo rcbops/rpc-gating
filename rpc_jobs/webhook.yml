@@ -45,12 +45,6 @@
             node ansible_host=YOUR_IP_HERE
 
     dsl: |
-      node('CentOS'){
-          dir("rpc-gating"){
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
-              pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
-              webhooks = load 'pipeline_steps/webhooks.groovy'
-          }
+      common.internal_slave(){
           webhooks.webhooks()
       } // cit node

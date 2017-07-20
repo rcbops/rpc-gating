@@ -31,18 +31,12 @@
               Destroy Slave
 
     dsl: |
-      node(){
-          dir("rpc-gating"){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline_steps/common.groovy'
-            pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
-            maas = load 'pipeline_steps/maas.groovy'
-          }
+      common.shared_slave(){
           dir("rpc-maas"){
             git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
           }
           String instance_name = common.gen_instance_name("long-running-slave")
-          pubCloudSlave.getPubCloudSlave(instance_name: instance_name)
+          pubcloud.getPubCloudSlave(instance_name: instance_name)
           try{
             withCredentials([
               file(
@@ -97,6 +91,6 @@
             throw(e)
           } finally {
             // this doesn't run by default as cleanup isn't included in stages
-            pubCloudSlave.delPubCloudSlave(instance_name: instance_name)
+            pubcloud.delPubCloudSlave(instance_name: instance_name)
           }
       } // cit node
