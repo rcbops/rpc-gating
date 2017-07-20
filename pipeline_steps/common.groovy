@@ -523,7 +523,7 @@ def delete_workspace() {
   }
 }
 
-def create_jira_issue(project="UG", tag=env.BUILD_TAG, link=env.BUILD_URL, type="Task"){
+def create_jira_issue(project="RE", tag=env.BUILD_TAG, link=env.BUILD_URL, type="Task"){
   withCredentials([
     usernamePassword(
       credentialsId: "jira_user_pass",
