@@ -67,7 +67,7 @@
       - minorupgrade:
           ACTION_STAGES: >-
             Minor Upgrade
-          UPGRADE_FROM_REF: "r14.0.0"
+          UPGRADE_FROM_REF: "newton-14.0"
     scenario:
       - swift
       - ceph:
