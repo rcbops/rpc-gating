@@ -256,9 +256,6 @@
 
     dsl: |
       common.shared_slave(){{
-        dir(env.WORKSPACE) {{
-          deleteDir()
-        }}
         try {{
           instance_name = common.gen_instance_name()
           deploy_node = null
@@ -325,6 +322,5 @@
             if(deploy_node != null){{
               ssh_slave.destroy(deploy_node)
             }}
-            common.delete_workspace()
         }}
       }} // cit node
