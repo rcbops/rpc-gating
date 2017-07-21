@@ -15,7 +15,7 @@
           INSTANCE_NAME: "WEBHOOK-PROXY"
       - string:
           name: JIRA_PROJECT
-          default: UG
+          default: RE
           description: |
             Jira project code. Issues will be created in this project
             for MaaS alerts
