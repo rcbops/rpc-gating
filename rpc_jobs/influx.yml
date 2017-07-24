@@ -51,6 +51,7 @@
             only be allowed from RAX bastions and internal Jenkins nodes.
 
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.internal_slave(){
         influx.setup()
       } // cit node

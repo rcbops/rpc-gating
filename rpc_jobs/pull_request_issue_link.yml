@@ -34,6 +34,7 @@
           name: REPO
           default: "{repo}"
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave() {{
         github.add_issue_url_to_pr()
       }}

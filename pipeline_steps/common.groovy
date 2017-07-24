@@ -1,7 +1,6 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 
-
 def void create_workspace_venv(){
   print "create_workspace_venv"
   sh """#!/bin/bash -xe
@@ -578,13 +577,10 @@ void use_node(label=null, body){
     try {
       deleteDir()
       dir("rpc-gating"){
-        if (! env.RPC_GATING_REPO){
-          env.RPC_GATING_REPO="https://github.com/rcbops/rpc-gating"
-        }
         if (! env.RPC_GATING_BRANCH){
           env.RPC_GATING_BRANCH="master"
         }
-        git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+        git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
       }
       install_ansible()
       body()

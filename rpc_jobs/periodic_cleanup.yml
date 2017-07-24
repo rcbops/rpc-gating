@@ -25,6 +25,7 @@
       - build-discarder:
           days-to-keep: 3
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       // Get list of jenkins slaves
       @NonCPS
       def getLongRunningNodes() {
@@ -72,7 +73,7 @@
         // common.use_node/shared_slave/internal_slave.
         container.inside {
           stage("Docker Checkout"){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
+            git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
           }
           stage("Public Cloud Cleanup"){
             withCredentials([

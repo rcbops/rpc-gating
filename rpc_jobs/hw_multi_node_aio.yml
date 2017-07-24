@@ -99,7 +99,7 @@
       - timed: ""
 
     dsl: |
-      // CIT Slave node
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       timeout(time: 8, unit: 'HOURS'){{
         common.shared_slave() {{
           try {{

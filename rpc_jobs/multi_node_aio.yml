@@ -146,6 +146,7 @@
     triggers:
       - github
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){{
         stage('OnMetal Multi-Node AIO') {{
           git branch: "{branch}", url: "https://github.com/rcbops/rpc-openstack"
@@ -255,6 +256,7 @@
           description: "The number of volume nodes to deploy."
 
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){{
         try {{
           instance_name = common.gen_instance_name()

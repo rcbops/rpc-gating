@@ -139,7 +139,7 @@
           status-context: 'CIT/artifact-{image}-{context}'
           cancel-builds-on-update: true
     dsl: |
-      // CIT slave
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave() {{
         currentBuild.result = "SUCCESS"
         // We need to checkout the rpc-openstack repo on the CIT Slave

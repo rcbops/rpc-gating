@@ -14,6 +14,7 @@
     triggers:
       - github # triggered post merge, not on PR
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){
         stage('Run Jenkins Job Builder') {
           git branch: "master", url: "https://github.com/rcbops/rpc-gating"
@@ -43,6 +44,7 @@
             default: false
         - rpc_gating_params
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.internal_slave(){
         dir("rpc-gating"){
           stage('Run JJB'){

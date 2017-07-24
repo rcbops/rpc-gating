@@ -22,7 +22,7 @@
               Cleanup
               Destroy Slave
     dsl: |
-      // CIT Slave node
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){
         pubcloud.runonpubcloud {
           sh """
