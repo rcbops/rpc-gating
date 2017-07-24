@@ -285,12 +285,13 @@
                 }}
               }}
             }}
+            environment_vars = [
+              "DEPLOY_HAPROXY=yes",
+              "DEPLOY_TEMPEST=no",
+              "DEPLOY_AIO=no",
+            ]
             deploy.deploy_sh(
-              environment_vars: [
-                "DEPLOY_HAPROXY=yes",
-                "DEPLOY_TEMPEST=no",
-                "DEPLOY_AIO=no",
-                ]
+              environment_vars: environment_vars
             ) // deploy_sh
             parallel(
               "tempest": {{
