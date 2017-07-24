@@ -55,7 +55,7 @@ def cleanup(Map args){
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
             ],
             vars: [
-              "instance_name": instance_name,
+              "instance_name": args.instance_name,
               "server_name": args.server_name,
               "region": args.region
             ]
@@ -94,13 +94,13 @@ def delPubCloudSlave(Map args){
     step_name: 'Cleanup',
     step: {
       cleanup (
-        instance_name: instance_name,
-        server_name: instance_name,
+        instance_name: args.instance_name,
+        server_name:  args.instance_name,
         region: env.REGION,
       )
     } //stage
   ) //conditionalStage
-  ssh_slave.destroy(instance_name)
+  ssh_slave.destroy(args.instance_name)
 }
 
 /* One func entrypoint to run a script on a single use slave */
