@@ -131,11 +131,12 @@
     name: rpc_gating_params
     parameters:
       - string:
-          name: RPC_GATING_REPO
-          default: "https://github.com/rcbops/rpc-gating"
-      - string:
           name: RPC_GATING_BRANCH
           default: "master"
+          description: |
+            Version of rpc-gating. This is used when loading the rpc-gating
+            groovy library, and when cloning RPC_GATING_REPO into each
+            workspace. The clone source is always rcbops/rpc-gating.
 
 - parameter:
     name: kibana_selenium_params

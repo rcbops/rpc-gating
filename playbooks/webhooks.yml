@@ -19,7 +19,7 @@
     GITHUB_CIDR: "192.30.252.0/22"
     GITHUB_HOOK_PORT: 80
 
-    RPC_GATING_REPO: "{{ lookup('env', 'RPC_GATING_REPO') }}"
+    RPC_GATING_REPO: "https://github.com/rcbops/rpc-gating"
     RPC_GATING_BRANCH: "{{ lookup('env', 'RPC_GATING_BRANCH') }}"
     RPC_GATING_DIR: /opt/rpc-gating
 
