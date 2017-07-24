@@ -45,6 +45,7 @@
             node ansible_host=YOUR_IP_HERE
 
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.internal_slave(){
           webhooks.webhooks()
       } // cit node

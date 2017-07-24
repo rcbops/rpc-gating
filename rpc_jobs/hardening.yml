@@ -68,6 +68,7 @@
               Destroy Slave
 
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){{
         try {{
           common.internal_slave(){{

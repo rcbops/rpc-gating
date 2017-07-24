@@ -282,7 +282,7 @@
           cancel-builds-on-update: true
 
     dsl: |
-      // CIT Slave node
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       currentBuild.result = 'SUCCESS'
       // pass JJB axes through to environment
       env.SCENARIO = "{scenario}"

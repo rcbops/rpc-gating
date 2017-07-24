@@ -31,6 +31,7 @@
               Destroy Slave
 
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){
           dir("rpc-maas"){
             git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO

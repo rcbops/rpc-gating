@@ -25,6 +25,7 @@
       - build-discarder:
           days-to-keep: 3
     dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       // Get list of jenkins slaves
       @NonCPS
       def getLongRunningNodes() {
