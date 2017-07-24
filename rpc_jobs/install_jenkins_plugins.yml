@@ -6,7 +6,7 @@
       # See params.yml
       - rpc_gating_params
     dsl: |
-      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      library "rpc-gating@${RPC_GATING_BRANCH}"
       common.shared_slave(){ // CIT slave node
         withCredentials([
           usernamePassword(

@@ -17,7 +17,7 @@
     properties:
       - rpc-gating-github
     dsl: |
-      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      library "rpc-gating@${RPC_GATING_BRANCH}"
       currentBuild.result = 'SUCCESS'
       common.shared_slave(){
         try{
