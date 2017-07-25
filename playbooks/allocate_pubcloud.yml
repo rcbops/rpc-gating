@@ -26,14 +26,17 @@
       when:
         - rax.success|length < count
 
-    - name: Fail on duplicate instance
+    - name: Instance exists but wasn't created succesfully
       fail:
         msg: |
-          While nova allows multiple instances with the same name,
-          the ansible rax module will not create an instance if one
-          with the requested name already exists. Please create
-          instances with unique names, using the common.gen_instance_name
-          function
+          This state can occur when an instance fails to build in time.
+          The api confirms that the existence exists, but it didn't go
+          into the active state within the timeout.
+
+          This state can also occur when trying to boot an instance with the
+          same name as an existing instance. In that case the rax module
+          sees that the instance exists but it didn't create it. It's important
+          to fail in that case so that a job doesn't run on a dirty node.
       when:
         - rax.success|length < count
         - rax.instances|length == count
