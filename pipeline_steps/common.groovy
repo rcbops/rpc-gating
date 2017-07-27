@@ -115,7 +115,7 @@ def venvPlaybook(Map args){
         write_json(file: vars_file, obj: args.vars)
         sh """#!/bin/bash -x
           which scl && source /opt/rh/python27/enable
-          . ${env.WORKSPACE}/.venv/bin/activate
+          set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
           export ANSIBLE_HOST_KEY_CHECKING=False
           ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
         """
@@ -545,7 +545,7 @@ def create_jira_issue(project="RE", tag=env.BUILD_TAG, link=env.BUILD_URL, type=
   ]){
     sh """#!/bin/bash -xe
       cd ${env.WORKSPACE}
-      . .venv/bin/activate
+      set +x; . .venv/bin/activate; set -x
       python rpc-gating/scripts/jirautils.py create_issue\
         --tag '$tag'\
         --link '$link'\

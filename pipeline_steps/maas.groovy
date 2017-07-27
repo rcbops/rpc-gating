@@ -93,7 +93,7 @@ def maas_utils(List args){
     return sh (
       script: """#!/bin/bash
         cd ${env.WORKSPACE}/rpc-gating/scripts
-        . ${env.WORKSPACE}/.venv/bin/activate
+        set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
         ./maasutils.py --username ${env.PUBCLOUD_USERNAME} --api-key ${env.PUBCLOUD_API_KEY} ${args.join(" ")}
       """,
       returnStdout: true
