@@ -7,7 +7,7 @@
       # params you want to override the defaults for.
       - instance_params:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-          FLAVOR: "performance2-15"
+          FLAVOR: "performance1-1"
           REGION: "DFW"
       - rpc_gating_params
       - string:
@@ -25,9 +25,31 @@
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.shared_slave(){
         pubcloud.runonpubcloud {
-          sh """
-            hostname; date
-            echo "your script here"
-          """
-        } //pubcloud
-      } //cit node
+          // Do something that creates an artifact
+          stage("Build"){
+            sh """
+              date > datestamp
+            """
+          }
+
+          stage("Upload"){
+            // upload the artifact to cloudfiles
+            pubcloud.uploadToCloudFiles(
+              container: "jenkins_logs",
+              src: "${WORKSPACE}/datestamp",
+              html_report_dest: "${WORKSPACE}/artifacts.html"
+            )
+          }
+
+          stage("Publish"){
+            // link to artifacts from Jenkins UI
+            publishHTML(
+              alwaysLinkToLastBuild: true,
+              keepAll: true,
+              reportFiles: "artifacts.html",
+              reportName: "Build Artifact Links",
+              reportDir: "${WORKSPACE}"
+            )
+          }
+        }
+      }
