@@ -1,0 +1,43 @@
+- job:
+    name: Build-Gating-Venv
+    project-type: workflow
+    concurrent: false
+    properties:
+      - rpc-gating-github
+    triggers:
+      - github # triggered post merge, not on PR
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.shared_slave(){
+        withCredentials(artifact_build.get_rpc_repo_creds()) {
+          sh """#!/bin/bash -xeu
+            # Tar venv and roles
+            pushd rpc-gating
+              SHA=\$(git rev-parse HEAD)
+            popd
+            archive="rpcgatingvenv_\${SHA}.tbz"
+            find .venv -name \\*.pyc -delete
+            echo "\${PWD}/.venv" > .venv/original_venv_path
+            echo \$SHA > .venv/venv_sha
+            tar cjfp \$archive .venv rpc-gating/playbooks/roles
+
+            # Add ssh host key
+            grep "\${REPO_HOST}" ~/.ssh/known_hosts \
+              || echo "\${REPO_HOST} \$(cat \$REPO_HOST_PUBKEY)" \
+              >> ~/.ssh/known_hosts
+
+            REPO_PATH="/var/www/repo/rpcgating/venvs"
+
+            # Upload generated version
+            scp -i \$REPO_USER_KEY \$archive \$REPO_USER@\$REPO_HOST:\$REPO_PATH
+
+            # Generate index
+            ssh -i \$REPO_USER_KEY \$REPO_USER@\$REPO_HOST "cd \$REPO_PATH; ls -1 *tbz > index"
+
+            # Keep 10 newest archives, remove the rest.
+            ssh -i \$REPO_USER_KEY \$REPO_USER@\$REPO_HOST "cd \$REPO_PATH && ls -t1 *tbz |tail -n +11 |while read f; do echo "'removing \$f'"; rm "'\$f'"; done"
+          """
+        }
+      }

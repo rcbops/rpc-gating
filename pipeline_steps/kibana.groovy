@@ -30,7 +30,7 @@ def kibana_prep(branch){
           pip install virtualenv
           virtualenv .venv
       fi
-      source .venv/bin/activate
+      set +x; source .venv/bin/activate; set -x
       if [ -f ~/.pip/pip.conf ]; then
         mv ~/.pip/pip.conf ~/.pip/pip.conf.bak
         pip install -r requirements.txt
@@ -47,7 +47,7 @@ def kibana_tests(branch){
     dir("kibana-selenium") {
       git url: env.KIBANA_SELENIUM_REPO, branch: "${branch}"
       sh """#!/bin/bash
-        source .venv/bin/activate
+        set +x; source .venv/bin/activate; set -x
         export PYTHONPATH=\$(pwd)
         export PATH=\$PATH:./phantomjs-2.1.1-linux-x86_64/bin
         # Remove any existing screenshots from old runs

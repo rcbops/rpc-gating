@@ -33,7 +33,7 @@ def mitaka_prep() {
         pip install virtualenv
         virtualenv .venv
     fi
-    source .venv/bin/activate
+    set +x; source .venv/bin/activate; set -x
 
     mv ~/.pip/pip.conf ~/.pip/pip.conf.bak
     pip install selenium==2.53.1
@@ -62,7 +62,7 @@ def mitaka_tests(){
         set -x
 
         # Run Horizon tests
-        source .venv/bin/activate
+        set +x; source .venv/bin/activate; set -x
         export TMP_CONF="/tmp/\${BUILD_TAG}_horizon_conf"
         mv openstack_dashboard/test/integration_tests/horizon.conf \$TMP_CONF
         export HORIZON_INTEGRATION_TESTS_CONFIG_FILE=\$TMP_CONF

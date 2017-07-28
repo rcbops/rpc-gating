@@ -67,7 +67,7 @@ def destroy(slave_name){
           dir("rpc-gating/scripts"){
             retry(5) {
               sh """
-                . ${env.WORKSPACE}/.venv/bin/activate
+                set +x; . ${env.WORKSPACE}/.venv/bin/activate; set +x
                 python jenkins_node.py \
                   delete --name "${slave_name}"
               """

@@ -13,7 +13,7 @@ def create_issue(
   ]){
     sh """#!/bin/bash -xe
       cd ${env.WORKSPACE}
-      . .venv/bin/activate
+      set +x; . .venv/bin/activate; set -x
       python rpc-gating/scripts/ghutils.py\
         --org '$org'\
         --repo '$repo'\
@@ -58,7 +58,7 @@ void add_issue_url_to_pr(upstream="upstream"){
   ]){
     sh """#!/bin/bash -xe
       cd $env.WORKSPACE
-      . .venv/bin/activate
+      set +x; . .venv/bin/activate; set -x
       python rpc-gating/scripts/ghutils.py\
         --org '$org'\
         --repo '$repo'\
