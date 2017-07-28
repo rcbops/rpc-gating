@@ -11,6 +11,8 @@
       daysToKeep: 14
     properties:
       - rpc-gating-github
+    parameters:
+      - rpc_gating_params
     triggers:
       - github # triggered post merge, not on PR
     dsl: |
