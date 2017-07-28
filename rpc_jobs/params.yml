@@ -69,7 +69,7 @@
           default: https://github.com/openstack/openstack-ansible-ops
       - string:
           name: OSA_OPS_BRANCH
-          default: master
+          default: b291961361c6f3a3921ca55f73cef36211876f1a
       - string:
           name: DEFAULT_IMAGE
           default: "{DEFAULT_IMAGE}"
