@@ -28,97 +28,84 @@ def get_rpc_repo_creds(){
 }
 
 def apt() {
-  withCredentials(get_rpc_repo_creds()) {
-    common.prepareRpcGit()
-    ansiColor('xterm') {
-      dir("/opt/rpc-openstack/") {
-        sh """#!/bin/bash
-        scripts/artifacts-building/apt/build-apt-artifacts.sh
-        """
-      } // dir
-    } // ansiColor
-  } // withCredentials
+  common.use_node('ArtifactBuilder2') {
+    withCredentials(get_rpc_repo_creds()) {
+      common.prepareRpcGit()
+      ansiColor('xterm') {
+        dir("/opt/rpc-openstack/") {
+          sh """#!/bin/bash
+          scripts/artifacts-building/apt/build-apt-artifacts.sh
+          """
+        } // dir
+      } // ansiColor
+    } // withCredentials
+  } // use_node
 }
 
-def git() {
-  common.conditionalStage(
-    stage_name: "Build Git Artifacts",
-    stage: {
-      pubcloud.runonpubcloud {
-        try {
-          withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit()
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/git/build-git-artifacts.sh
-                """
-              } // dir
-            } // ansiColor
-          } // withCredentials
-        } catch (e) {
-          print(e)
-          throw e
-        } finally {
-          common.archive_artifacts()
-        }
-      } // pubcloud slave
-    } // stage
-  ) // conditionalStage
+def git(String image) {
+  pubcloud.runonpubcloud('image': image) {
+    try {
+      withCredentials(get_rpc_repo_creds()) {
+        common.prepareRpcGit()
+        ansiColor('xterm') {
+          dir("/opt/rpc-openstack/") {
+            sh """#!/bin/bash
+            scripts/artifacts-building/git/build-git-artifacts.sh
+            """
+          } // dir
+        } // ansiColor
+      } // withCredentials
+    } catch (e) {
+      print(e)
+      throw e
+    } finally {
+      common.archive_artifacts()
+    }
+  } // pubcloud slave
 }
 
-def python() {
-  common.conditionalStage(
-    stage_name: "Build Python Artifacts",
-    stage: {
-      pubcloud.runonpubcloud {
-        try {
-          withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit()
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/python/build-python-artifacts.sh
-                """
-              } // dir
-            } // ansiColor
-          } // withCredentials
-        } catch (e) {
-          print(e)
-          throw e
-        } finally {
-          common.archive_artifacts()
-        }
-      } // pubcloud slave
-    } // stage
-  ) // conditionalStage
+def python(String image) {
+  pubcloud.runonpubcloud('image': image) {
+    try {
+      withCredentials(get_rpc_repo_creds()) {
+        common.prepareRpcGit()
+        ansiColor('xterm') {
+          dir("/opt/rpc-openstack/") {
+            sh """#!/bin/bash
+            scripts/artifacts-building/python/build-python-artifacts.sh
+            """
+          } // dir
+        } // ansiColor
+      } // withCredentials
+    } catch (e) {
+      print(e)
+      throw e
+    } finally {
+      common.archive_artifacts()
+    }
+  } // pubcloud slave
 }
 
-def container() {
-  common.conditionalStage(
-    stage_name: "Build Container Artifacts",
-    stage: {
-      pubcloud.runonpubcloud {
-        try {
-          withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit()
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/containers/build-process.sh
-                """
-              } // dir
-            } // ansiColor
-          } // withCredentials
-        } catch (e) {
-          print(e)
-          throw e
-        } finally {
-          common.archive_artifacts()
-        }
-      } // pubcloud slave
-    } // stage
-  ) // conditionalStage
+def container(String image) {
+  pubcloud.runonpubcloud('image': image) {
+    try {
+      withCredentials(get_rpc_repo_creds()) {
+        common.prepareRpcGit()
+        ansiColor('xterm') {
+          dir("/opt/rpc-openstack/") {
+            sh """#!/bin/bash
+            scripts/artifacts-building/containers/build-process.sh
+            """
+          } // dir
+        } // ansiColor
+      } // withCredentials
+    } catch (e) {
+      print(e)
+      throw e
+    } finally {
+      common.archive_artifacts()
+    }
+  } // pubcloud slave
 }
 
 return this
