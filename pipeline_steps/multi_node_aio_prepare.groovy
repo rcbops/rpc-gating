@@ -88,7 +88,8 @@ def prepare() {
       }
       String osa_commit = common.get_current_git_sha("/opt/rpc-openstack/openstack-ansible")
       dir("openstack-ansible-ops") {
-        git url: env.OSA_OPS_REPO, branch: env.OSA_OPS_BRANCH
+        git url: env.OSA_OPS_REPO, branch: "master"
+        sh "git checkout ${env.OSA_OPS_BRANCH}"
       }
       dir("openstack-ansible-ops/${env.MULTI_NODE_AIO_DIR}") {
         timeout(time: 45, unit: "MINUTES") {
