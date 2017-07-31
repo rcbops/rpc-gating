@@ -94,6 +94,14 @@
             Options:
               multi-node-aio
               multi-node-aio-xenial-ansible
+      - string:
+          name: "COMPUTE_NODES"
+          default: "{COMPUTE_NODES}"
+          description: "The number of compute nodes to deploy."
+      - string:
+          name: "VOLUME_NODES"
+          default: "{VOLUME_NODES}"
+          description: "The number of volume nodes to deploy."
 
 - parameter:
     name: rpc_deploy_params

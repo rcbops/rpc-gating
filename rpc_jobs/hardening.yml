@@ -35,6 +35,8 @@
       - osa_ops_params:
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "sdb"
+          COMPUTE_NODES: "{COMPUTE_NODES}"
+          VOLUME_NODES: "{VOLUME_NODES}"
       - text:
           name: "USER_VARS"
           default: "{USER_VARS}"

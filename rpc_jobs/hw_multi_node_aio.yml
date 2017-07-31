@@ -49,6 +49,8 @@
       - osa_ops_params:
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "mapper/lxc-aio"
+          COMPUTE_NODES: "{COMPUTE_NODES}"
+          VOLUME_NODES: "{VOLUME_NODES}"
       - rpc_repo_params:
           RPC_BRANCH: "{branch}"
       - string:
