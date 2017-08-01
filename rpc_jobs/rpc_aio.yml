@@ -14,6 +14,11 @@
           branch: mitaka-13.1
           branches: "mitaka-.*"
           UPGRADE_FROM_REF: "liberty-12.2"
+      - newton:
+          branch: newton
+          branches: "newton"
+          UPGRADE_FROM_REF: "kilo"
+          DEPLOY_TELEGRAF: "yes"
       - newton141:
           branch: newton-14.1
           branches: "newton-14.1.*"
@@ -63,6 +68,9 @@
       - minorupgrade:
           ACTION_STAGES: >-
             Minor Upgrade
+          # NOTE: Once the newton stabilization branch has been created
+          #       (newton-14.2 or similar), we'll need to find a way to
+          #       set this differently depending on the newton series.
           UPGRADE_FROM_REF: "r14.0.1"
     scenario:
       - swift
@@ -110,6 +118,8 @@
         action: majorupgrade
       - series: liberty
         action: majorupgrade
+      - series: newton
+        action: majorupgrade
       - series: newton141
         action: majorupgrade
       - series: master
@@ -154,6 +164,8 @@
       # scenario for newton onwards, but it will only
       # consume the cluster, not deploy it. At that
       # time the scenario can be added back again.
+      - series: newton
+        scenario: ceph
       - series: newton141
         scenario: ceph
       # Ceph builds are not tested for leapfrog upgrades
