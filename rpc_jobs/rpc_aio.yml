@@ -304,13 +304,7 @@
             // We need to checkout the rpc-openstack repo on the CIT Slave
             // so that we can check whether the patch is a docs-only patch
             // before allocating resources unnecessarily.
-            if (env.STAGES.contains("Minor Upgrade")
-                || env.STAGES.contains("Major Upgrade")
-                || env.STAGES.contains("Leapfrog Upgrade")) {{
-              common.prepareRpcGit(env.UPGRADE_FROM_REF, env.WORKSPACE)
-            }} else {{
-              common.prepareRpcGit("auto", env.WORKSPACE)
-            }}
+            common.prepareRpcGit("auto", env.WORKSPACE)
             if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
               return
             }}
