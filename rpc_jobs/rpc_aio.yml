@@ -14,10 +14,6 @@
           branch: mitaka-13.1
           branches: "mitaka-.*"
           UPGRADE_FROM_REF: "liberty-12.2"
-      - newton140:
-          branch: newton-14.0
-          branches: "newton-14.0.*"
-          DEPLOY_TELEGRAF: "yes"
       - newton141:
           branch: newton-14.1
           branches: "newton-14.1.*"
@@ -67,7 +63,7 @@
       - minorupgrade:
           ACTION_STAGES: >-
             Minor Upgrade
-          UPGRADE_FROM_REF: "newton-14.0"
+          UPGRADE_FROM_REF: "r14.0.1"
     scenario:
       - swift
       - ceph:
@@ -96,7 +92,7 @@
           DEPLOY_SUPPORT_ROLE: "yes"
     exclude:
       # Minor upgrades are only being executed
-      # for newton140->newton141 for now until
+      # for r14.0.1->newton141 for now until
       # the minor upgrade testing process is
       # stabilised.
       - series: kilo
@@ -104,8 +100,6 @@
       - series: liberty
         action: minorupgrade
       - series: mitaka
-        action: minorupgrade
-      - series: newton140
         action: minorupgrade
       - series: master
         action: minorupgrade
@@ -115,8 +109,6 @@
       - series: kilo
         action: majorupgrade
       - series: liberty
-        action: majorupgrade
-      - series: newton140
         action: majorupgrade
       - series: newton141
         action: majorupgrade
@@ -137,8 +129,6 @@
       - series: liberty
         action: leapfrogupgrade
       - series: mitaka
-        action: leapfrogupgrade
-      - series: newton140
         action: leapfrogupgrade
       - series: master
         action: leapfrogupgrade
@@ -164,8 +154,6 @@
       # scenario for newton onwards, but it will only
       # consume the cluster, not deploy it. At that
       # time the scenario can be added back again.
-      - series: newton140
-        scenario: ceph
       - series: newton141
         scenario: ceph
       # Ceph builds are not tested for leapfrog upgrades
