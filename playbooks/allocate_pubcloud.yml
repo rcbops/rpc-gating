@@ -2,15 +2,17 @@
 - hosts: localhost
   connection: local
   gather_facts: False
+  vars:
+    count: 1
   tasks:
     - name: Provision a set of public cloud instances
       local_action:
           module: rax
-          name: "{{ name }}"
+          name: "{{ instance_name }}"
           flavor: "{{ flavor }}"
           image: "{{ image }}"
           count: "{{ count }}"
-          key_name: "{{ keyname }}"
+          key_name: "jenkins"
           region: "{{ region }}"
           wait: yes
           wait_timeout: 900
