@@ -3,12 +3,14 @@ ansible
 appdirs
 click
 github3.py
+influxdb
 jenkins-job-builder
 jenkinsapi
 jira
 packaging
 pyrax
 python-dateutil
+python-subunit
 rackspace_monitoring
 six
 urllib3

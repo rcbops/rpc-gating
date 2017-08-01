@@ -12,6 +12,7 @@ flake8==3.3.0
 funcsigs==1.0.2
 github3.py==0.9.6
 idna==2.5
+influxdb==4.1.1
 ip-associations-python-novaclient-ext==0.2
 ipaddress==1.0.18
 iso8601==0.1.11
@@ -54,6 +55,7 @@ python-dateutil==2.6.0
 python-jenkins==0.4.14
 python-keystoneclient==3.10.0
 python-novaclient==2.27.0
+python-subunit==1.2.0
 pytz==2017.2
 PyYAML==3.12
 rackspace-auth-openstack==1.3
