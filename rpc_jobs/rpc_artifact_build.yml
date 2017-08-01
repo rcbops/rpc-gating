@@ -172,22 +172,28 @@
 
             // The apt artifacts are built on a long-lived slave
             // with a single executor, so no locking is required.
-            artifact_build.apt()
+            stage('Apt'){{
+              artifact_build.apt()
+            }}
 
             // We lock the git job per series to ensure that no
             // more than one job for each series executes at the
             // same time.
             // We use the first available image for the series
             // as the artifacts are not distribution-specific.
-            lock("artifact_git_${{env.series}}"){{
-              artifact_build.git(image_list[env.series][0])
+            stage('Git'){{
+              lock("artifact_git_${{env.series}}"){{
+                artifact_build.git(image_list[env.series][0])
+              }}
             }}
 
             // We lock the python job per series to ensure that no
             // more than one job for each series executes at the
             // same time.
-            lock("artifact_python_${{env.series}}"){{
-              parallel python_parallel
+            stage('Python'){{
+              lock("artifact_python_${{env.series}}"){{
+                parallel python_parallel
+              }}
             }}
 
             // We lock the container job with a static lock value
@@ -197,12 +203,14 @@
             // necessary due to a race condition when updating the
             // image index.
             // ref: RE-115
-            lock('artifact_container'){{
-              for (x in image_list[env.series]){{
-                def image = x
-                artifact_build.container(image)
-              }} //for
-            }} //lock
+            stage('Container'){{
+              lock('artifact_container'){{
+                for (x in image_list[env.series]){{
+                  def image = x
+                  artifact_build.container(image)
+                }} //for
+              }} //lock
+            }} //stage
           }} //if
         }} catch (e) {{
           print e
