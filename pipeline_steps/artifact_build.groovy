@@ -43,7 +43,8 @@ def apt() {
 }
 
 def git(String image) {
-  pubcloud.runonpubcloud('image': image) {
+  env.IMAGE = image
+  pubcloud.runonpubcloud() {
     try {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit()
@@ -65,7 +66,8 @@ def git(String image) {
 }
 
 def python(String image) {
-  pubcloud.runonpubcloud('image': image) {
+  env.IMAGE = image
+  pubcloud.runonpubcloud() {
     try {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit()
@@ -87,7 +89,8 @@ def python(String image) {
 }
 
 def container(String image) {
-  pubcloud.runonpubcloud('image': image) {
+  env.IMAGE = image
+  pubcloud.runonpubcloud() {
     try {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit()
