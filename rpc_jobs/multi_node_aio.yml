@@ -22,11 +22,6 @@
           SERIES_USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
           DEPLOY_TELEGRAF: "yes"
-      - newton140:
-          branch: newton-14.0
-          SERIES_USER_VARS: |
-            tempest_test_sets: 'all'
-          DEPLOY_TELEGRAF: "yes"
       - newton141:
           branch: newton-14.1
           SERIES_USER_VARS: |
@@ -111,8 +106,6 @@
       - series: liberty
         action: leapfrogupgrade
       - series: mitaka
-        action: leapfrogupgrade
-      - series: newton140
         action: leapfrogupgrade
       - series: master
         action: leapfrogupgrade

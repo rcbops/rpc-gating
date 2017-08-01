@@ -6,7 +6,7 @@
       - mitaka:
           branch: mitaka-13.1
       - newton:
-          branch: newton-14.0
+          branch: newton-14.1
       - master:
           branch: master
     context:
