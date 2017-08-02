@@ -17,9 +17,9 @@
  *  - playbooks/inventory/hosts
  */
 def connect(port=22){
-  common.conditionalStage(
-    stage_name: "Connect Slave",
-    stage: {
+  common.conditionalStep(
+    step_name: "Connect Slave",
+    step: {
       common.internal_slave(){
         withCredentials([
           file(
