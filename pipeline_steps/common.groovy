@@ -619,7 +619,7 @@ void use_node(label=null, body){
 //shortcut functions for a shared slave or internal shared slave
 
 void shared_slave(body){
-  use_node(body)
+  use_node("pubcloud_multiuse", body)
 }
 
 void internal_slave(body){
