@@ -19,11 +19,6 @@
           branches: "newton"
           UPGRADE_FROM_REF: "kilo"
           DEPLOY_TELEGRAF: "yes"
-      - newton141:
-          branch: newton-14.1
-          branches: "newton-14.1.*"
-          UPGRADE_FROM_REF: "kilo"
-          DEPLOY_TELEGRAF: "yes"
       - master:
           branch: master
           branches: "master"
@@ -100,7 +95,7 @@
           DEPLOY_SUPPORT_ROLE: "yes"
     exclude:
       # Minor upgrades are only being executed
-      # for r14.0.1->newton141 for now until
+      # for r14.0.1->newton for now until
       # the minor upgrade testing process is
       # stabilised.
       - series: kilo
@@ -120,8 +115,6 @@
         action: majorupgrade
       - series: newton
         action: majorupgrade
-      - series: newton141
-        action: majorupgrade
       - series: master
         action: majorupgrade
       # Xenial builds are run for newton and above
@@ -132,10 +125,10 @@
         image: xenial
       - series: mitaka
         image: xenial
-      # Leapfrog upgrades are only run for kilo --> newton141
+      # Leapfrog upgrades are only run for kilo --> newton
       # as the upgrade method is not supported for any
       # other target series.
-      # the kilo --> newton141 job is triggered by PRs to either branch.
+      # the kilo --> newton job is triggered by PRs to either branch.
       - series: liberty
         action: leapfrogupgrade
       - series: mitaka
@@ -143,7 +136,7 @@
       - series: master
         action: leapfrogupgrade
       # This combo tests the same thing as
-      # RPC-AIO_newton141-trusty-leapfrogupgrade-swift-periodic and is not
+      # RPC-AIO_newton-trusty-leapfrogupgrade-swift-periodic and is not
       # needed
       #- series: kilo
       #  action: leapfrogupgrade
@@ -165,8 +158,6 @@
       # consume the cluster, not deploy it. At that
       # time the scenario can be added back again.
       - series: newton
-        scenario: ceph
-      - series: newton141
         scenario: ceph
       # Ceph builds are not tested for leapfrog upgrades
       # at this time due to the failure for ceph to
