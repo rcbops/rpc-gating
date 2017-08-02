@@ -13,11 +13,19 @@
       - mitaka:
           branch: mitaka-13.1
           branches: "mitaka-.*"
-          UPGRADE_FROM_REF: "liberty-12.2"
+          MAJOR_UPGRADE_FROM_REF: "liberty-12.2"
+      - newton:
+          branch: newton
+          branches: "newton"
+          LEAPFROG_UPGRADE_FROM_REF: "kilo"
+          # NOTE: This branch is TBD
+          MINOR_UPGRADE_FROM_REF: "newton-14.2"
+          DEPLOY_TELEGRAF: "yes"
       - newton141:
           branch: newton-14.1
           branches: "newton-14.1.*"
-          UPGRADE_FROM_REF: "kilo"
+          LEAPFROG_UPGRADE_FROM_REF: "kilo"
+          MINOR_UPGRADE_FROM_REF: "r14.0.1"
           DEPLOY_TELEGRAF: "yes"
       - master:
           branch: master
@@ -63,7 +71,6 @@
       - minorupgrade:
           ACTION_STAGES: >-
             Minor Upgrade
-          UPGRADE_FROM_REF: "r14.0.1"
     scenario:
       - swift
       - ceph:
@@ -110,6 +117,8 @@
         action: majorupgrade
       - series: liberty
         action: majorupgrade
+      - series: newton
+        action: majorupgrade
       - series: newton141
         action: majorupgrade
       - series: master
@@ -154,6 +163,8 @@
       # scenario for newton onwards, but it will only
       # consume the cluster, not deploy it. At that
       # time the scenario can be added back again.
+      - series: newton
+        scenario: ceph
       - series: newton141
         scenario: ceph
       # Ceph builds are not tested for leapfrog upgrades
@@ -283,37 +294,39 @@
           try {{
             // This sets kibana_branch based on STAGES
             // Note that we do this before the block below since
-            // env.UPGRADE_FROM_ENV gets overwritten
-            if (env.STAGES.contains("Minor Upgrade")
-                || env.STAGES.contains("Major Upgrade")
-                || env.STAGES.contains("Leapfrog Upgrade")) {{
-              kibana_branch = env.UPGRADE_FROM_REF
+            // env.UPGRADE_FROM_ENV may get overwritten
+            if (env.STAGES.contains("Minor Upgrade")) {{
+              env.UPGRADE_FROM_REF = env.MINOR_UPGRADE_FROM_REF
+              kibana_branch        = env.MINOR_UPGRADE_FROM_REF
+            }} else if (env.STAGES.contains("Major Upgrade")) {{
+              env.UPGRADE_FROM_REF = env.MAJOR_UPGRADE_FROM_REF
+              kibana_branch        = env.MAJOR_UPGRADE_FROM_REF
+            }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
+              env.UPGRADE_FROM_REF = env.LEAPFROG_UPGRADE_FROM_REF
+              kibana_branch        = env.LEAPFROG_UPGRADE_FROM_REF
             }} else {{
               kibana_branch = env.KIBANA_SELENIUM_BRANCH
             }}
+
             // prepare vars for leapfrog upgrade test of changes proposed to kilo
             // this is a special case as we only usually test upgrades on
             // changes to the destination branch.
             if (env.SERIES == "kilo"
                 && env.TRIGGER == "pr"
                 && env.ACTION == "leapfrogupgrade" ){{
-                env.UPGRADE_FROM_REF="origin/pr/${{env.ghprbPullId}}/merge"
-                kibana_branch = "kilo"
-                env.KIBANA_SELENIUM_BRANCH="newton-14.1"
+              env.UPGRADE_FROM_REF       = "origin/pr/${{env.ghprbPullId}}/merge"
+              kibana_branch              = "kilo"
+              env.KIBANA_SELENIUM_BRANCH = "newton-14.1"
             }}
+
             // We need to checkout the rpc-openstack repo on the CIT Slave
             // so that we can check whether the patch is a docs-only patch
             // before allocating resources unnecessarily.
-            if (env.STAGES.contains("Minor Upgrade")
-                || env.STAGES.contains("Major Upgrade")
-                || env.STAGES.contains("Leapfrog Upgrade")) {{
-              common.prepareRpcGit(env.UPGRADE_FROM_REF, env.WORKSPACE)
-            }} else {{
-              common.prepareRpcGit("auto", env.WORKSPACE)
-            }}
+            common.prepareRpcGit("auto", env.WORKSPACE)
             if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
               return
             }}
+
             // Adds maas token and url to environment
             // without adding another level of nesting
             maas.add_maas_env_vars()
