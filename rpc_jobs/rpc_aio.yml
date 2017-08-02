@@ -8,12 +8,12 @@
           branches: "kilo.*"
           DEPLOY_TELEGRAF: "yes"
       - liberty:
-          branch: liberty-12.2
-          branches: "liberty-.*"
+          branch: liberty
+          branches: "liberty.*"
       - mitaka:
-          branch: mitaka-13.1
-          branches: "mitaka-.*"
-          UPGRADE_FROM_REF: "liberty-12.2"
+          branch: mitaka
+          branches: "mitaka.*"
+          UPGRADE_FROM_REF: "liberty"
       - newton:
           branch: newton
           branches: "newton"

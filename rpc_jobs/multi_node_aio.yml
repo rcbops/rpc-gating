@@ -12,13 +12,13 @@
             tempest_test_sets: 'scenario defcore api heat_api smoke'
           DEPLOY_TELEGRAF: "yes"
       - liberty:
-          branch: liberty-12.2
-          branches: "liberty-.*"
+          branch: liberty
+          branches: "liberty.*"
           SERIES_USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
           DEPLOY_TELEGRAF: "yes"
       - mitaka:
-          branch: mitaka-13.1
+          branch: mitaka
           SERIES_USER_VARS: |
             tempest_test_sets: 'scenario defcore api heat_api smoke'
           DEPLOY_TELEGRAF: "yes"
