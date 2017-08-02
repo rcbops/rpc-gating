@@ -95,7 +95,7 @@ def upgrade_leapfrog(Map args) {
   // as it's already been used to deploy kilo.
   branch = "auto"
   if (env.SERIES == "kilo" && env.TRIGGER == "pr"){
-    branch="newton-14.1"
+    branch="newton"
   }
   upgrade("Leapfrog Upgrade",
           "leapfrog/ubuntu14-leapfrog.sh",

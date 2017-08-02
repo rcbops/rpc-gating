@@ -31,15 +31,6 @@
             neutron_legacy_ha_tool_enabled: true
           UPGRADE_FROM_REF: "kilo"
           DEPLOY_TELEGRAF: "yes"
-      - newton141:
-          branch: newton-14.1
-          SERIES_USER_VARS: |
-            tempest_test_sets: 'all'
-            lxc_container_vg_name: "USE_DIR_NOT_VG"
-            glance_default_store: "swift"
-            neutron_legacy_ha_tool_enabled: true
-          UPGRADE_FROM_REF: "kilo"
-          DEPLOY_TELEGRAF: "yes"
       - master:
           branch: master
           SERIES_USER_VARS: |
