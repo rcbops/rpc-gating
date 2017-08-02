@@ -68,9 +68,9 @@ def cleanup(Map args){
 
 
 def getPubCloudSlave(Map args){
-  common.conditionalStage(
-    stage_name: 'Allocate Resources',
-    stage: {
+  common.conditionalStep(
+    step_name: 'Allocate Resources',
+    step: {
       create (
         name: args.instance_name,
         count: 1,
@@ -79,8 +79,8 @@ def getPubCloudSlave(Map args){
         image: env.IMAGE,
         keyname: "jenkins",
       )
-    } //stage
-  ) //conditionalStages
+    } //step
+  ) //conditionalsteps
   ssh_slave.connect()
 }
 def delPubCloudSlave(Map args){
@@ -98,8 +98,8 @@ def delPubCloudSlave(Map args){
         server_name:  args.instance_name,
         region: env.REGION,
       )
-    } //stage
-  ) //conditionalStage
+    } //step
+  ) //conditionalstep
   ssh_slave.destroy(args.instance_name)
 }
 
