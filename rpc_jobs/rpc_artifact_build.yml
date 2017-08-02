@@ -7,8 +7,8 @@
           branch: master
           branches: "master"
       - newton:
-          branch: newton-14.1
-          branches: "newton-14.1.*"
+          branch: newton
+          branches: "newton.*"
     ztrigger:
       - pr:
           CRON: ""
