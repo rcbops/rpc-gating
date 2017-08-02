@@ -201,6 +201,8 @@
       - osa_ops_params:
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "sdb"
+          COMPUTE_NODES: "{COMPUTE_NODES}"
+          VOLUME_NODES: "{VOLUME_NODES}"
       - rpc_deploy_params:
           DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
           DEPLOY_CEPH: "{DEPLOY_CEPH}"
@@ -239,14 +241,6 @@
           GENERATE_TEST_NETWORKS: "{GENERATE_TEST_NETWORKS}"
           GENERATE_TEST_SERVERS: "{GENERATE_TEST_SERVERS}"
           GENERATE_TEST_VOLUMES: "{GENERATE_TEST_VOLUMES}"
-      - string:
-          name: "COMPUTE_NODES"
-          default: "{COMPUTE_NODES}"
-          description: "The number of compute nodes to deploy."
-      - string:
-          name: "VOLUME_NODES"
-          default: "{VOLUME_NODES}"
-          description: "The number of volume nodes to deploy."
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
