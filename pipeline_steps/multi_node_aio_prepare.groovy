@@ -151,7 +151,7 @@ EOF
 }
 
 def connect_deploy_node(name, instance_ip) {
-  inventory_content = """
+  String inventory_content = """
   [job_nodes:children]
   hosts
   [hosts]

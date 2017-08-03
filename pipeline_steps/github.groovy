@@ -1,10 +1,10 @@
 
 def create_issue(
-    tag,
-    link,
-    label="jenkins-build-failure",
-    org="rcbops",
-    repo="u-suk-dev"){
+    String tag,
+    String link,
+    String label="jenkins-build-failure",
+    String org="rcbops",
+    String repo="u-suk-dev"){
   withCredentials([
     string(
       credentialsId: 'rpc-jenkins-svc-github-pat',
@@ -33,7 +33,7 @@ def create_issue(
  * Update the description of the current GitHub pull request with a link to
  * the Jira issue.
  */
-void add_issue_url_to_pr(upstream="upstream"){
+void add_issue_url_to_pr(String upstream="upstream"){
   List org_repo = env.ghprbGhRepository.split("/")
   String org = org_repo[0]
   String repo = org_repo[1]

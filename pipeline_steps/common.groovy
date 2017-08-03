@@ -125,7 +125,7 @@ def venvPlaybook(Map args){
 } //venvplaybook
 
 def calc_ansible_forks(){
-  def forks = sh (script: """#!/bin/bash
+  String forks = sh (script: """#!/bin/bash
     CPU_NUM=\$(grep -c ^processor /proc/cpuinfo)
     if [ \${CPU_NUM} -lt "10" ]; then
       ANSIBLE_FORKS=\${CPU_NUM}
@@ -143,7 +143,7 @@ to evaluate ${forks} and fail.
 These vars should be set every time deploy.sh or test-upgrade is run
 */
 List get_deploy_script_env(){
-  forks = calc_ansible_forks()
+  String forks = calc_ansible_forks()
   return [
     'ANSIBLE_FORCE_COLOR=true',
     'ANSIBLE_HOST_KEY_CHECKING=False',
@@ -283,19 +283,20 @@ def conditionalStep(Map args){
  *  string: the string to process
  */
 def String acronym(Map args){
-  acronym=""
-  words=args.string.split("[-_ ]")
+  String acronym=""
+  List words=args.string.split("[-_ ]")
   for (def i=0; i<words.size(); i++){
     acronym += words[i][0]
   }
   return acronym
 }
 
-def String rand_int_str(max=0xFFFF, base=16){
+def String rand_int_str(int max=0xFFFF, int base=16){
   return Integer.toString(Math.abs((new Random()).nextInt(max)), base)
 }
 
 def String gen_instance_name(String prefix="AUTO"){
+  String instance_name = ""
   if (env.INSTANCE_NAME == "AUTO"){
     if (prefix == "AUTO"){
       prefix = acronym(string: env.JOB_NAME)
@@ -389,13 +390,13 @@ List get_cloud_creds(){
 }
 
 def writePyraxCfg(Map args){
-  cfg = """[rackspace_cloud]
+  String cfg = """[rackspace_cloud]
 username = ${args.username}
 api_key = ${args.api_key}
 """
 
-  tmp_dir = pwd(tmp:true)
-  pyrax_cfg = "${tmp_dir}/.pyrax.cfg"
+  String tmp_dir = pwd(tmp:true)
+  String pyrax_cfg = "${tmp_dir}/.pyrax.cfg"
   sh """
     echo "${cfg}" > ${pyrax_cfg}
   """
@@ -417,7 +418,7 @@ def prepareConfigs(Map args){
   }
 }
 
-def prepareRpcGit(branch = "auto", dest = "/opt"){
+def prepareRpcGit(String branch = "auto", String dest = "/opt"){
   dir("${dest}/rpc-openstack"){
 
     if (branch == "auto"){
@@ -461,7 +462,7 @@ def docker_cache_workaround(){
    sh "touch -t 201704100000 *.txt"
 }
 
-def is_doc_update_pr(git_dir) {
+def is_doc_update_pr(String git_dir) {
   if (env.ghprbPullId != null) {
     dir(git_dir) {
       def rc = sh(
@@ -491,7 +492,7 @@ def is_doc_update_pr(git_dir) {
  * This function uses environment variables injected by github pull request
  * builder and so can only be used for PR triggered jobs
  */
-def get_jira_issue_key(repo_path="rpc-openstack"){
+def get_jira_issue_key(String repo_path="rpc-openstack"){
   def key_regex = "[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"
   dir(repo_path){
     commits = sh(
@@ -500,7 +501,7 @@ def get_jira_issue_key(repo_path="rpc-openstack"){
         git log --pretty=%B upstream/${ghprbTargetBranch}..${ghprbSourceBranch}""")
     print("looking for Jira issue keys in the following commits: ${commits}")
     try{
-      key = (commits =~ key_regex)[0]
+      String key = (commits =~ key_regex)[0]
       print ("First Found Jira Issue Key: ${key}")
       return key
     } catch (e){
@@ -513,13 +514,13 @@ def get_jira_issue_key(repo_path="rpc-openstack"){
 /* Attempt to add a jira comment, but don't fail if ghprb env vars are missing
  * or no Jira issue key is present in commit titles
  */
-def safe_jira_comment(body, repo_path="rpc-openstack"){
+def safe_jira_comment(body, String repo_path="rpc-openstack"){
   if (env.ghprbTargetBranch == null){
     print ("Not a PR job, so not attempting to add a Jira comment")
     return
   }
   try{
-    key = get_jira_issue_key(repo_path)
+    String key = get_jira_issue_key(repo_path)
     jiraComment(issueKey: key,
                 body: body)
     print "Jira Comment Added: [${key}] ${body}"
@@ -535,7 +536,10 @@ def delete_workspace() {
   }
 }
 
-def create_jira_issue(project="RE", tag=env.BUILD_TAG, link=env.BUILD_URL, type="Task"){
+def create_jira_issue(String project="RE",
+                      String tag=env.BUILD_TAG,
+                      String link=env.BUILD_URL,
+                      String type="Task"){
   withCredentials([
     usernamePassword(
       credentialsId: "jira_user_pass",
@@ -584,6 +588,7 @@ void override_inventory(){
   conditionalStep(
     step_name: "Override Inventory",
     step:{
+        String inventory_path
         if (env.OVERRIDE_INVENTORY_PATH == null){
           inventory_path = 'rpc-gating/playbooks/inventory/hosts'
         } else{
@@ -595,7 +600,7 @@ void override_inventory(){
 }
 
 // initialisation steps for nodes
-void use_node(label=null, body){
+void use_node(String label=null, body){
   node(label){
     try {
       deleteDir()

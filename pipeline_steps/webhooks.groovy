@@ -1,5 +1,5 @@
 def webhooks(){
-  instance_name = "WEBHOOK-PROXY"
+  String instance_name = "WEBHOOK-PROXY"
   pubcloud.getPubCloudSlave(instance_name: instance_name)
   common.override_inventory()
   try{
@@ -48,7 +48,7 @@ def webhooks(){
             ) //venvPlaybook
           } //dir
         } //withCredentials
-        ip = readFile file: "instance_address"
+        String ip = readFile file: "instance_address"
        common.use_node("master"){
           withCredentials([
             file(

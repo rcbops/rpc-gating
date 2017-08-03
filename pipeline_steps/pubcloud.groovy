@@ -34,7 +34,7 @@ def cleanup(Map args){
  * The args required can be supplied uppercase in the env dictionary, or lower
  * case as direct arguments.
  */
-def getPubCloudSlave(Map args){
+String getPubCloudSlave(Map args){
   common.conditionalStep(
     step_name: 'Allocate Resources',
     step: {
@@ -92,14 +92,14 @@ def delPubCloudSlave(Map args){
 // nothing is returned as "args" is passed by ref.
 // env vars are upper case while args are lower case
 void add_instance_env_params_to_args(Map args){
-  instance_params=[
+  List instance_params=[
     'flavor',
     'image',
     'region'
   ]
-  for (p in instance_params){
+  for (String p in instance_params){
     if (!(p in args)){
-      P = p.toUpperCase()
+      String P = p.toUpperCase()
       if (env[P] != null){
         args[p] = env[P]
         print ("${p} not supplied to runonpubcloud or getPubCloudSlave"
@@ -119,7 +119,7 @@ be supplied uppercase in the env dictionary, or lower case as
 direct arguments. */
 def runonpubcloud(Map args=[:], body){
   add_instance_env_params_to_args(args)
-  instance_name = common.gen_instance_name()
+  String instance_name = common.gen_instance_name()
   try{
     getPubCloudSlave(args + [instance_name: instance_name])
     common.use_node(instance_name){

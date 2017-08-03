@@ -1,5 +1,5 @@
 def setup(){
-  instance_name = common.gen_instance_name("influx")
+  String instance_name = common.gen_instance_name("influx")
   pubcloud.getPubCloudSlave(instance_name: instance_name)
   common.override_inventory()
   try{
