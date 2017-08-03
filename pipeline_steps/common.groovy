@@ -109,9 +109,10 @@ def venvPlaybook(Map args){
       if (!('args' in args)){
         args.args=[]
       }
-      for (def i=0; i<args.playbooks.size(); i++){
-        playbook = args.playbooks[i]
-        vars_file="vars.${playbook.split('/')[-1]}"
+      for (int i=0; i<args.playbooks.size(); i++){
+        String playbook = args.playbooks[i]
+        // randomised vars file path for parallel safety
+        String vars_file="vars.${playbook.split('/')[-1]}.${rand_int_str()}"
         write_json(file: vars_file, obj: args.vars)
         sh """#!/bin/bash -x
           which scl && source /opt/rh/python27/enable

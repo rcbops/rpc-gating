@@ -16,11 +16,17 @@
  * Files:
  *  - playbooks/inventory/hosts
  */
-def connect(port=22){
+def connect(Map args){
   common.conditionalStep(
     step_name: "Connect Slave",
     step: {
       common.internal_slave(){
+        if (!("inventory" in args)){
+          args.inventory == "inventory"
+        }
+        if (!("port" in args)){
+          args.port = 22
+        }
         withCredentials([
           file(
             credentialsId: 'id_rsa_cloud10_jenkins_file',
@@ -33,13 +39,13 @@ def connect(port=22){
           )
         ]){
           dir("rpc-gating/playbooks"){
-            unstash "pubcloud_inventory"
+            unstash args.inventory
             common.venvPlaybook(
               playbooks: ["setup_jenkins_slave.yml"],
               args: [
-                "-i inventory",
+                "-i ${args.inventory}",
                 "--limit job_nodes",
-                "--extra-vars='ansible_port=${port}'",
+                "--extra-vars='ansible_port=${args.port}'",
                 "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
               ]
             )

@@ -164,7 +164,7 @@ def connect_deploy_node(name, instance_ip) {
       include: "inventory/hosts"
     )
   }
-  ssh_slave.connect(2222)
+  ssh_slave.connect(port: 2222)
 }
 
 return this;

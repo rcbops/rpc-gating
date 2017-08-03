@@ -4,6 +4,7 @@
   gather_facts: False
   vars:
     count: 1
+    inventory_path: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory'
   tasks:
     - name: Provision a set of public cloud instances
       local_action:
@@ -48,6 +49,11 @@
         msg: "At least one public cloud instance failed to start :("
       when: rax.success|length < count
 
+    - name: Create inventory directory
+      file:
+        path: "{{inventory_path}}"
+        state: directory
+
     - name: Write inventory
       copy:
         content: |
@@ -58,7 +64,7 @@
           {% for instance in rax.success %}
           {{instance.name}} ansible_host={{instance.accessIPv4}} ansible_user=root
           {% endfor %}
-        dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory/hosts'
+        dest: '{{inventory_path}}/hosts'
 
     - name: Wait for SSH to be available on all hosts
       wait_for: port=22 host="{{ item.accessIPv4 }}"
