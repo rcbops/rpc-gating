@@ -1,25 +1,25 @@
 /* Remove public cloud instances
  */
 def cleanup(Map args){
-  withEnv(['ANSIBLE_FORCE_COLOR=true']){
-    withCredentials(common.get_cloud_creds()){
-      dir("rpc-gating/playbooks"){
-        pyrax_cfg = common.writePyraxCfg(
-          username: env.PUBCLOUD_USERNAME,
-          api_key: env.PUBCLOUD_API_KEY
+  withCredentials(common.get_cloud_creds()){
+
+    dir("rpc-gating/playbooks"){
+      pyrax_cfg = common.writePyraxCfg(
+        username: env.PUBCLOUD_USERNAME,
+        api_key: env.PUBCLOUD_API_KEY
+      )
+      withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
+        common.venvPlaybook(
+          playbooks: ['cleanup_pubcloud.yml'],
+          args: [
+            "-i inventory",
+            "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+          ],
+          vars: args
         )
-        withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
-          common.venvPlaybook(
-            playbooks: ['cleanup_pubcloud.yml'],
-            args: [
-              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
-            ],
-            vars: args
-          )
-        } // withEnv
-      } // directory
-    } //withCredentials
-  } // withEnv
+      } // withEnv
+    } // directory
+  } //withCredentials
 } //call
 
 
@@ -33,13 +33,18 @@ def cleanup(Map args){
  *  - WORKSPACE
  * The args required can be supplied uppercase in the env dictionary, or lower
  * case as direct arguments.
+ *
+ *  NOT Parallel safe unless inventory_path is supplied and unique per branch.
+ *
  */
-def getPubCloudSlave(Map args){
+String getPubCloudSlave(Map args){
   common.conditionalStep(
     step_name: 'Allocate Resources',
     step: {
       add_instance_env_params_to_args(args)
-      env.RAX_REGION = args.region
+      if (!("inventory" in args)){
+        args.inventory = "inventory"
+      }
       withCredentials(common.get_cloud_creds()){
         dir("rpc-gating/playbooks"){
           pyrax_cfg = common.writePyraxCfg(
@@ -57,14 +62,14 @@ def getPubCloudSlave(Map args){
             vars: args
           )
           stash (
-            name: "pubcloud_inventory",
-            include: "inventory/hosts"
+            name: args.inventory,
+            include: "${args.inventory}/hosts"
           )
         }
       }
     }
   )
-  ssh_slave.connect()
+  ssh_slave.connect(args)
 }
 
 def delPubCloudSlave(Map args){
@@ -77,11 +82,9 @@ def delPubCloudSlave(Map args){
   common.conditionalStep(
     step_name: 'Cleanup',
     step: {
-      cleanup (
-        instance_name: args.instance_name,
-        server_name:  args.instance_name,
-        region: env.REGION,
-      )
+      args.server_name = args.instance_name
+      add_instance_env_params_to_args(args)
+      cleanup (args)
     }
   )
   ssh_slave.destroy(args.instance_name)
@@ -92,14 +95,14 @@ def delPubCloudSlave(Map args){
 // nothing is returned as "args" is passed by ref.
 // env vars are upper case while args are lower case
 void add_instance_env_params_to_args(Map args){
-  instance_params=[
+  List instance_params=[
     'flavor',
     'image',
     'region'
   ]
-  for (p in instance_params){
+  for (String p in instance_params){
     if (!(p in args)){
-      P = p.toUpperCase()
+      String P = p.toUpperCase()
       if (env[P] != null){
         args[p] = env[P]
         print ("${p} not supplied to runonpubcloud or getPubCloudSlave"
@@ -119,7 +122,10 @@ be supplied uppercase in the env dictionary, or lower case as
 direct arguments. */
 def runonpubcloud(Map args=[:], body){
   add_instance_env_params_to_args(args)
-  instance_name = common.gen_instance_name()
+  // randomised inventory_path to avoid parallel conflicts
+  args.inventory="inventory.${common.rand_int_str()}"
+  args.inventory_path="${WORKSPACE}/rpc-gating/playbooks/${args.inventory}"
+  String instance_name = common.gen_instance_name()
   try{
     getPubCloudSlave(args + [instance_name: instance_name])
     common.use_node(instance_name){

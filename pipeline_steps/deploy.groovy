@@ -2,11 +2,11 @@ def deploy(){
   common.conditionalStep(
     step_name: "Deploy",
     step: {
-      playbooks = common._parse_json_string(json_text: env.PLAYBOOKS)
+      List playbooks = common._parse_json_string(json_text: env.PLAYBOOKS)
       print(playbooks)
       print(playbooks.size())
       for (def i=0; i<playbooks.size(); i++){
-        playbook = playbooks[i]
+        String playbook = playbooks[i]
         print(playbook)
         stage(playbook.playbook){
           common.openstack_ansible(playbook)
@@ -20,7 +20,8 @@ def deploy_sh(Map args) {
   common.conditionalStage(
     stage_name: "Deploy RPC w/ Script",
     stage: {
-      environment_vars = args.environment_vars + common.get_deploy_script_env()
+      List environment_vars = args.environment_vars \
+                              + common.get_deploy_script_env()
       withCredentials([
         string(
           credentialsId: "INFLUX_IP",
@@ -59,7 +60,7 @@ def upgrade(String stage_name, String upgrade_script, List env_vars,
   common.conditionalStage(
     stage_name: stage_name,
     stage: {
-      environment_vars = env_vars + common.get_deploy_script_env()
+      List environment_vars = env_vars + common.get_deploy_script_env()
       withEnv(environment_vars){
         dir("/opt/rpc-openstack/openstack-ansible"){
           sh "git reset --hard"
@@ -93,7 +94,7 @@ def upgrade_major(Map args) {
 def upgrade_leapfrog(Map args) {
   // for a PR to kilo, we don't want to checkout the PR commit at this point
   // as it's already been used to deploy kilo.
-  branch = "auto"
+  String branch = "auto"
   if (env.SERIES == "kilo" && env.TRIGGER == "pr"){
     branch="newton"
   }

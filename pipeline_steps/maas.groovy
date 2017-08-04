@@ -1,5 +1,5 @@
 String get_mnaio_entity_names() {
-  entities = sh (
+  String entities = sh (
     script: """#!/usr/bin/env python
 from __future__ import print_function
 from itertools import chain
@@ -79,7 +79,7 @@ def verify() {
 void add_maas_env_vars(){
   List vars = get_maas_token_and_url()
   for (def i=0; i<vars.size(); i++){
-    kv = vars[i].split('=')
+    List kv = vars[i].split('=')
     env[kv[0]] = kv[1]
   }
 }

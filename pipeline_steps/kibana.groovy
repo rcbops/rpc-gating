@@ -1,4 +1,4 @@
-def kibana(branch){
+def kibana(String branch){
   common.conditionalStage(
     stage_name: "Prepare Kibana Selenium",
     stage: {
@@ -13,7 +13,7 @@ def kibana(branch){
   )
 }
 
-def kibana_prep(branch){
+def kibana_prep(String branch){
   dir("kibana-selenium") {
     git url: env.KIBANA_SELENIUM_REPO, branch: "${branch}"
 
@@ -42,7 +42,7 @@ def kibana_prep(branch){
   }
 }
 
-def kibana_tests(branch){
+def kibana_tests(String branch){
   try {
     dir("kibana-selenium") {
       git url: env.KIBANA_SELENIUM_REPO, branch: "${branch}"

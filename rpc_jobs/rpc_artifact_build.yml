@@ -203,14 +203,14 @@
             // necessary due to a race condition when updating the
             // image index.
             // ref: RE-115
-            stage('Container'){{
-              lock('artifact_container'){{
-                for (x in image_list[env.series]){{
-                  def image = x
+            lock('artifact_container'){{
+              for (x in image_list[env.series]){{
+                def image = x
+                stage("Container ${{image}}"){{
                   artifact_build.container(image)
-                }} //for
-              }} //lock
-            }} //stage
+                }} //stage
+              }} //for
+            }} //lock
           }} //if
         }} catch (e) {{
           print e

@@ -25,7 +25,7 @@ def prepare(){
         }
       }
       // If this branch can prepare its own configs, common.prepareConfigs
-      config_cap_file="/opt/rpc-openstack/gating/capabilities/aio_config"
+      String config_cap_file="/opt/rpc-openstack/gating/capabilities/aio_config"
       if (fileExists(config_cap_file)){
         print ("Skipping rpc-gating config prep (common.prepareConfigs)"
                +" as this is handled in repo."
