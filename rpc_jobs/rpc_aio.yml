@@ -281,80 +281,80 @@
       env.TARGET = "aio"
       env.ACTION = "{action}"
       env.SERIES = "{series}"
-      timeout(time: 8, unit: 'HOURS'){{
         common.shared_slave() {{
           try {{
-            // This sets kibana_branch based on STAGES
-            // Note that we do this before the block below since
-            // env.UPGRADE_FROM_ENV gets overwritten
-            if (env.STAGES.contains("Minor Upgrade")
-                || env.STAGES.contains("Major Upgrade")
-                || env.STAGES.contains("Leapfrog Upgrade")) {{
-              kibana_branch = env.UPGRADE_FROM_REF
-            }} else {{
-              kibana_branch = env.KIBANA_SELENIUM_BRANCH
-            }}
-            // prepare vars for leapfrog upgrade test of changes proposed to kilo
-            // this is a special case as we only usually test upgrades on
-            // changes to the destination branch.
-            if (env.SERIES == "kilo"
-                && env.TRIGGER == "pr"
-                && env.ACTION == "leapfrogupgrade" ){{
-                env.UPGRADE_FROM_REF="origin/pr/${{env.ghprbPullId}}/merge"
-                kibana_branch = "kilo"
-                env.KIBANA_SELENIUM_BRANCH="newton-14.1"
-            }}
-            // We need to checkout the rpc-openstack repo on the CIT Slave
-            // so that we can check whether the patch is a docs-only patch
-            // before allocating resources unnecessarily.
-            common.prepareRpcGit("auto", env.WORKSPACE)
-            if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
-              return
-            }}
-            // Adds maas token and url to environment
-            // without adding another level of nesting
-            maas.add_maas_env_vars()
-            pubcloud.runonpubcloud {{
-              // try within pubcloud node so we can archive archive_artifacts
-              // after a failure, before the node is cleaned up.
-              try {{
-                environment_vars = [
-                  "DEPLOY_HAPROXY=yes",
-                  "DEPLOY_AIO=no",
-                  "DEPLOY_TEMPEST=no",
-                  "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
-                  "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
-                  "DEPLOY_ELK=${{DEPLOY_ELK}}",
-                  "DEPLOY_SUPPORT_ROLE=${{DEPLOY_SUPPORT_ROLE}}",
-                  ]
-                aio_prepare.prepare()
-                deploy.deploy_sh(environment_vars: environment_vars)
-                tempest.tempest()
-                kibana.kibana(kibana_branch)
-                holland.holland()
-                if (env.STAGES.contains("Minor Upgrade")) {{
-                  deploy.upgrade_minor(environment_vars: environment_vars)
-                }} else if (env.STAGES.contains("Major Upgrade")) {{
-                  deploy.upgrade_major(environment_vars: environment_vars)
-                  tempest.tempest()
-                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
-                  holland.holland()
-                }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
-                  deploy.upgrade_leapfrog(environment_vars: environment_vars)
-                  tempest.tempest()
-                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
-                }}
-              }} catch (e) {{
-                print(e)
-                currentBuild.result = 'FAILURE'
-                throw e
-              }} finally {{
-                common.archive_artifacts()
-                common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
+            timeout(time: 1, unit: 'HOURS'){{
+              // This sets kibana_branch based on STAGES
+              // Note that we do this before the block below since
+              // env.UPGRADE_FROM_ENV gets overwritten
+              if (env.STAGES.contains("Minor Upgrade")
+                  || env.STAGES.contains("Major Upgrade")
+                  || env.STAGES.contains("Leapfrog Upgrade")) {{
+                kibana_branch = env.UPGRADE_FROM_REF
+              }} else {{
+                kibana_branch = env.KIBANA_SELENIUM_BRANCH
               }}
-            }} //pubcloud slave
+              // prepare vars for leapfrog upgrade test of changes proposed to kilo
+              // this is a special case as we only usually test upgrades on
+              // changes to the destination branch.
+              if (env.SERIES == "kilo"
+                  && env.TRIGGER == "pr"
+                  && env.ACTION == "leapfrogupgrade" ){{
+                  env.UPGRADE_FROM_REF="origin/pr/${{env.ghprbPullId}}/merge"
+                  kibana_branch = "kilo"
+                  env.KIBANA_SELENIUM_BRANCH="newton-14.1"
+              }}
+              // We need to checkout the rpc-openstack repo on the CIT Slave
+              // so that we can check whether the patch is a docs-only patch
+              // before allocating resources unnecessarily.
+              common.prepareRpcGit("auto", env.WORKSPACE)
+              if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
+                return
+              }}
+              // Adds maas token and url to environment
+              // without adding another level of nesting
+              maas.add_maas_env_vars()
+              pubcloud.runonpubcloud {{
+                // try within pubcloud node so we can archive archive_artifacts
+                // after a failure, before the node is cleaned up.
+                try {{
+                  environment_vars = [
+                    "DEPLOY_HAPROXY=yes",
+                    "DEPLOY_AIO=no",
+                    "DEPLOY_TEMPEST=no",
+                    "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
+                    "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
+                    "DEPLOY_ELK=${{DEPLOY_ELK}}",
+                    "DEPLOY_SUPPORT_ROLE=${{DEPLOY_SUPPORT_ROLE}}",
+                    ]
+                  aio_prepare.prepare()
+                  deploy.deploy_sh(environment_vars: environment_vars)
+                  tempest.tempest()
+                  kibana.kibana(kibana_branch)
+                  holland.holland()
+                  if (env.STAGES.contains("Minor Upgrade")) {{
+                    deploy.upgrade_minor(environment_vars: environment_vars)
+                  }} else if (env.STAGES.contains("Major Upgrade")) {{
+                    deploy.upgrade_major(environment_vars: environment_vars)
+                    tempest.tempest()
+                    kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
+                    holland.holland()
+                  }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
+                    deploy.upgrade_leapfrog(environment_vars: environment_vars)
+                    tempest.tempest()
+                    kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
+                  }}
+                }} catch (e) {{
+                  print(e)
+                  currentBuild.result = 'FAILURE'
+                  throw e
+                }} finally {{
+                  common.archive_artifacts()
+                  common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
+                }}
+              }} //pubcloud slave
+            }} // timeout
           }} finally {{
             common.delete_workspace()
           }}
         }} // cit node
-      }} // timeout
