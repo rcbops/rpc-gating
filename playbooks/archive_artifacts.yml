@@ -1,0 +1,88 @@
+- hosts: "{{ target_hosts }}"
+  tasks:
+    - name: Create temporary directory to store artifacts
+      file:
+        path: "{{ artifacts_path }}"
+        state: directory
+      delegate_to: "localhost"
+      run_once: yes
+
+    - name: Grab host data
+      command: >
+               rsync
+               --archive
+               --compress
+               --verbose
+               --relative
+               --rsh 'ssh -o StrictHostKeyChecking=no'
+               --ignore-missing-args
+               {{ inventory_hostname }}:{{ item }}
+               {{ artifacts_path }}/{{ ansible_hostname }}
+      with_items:
+        - "/openstack/log/{{ ansible_hostname }}-lxc"
+        - "/etc"
+        - "/var/log"
+      delegate_to: "localhost"
+      tags:
+        - skip_ansible_lint
+
+    - name: Grab leapfrog upgrade .leap marker files
+      command: >
+               rsync
+               --archive
+               --compress
+               --verbose
+               --rsh 'ssh -o StrictHostKeyChecking=no'
+               --include '*.leap'
+               --exclude '*'
+               {{ inventory_hostname }}:/opt/rpc-leapfrog/leap42/
+               {{ artifacts_path }}/{{ ansible_hostname }}/leap_marker_files
+      delegate_to: "localhost"
+      ignore_errors: yes
+      tags:
+        - skip_ansible_lint
+
+    - name: List containers
+      command: "lxc-ls -1"
+      failed_when:
+        - "{{ containers.rc != 0 }}"
+        - "{{ containers.msg != '[Errno 2] No such file or directory' }}"
+      changed_when: false
+      register: containers
+
+    - name: Grab container data
+      command: >
+               rsync
+               --archive
+               --compress
+               --verbose
+               --relative
+               --rsh 'ssh -o StrictHostKeyChecking=no'
+               --ignore-missing-args
+               {{ inventory_hostname }}:{{ item[1].pre }}/{{ item[0] }}{{ item[1].post }}
+               {{ artifacts_path }}/{{ ansible_hostname }}
+      when: "{{ containers.rc == 0 }}"
+      with_nested:
+        - "{{ containers.stdout_lines | default([]) }}"
+        -
+          - { pre: "/openstack/log", post: "" }
+          - { pre: "/var/lib/lxc", post: "/rootfs/etc" }
+          - { pre: "/var/lib/lxc", post: "/delta0/etc" }
+      delegate_to: "localhost"
+      tags:
+        - skip_ansible_lint
+
+    - name: Create archive
+      command: "tar -cjf {{ artifacts_basename }}.tar.bz2 {{ artifacts_basename }}"
+      args:
+        chdir: "{{ artifacts_basedir }}"
+      delegate_to: "localhost"
+      run_once: yes
+      tags:
+        - skip_ansible_lint
+  vars:
+    build_tag: "{{ lookup('env','BUILD_TAG') }}"
+    artifacts_basename: "artifacts_{{ build_tag }}"
+    artifacts_basedir: "{{ lookup('env','WORKSPACE') }}"
+    artifacts_path: "{{ artifacts_basedir }}/{{ artifacts_basename }}"
+    target_hosts: "localhost"

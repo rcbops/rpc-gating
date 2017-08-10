@@ -325,34 +325,28 @@ def String gen_instance_name(String prefix="AUTO"){
   return instance_name
 }
 
-def archive_artifacts(){
+def archive_artifacts(String build_type = "AIO"){
   try{
-    sh """#!/bin/bash
-    echo "Archiving logs and configs..."
-    d="artifacts_\${BUILD_TAG}"
-    mkdir -p \$d
-
-    # logs and config from the single use slave
-    mkdir -p \$d/\$HOSTNAME/log
-    cp -rp /openstack/log/\$HOSTNAME-* \$d/\$HOSTNAME/log ||:
-    cp -rp /etc/ \$d/\$HOSTNAME/etc
-    cp -rp /var/log/ \$d/\$HOSTNAME/var_log
-
-    # logs and config from the containers
-    while read c
-    do
-      mkdir -p \$d/\$c/log
-      cp -rp /openstack/log/\$c/* \$d/\$c/log 2>/dev/null ||:
-      cp -rp /var/lib/lxc/\$c/rootfs/etc \$d/\$c 2>/dev/null ||:
-      cp -rp /var/lib/lxc/\$c/delta0/etc \$d/\$c 2>/dev/null ||:
-    done < <(lxc-ls)
-
-    # compress to reduce storage space requirements
-    ARTIFACT_SIZE=\$(du -sh \$d | cut -f1)
-    echo "Compressing \$ARTIFACT_SIZE of artifact files..."
-    tar cjf "\$d".tar.bz2 \$d
-    echo "Compression complete."
-    """
+    if ( build_type == "MNAIO" ){
+      args = [
+        "-i /opt/ansible-static-inventory.ini",
+      ]
+      vars = [
+        target_hosts: "all",
+      ]
+    } else {
+      args = []
+      vars = [
+        target_hosts: "localhost",
+      ]
+    }
+    dir("rpc-gating/playbooks"){
+      venvPlaybook(
+        playbooks: ['archive_artifacts.yml'],
+        args: args,
+        vars: vars,
+      )
+    }
   } catch (e){
     print(e)
     throw(e)
