@@ -2,6 +2,9 @@
     name: Single-Use-Slave-Example
     project-type: workflow
     concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
     parameters:
       # Default params are provided by macro, add any extra params, or
       # params you want to override the defaults for.
