@@ -33,17 +33,12 @@ def tempest(){
     stage_name: "Tempest Tests",
     stage: {
       try{
-        def result = tempest_run()
-        def second_result = ""
-        if(result.contains("Race in testr accounting.")){
-          second_result = tempest_run()
+        retry(2){
+          def result = tempest_run()
+          if(result.contains("Race in testr accounting.")) {
+            throw new Exception("Race in testr accounting")
+          }
         }
-        if(second_result.contains("Race in testr accounting.")) {
-          currentBuild.result = 'FAILURE'
-        }
-        } catch (e){
-        print(e)
-        throw(e)
       } finally{
         sh """#!/bin/bash -x
           # Set up variables for copy
