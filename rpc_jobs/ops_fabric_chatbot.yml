@@ -1,0 +1,27 @@
+- job:
+    name: ops-fabric-chatbot-gate
+    description: "lint and unit tests for ops-fabric-chatbot"
+    disabled: false
+    display-name: "ops-fabric-chatbot lint and unit tests"
+    properties:
+      - github:
+          url: https://github.com/rcbops/ops-fabric-chatbot/
+    scm:
+      - git:
+          url: ssh://git@github.com/rcbops/ops-fabric-chatbot.git
+          refspec: '+refs/pull/*:refs/remotes/origin/pr/*'
+          branches:
+              - "${sha1}"
+    triggers:
+        - github-pull-request:
+            org-list:
+                - rcbops
+            github-hooks: true
+            trigger-phrase: 'recheck'
+            only-trigger-phrase: false
+            auth-id: "github_account_rpc_jenkins_svc"
+            permit-all: true
+            status-context: 'ops-fabric-chatbot-gate'
+    builders:
+        shell: 'ops-fabric-chatbot/install-deps.sh'
+        shell: 'ops-fabric-chatbot/run-tests.sh'
