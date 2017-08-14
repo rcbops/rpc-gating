@@ -1,0 +1,145 @@
+- job:
+    name: RE-Release
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${RPC_GATING_BRANCH}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/release.groovy
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+      - text:
+          name: COMMAND
+          default: |
+            # ORG - Owner of the repo
+            ORG="rcbops"
+
+            # REPO - Name of the repo containing project to be released
+            REPO="?"
+
+            # MAINLINE - the mainline branch, usually master
+            MAINLINE="?"
+
+            # RC_BRANCH - the rc/stabilisaiton branch, usually master-rc
+            # This is the ref that will be released. These coincide
+            # as releases should happen after a stabilisation period.
+            RC_BRANCH="${MAINLINE}-rc"
+
+            # VERSION - Symbolic name of the release, not the ref to be released
+            VERSION="?"
+
+            # PREVIOUS_VERSION - Used as base version for generating release notes
+            PREVIOUS_VERSION="?"
+
+            # NOTIFICATION_ADDRESS - where to send email release notifications
+            # Note: NOTIFICATION_ADDRESS must be in authorised recipients
+            #       list for the mailgun account, if using mailgun.
+            NOTIFICATION_ADDRESS="?"
+
+            # Location where release notes should be written
+            # This is passed through to the release notes hook script
+            RELEASE_NOTES_FILE="${WORKSPACE}/artifacts/release_notes"
+
+            python rpc-gating/scripts/release.py \
+                --debug \
+                --org "$ORG" \
+                --repo "$REPO" \
+                clone \
+                  --ref $RC_BRANCH \
+                generate_release_notes \
+                    --script "optional:gating/generate_release_notes/pre" \
+                    --script "gating/generate_release_notes/run" \
+                    --script "optional:gating/generate_release_notes/post" \
+                    --prev-version "${PREVIOUS_VERSION}" \
+                    --out-file "${RELEASE_NOTES_FILE}" \
+                create_release \
+                    --version "${VERSION}" \
+                    --bodyfile "${RELEASE_NOTES_FILE}" \
+                update_rc_branch \
+                    --mainline "${MAINLINE}" \
+                mailgun \
+                    --to "${NOTIFICATION_ADDRESS}" \
+                    --body "${RELEASE_NOTES_FILE}"
+          description: |
+            Commands and available options.
+              Note that options that are also used
+              by a subsequent command are passed internally.
+
+              <br>mailgun:<br>
+                Send mail via mailgun api.<br>
+                --to TEXT                Must be added to authorised recipients list if<br>
+                                         using a free mailgun account.  [required]<br>
+                --subject TEXT           Subject of release announcement message. May be<br>
+                                         omitted if create_release is used as that generates<br>
+                                         a subject.<br>
+                --body TEXT              Contents of release announcement message May be<br>
+                                         omitted if generate_release_notes is used.<br>
+                --mailgun-api-key TEXT   [required]<br>
+                --mailgun-endpoint TEXT  [required]<br>
+                --help                   Show this message and exit.<br>
+              <br>generate_release_notes:<br>
+                --script TEXT        Execute these script(s) to generate release notes, may<br>
+                                     be specified multiple times. After all scripts are<br>
+                                     executed, release notes must have been written to<br>
+                                     $WORKSPACE/artifacts/release_notes. Scripts can be<br>
+                                     marked as optional prefixing with 'optional:' eg<br>
+                                     optional:/opt/myscript<br>
+                --file TEXT          Read release notes from this file.<br>
+                --text TEXT          Text of the release notes.<br>
+                --ref TEXT           Ref that will be released. Release notes scripts<br>
+                                     compare from --prev-version to --ref. May be omitted if<br>
+                                     --ref has already been supplied to clone<br>
+                --prev-version TEXT  Last released version. Release notes scripts should<br>
+                                     compare prev-version to ref  [required]<br>
+                --clone-dir TEXT     Root of the repo dir. May be omitted if clone was used<br>
+                                     earlier in the chain.<br>
+                --out-file TEXT      Release notes will be written to this file  [required]<br>
+                --help               Show this message and exit.<br>
+              <br>add_issue_url_to_pr:<br>
+                --pull-request-number TEXT  Pull request to update  [required]<br>
+                --issue-key TEXT            Issue being resolved by pull request  [required]<br>
+                --help                      Show this message and exit.<br>
+              <br>clone:<br>
+                --url TEXT      URL of repo to clone.  May be omitted if --org and --repo<br>
+                                are supplied.<br>
+                --ref TEXT      ref to checkout<br>
+                --refspec TEXT  refspec(s) to fetch, space separated.<br>
+                --help          Show this message and exit.<br>
+              <br>create_issue:<br>
+                --tag TEXT    Jenkins build tag  [required]<br>
+                --link TEXT   Link to related build in Jenkins UI  [required]<br>
+                --label TEXT  Add label to issue, can be specified multiple times<br>
+                              [required]<br>
+                --help        Show this message and exit.<br>
+              <br>usage:<br>
+                --help  Show this message and exit.<br>
+              <br>update_rc_branch:<br>
+                Update rc branch.<br>
+                1. Store branch protection data 2. Delete rc branch 3. Create rc branch<br>
+                from head of mainline 4. Enable branch protection with skeleton or<br>
+                previously stored settings.<br>
+                --mainline TEXT  Mainline branch to cut from  [required]<br>
+                --rc TEXT        Release Candidate branch (re)create, may be omitted if<br>
+                                 --ref supplied to clone<br>
+                --help           Show this message and exit.<br>
+              <br>create_release:<br>
+                --version TEXT   Symbolic name of Release (eg r14.1.99)  [required]<br>
+                --ref TEXT       Reference to create release from (branch, SHA etc) May be<br>
+                                 omitted if supplied to clone earlier in the chain.<br>
+                --bodyfile TEXT  File containing release message body  [required]<br>
+                --help           Show this message and exit.<br>
+              <br>mail:<br>
+                Send mail via local MTA<br>
+                --to TEXT       [required]<br>
+                --subject TEXT  Subject of release announcement message. May be omitted if<br>
+                                create_release is used as that generates a subject.<br>
+                --body TEXT     Contents of release announcement message May be omitted if<br>
+                                generate_release_notes is used.<br>
+                --help          Show this message and exit.<br>

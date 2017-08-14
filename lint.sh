@@ -47,7 +47,7 @@ check_groovy(){
          return
        }
   extract_groovy_from_jjb
-  groovy scripts/syntax.groovy pipeline_steps/*.groovy tmp_groovy/*.groovy
+  groovy scripts/syntax.groovy pipeline_steps/*.groovy tmp_groovy/*.groovy job_dsl/*.groovy
 
   if [[ $? == 0 ]]
   then
