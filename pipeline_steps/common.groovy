@@ -66,6 +66,8 @@ def void install_ansible(){
         echo "CentOS node detected, copying in external python interpreter and setting PYTHONPATH in activate script"
         # CentOS 6 can take a hike, its glibc isn't new enough for python 2.7.12
         cp /opt/rh/python27/root/usr/bin/python .venv/bin/python
+        # hack the selinux module into the venv
+        cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
         # I'm not sure why this is needed, but I assume its due to a change in python's
         # default module search paths between 2.7.8 and 2.7.12
         echo "export PYTHONPATH=${env.WORKSPACE}/.venv/lib/python2.7/site-packages" >> .venv/bin/activate
