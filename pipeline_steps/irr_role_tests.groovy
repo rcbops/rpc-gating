@@ -1,6 +1,6 @@
 def run_irr_tests() {
   pubcloud.runonpubcloud {
-    String currentBuild.result="SUCCESS"
+    currentBuild.result="SUCCESS"
     try {
       ansiColor('xterm') {
         dir("${env.WORKSPACE}/${env.ghprbGhRepository}") {
