@@ -67,7 +67,7 @@ def setup(){
     print(e)
     throw e
   }finally{
-    pubcloud.delPubCloudSlave()
+    pubcloud.delPubCloudSlave(instance_name: instance_name)
   }
 } //func
 return this
