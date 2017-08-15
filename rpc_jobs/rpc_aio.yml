@@ -329,21 +329,20 @@
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
-                tempest.tempest()
+                tempest.tempest_install()
                 kibana.kibana(kibana_branch)
                 holland.holland()
                 if (env.STAGES.contains("Minor Upgrade")) {{
                   deploy.upgrade_minor(environment_vars: environment_vars)
                 }} else if (env.STAGES.contains("Major Upgrade")) {{
                   deploy.upgrade_major(environment_vars: environment_vars)
-                  tempest.tempest()
                   kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                   holland.holland()
                 }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
                   deploy.upgrade_leapfrog(environment_vars: environment_vars)
-                  tempest.tempest()
                   kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                 }}
+                tempest.tempest()
               }} catch (e) {{
                 print(e)
                 currentBuild.result = 'FAILURE'
