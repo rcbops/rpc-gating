@@ -11,6 +11,7 @@ packaging
 pyrax
 python-dateutil
 python-subunit
+pytz
 rackspace_monitoring
 six
 urllib3
