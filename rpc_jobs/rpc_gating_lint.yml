@@ -29,7 +29,7 @@
           }
           lint_container.inside {
             stage("Checkout"){
-              git url: env.ghprbAuthorRepoGitUrl, branch: ghprbSourceBranch
+              common.clone_with_pr_refs()
             }
             stage("Lint"){
               withEnv([
