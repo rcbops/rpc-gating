@@ -481,6 +481,30 @@ void clone_with_pr_refs(
   }
 }
 
+void configure_git(){
+  print "Configuring Git"
+  withCredentials([
+    usernamePassword(
+    credentialsId: "github_account_rpc_jenkins_svc",
+    usernameVariable: "GIT_USER",
+    passwordVariable: "GIT_PASS"
+     )
+  ]){
+    // credentials store created to ensure that non public repos
+    // can be cloned when specified as https:// urls.
+    // Ssh auth is handled in clone_with_pr_refs
+    sh """#!/bin/bash -xe
+      mkdir -p ~/.ssh
+      ssh-keyscan github.com >> ~/.ssh/known_hosts
+      git config --global credential.helper "store --file ${WORKSPACE}/.git-credentials"
+      echo "https://${GIT_USER}:${GIT_PASS}@github.com" >> ${WORKSPACE}/.git-credentials
+      git config --global user.email "rpc-jenkins-svc@github.com"
+      git config --global user.name "rpc.jenkins.cit.rackspace.net"
+    """
+  }
+  print "Git Configuration Complete"
+}
+
 /* Set mtime to a constant value as git doesn't track mtimes but
  * docker 1.7 does, this causes cache invalidation when files are
  * added.
@@ -630,6 +654,7 @@ void override_inventory(){
 void use_node(String label=null, body){
   node(label){
     try {
+      print "Preparing ${env.NODE_NAME} for use"
       deleteDir()
       dir("rpc-gating"){
         if (! env.RPC_GATING_BRANCH){
@@ -638,6 +663,8 @@ void use_node(String label=null, body){
         git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
       }
       install_ansible()
+      configure_git()
+      print "${env.NODE_NAME} preparation complete, now ready for use."
       body()
     } catch (e){
       print "Caught exception on ${env.NODE_NAME}: ${e}"
