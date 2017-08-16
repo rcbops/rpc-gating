@@ -247,6 +247,11 @@ def run_script(Map args) {
  *    - STAGES: String list of stages that should be run
  */
 def conditionalStage(Map args){
+  if (env.STAGES == null){
+  throw new Exception(
+    "ConditionalStage used without STAGES env var existing."\
+    + " Ensure the top level job has a string param called STAGES.")
+  }
   stage(args.stage_name){
     if (env.STAGES.contains(args.stage_name)){
         print "Stage Start: ${args.stage_name}"
@@ -271,6 +276,11 @@ def conditionalStage(Map args){
  * run in a stage.
  */
 def conditionalStep(Map args){
+  if (env.STAGES == null){
+    throw new Exception(
+      "ConditionalStep used without STAGES env var existing."\
+      + " Ensure the top level job has a string param called STAGES.")
+  }
   if (env.STAGES.contains(args.step_name)){
       print "Step Start: ${args.step_name}"
       args.step()
