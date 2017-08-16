@@ -2,7 +2,8 @@
 
 set -xe
 echo "Remove exited containers"
-docker ps -a |awk '/Exited/{print $1}' |while read cid; do docker rm $cid||:; done
+#https://docs.docker.com/engine/reference/commandline/ps/#examples
+(docker ps -a -q -f "status=exited"; docker ps -a -q -f "status=dead")| while read cid; do docker rm $cid||:; done
 
 echo "Remove old Images"
 # Remove any images that have been created more than a day ago, unless it is
