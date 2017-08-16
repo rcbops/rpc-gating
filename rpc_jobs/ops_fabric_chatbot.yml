@@ -1,27 +1,36 @@
 - job:
-    name: ops-fabric-chatbot-gate
+    name: Ops-Fabric-Chatbot-Gate
     description: "lint and unit tests for ops-fabric-chatbot"
     disabled: false
     display-name: "ops-fabric-chatbot lint and unit tests"
+    project-type: workflow
+    concurrent: true
     properties:
       - github:
           url: https://github.com/rcbops/ops-fabric-chatbot/
-    scm:
-      - git:
-          url: ssh://git@github.com/rcbops/ops-fabric-chatbot.git
-          refspec: '+refs/pull/*:refs/remotes/origin/pr/*'
-          branches:
-              - "${sha1}"
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
     triggers:
-        - github-pull-request:
-            org-list:
-                - rcbops
-            github-hooks: true
-            trigger-phrase: 'recheck'
-            only-trigger-phrase: false
-            auth-id: "github_account_rpc_jenkins_svc"
-            permit-all: true
-            status-context: 'ops-fabric-chatbot-gate'
-    builders:
-        shell: 'ops-fabric-chatbot/install-deps.sh'
-        shell: 'ops-fabric-chatbot/run-tests.sh'
+      - github-pull-request:
+          org-list:
+              - rcbops
+          github-hooks: true
+          trigger-phrase: 'recheck'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'ops-fabric-chatbot-gate'
+    dsl: |
+      library "rpc-gating@${env.RPC_GATING_BRANCH}"
+      common.shared_slave(){
+        common.clone_with_pr_refs()
+        timeout(time: 5, units: "MINUTES"){
+          stage("Install Deps"){
+            sh "./install-deps.sh"
+          }
+          stage("Run Tests"){
+            sh "./run-tests.sh"
+          }
+        }
+      }
