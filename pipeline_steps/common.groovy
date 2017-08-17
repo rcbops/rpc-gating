@@ -460,13 +460,15 @@ def prepareRpcGit(String branch = "auto", String dest = "/opt"){
 // Use init + fetch instead of clone so that the repo can
 // be cloned into a non-empty directory. Thats added for
 // compatibility with the jenkins git scm step.
+// Note: Creds are not supplied for https connections
+// If you need autheniticated access, use ssh:// or git@
 void clone_with_pr_refs(
-  String repo="https://github.com/${env.ghprbGhRepository}.git",
+  String repo="git@github.com:${env.ghprbGhRepository}",
   String ref="origin/pr/${env.ghprbPullId}/merge",
   String refspec='+refs/pull/\\*:refs/remotes/origin/pr/\\*'\
                 +' +refs/heads/\\*:refs/remotes/origin/\\*'
 ){
-  if(repo == "https://github.com/.git"){
+  if(repo == "git@github.com:"){
     throw new Exception(
       "repo not supplied to common.clone_with_pr_refs or env.ghprbGhRepository"\
       + " not set."
@@ -493,25 +495,15 @@ void clone_with_pr_refs(
 
 void configure_git(){
   print "Configuring Git"
-  withCredentials([
-    usernamePassword(
-    credentialsId: "github_account_rpc_jenkins_svc",
-    usernameVariable: "GIT_USER",
-    passwordVariable: "GIT_PASS"
-     )
-  ]){
-    // credentials store created to ensure that non public repos
-    // can be cloned when specified as https:// urls.
-    // Ssh auth is handled in clone_with_pr_refs
-    sh """#!/bin/bash -xe
-      mkdir -p ~/.ssh
-      ssh-keyscan github.com >> ~/.ssh/known_hosts
-      git config --global credential.helper "store --file ${WORKSPACE}/.git-credentials"
-      echo "https://${GIT_USER}:${GIT_PASS}@github.com" >> ${WORKSPACE}/.git-credentials
-      git config --global user.email "rpc-jenkins-svc@github.com"
-      git config --global user.name "rpc.jenkins.cit.rackspace.net"
-    """
-  }
+  // credentials store created to ensure that non public repos
+  // can be cloned when specified as https:// urls.
+  // Ssh auth is handled in clone_with_pr_refs
+  sh """#!/bin/bash -xe
+    mkdir -p ~/.ssh
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+    git config --global user.email "rpc-jenkins-svc@github.com"
+    git config --global user.name "rpc.jenkins.cit.rackspace.net"
+  """
   print "Git Configuration Complete"
 }
 
