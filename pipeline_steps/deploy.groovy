@@ -98,6 +98,8 @@ def upgrade_leapfrog(Map args) {
   if (env.SERIES == "kilo" && env.TRIGGER == "pr"){
     branch="newton"
   }
+  // Required to run first for leapfrog resource generation
+  tempest.tempest_install()
   upgrade("Leapfrog Upgrade",
           "leapfrog/ubuntu14-leapfrog.sh",
           args.environment_vars,
