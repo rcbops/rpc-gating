@@ -329,7 +329,6 @@
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
-                tempest.tempest_install()
                 kibana.kibana(kibana_branch)
                 holland.holland()
                 if (env.STAGES.contains("Minor Upgrade")) {{
@@ -339,6 +338,8 @@
                   kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                   holland.holland()
                 }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
+                  // Required for leapfrog resource generation
+                  tempest.tempest_install()
                   deploy.upgrade_leapfrog(environment_vars: environment_vars)
                   kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                 }}
