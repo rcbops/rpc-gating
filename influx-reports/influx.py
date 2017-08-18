@@ -65,9 +65,6 @@ LEAPFROG_STAGES = [
 ]
 
 
-yaml.Dumper.ignore_aliases = lambda *args: True
-
-
 class InfluxTimestampParseException(Exception):
     pass
 
@@ -90,7 +87,7 @@ class SubunitContext():
 
 
 def generate_reports(data, max_downtime=100, ymlfile=None, subunitfile=None):
-    yml_report = yaml.dump(data, default_flow_style=False)
+    yml_report = yaml.safe_dump(data, default_flow_style=False)
     logging.info(yml_report)
     if ymlfile:
         with open(ymlfile, "w+") as output_file:
