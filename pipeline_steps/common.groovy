@@ -247,6 +247,11 @@ def run_script(Map args) {
  *    - STAGES: String list of stages that should be run
  */
 def conditionalStage(Map args){
+  if (env.STAGES == null){
+  throw new Exception(
+    "ConditionalStage used without STAGES env var existing."\
+    + " Ensure the top level job has a string param called STAGES.")
+  }
   stage(args.stage_name){
     if (env.STAGES.contains(args.stage_name)){
         print "Stage Start: ${args.stage_name}"
@@ -271,6 +276,11 @@ def conditionalStage(Map args){
  * run in a stage.
  */
 def conditionalStep(Map args){
+  if (env.STAGES == null){
+    throw new Exception(
+      "ConditionalStep used without STAGES env var existing."\
+      + " Ensure the top level job has a string param called STAGES.")
+  }
   if (env.STAGES.contains(args.step_name)){
       print "Step Start: ${args.step_name}"
       args.step()
@@ -439,22 +449,62 @@ def prepareRpcGit(String branch = "auto", String dest = "/opt"){
 
     print("Repo: ${env.RPC_REPO} Branch: ${branch}")
 
-    // checkout used instead of git as a custom refspec is required
-    // to checkout pull requests
-    checkout([$class: 'GitSCM',
-      branches: [[name: branch]],
-      doGenerateSubmoduleConfigurations: false,
-      extensions: [[$class: 'CleanCheckout']],
-      submoduleCfg: [],
-      userRemoteConfigs: [
-        [
-          url: env.RPC_REPO,
-          refspec: '+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*'
-        ]
-      ]
-    ]) // checkout
-    sh "git submodule update --init"
+    clone_with_pr_refs(env.RPC_REPO, branch)
   } // dir
+}
+
+// Clone repo with Refspecs required for PRs.
+// Shouldn't need to supply any params to checkout a PR merged with the base.
+// Uses shell+git to avoid hostname verification failures with
+// the built in git scm step.
+// Use init + fetch instead of clone so that the repo can
+// be cloned into a non-empty directory. Thats added for
+// compatibility with the jenkins git scm step.
+// Note: Creds are not supplied for https connections
+// If you need autheniticated access, use ssh:// or git@
+void clone_with_pr_refs(
+  String repo="git@github.com:${env.ghprbGhRepository}",
+  String ref="origin/pr/${env.ghprbPullId}/merge",
+  String refspec='+refs/pull/\\*:refs/remotes/origin/pr/\\*'\
+                +' +refs/heads/\\*:refs/remotes/origin/\\*'
+){
+  if(repo == "git@github.com:"){
+    throw new Exception(
+      "repo not supplied to common.clone_with_pr_refs or env.ghprbGhRepository"\
+      + " not set."
+    )
+  }
+  if(ref == "origin/pr//merge"){
+    throw new Exception(
+      "ref not supplied to common.clone_with_pr_refs or env.ghprbPullID not "\
+      + "set, attempting to checkout PR for a periodic build?")
+  }
+  print "Cloning Repo: ${repo}@${ref}"
+  sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+    sh """/bin/bash -xe
+      # use init + fetch to avoid the "dir not empty git fail"
+      git init .
+      git remote add origin "${repo}"
+      # Don't quote refspec as it should be separate args to git.
+      git fetch --tags origin ${refspec}
+      git checkout ${ref}
+      git submodule update --init
+    """
+  }
+}
+
+void configure_git(){
+  print "Configuring Git"
+  // credentials store created to ensure that non public repos
+  // can be cloned when specified as https:// urls.
+  // Ssh auth is handled in clone_with_pr_refs
+  sh """#!/bin/bash -xe
+    mkdir -p ~/.ssh
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+    git config --global user.email "rpc-jenkins-svc@github.com"
+    git config --global user.name "rpc.jenkins.cit.rackspace.net"
+  """
+  print "Git Configuration Complete"
 }
 
 /* Set mtime to a constant value as git doesn't track mtimes but
@@ -606,6 +656,7 @@ void override_inventory(){
 void use_node(String label=null, body){
   node(label){
     try {
+      print "Preparing ${env.NODE_NAME} for use"
       deleteDir()
       dir("rpc-gating"){
         if (! env.RPC_GATING_BRANCH){
@@ -614,6 +665,8 @@ void use_node(String label=null, body){
         git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
       }
       install_ansible()
+      configure_git()
+      print "${env.NODE_NAME} preparation complete, now ready for use."
       body()
     } catch (e){
       print "Caught exception on ${env.NODE_NAME}: ${e}"

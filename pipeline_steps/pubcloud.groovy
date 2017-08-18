@@ -123,6 +123,9 @@ direct arguments. */
 def runonpubcloud(Map args=[:], body){
   add_instance_env_params_to_args(args)
   // randomised inventory_path to avoid parallel conflicts
+  if (env.WORKSPACE == null){
+    throw new Exception("runonpubcloud must be run from within a node")
+  }
   args.inventory="inventory.${common.rand_int_str()}"
   args.inventory_path="${WORKSPACE}/rpc-gating/playbooks/${args.inventory}"
   String instance_name = common.gen_instance_name()

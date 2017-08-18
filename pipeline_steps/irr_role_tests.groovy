@@ -6,18 +6,7 @@ def run_irr_tests() {
         dir("${env.WORKSPACE}/${env.ghprbGhRepository}") {
           stage('Checkout'){
             print("Triggered by PR: ${env.ghprbPullLink}")
-            checkout([$class: 'GitSCM',
-              branches: [[name: "origin/pr/${env.ghprbPullId}/merge"]],
-              doGenerateSubmoduleConfigurations: false,
-              extensions: [[$class: 'CleanCheckout']],
-              submoduleCfg: [],
-              userRemoteConfigs: [
-                [
-                  url: "https://github.com/${env.ghprbGhRepository}.git",
-                  refspec: '+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*'
-                ]
-              ]
-            ])
+            common.clone_with_pr_refs()
           }
           stage('Execute ./run_tests.sh'){
             withCredentials(common.get_cloud_creds()) {
