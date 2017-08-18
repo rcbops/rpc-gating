@@ -329,7 +329,6 @@
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
-                tempest.tempest_install()
                 kibana.kibana(kibana_branch)
                 holland.holland()
                 if (env.STAGES.contains("Minor Upgrade")) {{
