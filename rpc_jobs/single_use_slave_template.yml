@@ -31,7 +31,8 @@
           // Do something that creates an artifact
           stage("Build"){
             sh """
-              date > datestamp
+              mkdir -p artifacts
+              date > artifacts/datestamp
             """
           }
 
@@ -39,8 +40,8 @@
             // upload the artifact to cloudfiles
             pubcloud.uploadToCloudFiles(
               container: "jenkins_logs",
-              src: "${WORKSPACE}/datestamp",
-              html_report_dest: "${WORKSPACE}/artifacts.html"
+              src: "${WORKSPACE}/artifacts/datestamp",
+              html_report_dest: "${WORKSPACE}/artifacts/artifacts.html"
             )
           }
 
@@ -51,7 +52,7 @@
               keepAll: true,
               reportFiles: "artifacts.html",
               reportName: "Build Artifact Links",
-              reportDir: "${WORKSPACE}"
+              reportDir: "${WORKSPACE}/artifacts"
             )
           }
         }
