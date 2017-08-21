@@ -484,6 +484,8 @@ void clone_with_pr_refs(
     sh """#!/bin/bash -xe
       # use init + fetch to avoid the "dir not empty git fail"
       git init .
+      # If the git repo previously existed, we remove the origin
+      git remote remove origin || true
       git remote add origin "${repo}"
       # Don't quote refspec as it should be separate args to git.
       git fetch --tags origin ${refspec}
