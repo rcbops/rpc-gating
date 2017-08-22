@@ -481,7 +481,7 @@ void clone_with_pr_refs(
   }
   print "Cloning Repo: ${repo}@${ref}"
   sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
-    sh """/bin/bash -xe
+    sh """#!/bin/bash -xe
       # use init + fetch to avoid the "dir not empty git fail"
       git init .
       git remote add origin "${repo}"
