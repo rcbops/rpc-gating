@@ -29,13 +29,14 @@
           }
           lint_container.inside {
             stage("Checkout"){
+              common.configure_git()
               common.clone_with_pr_refs()
             }
             stage("Lint"){
               withEnv([
                 'RPC_GATING_LINT_USE_VENV=no'
               ]){
-                sh "./lint.sh 2>&1"
+                sh "cd rpc-gating && ./lint.sh 2>&1"
               }// withenv
             }// stage
           }// inside
