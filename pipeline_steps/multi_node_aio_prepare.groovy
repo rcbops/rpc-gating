@@ -160,7 +160,7 @@ def connect_deploy_node(name, instance_ip) {
   common.drop_inventory_file(inventory_content)
   dir("rpc-gating/playbooks"){
     stash (
-      name: "pubcloud_inventory",
+      name: "inventory",
       include: "inventory/hosts"
     )
   }

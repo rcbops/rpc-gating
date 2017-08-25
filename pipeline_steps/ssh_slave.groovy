@@ -22,7 +22,7 @@ def connect(Map args){
     step: {
       common.internal_slave(){
         if (!("inventory" in args)){
-          args.inventory == "inventory"
+          args.inventory = "inventory"
         }
         if (!("port" in args)){
           args.port = 22
