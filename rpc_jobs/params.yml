@@ -122,6 +122,10 @@
           name: "DEPLOY_MAAS"
           default: "{DEPLOY_MAAS}"
           description: "Deploy and verify maas? yes/no"
+      - string:
+          name: "DEPLOY_IRONIC"
+          default: "{DEPLOY_IRONIC}"
+          description: "Deploy Ironic? yes/no"
       - text:
           name: "USER_VARS"
           default: "{USER_VARS}"

@@ -183,6 +183,39 @@
     jobs:
       - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
 
+- project:
+    name: 'RPC-AIO-Ironic-Jobs'
+    series:
+      - newton:
+          branch: newton
+          branches: "newton"
+      - master:
+          branch: master
+          branches: "master"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    action:
+      - deploy:
+          ACTION_STAGES: >-
+            Install Tempest,
+            Tempest Tests,
+            Prepare Kibana Selenium,
+            Kibana Tests
+    scenario:
+      - ironic-multihypervisor:
+          DEPLOY_IRONIC: "yes"
+          TRIGGER_PR_PHRASE_ONLY: true
+    ztrigger:
+      - pr:
+          CRON: ""
+          TRIGGER_USER_VARS: "maas_use_api: false"
+      - periodic:
+          branches: "do_not_build_on_pr"
+          NUM_TO_KEEP: 10
+    jobs:
+      - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
+
 - job-template:
     # DEFAULTS
     DEFAULT_STAGES: >-
@@ -198,8 +231,10 @@
     NUM_TO_KEEP: 30
     IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
     DEPLOY_MAAS: "yes"
+    DEPLOY_IRONIC: "no"
     DEPLOY_TELEGRAF: "NO"
     DEPLOY_INFLUX: "NO"
+    TRIGGER_PR_PHRASE_ONLY: false
     # TEMPLATE
     name: 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
     project-type: workflow
@@ -219,6 +254,7 @@
           DEPLOY_CEPH: "{DEPLOY_CEPH}"
           DEPLOY_ELK: "{DEPLOY_ELK}"
           DEPLOY_MAAS: "{DEPLOY_MAAS}"
+          DEPLOY_IRONIC: "{DEPLOY_IRONIC}"
           USER_VARS: |
             {CONTEXT_USER_VARS}
             {SERIES_USER_VARS}
@@ -263,7 +299,7 @@
             - rcbops
           github-hooks: true
           trigger-phrase: '.*recheck_cit_all.*|.*recheck_cit_{image}_{action}_{scenario}.*'
-          only-trigger-phrase: false
+          only-trigger-phrase: "{obj:TRIGGER_PR_PHRASE_ONLY}"
           white-list-target-branches:
             - "{branches}"
           auth-id: "github_account_rpc_jenkins_svc"
@@ -313,6 +349,7 @@
                   "DEPLOY_SWIFT=${{DEPLOY_SWIFT}}",
                   "DEPLOY_CEPH=${{DEPLOY_CEPH}}",
                   "DEPLOY_ELK=${{DEPLOY_ELK}}",
+                  "DEPLOY_IRONIC=${{DEPLOY_IRONIC}}",
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)

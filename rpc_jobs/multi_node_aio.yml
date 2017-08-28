@@ -177,6 +177,7 @@
     ACTION_STAGES: ""
     TRIGGER_STAGES: ""
     DEPLOY_MAAS: "yes"
+    DEPLOY_IRONIC: "no"
     DEPLOY_TELEGRAF: "no"
     DEPLOY_INFLUX: "no"
     properties:
@@ -209,6 +210,7 @@
           DEPLOY_CEPH: "{DEPLOY_CEPH}"
           DEPLOY_ELK: "{DEPLOY_ELK}"
           DEPLOY_MAAS: "{DEPLOY_MAAS}"
+          DEPLOY_IRONIC: "{DEPLOY_IRONIC}"
           USER_VARS: |
             {CONTEXT_USER_VARS}
             {SERIES_USER_VARS}

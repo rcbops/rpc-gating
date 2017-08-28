@@ -16,6 +16,7 @@ def prepare(){
             "DEPLOY_OA=no",
             "DEPLOY_SWIFT=${env.DEPLOY_SWIFT}",
             "DEPLOY_ELK=${env.DEPLOY_ELK}",
+            "DEPLOY_IRONIC=${env.DEPLOY_IRONIC}",
             "DEPLOY_RPC=no"
           ]){
             sh """#!/bin/bash
