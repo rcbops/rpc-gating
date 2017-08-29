@@ -55,9 +55,7 @@ def void install_ansible(){
       ansible-galaxy install -r rpc-gating/role_requirements.yml -p rpc-gating/playbooks/roles
     }
 
-    download_venv(){
-      curl -s "\${REPO_BASE}/rpcgatingvenv_\${SHA}.tbz" > venv.tbz
-      tar xjfp venv.tbz
+    unpack_venv(){
       op=\$(cat .venv/original_venv_path) # Original Path
       np=\${PWD}/.venv                    # New Path
       grep -ri --files-with-match \$op \
@@ -78,13 +76,13 @@ def void install_ansible(){
       SHA=\$(git rev-parse HEAD)
     popd
 
-    curl -s "\${REPO_BASE}/index" > index ||:
-    if grep -q \$SHA index; then
-      echo "Found rpc-gating venv tar on rpc-repo for \$SHA, downloading."
-      download_venv
+    if (curl -s "\${REPO_BASE}/rpcgatingvenv_\${SHA}.tbz" > venv.tbz \
+        && tar xjfp venv.tbz); then
+      echo "Downloaded rpc-gating venv tar from rpc-repo for \$SHA, unpacking."
+      unpack_venv
       echo "Venv download and modification complete. SHA:\${SHA}"
     else
-      echo "rpc-gating venv tar not found on rpc-repo for \$SHA, creating venv locally."
+      echo "Failed to download rpc-gating venv tar from rpc-repo for \$SHA, creating venv locally."
       create_venv
       echo "workspace/.venv creation complete"
     fi
