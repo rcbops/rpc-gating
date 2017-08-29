@@ -460,13 +460,13 @@ void clone_with_pr_refs(
   String refspec='+refs/pull/\\*:refs/remotes/origin/pr/\\*'\
                 +' +refs/heads/\\*:refs/remotes/origin/\\*'
 ){
-  if(repo == "git@github.com:"){
+  if(repo == "git@github.com:null"){
     throw new Exception(
       "repo not supplied to common.clone_with_pr_refs or env.ghprbGhRepository"\
       + " not set."
     )
   }
-  if(ref == "origin/pr//merge"){
+  if(ref == "origin/pr/null/merge"){
     throw new Exception(
       "ref not supplied to common.clone_with_pr_refs or env.ghprbPullID not "\
       + "set, attempting to checkout PR for a periodic build?")
