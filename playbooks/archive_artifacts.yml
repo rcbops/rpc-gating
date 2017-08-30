@@ -19,7 +19,7 @@
                {{ inventory_hostname }}:{{ item }}
                {{ artifacts_path }}/{{ ansible_hostname }}
       with_items:
-        - "/openstack/log/{{ ansible_hostname }}-lxc"
+        - "/openstack/log"
         - "/etc"
         - "/var/log"
       delegate_to: "localhost"
@@ -65,7 +65,6 @@
       with_nested:
         - "{{ containers.stdout_lines | default([]) }}"
         -
-          - { pre: "/openstack/log", post: "" }
           - { pre: "/var/lib/lxc", post: "/rootfs/etc" }
           - { pre: "/var/lib/lxc", post: "/delta0/etc" }
       delegate_to: "localhost"
