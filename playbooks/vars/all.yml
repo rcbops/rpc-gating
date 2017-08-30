@@ -27,3 +27,7 @@ default_gating_overrides:
   # too low for the liberty->mitaka upgrade job where more space is used by
   # additional packages, venvs, logs, etc.
   percent_used_critical_threshold: 95
+  # These neutron vars are required to allow instances to be pinged after an
+  # upgrade when using vxlan
+  neutron_l2_population: False
+  neutron_vxlan_group: 224.0.0.1
