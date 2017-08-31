@@ -88,6 +88,8 @@ def upgrade_minor(Map args) {
 }
 
 def upgrade_major(Map args) {
+  // Required to run first for major upgrade resource generation
+  tempest.tempest_install()
   upgrade("Major Upgrade", "test-upgrade.sh", args.environment_vars)
 }
 
