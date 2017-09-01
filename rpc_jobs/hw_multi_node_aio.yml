@@ -68,7 +68,6 @@
             Tempest Tests,
             Prepare Kibana Selenium,
             Kibana Tests,
-            Holland,
             Destroy Slave
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
@@ -85,7 +84,6 @@
               Tempest Tests
               Prepare Kibana Selenium
               Kibana Tests
-              Holland (test holland mysql backup)
               Destroy Slave
       - string:
           name: INSTANCE_NAME
@@ -136,7 +134,6 @@
                   "DEPLOY_TEMPEST=no",
                   "DEPLOY_AIO=no",
                   "DEPLOY_MAAS=no",
-                  "DEPLOY_SUPPORT_ROLE=yes"
                   ]
               ) // deploy_sh
               maas.prepare(instance_name: instance_name)
@@ -144,7 +141,6 @@
               maas.verify()
               tempest.tempest()
               kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
-              holland.holland()
             }} // hw node
           }} catch (e){{
               print e

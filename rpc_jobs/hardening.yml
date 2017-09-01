@@ -64,7 +64,6 @@
               Horizon Tests
               Prepare Kibana Selenium
               Kibana Tests
-              Holland
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
               Destroy Slave
