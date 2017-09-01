@@ -48,8 +48,7 @@
             Install Tempest,
             Tempest Tests,
             Prepare Kibana Selenium,
-            Kibana Tests,
-            Holland
+            Kibana Tests
       - leapfrogupgrade:
           ACTION_STAGES: >-
             Prepare MaaS,
@@ -174,7 +173,6 @@
       Destroy Slave
     ACTION_STAGES: ""
     TRIGGER_STAGES: ""
-    DEPLOY_SUPPORT_ROLE: "yes"
     DEPLOY_MAAS: "yes"
     DEPLOY_TELEGRAF: "no"
     DEPLOY_INFLUX: "no"
@@ -207,7 +205,6 @@
           DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
           DEPLOY_CEPH: "{DEPLOY_CEPH}"
           DEPLOY_ELK: "{DEPLOY_ELK}"
-          DEPLOY_SUPPORT_ROLE: "{DEPLOY_SUPPORT_ROLE}"
           DEPLOY_MAAS: "{DEPLOY_MAAS}"
           USER_VARS: |
             {CONTEXT_USER_VARS}
@@ -232,7 +229,6 @@
               Horizon Tests
               Prepare Kibana Selenium
               Kibana Tests
-              Holland
               Leapfrog Upgrade
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
@@ -291,9 +287,6 @@
               }},
               "kibana": {{
                 kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
-              }},
-              "holland": {{
-                holland.holland()
               }}
             ) // parallel
             if (env.STAGES.contains("Leapfrog Upgrade")) {{

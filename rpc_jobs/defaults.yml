@@ -8,7 +8,6 @@
     DEPLOY_SWIFT: "yes"
     DEPLOY_CEPH: "no"
     DEPLOY_ELK: "yes"
-    DEPLOY_SUPPORT_ROLE: "no"
     # Misc
     CRON: "H H(9-21) * * 1-5"
     CONTEXT_USER_VARS: ""

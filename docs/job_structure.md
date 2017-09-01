@@ -71,7 +71,6 @@
 * Example Implementations:
   * Tempest
   * Selenium
-  * Holland
   * Ceph Func
 * Node: Newly created slave
 

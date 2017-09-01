@@ -119,10 +119,6 @@
           default: "{DEPLOY_ELK}"
           description: "Deploy ELK? yes/no"
       - string:
-          name: "DEPLOY_SUPPORT_ROLE"
-          default: "{DEPLOY_SUPPORT_ROLE}"
-          description: "Deploy support role? yes/no"
-      - string:
           name: "DEPLOY_MAAS"
           default: "{DEPLOY_MAAS}"
           description: "Deploy and verify maas? yes/no"
