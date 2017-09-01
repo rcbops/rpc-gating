@@ -284,16 +284,6 @@
       timeout(time: 8, unit: 'HOURS'){{
         common.shared_slave() {{
           try {{
-            // This sets kibana_branch based on STAGES
-            // Note that we do this before the block below since
-            // env.UPGRADE_FROM_ENV gets overwritten
-            if (env.STAGES.contains("Minor Upgrade")
-                || env.STAGES.contains("Major Upgrade")
-                || env.STAGES.contains("Leapfrog Upgrade")) {{
-              kibana_branch = env.UPGRADE_FROM_REF
-            }} else {{
-              kibana_branch = env.KIBANA_SELENIUM_BRANCH
-            }}
             // prepare vars for leapfrog upgrade test of changes proposed to kilo
             // this is a special case as we only usually test upgrades on
             // changes to the destination branch.
@@ -329,19 +319,16 @@
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
-                kibana.kibana(kibana_branch)
-                holland.holland()
                 if (env.STAGES.contains("Minor Upgrade")) {{
                   deploy.upgrade_minor(environment_vars: environment_vars)
                 }} else if (env.STAGES.contains("Major Upgrade")) {{
                   deploy.upgrade_major(environment_vars: environment_vars)
-                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
-                  holland.holland()
                 }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
                   deploy.upgrade_leapfrog(environment_vars: environment_vars)
-                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                 }}
                 tempest.tempest()
+                kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
+                holland.holland()
               }} catch (e) {{
                 print(e)
                 currentBuild.result = 'FAILURE'
