@@ -138,7 +138,13 @@ def runonpubcloud(Map args=[:], body){
     print(e)
     throw e
   }finally {
-    delPubCloudSlave(instance_name: instance_name)
+    try {
+      delPubCloudSlave(instance_name: instance_name)
+    } catch (e){
+      print "Error while cleaning up, swallowing this exception to prevent "\
+            +"cleanup errors from failing the build: ${e}"
+      common.create_jira_issue("RE", "Cleanup Failure: ${env.BUILD_TAG}")
+    }
   }
 }
 
