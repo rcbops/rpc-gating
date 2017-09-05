@@ -93,7 +93,7 @@
             instance_ip = sh(script: "ip route get 1 | awk '{{print \$NF;exit}}'", returnStdout: true)
           }} // public cloud node
 
-          deploy_node = "${{instance_name}}-deploy-vm"
+          deploy_node = "${{instance_name}}-infra1-vm"
           multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
 
           common.use_node(deploy_node){{

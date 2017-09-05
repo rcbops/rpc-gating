@@ -66,10 +66,10 @@
     parameters:
       - string:
           name: OSA_OPS_REPO
-          default: https://github.com/git-harry/openstack-ansible-ops
+          default: https://github.com/openstack/openstack-ansible-ops
       - string:
           name: OSA_OPS_BRANCH
-          default: 93ac83d3436fd078500d6fd85ec5078e357f4db4
+          default: db2f2759a6f5a42102e973dd2f0e9e4c386b690c
       - string:
           name: DEFAULT_IMAGE
           default: "{DEFAULT_IMAGE}"
@@ -86,14 +86,6 @@
           name: DATA_DISK_DEVICE
           default: "{DATA_DISK_DEVICE}"
           description: The data disk to use for VMs (if unset the largest unpartitioned device will be used)
-      - string:
-          name: MULTI_NODE_AIO_DIR
-          default: "multi-node-aio"
-          description: |
-            The directory to trigger build.sh from
-            Options:
-              multi-node-aio
-              multi-node-aio-xenial-ansible
       - string:
           name: "COMPUTE_NODES"
           default: "{COMPUTE_NODES}"

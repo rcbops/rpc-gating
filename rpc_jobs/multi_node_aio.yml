@@ -38,9 +38,9 @@
           DEPLOY_TELEGRAF: "yes"
     image:
       - xenial:
-          DEFAULT_IMAGE: "16.04.3"
+          DEFAULT_IMAGE: "ubuntu-16.04-amd64"
       - trusty:
-          DEFAULT_IMAGE: "14.04.5"
+          DEFAULT_IMAGE: "ubuntu-14.04-amd64"
     action:
       - deploy:
           ACTION_STAGES: >-
@@ -54,8 +54,8 @@
           GENERATE_TEST_NETWORKS: "0"
           GENERATE_TEST_SERVERS: "0"
           GENERATE_TEST_VOLUMES: "0"
-          COMPUTE_NODES: "2"
-          VOLUME_NODES: "2"
+          COMPUTE_NODES: "0"
+          VOLUME_NODES: "0"
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
@@ -206,7 +206,7 @@
             instance_ip = sh(script: "ip route get 1 | awk '{{print \$NF;exit}}'", returnStdout: true)
           }} // public cloud node
 
-          deploy_node = "${{instance_name}}-deploy-vm"
+          deploy_node = "${{instance_name}}-infra1-vm"
           multi_node_aio_prepare.connect_deploy_node(deploy_node, instance_ip)
           maas.prepare(instance_name: instance_name)
 

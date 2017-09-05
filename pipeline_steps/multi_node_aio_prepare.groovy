@@ -107,10 +107,16 @@ def prepare() {
         git url: env.OSA_OPS_REPO, branch: "master"
         sh "git checkout ${env.OSA_OPS_BRANCH}"
       }
-      dir("openstack-ansible-ops/${env.MULTI_NODE_AIO_DIR}") {
+      dir("openstack-ansible-ops/multi-node-aio") {
+        // The multi-node-aio tool is quite modest when it comes to allocating
+        // RAM to VMs -- since we have RAM to spare we double that assigned to
+        // infra nodes.
+        sh """#!/bin/bash
+          sed -i 's/server_vm_ram: 8192/server_vm_ram: 16384/g' playbooks/host_vars/infra*.yml
+          cp -a ${WORKSPACE}/rpc-gating/scripts/dynamic_inventory.py playbooks/inventory
+          cp -a ${WORKSPACE}/rpc-gating/playbooks/templates/openstack_user_config.yml.j2 playbooks/osa/openstack_user_config.yml
+        """
         timeout(time: 45, unit: "MINUTES") {
-          add_nodes()
-          env.MNAIO_ENTITIES = maas.get_mnaio_entity_names()
           common.run_script(
             script: 'build.sh',
             environment_vars: [
@@ -120,7 +126,6 @@ def prepare() {
               "OVERRIDE_SOURCES=true",
               "DEVICE_NAME=vda",
               "DEFAULT_NETWORK=eth0",
-              "VM_DISK_SIZE=252",
               "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
               "DEFAULT_KERNEL=${env.DEFAULT_KERNEL}",
               "OSA_BRANCH=${osa_commit}",
@@ -133,9 +138,13 @@ def prepare() {
               "DATA_DISK_DEVICE=${env.DATA_DISK_DEVICE}",
               "CONFIG_PREROUTING=true",
               "OSA_PORTS=6080 6082 443 80 8443",
+              "COMPUTE_NODES=${env.COMPUTE_NODES}",
+              "VOLUME_NODES=${env.VOLUME_NODES}",
               ]
           ) //run_script
         } //timeout
+        env.MNAIO_ENTITIES = maas.get_mnaio_entity_names()
+        sh "scp -o StrictHostKeyChecking=no /root/.ssh/authorized_keys infra1:/root/.ssh"
       } // dir
     } //stage
   ) //conditionalStage
@@ -149,10 +158,10 @@ def prepare() {
       sh """/bin/bash
       echo "multi_node_aio_prepare.prepare/Prepare RPC Configs"
       set -xe
-      scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
-      scp -o StrictHostKeyChecking=no ${env.WORKSPACE}/user_zzz_gating_variables.yml deploy1:/etc/openstack_deploy/user_zzz_gating_variables.yml
+      scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack infra1:/opt/
+      scp -o StrictHostKeyChecking=no ${env.WORKSPACE}/user_zzz_gating_variables.yml infra1:/etc/openstack_deploy/user_zzz_gating_variables.yml
 
-      ssh -T -o StrictHostKeyChecking=no deploy1 << 'EOF'
+      ssh -T -o StrictHostKeyChecking=no infra1 << 'EOF'
       set -xe
       sudo cp /etc/openstack_deploy/user_variables.yml /etc/openstack_deploy/user_variables.yml.bak
       sudo cp -R /opt/rpc-openstack/openstack-ansible/etc/openstack_deploy /etc
