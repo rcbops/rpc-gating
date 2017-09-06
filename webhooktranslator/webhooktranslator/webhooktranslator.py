@@ -114,7 +114,7 @@ def create_jira_issue(summary, description, labels):
         project=app.config['jproject'],
         summary=summary,
         description=description,
-        issuetype={'name': 'Task'},
+        issuetype={'name': 'Issue-releng-platform-alert'},
         labels=labels
     )
 
