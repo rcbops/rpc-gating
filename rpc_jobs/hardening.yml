@@ -56,8 +56,6 @@
               Prepare RPC Configs
               Deploy RPC w/ Script
               Prepare MaaS
-              Setup MaaS
-              Verify MaaS
               Install Tempest
               Tempest Tests
               Prepare Horizon Selenium
