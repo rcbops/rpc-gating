@@ -1,5 +1,4 @@
 ---
-gating_overrides_file: "{{ lookup('env', 'WORKSPACE') }}/user_zzz_gating_variables.yml"
 gating_overrides:
   apply_security_hardening: false
   maas_fqdn_extension: ".{{ lookup('env', 'NODE_NAME') }}"

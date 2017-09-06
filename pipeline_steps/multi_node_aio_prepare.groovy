@@ -123,7 +123,9 @@ def prepare() {
       } // dir
     } //stage
   ) //conditionalStage
+}
 
+def prepare_configs(){
   common.conditionalStage(
     stage_name: 'Prepare RPC Configs',
     stage: {
@@ -133,22 +135,17 @@ def prepare() {
       sh """/bin/bash
       echo "multi_node_aio_prepare.prepare/Prepare RPC Configs"
       set -xe
-      scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
-      scp -o StrictHostKeyChecking=no ${env.WORKSPACE}/user_zzz_gating_variables.yml deploy1:/etc/openstack_deploy/user_zzz_gating_variables.yml
-
-      ssh -T -o StrictHostKeyChecking=no deploy1 << 'EOF'
-      set -xe
       sudo cp /etc/openstack_deploy/user_variables.yml /etc/openstack_deploy/user_variables.yml.bak
       sudo cp -R /opt/rpc-openstack/openstack-ansible/etc/openstack_deploy /etc
       sudo cp /etc/openstack_deploy/user_variables.yml.bak /etc/openstack_deploy/user_variables.yml
 
       sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_*.yml /etc/openstack_deploy
       sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/env.d/* /etc/openstack_deploy/env.d
-EOF
       """
     } //stage
   ) //conditionalStage
 }
+
 
 def connect_deploy_node(name, instance_ip) {
   String inventory_content = """
