@@ -19,6 +19,7 @@
     context:
       - master:
           irr_flavor: "performance2-15"
+      - pike
       - ocata
       - newton
       - mitaka
@@ -26,6 +27,8 @@
       - kilo
     exclude:
       # NOTE(cloudnull): At present the logstash role only gates on master.
+      - repo: rpc-role-logstash
+        context: pike
       - repo: rpc-role-logstash
         context: ocata
       - repo: rpc-role-logstash
@@ -39,6 +42,8 @@
       # NOTE(cloudnull): The image context is only applied to certain releases.
       - image: trusty
         context: master
+      - image: trusty
+        context: pike
       - image: trusty
         context: ocata
       - image: xenial
