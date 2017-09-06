@@ -330,7 +330,7 @@ if __name__ == "__main__":
     """ Args parser and logic router """
     logging.getLogger().setLevel(logging.INFO)
     parser = argparse.ArgumentParser(
-        description="Fetch maas_ metrics, and report downtime data.")
+        description="Fetch metrics, and report downtime data.")
     parser.add_argument("--ymlreport", help="Yaml report filename")
     parser.add_argument("--subunitreport", help="Subunit report filename")
     parser.add_argument(
