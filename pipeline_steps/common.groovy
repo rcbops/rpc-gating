@@ -592,7 +592,7 @@ def delete_workspace() {
 def create_jira_issue(String project="RE",
                       String tag=env.BUILD_TAG,
                       String link=env.BUILD_URL,
-                      String type="Task"){
+                      String type="Issue-releng-platform-alert"){
   withCredentials([
     usernamePassword(
       credentialsId: "jira_user_pass",
