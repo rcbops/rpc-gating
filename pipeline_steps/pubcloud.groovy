@@ -23,6 +23,55 @@ def cleanup(Map args){
 } //call
 
 
+/* Save image of public cloud instance
+ * Params:
+ *  - region: Rax region to build in
+ *  - instance_name: Name of instance to save
+ *  - image: Name to use for the saved image
+ * Environment Variables:
+ *  - WORKSPACE
+ * The args required can be supplied uppercase in the env dictionary, or lower
+ * case as direct arguments.
+ *
+ *  NOT Parallel safe unless inventory_path is supplied and unique per branch.
+ *
+ */
+def savePubCloudSlave(Map args){
+  common.conditionalStep(
+    step_name: 'Save Slave',
+    step: {
+      add_instance_env_params_to_args(args)
+      if (!("inventory" in args)){
+        args.inventory = "inventory"
+      }
+      withCredentials(common.get_cloud_creds()){
+
+        dir("rpc-gating/playbooks"){
+          pyrax_cfg = common.writePyraxCfg(
+            username: env.PUBCLOUD_USERNAME,
+            api_key: env.PUBCLOUD_API_KEY
+          )
+          env.RAX_CREDS_FILE = pyrax_cfg
+          env.SAVE_IMAGE_NAME = args.image
+          common.venvPlaybook(
+            playbooks: ['save_pubcloud.yml'],
+            args: [
+              "-i inventory",
+              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+            ],
+            vars: args
+          )
+          stash (
+            name: args.inventory,
+            include: "${args.inventory}/hosts"
+          )
+        } // dir
+      } //withCredentials
+    } //step
+  ) //conditionalStep
+} //save
+
+
 /* Create public cloud node
  * Params:
  *  - region: Rax region to build in

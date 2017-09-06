@@ -1,0 +1,50 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    region: "{{ lookup('env', 'REGION') }}"
+    script_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts"
+    pyrax_creds_file: "{{ lookup('env', 'RAX_CREDS_FILE') }}"
+    image_name: "{{ lookup('env', 'SAVE_IMAGE_NAME') }}"
+  tasks:
+
+    - name: Fail when no value is provided for SAVE_IMAGE_NAME
+      fail:
+       msg: "The SAVE_IMAGE_NAME environment variable must be set."
+      when: image_name == ""
+
+    - name: Get instance info
+      rax_facts:
+        name: "{{ instance_name }}"
+        region: "{{ region }}"
+      register: get_rax_facts
+
+    - name: Execute public cloud instance cleanup script
+      script: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/rax_instance_clean.sh"
+      delegate_to: "{{ rax_accessipv4 }}"
+
+    # This task is executed asynchronously so that
+    # Ansible does not wait for completion before
+    # continuing.
+    - name: Shut down cloud instance
+      shell: >
+        sleep 2 && /sbin/shutdown -h now
+      async: 1
+      poll: 0
+      ignore_errors: true
+      delegate_to: "{{ rax_accessipv4 }}"
+
+    # In order to ensure the integrity of the instance image
+    # we wait 30 seconds to give it a chance to complete shut
+    # down before executing the save.
+    - name: Pause for a minute to allow the instance to shut down
+      pause:
+        minutes: 1
+
+    - name: Save public cloud instance
+      command: >-
+        {{ script_path }}/rax_create_image.py --credentialsfile {{ pyrax_creds_file }}
+                                              --cloudregion {{ region }}
+                                              --serveruuid {{ rax_id }}
+                                              --imagename '{{ image_name }}'
