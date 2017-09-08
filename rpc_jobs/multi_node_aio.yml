@@ -259,38 +259,42 @@
           maas.prepare(instance_name: instance_name)
 
           common.use_node(deploy_node){{
-            // MNAIO prevents ANSIBLE_GIT_REPO and ANSIBLE_GIT_RELEASE from being overridden
-            // Re-running bootstrap-ansible.sh to use ssh_retry
-            if (env.STAGES.contains("Deploy RPC w/ Script")) {{
-              dir("/opt/rpc-openstack/openstack-ansible") {{
-                withEnv(common.get_deploy_script_env()) {{
-                  sh """#!/bin/bash -xe
-                     ./scripts/bootstrap-ansible.sh
-                     """
+            try {{
+              // MNAIO prevents ANSIBLE_GIT_REPO and ANSIBLE_GIT_RELEASE from being overridden
+              // Re-running bootstrap-ansible.sh to use ssh_retry
+              if (env.STAGES.contains("Deploy RPC w/ Script")) {{
+                dir("/opt/rpc-openstack/openstack-ansible") {{
+                  withEnv(common.get_deploy_script_env()) {{
+                    sh """#!/bin/bash -xe
+                       ./scripts/bootstrap-ansible.sh
+                       """
+                  }}
                 }}
               }}
-            }}
-            environment_vars = [
-              "DEPLOY_HAPROXY=yes",
-              "DEPLOY_TEMPEST=no",
-              "DEPLOY_AIO=no",
-            ]
-            deploy.deploy_sh(
-              environment_vars: environment_vars
-            ) // deploy_sh
-            parallel(
-              "tempest": {{
-                tempest.tempest()
-              }},
-              "horizon": {{
-                horizon.horizon_integration()
-              }},
-              "kibana": {{
-                kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
+              environment_vars = [
+                "DEPLOY_HAPROXY=yes",
+                "DEPLOY_TEMPEST=no",
+                "DEPLOY_AIO=no",
+              ]
+              deploy.deploy_sh(
+                environment_vars: environment_vars
+              ) // deploy_sh
+              parallel(
+                "tempest": {{
+                  tempest.tempest()
+                }},
+                "horizon": {{
+                  horizon.horizon_integration()
+                }},
+                "kibana": {{
+                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
+                }}
+              ) // parallel
+              if (env.STAGES.contains("Leapfrog Upgrade")) {{
+                deploy.upgrade_leapfrog(environment_vars: environment_vars)
               }}
-            ) // parallel
-            if (env.STAGES.contains("Leapfrog Upgrade")) {{
-              deploy.upgrade_leapfrog(environment_vars: environment_vars)
+            }} finally {{
+              common.archive_artifacts("MNAIO")
             }}
           }}// deploy node on public cloud node
         }} catch (e){{
