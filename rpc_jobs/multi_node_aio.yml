@@ -38,7 +38,7 @@
           DEPLOY_TELEGRAF: "yes"
     image:
       - xenial:
-          DEFAULT_IMAGE: "16.04.2"
+          DEFAULT_IMAGE: "16.04.3"
       - trusty:
           DEFAULT_IMAGE: "14.04.5"
     action:

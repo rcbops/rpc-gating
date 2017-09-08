@@ -13,7 +13,7 @@
       - trusty:
           DEFAULT_IMAGE: "14.04.5"
       - xenial:
-          DEFAULT_IMAGE: "16.04.2"
+          DEFAULT_IMAGE: "16.04.3"
 
     # NOTE: Hugh tested this and found that ztrigger overrides series and
     #       trigger doesn't, which is odd because both trigger and ztrigger
