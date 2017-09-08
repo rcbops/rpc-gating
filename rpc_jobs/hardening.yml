@@ -7,7 +7,7 @@
             tempest_test_sets: 'scenario'
     context:
       - xenial:
-          DEFAULT_IMAGE: "16.04.2"
+          DEFAULT_IMAGE: "16.04.3"
     trigger:
       - periodic:
           CRON: "0 2 * * 7"
