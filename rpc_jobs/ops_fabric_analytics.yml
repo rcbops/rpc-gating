@@ -1,0 +1,40 @@
+- job:
+    name: Ops-Fabric-Analytics-Gate
+    description: "lint and unit tests for ops-fabric-analytics"
+    disabled: false
+    display-name: "ops-fabric-analytics lint and unit tests"
+    project-type: workflow
+    concurrent: true
+    properties:
+      - github:
+          url: https://github.com/rcbops/ops-fabric-analytics/
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    triggers:
+      - github-pull-request:
+          org-list:
+              - rcbops
+          github-hooks: true
+          trigger-phrase: 'recheck'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'ops-fabric-analytics-gate'
+    dsl: |
+      library "rpc-gating@${env.RPC_GATING_BRANCH}"
+      common.shared_slave(){
+        common.clone_with_pr_refs()
+        stage("Build Docker Image"){
+            analytics_container = docker.build env.BUILD_TAG.toLowerCase()
+        }
+        analytics_container.inside {
+          timeout(time: 5, units: "MINUTES"){
+            stage("Run Tests"){
+              sh """#!/bin/bash -xe
+                cd ./source && tox
+              """
+            }
+          } // timeout
+        } // docker container
+      } // shared_slave
