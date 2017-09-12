@@ -49,30 +49,6 @@ def prepare(Map args) {
   ) // conditionalStage
 }
 
-def deploy() {
-  common.conditionalStage(
-    stage_name: 'Setup MaaS',
-    stage: {
-      common.openstack_ansible(
-        path: '/opt/rpc-openstack/rpcd/playbooks',
-        playbook: 'setup-maas.yml'
-      ) //openstack_ansible
-    } //stage
-  ) //conditionalStage
-}
-
-def verify() {
-  common.conditionalStage(
-    stage_name: 'Verify MaaS',
-    stage: {
-      common.openstack_ansible(
-        path: '/opt/rpc-openstack/rpcd/playbooks',
-        playbook: 'verify-maas.yml'
-      ) //openstack_ansible
-    } //stage
-  ) //conditionalStage
-}
-
 // Add MaaS vars as properties of the env object
 // This is similar to withEnv but doesn't require
 // another level of nesting.
