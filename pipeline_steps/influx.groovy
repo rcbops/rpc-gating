@@ -70,4 +70,22 @@ def setup(){
     pubcloud.delPubCloudSlave(instance_name: instance_name)
   }
 } //func
+
+void build_report(Map kwargs){
+  withCredentials([
+     string(
+       credentialsId: "INFLUX_IP",
+       variable: "INFLUX_IP"
+     )
+   ]){
+     if (kwargs.leapfrog){
+       cmdargs = "--leapfrog-upgrade"
+     } else{
+       cmdargs = ""
+     }
+     dir("rpc-gating/influx-reports"){
+       sh "./influx-report.sh ${cmdargs}"
+     }
+  }
+}
 return this

@@ -106,7 +106,7 @@ def upgrade_leapfrog(Map args) {
           "leapfrog/ubuntu14-leapfrog.sh",
           args.environment_vars,
           branch)
-
+  influx.build_report(leapfrog: true)
 }
 
 return this;
