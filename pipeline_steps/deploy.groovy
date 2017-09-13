@@ -42,19 +42,6 @@ def deploy_sh(Map args) {
   ) // conditionalStage
 }
 
-void create_test_resource_load(Integer servers, Integer networks, Integer volumes) {
-  dir("/opt/rpc-openstack/scripts/leapfrog/playbooks/") {
-    sh """
-      openstack-ansible \
-        -i /opt/rpc-openstack/openstack-ansible/playbooks/inventory/dynamic_inventory.py \
-        -e server_count=$servers \
-        -e network_count=$networks \
-        -e volume_count=$volumes \
-        generate-resources.yml
-    """
-  }
-}
-
 def upgrade(String stage_name, String upgrade_script, List env_vars,
             String branch = "auto", String dest = "/opt") {
   common.conditionalStage(
@@ -66,18 +53,18 @@ def upgrade(String stage_name, String upgrade_script, List env_vars,
           sh "git reset --hard"
         }
         common.prepareRpcGit(branch, dest)
-        if ( stage_name == "Leapfrog Upgrade" ) {
-          create_test_resource_load(
-            env.GENERATE_TEST_SERVERS as Integer,
-            env.GENERATE_TEST_NETWORKS as Integer,
-            env.GENERATE_TEST_VOLUMES as Integer,
+        withCredentials([
+          string(
+            credentialsId: "INFLUX_IP",
+            variable: "INFLUX_IP"
           )
+        ]){
+          dir("/opt/rpc-openstack"){
+            sh """
+              scripts/$upgrade_script
+            """
+          } // dir
         }
-        dir("/opt/rpc-openstack"){
-          sh """
-            scripts/$upgrade_script
-          """
-        } // dir
       } // withEnv
     } // stage
   ) // conditionalStage
