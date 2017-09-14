@@ -128,7 +128,7 @@
       # the kilo --> newton job is only ran as a periodic job until
       # it's more reliable and can be tested as a PR
       - action: leapfrogupgrade
-        trigger: pr
+        ztrigger: pr
       - series: liberty
         action: leapfrogupgrade
       - series: mitaka
