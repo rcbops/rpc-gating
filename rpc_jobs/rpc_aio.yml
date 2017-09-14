@@ -125,7 +125,10 @@
       # Leapfrog upgrades are only run for kilo --> newton
       # as the upgrade method is not supported for any
       # other target series.
-      # the kilo --> newton job is triggered by PRs to either branch.
+      # the kilo --> newton job is only ran as a periodic job until
+      # it's more reliable and can be tested as a PR
+      - action: leapfrogupgrade
+        trigger: pr
       - series: liberty
         action: leapfrogupgrade
       - series: mitaka
