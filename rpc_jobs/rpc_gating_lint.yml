@@ -24,14 +24,11 @@
           stage("Prepare"){
             common.docker_cache_workaround()
             dir ('rpc-gating'){
+              common.clone_with_pr_refs()
               lint_container = docker.build env.BUILD_TAG.toLowerCase()
             }
           }
           lint_container.inside {
-            stage("Checkout"){
-              common.configure_git()
-              common.clone_with_pr_refs()
-            }
             stage("Lint"){
               withEnv([
                 'RPC_GATING_LINT_USE_VENV=no'
