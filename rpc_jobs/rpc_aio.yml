@@ -133,6 +133,8 @@
         action: leapfrogupgrade
       - series: mitaka
         action: leapfrogupgrade
+      - series: newton
+        action: leapfrogupgrade
       - series: master
         action: leapfrogupgrade
       # This combo tests the same thing as

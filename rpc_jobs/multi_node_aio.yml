@@ -109,6 +109,8 @@
         action: leapfrogupgrade
       - series: mitaka
         action: leapfrogupgrade
+      - series: newton
+        action: leapfrogupgrade
       - series: master
         action: leapfrogupgrade
       # Leapfrog upgrades cannot be executed on
