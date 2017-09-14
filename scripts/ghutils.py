@@ -330,5 +330,45 @@ def clone(url, ref, refspec):
     ))
 
 
+@cli.command()
+@click.pass_obj
+@click.option(
+    '--source-branch',
+    help="Branch that contains the changes to propose",
+    required=True
+)
+@click.option(
+    '--target-branch',
+    help="Branch that changes should be proposed to",
+    required=True
+)
+@click.option(
+    '--title',
+    help="Title of the pull request",
+    required=True
+)
+@click.option(
+    '--body',
+    help="Body of the pull request",
+    required=True
+)
+def create_pr(repo, source_branch, target_branch, title, body):
+
+    # Check if PR already exists as github won't allow multiple PRs
+    # with the same head/source and base/target branches.
+    for p in repo.iter_pulls():
+        if p.base.ref == target_branch and p.head.ref == source_branch:
+            pr = p
+            break
+    else:
+        pr = repo.create_pull(title=title,
+                              base=target_branch,
+                              head=source_branch,
+                              body=body)
+    print "{org}/{repo}#{num}".format(org=repo.owner,
+                                      repo=repo.name,
+                                      num=pr.number)
+
+
 if __name__ == "__main__":
     cli()

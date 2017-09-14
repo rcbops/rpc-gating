@@ -601,13 +601,14 @@ def create_jira_issue(String project="RE",
     sh """#!/bin/bash -xe
       cd ${env.WORKSPACE}
       set +x; . .venv/bin/activate; set -x
-      python rpc-gating/scripts/jirautils.py create_issue\
-        --tag '$tag'\
-        --link '$link'\
-        --project '$project'\
+      python rpc-gating/scripts/jirautils.py \
         --user '$JIRA_USER' \
         --password '$JIRA_PASS' \
-        --type '$type'
+        create_issue \
+          --summary "JBF: ${tag}" \
+          --description "Jenkins Build Failed :( [${tag}|${link}]" \
+          --project '$project' \
+          --type '$type'
     """
   }
 }

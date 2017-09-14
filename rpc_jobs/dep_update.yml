@@ -1,0 +1,51 @@
+- project:
+    name: "Dependency-Update-Jobs"
+    repo:
+      - rpc-openstack:
+          URL: "https://github.com/rcbops/rpc-openstack"
+          BRANCH: "master"
+          #CRON: "@weekly" <-- commented as inherits default
+          #JIRA_ISSUE_TYPE: "task"
+          JIRA_PROJECT_KEY: "RO"
+    jobs:
+      - 'Dep-Update_{repo}-{BRANCH}'
+
+
+- job-template:
+    CRON: "@weekly"
+    RPC_GATING_BRANCH: master
+    JIRA_ISSUE_TYPE: Task
+    name: 'Dep-Update_{repo}-{BRANCH}'
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${{RPC_GATING_BRANCH}}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/dep_update.groovy
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    triggers:
+        - timed: "{CRON}"
+    parameters:
+      - rpc_gating_params
+      - string:
+          name: "URL"
+          description: URL of the repo to be updated
+          default: "{URL}"
+      - string:
+          name: "BRANCH"
+          description: Branch of the repo to be updated
+          default: "{BRANCH}"
+      - string:
+          name: "JIRA_PROJECT_KEY"
+          description: Project key to use when creating JIRA issues
+          default: "{JIRA_PROJECT_KEY}"
+      - string:
+          name: "JIRA_ISSUE_TYPE"
+          description: "Type of issue to create"
+          default: "{JIRA_ISSUE_TYPE}"
