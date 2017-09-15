@@ -1,0 +1,108 @@
+- project:
+    name: 'Multi-Node-AIO-Leapfrog-Testing'
+    series:
+      - kilo-r11.1.18:
+          branch: r11.1.18
+          branches: "r11.1.18"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.15:
+          branch: r11.1.15
+          branches: "r11.1.15"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.14:
+          branch: r11.1.14
+          branches: "r11.1.14"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.10:
+          branch: r11.1.10
+          branches: "r11.1.10"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.9:
+          branch: r11.1.9
+          branches: "r11.1.9"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.6:
+          branch: r11.1.6
+          branches: "r11.1.6"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.5:
+          branch: r11.1.5
+          branches: "r11.1.5"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.4:
+          branch: r11.1.4
+          branches: "r11.1.4"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.1.3:
+          branch: r11.1.3
+          branches: "r11.1.3"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.0.4:
+          branch: r11.0.4
+          branches: "r11.0.4"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.0.1:
+          branch: r11.0.1
+          branches: "r11.0.1"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+      - kilo-r11.0.0:
+          branch: r11.0.0
+          branches: "r11.0.0"
+          KIBANA_SELENIUM_BRANCH: "liberty-12.2"
+          SERIES_USER_VARS: |
+            tempest_test_sets: 'scenario defcore api heat_api smoke'
+          DEPLOY_TELEGRAF: "yes"
+    image:
+      - trusty:
+          DEFAULT_IMAGE: "14.04.5"
+    action:
+      - leapfrogupgrade:
+          ACTION_STAGES: >-
+            Prepare MaaS,
+            Install Tempest,
+            Leapfrog Upgrade
+    resources:
+      - small:
+          GENERATE_TEST_NETWORKS: "20"
+          GENERATE_TEST_SERVERS: "20"
+          GENERATE_TEST_VOLUMES: "8"
+          COMPUTE_NODES: "2"
+          VOLUME_NODES: "2"
+    trigger:
+      - periodic:
+          CRON: "H H * * H/2"
+    jobs:
+      - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
