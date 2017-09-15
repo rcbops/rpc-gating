@@ -608,18 +608,6 @@ def create_jira_issue(String project="RE",
   }
 }
 
-String get_current_git_sha(String repo_path) {
-  String sha = ""
-  dir(repo_path) {
-    sha = sh(
-      returnStdout: true,
-      script: "git rev-parse --verify HEAD",
-    ).trim()
-  }
-  print("Current SHA for '${repo_path}' is '${sha}'.")
-  return sha
-}
-
 // Create inventory file. Useful for running part of a job against
 // an existing node, where the job expects an inventory file to
 // have been created by the resource allocation step.
