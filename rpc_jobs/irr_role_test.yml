@@ -7,9 +7,7 @@
       - rpc-role-logstash:
           irr_repo_url: https://github.com/rcbops/rpc-role-logstash
     series:
-      # Note: branches is the branch pattern to match for PR Jobs.
-      - master:
-          branches: "master"
+      - master
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
@@ -55,6 +53,21 @@
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
+- project:
+    name: "RPC-Ceph-Jobs"
+    repo:
+      - rpc-ceph:
+          irr_repo_url: https://github.com/rcbops/rpc-ceph
+    series:
+      - master
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    context:
+      - master
+    jobs:
+      - 'RPC-IRR_{repo}-{series}-{image}-{context}'
+
 - job-template:
     # DEFAULTS
     STAGES: >
@@ -67,6 +80,8 @@
     NUM_TO_KEEP: 30
     # Flavor name
     irr_flavor: "general1-8"
+    # Note: branches is the branch pattern to match for PR Jobs.
+    branches: master
     # TEMPLATE
     name: 'RPC-IRR_{repo}-{series}-{image}-{context}'
     project-type: workflow
