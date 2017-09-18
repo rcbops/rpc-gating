@@ -120,10 +120,6 @@
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       timeout(time: 3, unit: 'HOURS'){{
         common.shared_slave() {{
-          try {{
             irr_role_tests.run_irr_tests()
-          }} finally {{
-            common.delete_workspace()
-          }}
         }} // cit node
       }} // timeout
