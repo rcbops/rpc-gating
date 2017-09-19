@@ -86,7 +86,23 @@ def prepare() {
       } else {
         common.prepareRpcGit("auto", "/opt")
       }
-      String osa_commit = common.get_current_git_sha("/opt/rpc-openstack/openstack-ansible")
+      dir("/opt/rpc-openstack"){
+        osa_commit = sh (script: """#!/bin/bash -x
+            git_submodule=\$(git submodule status openstack-ansible)
+            if [[ \$? == 0 ]]; then
+              echo \$git_submodule | egrep --only-matching '[a-f0-9]{40}'
+            else
+              functions_sha=\$(python -c 'import re; f = open("scripts/functions.sh"); print(re.search("OSA_RELEASE:-\\"(.+)\\"}", f.read()).group(1))')
+              if [[ \$? == 0 ]]; then
+                echo \$functions_sha
+              else
+                echo "Unable to determine openstack-ansible SHA"
+                exit 1
+              fi
+            fi
+            """, returnStdout: true)
+        print("Current SHA for openstack-ansible is '${osa_commit}'.")
+      }
       dir("openstack-ansible-ops") {
         git url: env.OSA_OPS_REPO, branch: "master"
         sh "git checkout ${env.OSA_OPS_BRANCH}"
