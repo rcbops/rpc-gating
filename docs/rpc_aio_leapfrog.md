@@ -52,10 +52,10 @@ need to be layered on top of RPC-O to test with. (i.e. swift, ceph, etc)
 
 ##### Ztrigger
 
-This determines what triggers the job, a PR via GitHub (github-pull-request) or a
-periodic triggered by the cron scheduled passed to *timed*. Periodic jobs can be
-started on demand and allow the parameters to be tuned before running and is used
-to validate that the code in the branch is still valid and passes.
+This determines what triggers the job, a PR via GitHub *github-pull-request* or a
+periodic triggered by the cron scheduled passed to *timed*. Periodic jobs allow
+for the parameters to be tuned before running and are used to validate that the
+code in the branch is still valid and passes.
 
 #### Excludes
 
