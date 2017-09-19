@@ -35,13 +35,15 @@ PR jobs on if present.
 
 #### Image
 
-The short form of the image name and image name as reflected in the Public Cloud
-Release Engineering account.  This is the image used as a base to run the tests
-on.
+The short form of the image name as reflected in the Public Cloud Release
+Engineering account.  This is the image used as a base to run the tests on.
 
 #### Action
 
-This specifies the various actions and tasks that will be ran during the build.
+This specifies what the test is doing, i.e. standard deploy, major upgrade,
+leapfrog upgrade, etc.  Since action is responsible for different things, we
+then override ACTION_STAGES with the neccessary pipeline stages for that
+specific action.
 
 #### Scenario
 
@@ -50,12 +52,14 @@ need to be layered on top of RPC-O to test with. (i.e. swift, ceph, etc)
 
 ##### Ztrigger
 
-Determines the types of tests to be ran, periodically ran, or tested on PR from
-the specified branches in the series.
+This determines what triggers the job, a PR via GitHub (github-pull-request) or a
+periodic triggered by the cron scheduled passed to *timed*. Periodic jobs can be
+started on demand and allow the parameters to be tuned before running and is used
+to validate that the code in the branch is still valid and passes.
 
 #### Excludes
 
-Uses to remove jobs that may not be needed.  A job will be generated for every
+Used to remove jobs that may not be needed.  A job will be generated for every
 scenario and there may be situations you don't want a job created.  The excludes
 will allow you to override those and ensure they aren't created.  Note: It
 appears that you can only specify two rules at a time, if you do three or more,
@@ -86,9 +90,6 @@ and pr.  pr jobs are ran on commits to validate a commit passes tests before
 providing the green light.  When adding those types of jobs, you will need to
 make sure to configure it on the repo in Github as well so that the job is fired
 on commits.
-
-Periodic jobs run on demand and validate that the code in the branch is still
-valid and passes.
 
 #### Location of Jobs
 
