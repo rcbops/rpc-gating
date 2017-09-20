@@ -330,7 +330,7 @@
                 currentBuild.result = 'FAILURE'
                 if (env.TRIGGER == 'periodic'){{
                   print("Creating jira issue in project RO for failed periodic build")
-                  common.create_jira_issue("RO")
+                  common.create_jira_issue("RO", env.BUILD_TAG, env.BUILD_URL, "Task")
                 }} else {{
                   print ("Not creating jira issue as this build is not periodic, trigger: ${{env.TRIGGER}}")
                 }}
