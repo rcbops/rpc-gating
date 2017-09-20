@@ -138,6 +138,15 @@
           DEFAULT_IMAGE: "14.04.5"
     action:
       - leapfrogupgrade:
+          DEFAULT_STAGES: >-
+            Allocate Resources,
+            Connect Slave,
+            Prepare Multi-Node AIO,
+            Prepare RPC Configs,
+            Prepare Lifecycle,
+            Deploy RPC w/ Script,
+            Cleanup,
+            Destroy Slave
           ACTION_STAGES: >-
             Prepare MaaS,
             Install Tempest,
