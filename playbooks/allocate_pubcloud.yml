@@ -4,7 +4,8 @@
   gather_facts: False
   vars:
     count: 1
-    inventory_path: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory'
+    inventory_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks/inventory"
+    user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
   tasks:
     - name: Provision a set of public cloud instances
       local_action:
@@ -15,6 +16,13 @@
           count: "{{ count }}"
           key_name: "jenkins"
           region: "{{ region }}"
+          # TODO(odyssey4me):
+          # In Ansible<2.3 there is a bug which prevents the rax module from
+          # reading user_data files. To work around that bug, we supply the
+          # contents of the user_data file rather than the path to it. This
+          # bug is fixed in 2.3, so once we upgrade to 2.3+, we can set
+          # user_data: user_data_path
+          user_data: "{{ lookup('file', user_data_path) }}"
           meta:
             build_config: core
           wait: yes
@@ -53,7 +61,7 @@
 
     - name: Create inventory directory
       file:
-        path: "{{inventory_path}}"
+        path: "{{ inventory_path }}"
         state: directory
 
     - name: Write inventory
@@ -66,7 +74,7 @@
           {% for instance in rax.success %}
           {{instance.name}} ansible_host={{instance.accessIPv4}} ansible_user=root
           {% endfor %}
-        dest: '{{inventory_path}}/hosts'
+        dest: '{{ inventory_path }}/hosts'
 
     - name: Wait for SSH to be available on all hosts
       wait_for: port=22 host="{{ item.accessIPv4 }}"
