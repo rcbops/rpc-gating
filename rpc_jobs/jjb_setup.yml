@@ -16,13 +16,17 @@
     triggers:
       - github # triggered post merge, not on PR
     dsl: |
-      library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.shared_slave(){
-        stage('Run Jenkins Job Builder') {
-          git branch: "master", url: "https://github.com/rcbops/rpc-gating"
-          build job: "Jenkins-Job-Builder"
-        } // stage
-      } // node
+      if (env.GIT_BRANCH == "master"){
+          library "rpc-gating@${RPC_GATING_BRANCH}"
+          common.shared_slave(){
+            stage('Run Jenkins Job Builder') {
+              git branch: "master", url: "https://github.com/rcbops/rpc-gating"
+              build job: "Jenkins-Job-Builder"
+            } // stage
+          } // node
+      } else {
+        print ("Not running JJB as job was triggered by a push to a branch other than master")
+      }
 
 # Node CentOS to ensure the CIT slave is used. If a pub cloud ubuntu slave is used,
 # the Jenkins API won't be reachable.
