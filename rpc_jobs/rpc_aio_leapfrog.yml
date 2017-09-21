@@ -80,6 +80,14 @@
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
     action:
       - leapfrogupgrade:
+          DEFAULT_STAGES: >-
+            Allocate Resources,
+            Connect Slave,
+            Prepare Deployment,
+            Prepare Lifecycle,
+            Deploy RPC w/ Script,
+            Cleanup,
+            Destroy Slave
           ACTION_STAGES: >-
             Leapfrog Upgrade,
             Install Tempest,
