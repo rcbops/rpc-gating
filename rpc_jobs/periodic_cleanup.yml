@@ -15,7 +15,7 @@
             be cleaned up.
       - string:
           name: "REGIONS"
-          default: "DFW IAD"
+          default: "DFW IAD ORD"
           description: |
             Only instances in the specified region will be cleaned up.
       - rpc_gating_params
