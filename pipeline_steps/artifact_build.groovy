@@ -108,4 +108,36 @@ def container(String image) {
   } // pubcloud slave
 }
 
+def cloudimage(Map args) {
+  inventory="inventory.${common.rand_int_str()}"
+  inventory_path="${WORKSPACE}/rpc-gating/playbooks/${inventory}"
+  String instance_name = common.gen_instance_name()
+  try {
+    pubcloud.getPubCloudSlave(
+      image: args.src_image,
+      instance_name: instance_name,
+      inventory: inventory,
+      inventory_path: inventory_path,
+      region: args.region
+    )
+    pubcloud.savePubCloudSlave(
+      image: args.dest_image,
+      instance_name: instance_name,
+      inventory: inventory,
+      inventory_path: inventory_path,
+      region: args.region
+    )
+  } catch (e) {
+    print(e)
+    throw e
+  } finally {
+    pubcloud.delPubCloudSlave(
+      instance_name: instance_name,
+      inventory: inventory,
+      inventory_path: inventory_path,
+      region: args.region
+    )
+  }
+}
+
 return this
