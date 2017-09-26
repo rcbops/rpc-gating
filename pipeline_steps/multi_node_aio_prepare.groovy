@@ -166,6 +166,8 @@ def prepare() {
       sudo cp /etc/openstack_deploy/user_variables.yml /etc/openstack_deploy/user_variables.yml.bak
       sudo cp -R /opt/rpc-openstack/openstack-ansible/etc/openstack_deploy /etc
       sudo cp /etc/openstack_deploy/user_variables.yml.bak /etc/openstack_deploy/user_variables.yml
+      # Write random var to user_variables.yml incase it's empty (which happens to be the case on stable/mitaka)
+      echo "osa_ops_mnaio: true" | sudo tee -a /etc/openstack_deploy/user_variables.yml
 
       sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_*.yml /etc/openstack_deploy
       sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/env.d/* /etc/openstack_deploy/env.d
