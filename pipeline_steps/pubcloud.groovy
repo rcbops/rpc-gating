@@ -209,8 +209,6 @@ def uploadToCloudFiles(Map args){
           playbooks: ["upload_to_cloud_files.yml"],
           vars: [
             container: args.container,
-            src: args.src,
-            html_report_dest: args.html_report_dest,
             description_file: args.description_file
           ]
         ) // venvPlaybook

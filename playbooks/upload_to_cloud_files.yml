@@ -3,6 +3,13 @@
   connection: local
   gather_facts: False
   tasks:
+    - name: Create archive
+      command: "tar -cjf {{ archive_name }} {{ artifacts_dir }}"
+      args:
+        chdir: "{{ artifacts_parent_dir }}"
+      tags:
+        - skip_ansible_lint
+
     - name: Create a public Cloud Files container
       rax_files:
         container: "{{ container }}"
@@ -16,7 +23,7 @@
         region: "DFW"
         expires: 2592000
         method: put
-        src: "{{ src }}"
+        src: "{{ artifacts_parent_dir }}/{{ archive_name }}"
 
     - name: Read artifact description file
       set_fact:
@@ -28,10 +35,17 @@
 
     - name: Create artifact report location if doesn't exist
       file:
-        path: "{{ html_report_dest | dirname }}"
+        path: "{{ report_dir }}"
         state: directory
 
     - name: Generate HTML report with file URL
       template:
         src: cloudfiles.html.j2
-        dest: "{{ html_report_dest }}"
+        dest: "{{ report_dir }}/index.html"
+  vars:
+    build_tag: "{{ lookup('env','BUILD_TAG') }}"
+    archive_name: "artifacts_{{ build_tag }}.tar.bz2"
+    workspace: "lookup('env', 'WORKSPACE') }}"
+    artifacts_parent_dir: "{{ workspace }}"
+    artifacts_dir: "{{ artifacts_parent_dir }}/artifacts }}"
+    report_dir: "{{ artifacts_parent_dir }}/artifacts_report"
