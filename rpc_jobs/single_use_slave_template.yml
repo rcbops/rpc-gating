@@ -40,8 +40,6 @@
             // upload the artifact to cloudfiles
             pubcloud.uploadToCloudFiles(
               container: "jenkins_logs",
-              src: "${WORKSPACE}/artifacts/datestamp",
-              html_report_dest: "${WORKSPACE}/artifacts/artifacts.html"
             )
           }
 
