@@ -49,35 +49,12 @@
             Tempest Tests,
             Prepare Kibana Selenium,
             Kibana Tests
-      - leapfrogupgrade:
-          ACTION_STAGES: >-
-            Prepare MaaS,
-            Install Tempest,
-            Leapfrog Upgrade
     resources:
       - none:
           GENERATE_TEST_NETWORKS: "0"
           GENERATE_TEST_SERVERS: "0"
           GENERATE_TEST_VOLUMES: "0"
           COMPUTE_NODES: "2"
-          VOLUME_NODES: "2"
-      - small:
-          GENERATE_TEST_NETWORKS: "20"
-          GENERATE_TEST_SERVERS: "20"
-          GENERATE_TEST_VOLUMES: "8"
-          COMPUTE_NODES: "2"
-          VOLUME_NODES: "2"
-      - medium:
-          GENERATE_TEST_NETWORKS: "50"
-          GENERATE_TEST_SERVERS: "50"
-          GENERATE_TEST_VOLUMES: "20"
-          COMPUTE_NODES: "5"
-          VOLUME_NODES: "2"
-      - large:
-          GENERATE_TEST_NETWORKS: "100"
-          GENERATE_TEST_SERVERS: "100"
-          GENERATE_TEST_VOLUMES: "40"
-          COMPUTE_NODES: "10"
           VOLUME_NODES: "2"
     trigger:
       - periodic:
@@ -98,34 +75,6 @@
       # Ocata onwards.
       - series: master
         image: trusty
-      # Leapfrog upgrades are only run for kilo --> newton141
-      # as the upgrade method is not supported for any
-      # other target series.
-      # the kilo --> newton141 job is only ran as a periodic job until
-      # it's more reliable and can be tested as a PR
-      - action: leapfrogupgrade
-        trigger: pr
-      - series: liberty
-        action: leapfrogupgrade
-      - series: mitaka
-        action: leapfrogupgrade
-      - series: master
-        action: leapfrogupgrade
-      # Leapfrog upgrades cannot be executed on
-      # xenial as it is not possible to install
-      # the source series (kilo-mitaka) on xenial.
-      - image: xenial
-        action: leapfrogupgrade
-      # Resources are currently only used to measure end-user impact of
-      # leapfrog upgrades
-      - action: deploy
-        resources: small
-      - action: deploy
-        resources: medium
-      - action: deploy
-        resources: large
-      - action: leapfrogupgrade
-        resources: none
     jobs:
       - 'OnMetal-Multi-Node-AIO_{series}-{image}-{action}-{resources}-{trigger}'
       - 'OnMetal-Multi-Node-AIO-Merge-Trigger_{series}'
