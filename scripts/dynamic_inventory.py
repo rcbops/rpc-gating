@@ -11,18 +11,22 @@ inventory = {
 hosts = []
 hostvars = {}
 
-compute_count = os.getenv('COMPUTE_NODES', 0)
-cinder_count = os.getenv('VOLUME_NODES', 0)
+compute_count = int(os.getenv('ADDITIONAL_COMPUTE_NODES', 0))
+cinder_count = int(os.getenv('ADDITIONAL_VOLUME_NODES', 0))
 
-for c in range(0, int(compute_count)):
-    # we want to start with compute3
+for c in range(0, compute_count):
+    # The stock inventory already has a compute1 and compute2, so we want to
+    # adding additional compute hosts as compute3.
     host = "compute%d" % (3 + c)
     hosts.append(host)
     inventory['all'].append(host)
     inventory['pxe_servers'].append(host)
+    # TODO(mattt): When https://review.openstack.org/#/c/507886/ merges we'll
+    #              need to add these hosts to the `compute_hosts` group.
 
-for c in range(0, int(cinder_count)):
-    # we want to start with cinder3
+for c in range(0, cinder_count):
+    # The stock inventory already has a cinder1 and cinder2, so we want to
+    # adding additional cinder hosts as cinder3.
     host = "cinder%d" % (3 + c)
     hosts.append(host)
     inventory['all'].append(host)
@@ -30,7 +34,8 @@ for c in range(0, int(cinder_count)):
     inventory["cinder_hosts"].append(host)
 
 for i, host in enumerate(hosts):
-    # we want to start with 10.0.236.144
+    # The last octet assigned in the stock inventory is 150, we allocating
+    # from 200 to avoid conflicts.
     ip_last_octet = 200 + i
     mac_last_octet = 20 + i
 

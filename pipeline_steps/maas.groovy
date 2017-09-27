@@ -2,7 +2,6 @@ String get_mnaio_entity_names() {
   String entities = sh (
     script: """#!/usr/bin/env python
 from ansible.parsing.dataloader import DataLoader
-from ansible.vars.manager import VariableManager
 from ansible.inventory.manager import InventoryManager
 import json
 loader = DataLoader()

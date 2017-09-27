@@ -54,8 +54,8 @@
           GENERATE_TEST_NETWORKS: "0"
           GENERATE_TEST_SERVERS: "0"
           GENERATE_TEST_VOLUMES: "0"
-          COMPUTE_NODES: "0"
-          VOLUME_NODES: "0"
+          ADDITIONAL_COMPUTE_NODES: "0"
+          ADDITIONAL_VOLUME_NODES: "0"
     trigger:
       - periodic:
           CRON: "H H(0-8) * * 1-5"
@@ -151,8 +151,8 @@
       - osa_ops_params:
           DEFAULT_IMAGE: "{DEFAULT_IMAGE}"
           DATA_DISK_DEVICE: "sdb"
-          COMPUTE_NODES: "{COMPUTE_NODES}"
-          VOLUME_NODES: "{VOLUME_NODES}"
+          ADDITIONAL_COMPUTE_NODES: "{ADDITIONAL_COMPUTE_NODES}"
+          ADDITIONAL_VOLUME_NODES: "{ADDITIONAL_VOLUME_NODES}"
       - rpc_deploy_params:
           DEPLOY_SWIFT: "{DEPLOY_SWIFT}"
           DEPLOY_CEPH: "{DEPLOY_CEPH}"

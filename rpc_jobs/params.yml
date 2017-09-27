@@ -87,13 +87,13 @@
           default: "{DATA_DISK_DEVICE}"
           description: The data disk to use for VMs (if unset the largest unpartitioned device will be used)
       - string:
-          name: "COMPUTE_NODES"
-          default: "{COMPUTE_NODES}"
-          description: "The number of compute nodes to deploy."
+          name: "ADDITIONAL_COMPUTE_NODES"
+          default: "{ADDITIONAL_COMPUTE_NODES}"
+          description: "The number of additional compute nodes to deploy."
       - string:
-          name: "VOLUME_NODES"
-          default: "{VOLUME_NODES}"
-          description: "The number of volume nodes to deploy."
+          name: "ADDITIONAL_VOLUME_NODES"
+          default: "{ADDITIONAL_VOLUME_NODES}"
+          description: "The number of additional volume nodes to deploy."
 
 - parameter:
     name: rpc_deploy_params
