@@ -33,13 +33,8 @@ def prepare() {
           # The multi-node-aio tool is quite modest when it comes to allocating
           # RAM to VMs -- since we have RAM to spare we double that assigned to
           # infra nodes.
-          # TODO(mattt): When https://review.openstack.org/#/c/507875/ merges
-          #              we can simply overwrite infra_vm_server_ram in group vars
-          sed -i 's/server_vm_ram: 8192/server_vm_ram: 16384/g' playbooks/host_vars/infra*.yml
+          echo "infra_vm_server_ram: 16384" | sudo tee -a playbooks/group_vars/all.yml
           cp -a ${WORKSPACE}/rpc-gating/scripts/dynamic_inventory.py playbooks/inventory
-          # TODO(mattt): Once https://review.openstack.org/#/c/507886/ we can
-          #              drop carrying this in rpc-gating
-          cp -a ${WORKSPACE}/rpc-gating/playbooks/templates/openstack_user_config.yml.j2 playbooks/osa/openstack_user_config.yml
         """
         timeout(time: 45, unit: "MINUTES") {
           common.run_script(
@@ -91,9 +86,6 @@ def prepare() {
       sudo cp /etc/openstack_deploy/user_variables.yml /etc/openstack_deploy/user_variables.yml.bak
       sudo cp -R /opt/rpc-openstack/openstack-ansible/etc/openstack_deploy /etc
       sudo cp /etc/openstack_deploy/user_variables.yml.bak /etc/openstack_deploy/user_variables.yml
-      # Write random var to user_variables.yml incase it's empty (which happens to be the case on stable/mitaka)
-      # TODO(mattt): This can be dropped when https://review.openstack.org/#/c/507876/ merges
-      echo "osa_ops_mnaio: true" | sudo tee -a /etc/openstack_deploy/user_variables.yml
 
       sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/user_*.yml /etc/openstack_deploy
       sudo cp /opt/rpc-openstack/rpcd/etc/openstack_deploy/env.d/* /etc/openstack_deploy/env.d

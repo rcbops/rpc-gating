@@ -21,8 +21,7 @@ for c in range(0, compute_count):
     hosts.append(host)
     inventory['all'].append(host)
     inventory['pxe_servers'].append(host)
-    # TODO(mattt): When https://review.openstack.org/#/c/507886/ merges we'll
-    #              need to add these hosts to the `compute_hosts` group.
+    inventory["compute_hosts"].append(host)
 
 for c in range(0, cinder_count):
     # The stock inventory already has a cinder1 and cinder2, so we want to
