@@ -65,8 +65,14 @@ def webhooks(){
 start on runlevel 2
 # ssh will not daemonize so use the default expect.
 # expect
-exec ssh root@$ip -i \$keyfile -R 8888:localhost:443 -N
 respawn
+respawn limit unlimited
+exec ssh root@$ip -i \$keyfile -R 8888:localhost:443 -N
+# This is the recommended way of implementing a respawn delay
+# This is required to prevent a tight loop consuming jenkins master
+# resources while trying to reconnect to the webhook proxy node.
+# http://upstart.ubuntu.com/cookbook/#delay-respawn-of-a-job
+post-stop exec sleep 15
 EOF
 
                 cat > \$jdir/root_setup.sh <<EOF
