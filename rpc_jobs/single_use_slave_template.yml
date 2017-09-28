@@ -40,8 +40,6 @@
             // upload the artifact to cloudfiles
             pubcloud.uploadToCloudFiles(
               container: "jenkins_logs",
-              src: "${WORKSPACE}/artifacts/datestamp",
-              html_report_dest: "${WORKSPACE}/artifacts/artifacts.html"
             )
           }
 
@@ -50,9 +48,9 @@
             publishHTML(
               alwaysLinkToLastBuild: true,
               keepAll: true,
-              reportFiles: "artifacts.html",
+              reportFiles: "index.html",
               reportName: "Build Artifact Links",
-              reportDir: "${WORKSPACE}/artifacts"
+              reportDir: "${WORKSPACE}/artifacts_report"
             )
           }
         }

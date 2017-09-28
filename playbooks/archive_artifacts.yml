@@ -2,7 +2,7 @@
   tasks:
     - name: Create temporary directory to store artifacts
       file:
-        path: "{{ artifacts_path }}"
+        path: "{{ artifacts_dir }}"
         state: directory
       delegate_to: "localhost"
       run_once: yes
@@ -17,7 +17,7 @@
                --rsh 'ssh -o StrictHostKeyChecking=no'
                --ignore-missing-args
                {{ inventory_hostname }}:{{ item }}
-               {{ artifacts_path }}/{{ ansible_hostname }}
+               {{ artifacts_dir }}/{{ ansible_hostname }}
       with_items:
         - "/openstack/log"
         - "/etc"
@@ -36,7 +36,7 @@
                --include '*.leap'
                --exclude '*'
                {{ inventory_hostname }}:/opt/rpc-leapfrog/leap42/
-               {{ artifacts_path }}/{{ ansible_hostname }}/leap_marker_files
+               {{ artifacts_dir }}/{{ ansible_hostname }}/leap_marker_files
       delegate_to: "localhost"
       ignore_errors: yes
       tags:
@@ -60,7 +60,7 @@
                --rsh 'ssh -o StrictHostKeyChecking=no'
                --ignore-missing-args
                {{ inventory_hostname }}:{{ item[1].pre }}/{{ item[0] }}{{ item[1].post }}
-               {{ artifacts_path }}/{{ ansible_hostname }}
+               {{ artifacts_dir }}/{{ ansible_hostname }}
       when: "{{ containers.rc == 0 }}"
       with_nested:
         - "{{ containers.stdout_lines | default([]) }}"
@@ -70,18 +70,7 @@
       delegate_to: "localhost"
       tags:
         - skip_ansible_lint
-
-    - name: Create archive
-      command: "tar -cjf {{ artifacts_basename }}.tar.bz2 {{ artifacts_basename }}"
-      args:
-        chdir: "{{ artifacts_basedir }}"
-      delegate_to: "localhost"
-      run_once: yes
-      tags:
-        - skip_ansible_lint
   vars:
-    build_tag: "{{ lookup('env','BUILD_TAG') }}"
-    artifacts_basename: "artifacts_{{ build_tag }}"
-    artifacts_basedir: "{{ lookup('env','WORKSPACE') }}"
-    artifacts_path: "{{ artifacts_basedir }}/{{ artifacts_basename }}"
+    workspace: "{{ lookup('env', 'WORKSPACE') }}"
+    artifacts_dir: "{{ workspace }}/artifacts }}"
     target_hosts: "localhost"

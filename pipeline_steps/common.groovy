@@ -356,8 +356,7 @@ def archive_artifacts(String build_type = "AIO"){
       print "Uploading artifacts to Cloud Files..."
       pubcloud.uploadToCloudFiles(
         container: "jenkins_logs",
-        src: "${env.WORKSPACE}/artifacts_${env.BUILD_TAG}.tar.bz2",
-        html_report_dest: "${env.WORKSPACE}/artifacts_report/index.html")
+      )
       publishHTML(
         allowMissing: true,
         alwaysLinkToLastBuild: true,

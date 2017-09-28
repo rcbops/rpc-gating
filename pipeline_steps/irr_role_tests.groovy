@@ -47,8 +47,7 @@ def irr_archive_artifacts(){
       // artifact collection failed.
       pubcloud.uploadToCloudFiles(
         container: "jenkins_logs",
-        src: "${env.WORKSPACE}/artifacts_${env.BUILD_TAG}.tar.bz2",
-        html_report_dest: "${env.WORKSPACE}/artifacts_report/index.html")
+      )
       publishHTML(
         allowMissing: true,
         alwaysLinkToLastBuild: true,
