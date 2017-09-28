@@ -72,5 +72,5 @@
         - skip_ansible_lint
   vars:
     workspace: "{{ lookup('env', 'WORKSPACE') }}"
-    artifacts_dir: "{{ workspace }}/artifacts }}"
+    artifacts_dir: "{{ workspace }}/artifacts"
     target_hosts: "localhost"
