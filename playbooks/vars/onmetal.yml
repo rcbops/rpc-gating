@@ -11,7 +11,7 @@ gating_overrides:
   tempest_testr_opts:
     - '--concurrency 3'
   tempest_run_tempest_opts: []
-  tempest_public_subnet_cidr: "172.29.248.0/22"
+  tempest_public_subnet_cidr: "10.0.248.0/22"
   # These neutron vars are required to allow instances to be pinged after an
   # upgrade when using vxlan
   neutron_l2_population: "False"

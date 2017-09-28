@@ -66,10 +66,10 @@
     parameters:
       - string:
           name: OSA_OPS_REPO
-          default: https://github.com/git-harry/openstack-ansible-ops
+          default: https://github.com/openstack/openstack-ansible-ops
       - string:
           name: OSA_OPS_BRANCH
-          default: 93ac83d3436fd078500d6fd85ec5078e357f4db4
+          default: 89e45170fe6043ae014c975f391cf3effc54476f
       - string:
           name: DEFAULT_IMAGE
           default: "{DEFAULT_IMAGE}"
@@ -87,21 +87,13 @@
           default: "{DATA_DISK_DEVICE}"
           description: The data disk to use for VMs (if unset the largest unpartitioned device will be used)
       - string:
-          name: MULTI_NODE_AIO_DIR
-          default: "multi-node-aio"
-          description: |
-            The directory to trigger build.sh from
-            Options:
-              multi-node-aio
-              multi-node-aio-xenial-ansible
+          name: "ADDITIONAL_COMPUTE_NODES"
+          default: "{ADDITIONAL_COMPUTE_NODES}"
+          description: "The number of additional compute nodes to deploy."
       - string:
-          name: "COMPUTE_NODES"
-          default: "{COMPUTE_NODES}"
-          description: "The number of compute nodes to deploy."
-      - string:
-          name: "VOLUME_NODES"
-          default: "{VOLUME_NODES}"
-          description: "The number of volume nodes to deploy."
+          name: "ADDITIONAL_VOLUME_NODES"
+          default: "{ADDITIONAL_VOLUME_NODES}"
+          description: "The number of additional volume nodes to deploy."
 
 - parameter:
     name: rpc_deploy_params

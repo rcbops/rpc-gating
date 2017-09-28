@@ -1,82 +1,3 @@
-void add_nodes() {
-  sh """#!/usr/bin/env python
-from itertools import chain
-import json
-
-def get_next_octet(start=1, end=255, used=None):
-    if not used:
-        used = set()
-
-    for i in range(start, end):
-        i = str(i)
-        if i not in used:
-            used.add(i)
-            yield i
-
-def add_nodes(config, base_name, number, octets):
-    start = len(config) + 1
-    end = start + number
-    for i in range(start, end):
-        name = "{}{}".format(base_name, i)
-        config[name] = next(octets)
-
-def add_additional_nodes(compute=0, volume=0):
-
-    config = {
-       "infra": {
-            "infra1": "100",
-            "infra2": "101",
-            "infra3": "102"
-       },
-       "logging": {
-           "logging1": "110"
-       },
-       "nova_compute": {
-       },
-       "cinder": {
-       },
-       "swift": {
-           "swift1": "140",
-           "swift2": "141",
-           "swift3": "142"
-       },
-       "deploy": {
-           "deploy1":"150"
-       }
-    }
-
-    used = set(chain(*(v.values() for v in config.values())))
-    octets = get_next_octet(start=100, end=200, used=used)
-
-    add_nodes(
-        config=config["nova_compute"],
-        base_name="compute",
-        number=compute,
-        octets=octets
-    )
-    add_nodes(
-        config=config["cinder"],
-        base_name="cinder",
-        number=volume,
-        octets=octets
-    )
-
-    return config
-
-if __name__ == "__main__":
-    with open("hosts.json", "w") as f:
-        f.write(
-            json.dumps(
-                add_additional_nodes(
-                    compute=${env.COMPUTE_NODES}, volume=${env.VOLUME_NODES}
-                ),
-                indent=4,
-                sort_keys=True,
-            )
-        )
-"""
-}
-
 def prepare() {
   common.conditionalStage(
     stage_name: 'Prepare Multi-Node AIO',
@@ -107,10 +28,15 @@ def prepare() {
         git url: env.OSA_OPS_REPO, branch: "master"
         sh "git checkout ${env.OSA_OPS_BRANCH}"
       }
-      dir("openstack-ansible-ops/${env.MULTI_NODE_AIO_DIR}") {
+      dir("openstack-ansible-ops/multi-node-aio") {
+        sh """#!/bin/bash
+          # The multi-node-aio tool is quite modest when it comes to allocating
+          # RAM to VMs -- since we have RAM to spare we double that assigned to
+          # infra nodes.
+          echo "infra_vm_server_ram: 16384" | sudo tee -a playbooks/group_vars/all.yml
+          cp -a ${WORKSPACE}/rpc-gating/scripts/dynamic_inventory.py playbooks/inventory
+        """
         timeout(time: 45, unit: "MINUTES") {
-          add_nodes()
-          env.MNAIO_ENTITIES = maas.get_mnaio_entity_names()
           common.run_script(
             script: 'build.sh',
             environment_vars: [
@@ -120,7 +46,6 @@ def prepare() {
               "OVERRIDE_SOURCES=true",
               "DEVICE_NAME=vda",
               "DEFAULT_NETWORK=eth0",
-              "VM_DISK_SIZE=252",
               "DEFAULT_IMAGE=${env.DEFAULT_IMAGE}",
               "DEFAULT_KERNEL=${env.DEFAULT_KERNEL}",
               "OSA_BRANCH=${osa_commit}",
@@ -133,9 +58,13 @@ def prepare() {
               "DATA_DISK_DEVICE=${env.DATA_DISK_DEVICE}",
               "CONFIG_PREROUTING=true",
               "OSA_PORTS=6080 6082 443 80 8443",
+              "ADDITIONAL_COMPUTE_NODES=${env.ADDITIONAL_COMPUTE_NODES}",
+              "ADDITIONAL_VOLUME_NODES=${env.ADDITIONAL_VOLUME_NODES}",
               ]
           ) //run_script
         } //timeout
+        env.MNAIO_ENTITIES = maas.get_mnaio_entity_names()
+        sh "scp -o StrictHostKeyChecking=no /root/.ssh/authorized_keys infra1:/root/.ssh"
       } // dir
     } //stage
   ) //conditionalStage
@@ -149,10 +78,10 @@ def prepare() {
       sh """/bin/bash
       echo "multi_node_aio_prepare.prepare/Prepare RPC Configs"
       set -xe
-      scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack deploy1:/opt/
-      scp -o StrictHostKeyChecking=no ${env.WORKSPACE}/user_zzz_gating_variables.yml deploy1:/etc/openstack_deploy/user_zzz_gating_variables.yml
+      scp -r -o StrictHostKeyChecking=no /opt/rpc-openstack infra1:/opt/
+      scp -o StrictHostKeyChecking=no ${env.WORKSPACE}/user_zzz_gating_variables.yml infra1:/etc/openstack_deploy/user_zzz_gating_variables.yml
 
-      ssh -T -o StrictHostKeyChecking=no deploy1 << 'EOF'
+      ssh -T -o StrictHostKeyChecking=no infra1 << 'EOF'
       set -xe
       sudo cp /etc/openstack_deploy/user_variables.yml /etc/openstack_deploy/user_variables.yml.bak
       sudo cp -R /opt/rpc-openstack/openstack-ansible/etc/openstack_deploy /etc

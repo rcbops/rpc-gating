@@ -59,20 +59,20 @@
           GENERATE_TEST_NETWORKS: "20"
           GENERATE_TEST_SERVERS: "20"
           GENERATE_TEST_VOLUMES: "8"
-          COMPUTE_NODES: "2"
-          VOLUME_NODES: "2"
+          ADDITIONAL_COMPUTE_NODES: "0"
+          ADDITIONAL_VOLUME_NODES: "0"
       - medium:
           GENERATE_TEST_NETWORKS: "50"
           GENERATE_TEST_SERVERS: "50"
           GENERATE_TEST_VOLUMES: "20"
-          COMPUTE_NODES: "5"
-          VOLUME_NODES: "2"
+          ADDITIONAL_COMPUTE_NODES: "3"
+          ADDITIONAL_VOLUME_NODES: "0"
       - large:
           GENERATE_TEST_NETWORKS: "100"
           GENERATE_TEST_SERVERS: "100"
           GENERATE_TEST_VOLUMES: "40"
-          COMPUTE_NODES: "10"
-          VOLUME_NODES: "2"
+          ADDITIONAL_COMPUTE_NODES: "8"
+          ADDITIONAL_VOLUME_NODES: "0"
     trigger:
       - periodic:
           CRON: "H H * * H/2"
