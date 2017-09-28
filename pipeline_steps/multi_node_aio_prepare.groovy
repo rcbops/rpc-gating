@@ -34,6 +34,9 @@ def prepare() {
           # RAM to VMs -- since we have RAM to spare we double that assigned to
           # infra nodes.
           echo "infra_vm_server_ram: 16384" | sudo tee -a playbooks/group_vars/all.yml
+          # By default the MNAIO deploys metering services, so we override
+          # osa_enable_meter to prevent those services from being deployed.
+          sudo sed -i 's/osa_enable_meter: true/osa_enable_meter: false/' playbooks/group_vars/all.yml
           cp -a ${WORKSPACE}/rpc-gating/scripts/dynamic_inventory.py playbooks/inventory
         """
         timeout(time: 45, unit: "MINUTES") {
