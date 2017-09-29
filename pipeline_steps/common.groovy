@@ -325,7 +325,7 @@ def String gen_instance_name(String prefix="AUTO"){
   return instance_name
 }
 
-def archive_artifacts(String build_type = "AIO"){
+def rpco_archive_artifacts(String build_type = "AIO"){
   try{
     if ( build_type == "MNAIO" ){
       args = [
@@ -351,24 +351,23 @@ def archive_artifacts(String build_type = "AIO"){
     print(e)
     throw(e)
   } finally{
-    // still worth trying to archiveArtifacts even if some part of
-    // artifact collection failed.
-      print "Uploading artifacts to Cloud Files..."
-      pubcloud.uploadToCloudFiles(
-        container: "jenkins_logs",
-      )
-      publishHTML(
-        allowMissing: true,
-        alwaysLinkToLastBuild: true,
-        keepAll: true,
-        reportDir: 'artifacts_report',
-        reportFiles: 'index.html',
-        reportName: 'Build Artifact Links'
-      )
-    sh """
-    rm -rf artifacts_\${BUILD_TAG}
-    rm -f artifacts_${env.BUILD_TAG}.tar.bz2
-    """
+    archive_artifacts()
+  }
+}
+
+def archive_artifacts(){
+  stage('Compress and Publish Artifacts'){
+    pubcloud.uploadToCloudFiles(
+      container: "jenkins_logs",
+    )
+    publishHTML(
+      allowMissing: true,
+      alwaysLinkToLastBuild: true,
+      keepAll: true,
+      reportDir: 'artifacts_report',
+      reportFiles: 'index.html',
+      reportName: 'Build Artifact Links'
+    )
   }
 }
 
