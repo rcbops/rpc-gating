@@ -1,11 +1,8 @@
 - project:
-    name: 'RPC-IRR-Jobs'
+    name: "RPC-MaaS-Jobs"
     repo:
-      # IRR REPOS ARE ADDED HERE
       - rpc-maas:
           irr_repo_url: https://github.com/rcbops/rpc-maas
-      - rpc-role-logstash:
-          irr_repo_url: https://github.com/rcbops/rpc-role-logstash
     series:
       - master
     image:
@@ -24,19 +21,6 @@
       - liberty
       - kilo
     exclude:
-      # NOTE(cloudnull): At present the logstash role only gates on master.
-      - repo: rpc-role-logstash
-        context: pike
-      - repo: rpc-role-logstash
-        context: ocata
-      - repo: rpc-role-logstash
-        context: newton
-      - repo: rpc-role-logstash
-        context: mitaka
-      - repo: rpc-role-logstash
-        context: liberty
-      - repo: rpc-role-logstash
-        context: kilo
       # NOTE(cloudnull): The image context is only applied to certain releases.
       - image: trusty
         context: master
@@ -50,6 +34,21 @@
         context: liberty
       - image: xenial
         context: kilo
+    jobs:
+      - 'RPC-IRR_{repo}-{series}-{image}-{context}'
+
+- project:
+    name: "RPC-Logstash-Jobs"
+    repo:
+      - rpc-role-logstash:
+          irr_repo_url: https://github.com/rcbops/rpc-role-logstash
+    series:
+      - master
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    context:
+      - master
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
