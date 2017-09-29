@@ -27,25 +27,9 @@ def run_irr_tests() {
       throw e
     } finally {
       common.safe_jira_comment("${currentBuild.result}: [${env.BUILD_TAG}|${env.BUILD_URL}]")
-      irr_archive_artifacts()
+      common.archive_artifacts()
     }
   } // pubcloud slave
-}
-
-def irr_archive_artifacts(){
-  stage('Compress and Publish Artefacts'){
-    pubcloud.uploadToCloudFiles(
-      container: "jenkins_logs",
-    )
-    publishHTML(
-      allowMissing: true,
-      alwaysLinkToLastBuild: true,
-      keepAll: true,
-      reportDir: 'artifacts_report',
-      reportFiles: 'index.html',
-      reportName: 'Build Artifact Links'
-    )
-  }
 }
 
 return this;

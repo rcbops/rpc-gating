@@ -249,7 +249,7 @@
                 deploy.upgrade_leapfrog(environment_vars: environment_vars)
               }}
             }} finally {{
-              common.archive_artifacts("MNAIO")
+              common.rpco_archive_artifacts("MNAIO")
             }}
           }}// deploy node on public cloud node
         }} catch (e){{
