@@ -47,7 +47,7 @@
           DEPLOY_TELEGRAF: "yes"
     image:
       - trusty:
-          DEFAULT_IMAGE: "14.04.5"
+          DEFAULT_IMAGE: "ubuntu-14.04-amd64"
     action:
       - leapfrogupgrade:
           ACTION_STAGES: >-
