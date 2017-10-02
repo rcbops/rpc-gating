@@ -516,15 +516,18 @@ def is_doc_update_pr(String git_dir) {
           set -xeu
           git status
           git show --stat=400,400 | awk '/\\|/{print \$1}' \
-            | egrep -v -e '.*md\$' -e '.*rst\$' -e '^releasenotes/'
+            | egrep -v -e '.*md\$' \
+                       -e '.*rst\$' \
+                       -e '^releasenotes/' \
+                       -e '^gating/generate_release_notes/'
         """,
         returnStatus: true
       )
       if (rc==0){
-        print "Not a documentation only change or not triggered by a pull request. Continuing..."
+        print "Detected a deployment-related change or periodic job execution. Continuing..."
         return false
       }else if(rc==1){
-        print "Skipping build as only documentation changes were detected"
+        print "No deployment-related changes were detected. Skipping..."
         return true
       }else if(rc==128){
         throw new Exception("Directory is not a git repo, cannot check if changes are doc only")
