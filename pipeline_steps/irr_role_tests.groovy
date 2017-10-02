@@ -1,6 +1,8 @@
 def run_irr_tests() {
   pubcloud.runonpubcloud {
     currentBuild.result="SUCCESS"
+    env.RE_HOOK_ARTIFACT_DIR="${WORKSPACE}/artifacts"
+    env.RE_HOOK_RESULT_DIR="${WORKSPACE}/results"
     try {
       ansiColor('xterm') {
         dir("${env.WORKSPACE}/${env.ghprbGhRepository}") {
@@ -11,6 +13,8 @@ def run_irr_tests() {
           stage('Execute ./run_tests.sh'){
             withCredentials(common.get_cloud_creds()) {
               sh """#!/bin/bash
+              mkdir -p "${RE_HOOK_RESULTS_DIR}"
+              mkdir -p "${RE_HOOK_ARTIFACT_DIR}"
               bash ./run_tests.sh
               """
             }
