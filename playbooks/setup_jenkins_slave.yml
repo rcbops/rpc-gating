@@ -14,6 +14,13 @@
     jenkins_node_labels: "{{ lookup('env', 'JENKINS_NODE_LABELS')|default('single_use_slave', true) }}"
     jenkins_node_executors: "{{ lookup('env', 'JENKINS_NODE_EXECUTORS')|default('2', true) }}"
     jenkins_ssh_port: "{{ ansible_port | default(22, true) }}"
+    jenkins_wait_params:
+      # Wait 5 seconds before attempting the first connection
+      delay: 5
+      # Wait 180 seconds for the container to respond
+      timeout: 180
+      # Sleep 5 seonds between checks
+      sleep: 5
   roles:
     - role: willshersystems.sshd
       sshd:
@@ -26,11 +33,23 @@
         ClientAliveInterval: 15
         Compression: "yes"
   tasks:
+    - meta: flush_handlers
+
+    - name: Wait for ssh connectivity
+      wait_for_connection:
+        delay: "{{ jenkins_wait_params.delay }}"
+        timeout: "{{ jenkins_wait_params.timeout }}"
+        sleep: "{{ jenkins_wait_params.sleep }}"
+
     - name: Install apt packages
       apt:
         pkg: "{{ item }}"
         state: installed
         update_cache: yes
+      register: install_packages
+      until: install_packages | success
+      retries: 5
+      delay: 2
       with_items:
         - git-core
         - default-jre-headless

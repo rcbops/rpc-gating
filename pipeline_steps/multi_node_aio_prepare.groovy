@@ -34,7 +34,7 @@ def prepare() {
           # RAM to VMs -- since we have RAM to spare we double that assigned to
           # infra nodes.
           echo "infra_vm_server_ram: 16384" | sudo tee -a playbooks/group_vars/all.yml
-          cp -a ${WORKSPACE}/rpc-gating/scripts/dynamic_inventory.py playbooks/inventory
+          ${WORKSPACE}/rpc-gating/scripts/mnaio_inventory_generate.py playbooks/inventory/rpc-inventory.yaml
         """
         timeout(time: 45, unit: "MINUTES") {
           common.run_script(
@@ -55,6 +55,7 @@ def prepare() {
               "DEPLOY_OSA=true",
               "PRE_CONFIG_OSA=true",
               "RUN_OSA=false",
+              "CONFIGURE_OPENSTACK=false",
               "DATA_DISK_DEVICE=${env.DATA_DISK_DEVICE}",
               "CONFIG_PREROUTING=true",
               "OSA_PORTS=6080 6082 443 80 8443",
