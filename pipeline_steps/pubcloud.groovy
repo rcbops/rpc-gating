@@ -198,23 +198,28 @@ def runonpubcloud(Map args=[:], body){
 }
 
 def uploadToCloudFiles(Map args){
-  withCredentials(common.get_cloud_creds()) {
-    dir("rpc-gating/playbooks") {
-      pyrax_cfg = common.writePyraxCfg(
-        username: env.PUBCLOUD_USERNAME,
-        api_key: env.PUBCLOUD_API_KEY
-      )
-      withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
-        common.venvPlaybook(
-          playbooks: ["upload_to_cloud_files.yml"],
-          vars: [
-            container: args.container,
-            description_file: args.description_file
-          ]
-        ) // venvPlaybook
-      } // withEnv
-    } // dir
-  } // withCredentials
+  if(fileExists("${WORKSPACE}/artifacts")){
+    print("WORKSPACE/artifacts directory found, Preparing to upload artifacts.")
+    withCredentials(common.get_cloud_creds()) {
+      dir("rpc-gating/playbooks") {
+        pyrax_cfg = common.writePyraxCfg(
+          username: env.PUBCLOUD_USERNAME,
+          api_key: env.PUBCLOUD_API_KEY
+        )
+          withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
+            common.venvPlaybook(
+              playbooks: ["upload_to_cloud_files.yml"],
+              vars: [
+                container: args.container,
+                description_file: args.description_file
+              ]
+            ) // venvPlaybook
+          } // withEnv
+      } // dir
+    } // withCredentials
+  } else {
+    print("WORKSPACE/artifacts not found, skipping artifact upload")
+  }
 }
 
 return this

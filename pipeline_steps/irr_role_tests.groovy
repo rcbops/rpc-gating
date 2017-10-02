@@ -30,37 +30,17 @@ def run_irr_tests() {
 
 def irr_archive_artifacts(){
   stage('Compress and Publish Artefacts'){
-    try{
-      sh """#!/bin/bash
-      d="artifacts_\${BUILD_TAG}"
-      mkdir -p "${WORKSPACE}/logs"
-      pushd "${WORKSPACE}/logs"
-        touch "\$d".marker
-      popd
-      tar -C "${WORKSPACE}/logs" -cjf "${env.WORKSPACE}/\$d".tar.bz2 .
-      """
-    } catch (e){
-      print(e)
-      throw(e)
-    } finally{
-      // still worth trying to archiveArtifacts even if some part of
-      // artifact collection failed.
-      pubcloud.uploadToCloudFiles(
-        container: "jenkins_logs",
-      )
-      publishHTML(
-        allowMissing: true,
-        alwaysLinkToLastBuild: true,
-        keepAll: true,
-        reportDir: 'artifacts_report',
-        reportFiles: 'index.html',
-        reportName: 'Build Artifact Links'
-      )
-      sh """
-      rm -rf "${WORKSPACE}/logs"
-      rm -f artifacts_${env.BUILD_TAG}.tar.bz2
-      """
-    }
+    pubcloud.uploadToCloudFiles(
+      container: "jenkins_logs",
+    )
+    publishHTML(
+      allowMissing: true,
+      alwaysLinkToLastBuild: true,
+      keepAll: true,
+      reportDir: 'artifacts_report',
+      reportFiles: 'index.html',
+      reportName: 'Build Artifact Links'
+    )
   }
 }
 
