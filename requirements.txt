@@ -3,6 +3,7 @@ ansible
 appdirs
 click
 github3.py
+gitpython
 influxdb
 jenkins-job-builder
 jenkinsapi
