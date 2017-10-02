@@ -16,7 +16,7 @@
           UPGRADE_FROM_REF: "liberty"
       - newton:
           branch: newton
-          branches: "newton"
+          branches: "newton.*"
           UPGRADE_FROM_REF: "kilo"
           DEPLOY_TELEGRAF: "yes"
       - master:
@@ -145,7 +145,7 @@
     series:
       - newton:
           branch: newton
-          branches: "newton"
+          branches: "newton.*"
       - master:
           branch: master
           branches: "master"
