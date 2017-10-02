@@ -13,7 +13,7 @@ def run_irr_tests() {
           stage('Execute ./run_tests.sh'){
             withCredentials(common.get_cloud_creds()) {
               sh """#!/bin/bash
-              mkdir -p "${RE_HOOK_RESULTS_DIR}"
+              mkdir -p "${RE_HOOK_RESULT_DIR}"
               mkdir -p "${RE_HOOK_ARTIFACT_DIR}"
               bash ./run_tests.sh
               """
