@@ -519,7 +519,9 @@ def is_doc_update_pr(String git_dir) {
             | egrep -v -e '.*md\$' \
                        -e '.*rst\$' \
                        -e '^releasenotes/' \
-                       -e '^gating/generate_release_notes/'
+                       -e '^gating/generate_release_notes/' \
+                       -e '^gating/post_merge' \
+                       -e '^gating/update_dependencies/'
         """,
         returnStatus: true
       )
