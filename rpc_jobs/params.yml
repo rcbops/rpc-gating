@@ -69,7 +69,7 @@
           default: https://github.com/openstack/openstack-ansible-ops
       - string:
           name: OSA_OPS_BRANCH
-          default: 89e45170fe6043ae014c975f391cf3effc54476f
+          default: bc2e128143ed9397e1452bde9987e4a59b39881a
       - string:
           name: DEFAULT_IMAGE
           default: "{DEFAULT_IMAGE}"
