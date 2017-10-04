@@ -20,6 +20,7 @@
       - mitaka
       - liberty
       - kilo
+      - ceph
     exclude:
       # NOTE(cloudnull): The image context is only applied to certain releases.
       - image: trusty
@@ -34,6 +35,8 @@
         context: liberty
       - image: xenial
         context: kilo
+      - image: trusty
+        context: ceph
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
