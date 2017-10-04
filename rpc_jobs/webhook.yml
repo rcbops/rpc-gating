@@ -9,7 +9,8 @@
       # See params.yml
       - rpc_gating_params
       - instance_params:
-          REGION: IAD
+          REGIONS: IAD
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
           FLAVOR: "2"
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           INSTANCE_NAME: "WEBHOOK-PROXY"

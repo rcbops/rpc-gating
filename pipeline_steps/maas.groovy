@@ -23,6 +23,10 @@ def prepare(Map args) {
     stage: {
       withCredentials(common.get_cloud_creds()){
         dir("rpc-gating/playbooks"){
+          if (!("inventory" in args)){
+            args.inventory = "inventory"
+          }
+          unstash(args.inventory)
           pyrax_cfg = common.writePyraxCfg(
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY
@@ -31,6 +35,7 @@ def prepare(Map args) {
             common.venvPlaybook(
               playbooks: ['multi_node_aio_maas_entities.yml'],
               args: [
+                "-i inventory",
                 "-e server_name=\"${args.instance_name}\"",
                 "-e '{\"entity_labels\": ${env.MNAIO_ENTITIES}}'",
               ],
@@ -78,6 +83,10 @@ def entity_cleanup(Map args){
       if (env.MNAIO_ENTITIES) {
         withCredentials(common.get_cloud_creds()) {
           dir("rpc-gating/playbooks") {
+            if (!("inventory" in args)){
+              args.inventory = "inventory"
+            }
+            unstash(args.inventory)
             pyrax_cfg = common.writePyraxCfg(
               username: env.PUBCLOUD_USERNAME,
               api_key: env.PUBCLOUD_API_KEY
@@ -85,6 +94,9 @@ def entity_cleanup(Map args){
             withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
               common.venvPlaybook(
                 playbooks: ['multi_node_aio_maas_cleanup.yml'],
+                args: [
+                  "-i inventory"
+                ],
                 vars: [
                   "server_name": args.instance_name,
                   "entity_labels": env.MNAIO_ENTITIES,

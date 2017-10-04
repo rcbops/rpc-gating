@@ -4,40 +4,65 @@
   gather_facts: False
   vars:
     count: 1
+    keyname: "jenkins"
+    # Each region in the primary regions list will be tried this number of times.
+    primary_region_attempts: 3
     inventory_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks/inventory"
     user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
   tasks:
-    - name: Provision a set of public cloud instances
-      local_action:
-          module: rax
-          name: "{{ instance_name }}"
-          flavor: "{{ flavor }}"
-          image: "{{ image }}"
-          count: "{{ count }}"
-          key_name: "jenkins"
-          region: "{{ region }}"
-          # TODO(odyssey4me):
-          # In Ansible<2.3 there is a bug which prevents the rax module from
-          # reading user_data files. To work around that bug, we supply the
-          # contents of the user_data file rather than the path to it. This
-          # bug is fixed in 2.3, so once we upgrade to 2.3+, we can set
-          # user_data: user_data_path
-          user_data: "{{ lookup('file', user_data_path) }}"
-          meta:
-            build_config: core
-          wait: yes
-          wait_timeout: 900
-          auto_increment: no
-      register: rax
-      until: rax|success
-      retries: 5
-      delay: 60
 
-    - name: Display rax output on failure
-      debug:
-        var: rax
+    # Region should be a CSV string.
+    # Primary regions are those specified in the region var,
+    # they are tried first in a random order. After that,
+    # fallback regions are tried in a random order.
+
+    - name: Create primary region list
+      set_fact:
+        # replace: replace commas with spaces. Double spaces will be removed by trim or select.
+        # split on spaces to produce a list
+        # trim: remove spaces from beginning and end of each item
+        # upper: convert to upper case
+        # select: remove empty strings from the list
+        # shuffle: randomise order
+        regions_shuf: "{{ (regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|shuffle }}"
+
+    - name: Create fallback region list
+      set_fact:
+        fallback_regions_shuff: "{{ (fallback_regions|replace(',', ' ')).split(',')|map('trim')|map('upper')|select|difference(regions)|shuffle }}"
+
+      # As this is a with_items loop not, do-until, we have to use
+      # failed_when: false. Otherwise the loop would exit after
+      # the first failure.
+      # When is used to skip further attempts once instances have booted.
+    - name: Provision a set of public cloud instances
+      rax:
+        name: "{{ instance_name }}"
+        flavor: "{{ flavor }}"
+        image: "{{ image }}"
+        count: "{{ count }}"
+        key_name: "{{ keyname }}"
+        region: "{{ item }}"
+        # TODO(odyssey4me):
+        # In Ansible<2.3 there is a bug which prevents the rax module from
+        # reading user_data files. To work around that bug, we supply the
+        # contents of the user_data file rather than the path to it. This
+        # bug is fixed in 2.3, so once we upgrade to 2.3+, we can set
+        # user_data: user_data_path
+        user_data: "{{ lookup('file', user_data_path) }}"
+        meta:
+          build_config: core
+        wait: yes
+        wait_timeout: 900
+        auto_increment: no
+      register: result
+      with_items: "{{ regions_shuf + fallback_regions_shuff }}"
       when:
-        - rax.success|length < count
+        - "{{ result is undefined or 'success' not in result or result.success|length != count }}"
+      failed_when: false
+
+    - name: Extract instance boot result from loop results array
+      set_fact:
+        rax: "{{ (result |json_query('results[?changed]'))[0] }}"
 
     - name: Instance exists but wasn't created succesfully
       fail:
@@ -57,7 +82,8 @@
     - name: Fail if the required number of instances aren't available
       fail:
         msg: "At least one public cloud instance failed to start :("
-      when: rax.success|length < count
+      when:
+        - rax.success|length < count
 
     - name: Create inventory directory
       file:
@@ -72,14 +98,20 @@
 
           [hosts]
           {% for instance in rax.success %}
-          {{instance.name}} ansible_host={{instance.accessIPv4}} ansible_user=root
+          {{instance.name}} ansible_host={{instance.accessIPv4}} ansible_user=root rax_region={{rax.item}}
           {% endfor %}
         dest: '{{ inventory_path }}/hosts'
 
+    - name: Show generated inventory
+      debug:
+        msg: "Generated inventory: {{ lookup('file', inventory_path+'/hosts')}}"
+
     - name: Wait for SSH to be available on all hosts
-      wait_for: port=22 host="{{ item.accessIPv4 }}"
+      wait_for:
+        port: 22
+        host: "{{ item.accessIPv4 }}"
       with_items: "{{ rax.success }}"
 
-    - name: Wait an additional amount of time for any remaning startup tasks to finish
+    - name: Wait for startup tasks to finish
       pause:
         minutes: 5

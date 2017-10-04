@@ -93,20 +93,22 @@ def prepare_configs(){
 
 
 def connect_deploy_node(name, instance_ip) {
+  String inventory_name="deploy_vm_inventory.${common.rand_int_str()}"
+  String inventory_path="${WORKSPACE}/rpc-gating/playbooks/${inventory_name}/hosts"
   String inventory_content = """
   [job_nodes:children]
   hosts
   [hosts]
   ${name} ansible_port=2222 ansible_host=${instance_ip}
   """
-  common.drop_inventory_file(inventory_content)
+  common.drop_inventory_file(inventory_content, inventory_path)
   dir("rpc-gating/playbooks"){
     stash (
-      name: "inventory",
-      include: "inventory/hosts"
+      name: inventory_name,
+      include: inventory_path
     )
   }
-  ssh_slave.connect(port: 2222)
+  ssh_slave.connect(port: 2222, inventory: inventory_name)
 }
 
 return this;

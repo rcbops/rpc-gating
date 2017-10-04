@@ -11,7 +11,8 @@
       - instance_params:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           FLAVOR: "performance1-1"
-          REGION: "DFW"
+          REGIONS: "ORD"
+          FALLBACK_REGIONS: "DFW IAD HKG SYD"
       - rpc_gating_params
       - string:
           name: STAGES

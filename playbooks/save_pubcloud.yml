@@ -3,7 +3,7 @@
   connection: local
   gather_facts: no
   vars:
-    region: "{{ lookup('env', 'REGION') }}"
+    region: "{{ rax_region }}"
     script_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts"
     pyrax_creds_file: "{{ lookup('env', 'RAX_CREDS_FILE') }}"
     image_name: "{{ lookup('env', 'SAVE_IMAGE_NAME') }}"

@@ -3,8 +3,16 @@
     name: instance_params
     parameters:
       - string:
-          name: REGION
-          default: "{REGION}"
+          name: REGIONS
+          default: "{REGIONS}"
+          description: |
+            CSV list of preferred regions, will be tried in a random order
+      - string:
+          name: FALLBACK_REGIONS
+          default: "{FALLBACK_REGIONS}"
+          description: |
+            CSV list of regions that this job can run in. Any regions
+            not contined in REGIONS will be used as fallbacks.
       - string:
           name: FLAVOR
           default: "{FLAVOR}"

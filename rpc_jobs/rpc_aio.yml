@@ -224,7 +224,8 @@
       - instance_params:
           IMAGE: "{IMAGE}"
           FLAVOR: "{FLAVOR}"
-          REGION: "{REGION}"
+          REGIONS: "{REGIONS}"
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
       - string:
           name: STAGES
           default: "{DEFAULT_STAGES}, {ACTION_STAGES}, {TRIGGER_STAGES}"
