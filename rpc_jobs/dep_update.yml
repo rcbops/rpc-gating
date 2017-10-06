@@ -5,7 +5,11 @@
           URL: "https://github.com/rcbops/rpc-openstack"
           BRANCH: "master"
           #CRON: "@weekly" <-- commented as inherits default
-          #JIRA_ISSUE_TYPE: "task"
+          #JIRA_ISSUE_TYPE: "Task"
+          JIRA_PROJECT_KEY: "RO"
+      - rpc-openstack:
+          URL: "https://github.com/rcbops/rpc-openstack"
+          BRANCH: "newton"
           JIRA_PROJECT_KEY: "RO"
     jobs:
       - 'Dep-Update_{repo}-{BRANCH}'
