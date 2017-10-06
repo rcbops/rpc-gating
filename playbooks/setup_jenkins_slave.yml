@@ -53,10 +53,6 @@
       with_items:
         - git-core
         - default-jre-headless
-        - python-dev
-        - gcc
-        - libffi-dev
-        - libssl-dev
 
     - name: Create Jenkins user
       user:
