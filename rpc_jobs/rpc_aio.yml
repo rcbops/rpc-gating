@@ -331,7 +331,7 @@
                 }}
                 throw e
               }} finally {{
-                common.archive_artifacts()
+                common.rpco_archive_artifacts()
                 common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
               }}
             }} //pubcloud slave
