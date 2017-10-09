@@ -1,0 +1,18 @@
+- project:
+    name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branches:
+      - "master"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    scenario:
+      - "ironic"
+      - "swift"
+    action:
+      - "deploy"
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
