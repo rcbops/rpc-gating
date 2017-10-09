@@ -30,7 +30,6 @@
         X11Forwarding: "no"
         PrintLastLog: "no"
         GatewayPorts: "no"
-        ClientAliveInterval: 15
         Compression: "yes"
   tasks:
     - meta: flush_handlers
