@@ -1,0 +1,14 @@
+#!/bin/bash -xeu
+
+# This script prepares the lint environment in the same way the
+# docker file does, but without the container as its running on
+# single use node.
+
+sudo apt-get update && sudo apt-get install -y \
+  groovy2 python-pip build-essential python-dev libssl-dev \
+  curl libffi-dev sudo git-core
+
+pip install -c constraints.txt -r requirements.txt
+pip install -c constraints.txt -r test-requirements.txt
+
+RPC_GATING_LINT_USE_VENV=no ./lint.sh
