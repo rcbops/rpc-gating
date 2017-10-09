@@ -41,6 +41,24 @@
         timeout: "{{ jenkins_wait_params.timeout }}"
         sleep: "{{ jenkins_wait_params.sleep }}"
 
+    # Ideally we should not have to do this, but considering that all
+    # slaves require packages installed to be setup for Jenkins it
+    # would seem we have little choice.
+    # ref: RE-674
+    - name: If the test is for RPC-O, figure out the release version
+      shell: |
+        RELEASE_FILE="{{ lookup('env', 'WORKSPACE') }}/rpc-openstack/group_vars/all/release.yml"
+        if [[ -e ${RELEASE_FILE} ]]; then
+          awk '/rpc_release/{print $2}' ${RELEASE_FILE} | tr -d '"'
+        else
+          echo "none"
+        fi
+      register: rpc_release_check
+      delegate_to: localhost
+
+    - name: Adjust the apt sources if necessary
+      script: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/apt_repo_setup.sh {{ rpc_release_check.stdout }}"
+
     - name: Install apt packages
       apt:
         pkg: "{{ item }}"
