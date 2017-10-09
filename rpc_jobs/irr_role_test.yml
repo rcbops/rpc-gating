@@ -67,6 +67,27 @@
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
+- project:
+    name: "RPC-Upgrade-Jobs"
+    repo:
+      - rpc-upgrades:
+          irr_repo_url: https://github.com/rcbops/rpc-upgrades
+    series:
+      - undefined
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    # Context is used to define the origin "release" when leap upgrading
+    #  The "series" parameter is used to define the checkout within the
+    #  release.
+    context:
+      - kilo:
+          # Kilo EOL SHA
+          series: "97e3425871659881201106d3e7fd406dc5bd8ff3"
+          irr_flavor: "performance2-15"
+    jobs:
+      - 'RPC-IRR_{repo}-{series}-{image}-{context}'
+
 - job-template:
     # DEFAULTS
     STAGES: >
