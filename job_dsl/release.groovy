@@ -18,10 +18,12 @@ common.shared_slave(){
         variable: 'MAILGUN_API_KEY'
       )
     ]){
-      sh """#!/bin/bash -xe
-        set +x; . .venv/bin/activate; set -x
-        ${env.COMMAND}
-      """
+      sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+        sh """#!/bin/bash -xe
+          set +x; . .venv/bin/activate; set -x
+          ${env.COMMAND}
+        """
+      }
     }
   }
 }

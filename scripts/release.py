@@ -5,6 +5,7 @@ import subprocess
 import traceback
 
 import click
+import git
 
 import ghutils
 from notifications import mail, mailgun, try_context
@@ -33,15 +34,13 @@ logger = logging.getLogger("release")
     help="Text of the release notes."
 )
 @click.option(
-    "--ref",
-    help="Ref that will be released. Release notes scripts compare from"
-         " --prev-version to --ref. May be omitted if --ref has already"
-         " been supplied to clone"
+    '--version',
+    help="Symbolic name of Release (eg r14.1.99)"
 )
 @click.option(
     "--prev-version",
     help="Last released version. Release notes scripts should compare "
-         "prev-version to ref",
+         "prev-version to version",
     required=True
 )
 @click.option(
@@ -53,19 +52,20 @@ logger = logging.getLogger("release")
     "--out-file", "dst_file",
     required=True,
     help="Release notes will be written to this file")
-def generate_release_notes(scripts, rnfile, text, ref, prev_version,
+def generate_release_notes(scripts, rnfile, text, version, prev_version,
                            clone_dir, dst_file):
     ctx_obj = click.get_current_context().obj
+    version = try_context(ctx_obj, version, "version", "version")
     clone_dir = try_context(ctx_obj, clone_dir, "clone_dir", "clone_dir")
     os.system("mkdir -p {}".format(os.path.dirname(dst_file)))
     if scripts:
-        ref = try_context(ctx_obj, ref, "ref", "rc_ref")
+        version = try_context(ctx_obj, version, "version", "version")
         logger.debug(
             "Generating release notes from scripts: {}".format(scripts)
         )
         sub_env = os.environ.copy()
         sub_env["RE_HOOK_PREVIOUS_VERSION"] = prev_version.encode('ascii')
-        sub_env["RE_HOOK_VERSION"] = ref.encode('ascii')
+        sub_env["RE_HOOK_VERSION"] = version.encode('ascii')
         sub_env["RE_HOOK_RELEASE_NOTES"] = dst_file.encode('ascii')
         sub_env["RE_HOOK_REPO_HTTP_URL"] = ctx_obj.clone_url.encode('ascii')
         script_work_dir = "{cwd}/{clone_dir}".format(
@@ -141,6 +141,36 @@ def generate_release_notes(scripts, rnfile, text, ref, prev_version,
 
 
 @click.command()
+@click.option(
+    '--version',
+    required=True,
+    help="Symbolic name of Release (eg r14.1.99)"
+)
+@click.option(
+    '--ref',
+    help="Reference to create release from (branch, SHA etc)"
+         " May be omitted if supplied to clone earlier in the chain."
+)
+@click.option(
+    "--clone-dir",
+    help="Root of the repo dir. May be omitted if clone was used earlier"
+         " in the chain."
+)
+def publish_tag(version, ref, clone_dir):
+    ctx_obj = click.get_current_context().obj
+    ctx_obj.version = version
+    ref = try_context(ctx_obj, ref, "ref", "rc_ref")
+    clone_dir = try_context(ctx_obj, clone_dir, "clone_dir", "clone_dir")
+
+    repo = git.Repo(clone_dir)
+    repo.create_tag(version, ref, message=version)
+    repo.remotes.origin.push(version)
+    logger.info(
+        "Tag '{tag}' successfully pushed to repository.".format(tag=version)
+    )
+
+
+@click.command()
 def usage():
     commands = ghutils.cli.commands
     for name, command in commands.items():
@@ -153,6 +183,7 @@ def usage():
 
 
 ghutils.cli.add_command(generate_release_notes)
+ghutils.cli.add_command(publish_tag)
 ghutils.cli.add_command(mail)
 ghutils.cli.add_command(mailgun)
 ghutils.cli.add_command(usage)

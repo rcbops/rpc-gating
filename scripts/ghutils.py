@@ -231,13 +231,7 @@ def update_rc_branch(ctx, mainline, rc):
 @click.pass_obj
 @click.option(
     '--version',
-    required=True,
     help="Symbolic name of Release (eg r14.1.99)"
-)
-@click.option(
-    '--ref',
-    help="Reference to create release from (branch, SHA etc)"
-         " May be omitted if supplied to clone earlier in the chain."
 )
 @click.option(
     '--bodyfile',
@@ -245,7 +239,7 @@ def update_rc_branch(ctx, mainline, rc):
     required=True
     # Can't use type=click.File because the file may not exist on startup
 )
-def create_release(repo, version, ref, bodyfile):
+def create_release(repo, version, bodyfile):
     ctx_obj = click.get_current_context().obj
     # Attempt to read release_notes from context
     # They may have been set by release.generate_release_notes
@@ -258,7 +252,7 @@ def create_release(repo, version, ref, bodyfile):
         ))
         click.get_current_context().exit(-1)
 
-    ref = try_context(ctx_obj, ref, "ref", "rc_ref")
+    version = try_context(ctx_obj, version, "version", "version")
     # Store version in context for use in notifications
     ctx_obj.version = version
     # Create a subject for use by notifications
@@ -269,10 +263,9 @@ def create_release(repo, version, ref, bodyfile):
     )
     try:
         repo.create_release(
-            version,            # tag name
-            ref,                # tag reference
-            version,            # release name
-            release_notes       # release body
+            tag_name=version,
+            name=version,
+            body=release_notes,
         )
         logger.info("Release {} created.".format(version))
     except github3.models.GitHubError as e:
@@ -301,7 +294,7 @@ def create_release(repo, version, ref, bodyfile):
             "+refs/heads/*:refs/heads/*")
 def clone(url, ref, refspec):
     ctx_obj = click.get_current_context().obj
-    url = try_context(ctx_obj, url, "url", "clone_url")
+    url = try_context(ctx_obj, url, "url", "ssh_url")
     ctx_obj.rc_ref = ref
     clone_dir = "{o}/{r}".format(
         o=ctx_obj.owner.login,
