@@ -1,91 +1,64 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 
-def void install_ansible(){
-  print "install_ansible"
-  sh """#!/bin/bash -e
+void download_venv(){
+  sh """#!/bin/bash -xeu
     REPO_BASE="https://rpc-repo.rackspace.com/rpcgating/venvs"
     cd ${env.WORKSPACE}
-
-    create_venv(){
-      if [[ ! -d ".venv" ]]; then
-        requirements="virtualenv==15.1.0"
-        pip install -U "\${requirements}" \
-          || pip install --isolated -U "\${requirements}"
-        if which scl
-        then
-          # redhat/centos
-          source /opt/rh/python27/enable
-          virtualenv --no-pip --no-setuptools --no-wheel --python=/opt/rh/python27/root/usr/bin/python .venv
-          # hack the selinux module into the venv
-          cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
-        else
-          virtualenv --no-pip --no-setuptools --no-wheel .venv
-        fi
-      fi
-
-      # Install Pip
-      source .venv/bin/activate
-
-      # UG-613 change TMPDIR to directory with more space
-      export TMPDIR="/var/lib/jenkins/tmp"
-
-      # If the pip version we're using is not the same as the constraint then replace it
-      PIP_TARGET="\$(awk -F= '/^pip==/ {print \$3}' rpc-gating/constraints.txt)"
-      VENV_PYTHON=".venv/bin/python"
-      VENV_PIP=".venv/bin/pip"
-      if [[ "\$(\${VENV_PIP} --version)" != "pip \${PIP_TARGET}"* ]]; then
-        # Install a known version of pip, setuptools, and wheel in the venv
-        CURL_CMD="curl --silent --show-error --retry 5"
-        OUTPUT_FILE="get-pip.py"
-        \${CURL_CMD} https://bootstrap.pypa.io/get-pip.py > \${OUTPUT_FILE} \
-          || \${CURL_CMD} https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py > \${OUTPUT_FILE}
-        GETPIP_OPTIONS="pip setuptools wheel --constraint rpc-gating/constraints.txt"
-        \${VENV_PYTHON} \${OUTPUT_FILE} \${GETPIP_OPTIONS} \
-          || \${VENV_PYTHON} \${OUTPUT_FILE} --isolated \${GETPIP_OPTIONS}
-      fi
-
-      # Install rpc-gating requirements
-      PIP_OPTIONS="-c rpc-gating/constraints.txt -r rpc-gating/requirements.txt"
-      \${VENV_PIP} install \${PIP_OPTIONS} \
-        || \${VENV_PIP} install --isolated \${PIP_OPTIONS}
-
-      # Install ansible roles
-      mkdir -p rpc-gating/playbooks/roles
-      ansible-galaxy install -r rpc-gating/role_requirements.yml -p rpc-gating/playbooks/roles
-    }
-
-    unpack_venv(){
-      op=\$(cat .venv/original_venv_path) # Original Path
-      np=\${PWD}/.venv                    # New Path
-      grep -ri --files-with-match \$op \
-        |while read f; do sed -i.bak "s|\$op|\$np|" \$f; done
-      if which scl; then
-        echo "CentOS node detected, copying in external python interpreter and setting PYTHONPATH in activate script"
-        # CentOS 6 can take a hike, its glibc isn't new enough for python 2.7.12
-        cp /opt/rh/python27/root/usr/bin/python .venv/bin/python
-        # hack the selinux module into the venv
-        cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
-        # I'm not sure why this is needed, but I assume its due to a change in python's
-        # default module search paths between 2.7.8 and 2.7.12
-        echo "export PYTHONPATH=${env.WORKSPACE}/.venv/lib/python2.7/site-packages" >> .venv/bin/activate
-      fi
-    }
-
     pushd rpc-gating
       SHA=\$(git rev-parse HEAD)
     popd
-
-    if (curl -s "\${REPO_BASE}/rpcgatingvenv_\${SHA}.tbz" > venv.tbz \
-        && tar xjfp venv.tbz); then
-      echo "Downloaded rpc-gating venv tar from rpc-repo for \$SHA, unpacking."
-      unpack_venv
-      echo "Venv download and modification complete. SHA:\${SHA}"
-    else
-      echo "Failed to download rpc-gating venv tar from rpc-repo for \$SHA, creating venv locally."
-      create_venv
-      echo "workspace/.venv creation complete"
+    curl --fail -s "\${REPO_BASE}/rpcgatingvenv_\${SHA}.tbz" > venv.tbz
+  """
+  print("Venv Downloaded")
+}
+void install_ansible(){
+  print("install_ansible")
+  try{
+    download_venv()
+  }catch (e){
+    print("Venv not found, kicking off Build-Gating-Venv to build it. Error: ${e}")
+    build(
+      job: "Build-Gating-Venv",
+      wait: true,
+      parameters: [
+        [
+          $class: 'StringParameterValue',
+          name: 'RPC_GATING_BRANCH',
+          value: env.RPC_GATING_BRANCH
+        ]
+      ]
+    )
+    sleep(time: 10, unit: "SECONDS")
+    retry(3){
+      try{
+        download_venv()
+      } catch (f) {
+        print ("Post venv build download failed, pausing before retry")
+        sleep(time: 60, unit: "SECONDS")
+        throw f
+      }
+    }
+  }
+  sh """#!/bin/bash -eu
+    cd ${env.WORKSPACE}
+    echo "Unpacking Venv..."
+    tar xjfp venv.tbz
+    op=\$(cat .venv/original_venv_path) # Original Path
+    np=\${PWD}/.venv                    # New Path
+    grep -ri --files-with-match \$op \
+      |while read f; do sed -i.bak "s|\$op|\$np|" \$f; done
+    if which scl; then
+      echo "CentOS node detected, copying in external python interpreter and setting PYTHONPATH in activate script"
+      # CentOS 6 can take a hike, its glibc isn't new enough for python 2.7.12
+      cp /opt/rh/python27/root/usr/bin/python .venv/bin/python
+      # hack the selinux module into the venv
+      cp -r /usr/lib64/python2.6/site-packages/selinux .venv/lib64/python2.7/site-packages/ ||:
+      # I'm not sure why this is needed, but I assume its due to a change in python's
+      # default module search paths between 2.7.8 and 2.7.12
+      echo "export PYTHONPATH=${env.WORKSPACE}/.venv/lib/python2.7/site-packages" >> .venv/bin/activate
     fi
+    echo "Venv Unpack Complete"
   """
 }
 
