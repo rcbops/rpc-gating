@@ -84,7 +84,7 @@
           description: Version of Ubuntu image to use for VMs (14.04.5 or 16.04.2)
       - string:
           name: DEFAULT_KERNEL
-          default: "linux-image-4.4.0-66-generic"
+          default: "linux-image-generic"
           description: Ubuntu Kernel package to use for VMs (linux-image-4.4.0-66-generic, linux-image-3.13.0-34-generic, etc.)
       - bool:
           name: PARTITION_HOST
