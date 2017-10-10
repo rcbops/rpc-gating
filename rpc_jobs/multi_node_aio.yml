@@ -197,6 +197,10 @@
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.shared_slave(){{
         try {{
+          // set kibana branch to newton for leapfrogs, see RE-677
+          if (env.ACTION == "leapfrogupgrade" ){{
+              env.KIBANA_SELENIUM_BRANCH="newton"
+          }}
           instance_name = common.gen_instance_name()
           deploy_node = null
           pubcloud.getPubCloudSlave(instance_name: instance_name)
