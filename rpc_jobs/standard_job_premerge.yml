@@ -92,7 +92,7 @@
                       common.clone_with_pr_refs()
                     }} // stage
 
-                    stage('Execute Pre-Merge Test (pre)') {{
+                    stage('Execute Pre Script') {{
                       // Retry the 'pre' stage 3 times. The 'pre' stage is considered
                       // to be preparation for the test, so let's try and make sure
                       // it has the best chance of success possible.
@@ -105,28 +105,36 @@
                       }}
                     }} // stage
 
-                    stage('Execute Pre-Merge Test (run)') {{
-                      sh """#!/bin/bash -xeu
-                      gating/pre_merge_test/run
-                      """
-                    }} // stage
+                    try{{
+                      stage('Execute Run Script') {{
+                        sh """#!/bin/bash -xeu
+                        gating/pre_merge_test/run
+                        """
+                      }} // stage
+                    }} finally {{
 
-                    stage('Execute Pre-Merge Test (post)') {{
-                      // We do not want the 'post' execution to fail the test,
-                      // but we do want to know if it fails so we make it only
-                      // return status.
-                      post_result = sh(
-                        returnStatus: true,
-                        script: """#!/bin/bash -xeu
-                                   if [[ -e gating/pre_merge_test/post ]]; then
-                                     gating/pre_merge_test/post
-                                   fi"""
-                      )
-                      if (post_result != 0) {{
-                        print("Pre-Merge Test (post) failed with return code ${{post_result}}")
-                      }} // if
-                    }} // stage
+                      // We implement the post script execution in a finally
+                      // block to ensure that it always executes as it is
+                      // typically used to collect logs and this needs to
+                      // happen whether the run script succeeds or fails.
 
+                      stage('Execute Post Script') {{
+                        // We do not want the 'post' execution to fail the test,
+                        // but we do want to know if it fails so we make it only
+                        // return status.
+                        post_result = sh(
+                          returnStatus: true,
+                          script: """#!/bin/bash -xeu
+                                     if [[ -e gating/pre_merge_test/post ]]; then
+                                       gating/pre_merge_test/post
+                                     fi"""
+                        )
+                        if (post_result != 0) {{
+                          print("Pre-Merge Test (post) failed with return code ${{post_result}}")
+                        }} // if
+                      }} // stage
+
+                    }} // inner try
                   }} // withCredentials
                 }} // dir
               }} // ansiColor
