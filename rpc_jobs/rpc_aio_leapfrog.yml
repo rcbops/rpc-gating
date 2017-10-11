@@ -7,22 +7,18 @@
           branch: newton
           branches: "newton"
           UPGRADE_FROM_REF: "kilo"
-          DEPLOY_TELEGRAF: "yes"
       - r14.2.0-kilo:
           branch: "r14.2.0"
           branches: "r14.2.0"
           UPGRADE_FROM_REF: "kilo"
-          DEPLOY_TELEGRAF: "yes"
       - newton-liberty:
           branch: newton
           branches: "newton"
           UPGRADE_FROM_REF: "liberty"
-          DEPLOY_TELEGRAF: "yes"
       - r14.2.0-liberty:
           branch: "r14.2.0"
           branches: "r14.2.0"
           UPGRADE_FROM_REF: "liberty"
-          DEPLOY_TELEGRAF: "yes"
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
