@@ -6,7 +6,6 @@
       - kilo:
           branch: kilo
           branches: "kilo.*"
-          DEPLOY_TELEGRAF: "yes"
       - liberty:
           branch: liberty
           branches: "liberty.*"
@@ -18,11 +17,9 @@
           branch: newton
           branches: "newton.*"
           UPGRADE_FROM_REF: "kilo"
-          DEPLOY_TELEGRAF: "yes"
       - master:
           branch: master
           branches: "master"
-          DEPLOY_TELEGRAF: "yes"
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
