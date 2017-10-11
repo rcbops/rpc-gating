@@ -67,6 +67,7 @@ def generate_release_notes(scripts, rnfile, text, ref, prev_version,
         sub_env["RE_HOOK_PREVIOUS_VERSION"] = prev_version.encode('ascii')
         sub_env["RE_HOOK_VERSION"] = ref.encode('ascii')
         sub_env["RE_HOOK_RELEASE_NOTES"] = dst_file.encode('ascii')
+        sub_env["RE_HOOK_REPO_HTTP_URL"] = ctx_obj.clone_url.encode('ascii')
         script_work_dir = "{cwd}/{clone_dir}".format(
             cwd=os.getcwd(),
             clone_dir=clone_dir
