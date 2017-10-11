@@ -139,6 +139,8 @@
       # defined in rpc_openstack.yml
       - series: master
         ztrigger: pr
+      - series: newton
+        ztrigger: pr
     jobs:
       - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
 
