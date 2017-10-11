@@ -70,26 +70,48 @@
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
+
+# This job item is specific for Kilo based leap jobs.
 - project:
-    name: "RPC-Upgrade-Jobs"
+    name: "RPC-Upgrade-Jobs-Kilo"
     repo:
       - rpc-upgrades:
           irr_repo_url: https://github.com/rcbops/rpc-upgrades
+    # Series is used to define the release umbrella used for a given context.
     series:
-      - undefined
+      - kilo
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
-    # Context is used to define the origin "release" when leap upgrading
-    #  The "series" parameter is used to define the checkout within the
-    #  release.
-    context:
-      - kilo:
-          # Kilo EOL SHA
-          series: "97e3425871659881201106d3e7fd406dc5bd8ff3"
           irr_flavor: "performance2-15"
+    # Context is used to define the origin checkout prior to leaping.
+    context:
+      - kilo
+      - "r11.0.0"
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
+
+
+# This job item is specific for Liberty based leap jobs.
+- project:
+    name: "RPC-Upgrade-Jobs-Liberty"
+    repo:
+      - rpc-upgrades:
+          irr_repo_url: https://github.com/rcbops/rpc-upgrades
+    # Series is used to define the release umbrella used for a given context.
+    series:
+      - liberty
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+          irr_flavor: "performance2-15"
+    # Context is used to define the origin checkout prior to leaping.
+    context:
+      - liberty
+      - "r12.0.0"
+    jobs:
+      - 'RPC-IRR_{repo}-{series}-{image}-{context}'
+
 
 - job-template:
     # DEFAULTS
