@@ -1,0 +1,30 @@
+ - project:
+    name: "rpc-octavia"
+
+    # URL of the rpc-octavia repository
+    repo_url: "https://github.com/rcbops/rpc-octavia"
+
+    # currently we only do master. Once RPC-O switches
+    # to Pike we will retire os-octavia and use the
+    # upstream installer
+    branches:
+      - "master"
+
+    # Use image for RPC-O install
+    image:
+      - xenial:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+
+    # Octavia ignores that setting for now
+    scenario:
+      - "functional"
+
+    # Octavia ignores that setting for now
+    action:
+      - "test"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
+    # add post_merge whe available
