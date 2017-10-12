@@ -28,6 +28,24 @@
         print ("Not running JJB as job was triggered by a push to a branch other than master")
       }
 
+- job:
+    name: "re634-Merge-Trigger-JJB"
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branch: "re-634"
+      script-path: job_dsl/merge_trigger_jjb.groovy
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    triggers:
+        - github
+    parameters:
+      - rpc_gating_params
+
 # Node CentOS to ensure the CIT slave is used. If a pub cloud ubuntu slave is used,
 # the Jenkins API won't be reachable.
 - job:
