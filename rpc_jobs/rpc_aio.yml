@@ -145,6 +145,8 @@
         ztrigger: pr
       - series: liberty
         ztrigger: pr
+      - series: kilo
+        ztrigger: pr
     jobs:
       - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
 

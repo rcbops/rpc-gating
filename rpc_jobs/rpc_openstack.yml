@@ -75,3 +75,21 @@
           FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PR_{name}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-kilo"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branches:
+      - "kilo.*"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
