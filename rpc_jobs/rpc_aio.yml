@@ -143,6 +143,8 @@
         ztrigger: pr
       - series: mitaka
         ztrigger: pr
+      - series: liberty
+        ztrigger: pr
     jobs:
       - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
 
