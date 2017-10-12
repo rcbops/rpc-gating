@@ -1,0 +1,13 @@
+[Unit]
+Description=Phobos Tunnel Service, used to allow connections from CIT Jenkins
+After=network.target
+
+[Service]
+StandardOutput=syslog
+StandardError=syslog
+ExecStart=/usr/bin/ssh -v -N -i {{private_key_file}} {{tunnel_user}}@{{tunnel_host}} -R {{remote_port}}:localhost:22
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
