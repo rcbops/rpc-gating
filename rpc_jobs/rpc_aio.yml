@@ -86,6 +86,11 @@
         action: minorupgrade
       - series: master
         action: minorupgrade
+      # Minorupgrades are only being executed
+      # as periodics for now due to the length
+      # of time they take to execute.
+      - action: minorupgrade
+        ztrigger: pr
       # Major upgrades are only run for mitaka
       # for the moment as no other major upgrade
       # testing or tooling has been implemented.
