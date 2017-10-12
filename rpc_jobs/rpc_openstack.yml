@@ -7,7 +7,8 @@
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     scenario:
-      - "ironic"
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
       - "swift"
     action:
       - deploy:
@@ -28,7 +29,8 @@
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     scenario:
-      - "ironic"
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
       - "swift"
     action:
       - deploy:

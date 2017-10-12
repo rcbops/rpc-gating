@@ -18,6 +18,7 @@
     concurrent: true
     FLAVOR: "performance1-1"
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    TRIGGER_PR_PHRASE_ONLY: false
     properties:
       - build-discarder:
           num-to-keep: "30"
@@ -50,7 +51,7 @@
             - rcbops
           github-hooks: true
           trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_(cit_)?{image}_{scenario}_{action}.*'
-          only-trigger-phrase: false
+          only-trigger-phrase: "{obj:TRIGGER_PR_PHRASE_ONLY}"
           white-list-target-branches: "{branches}"
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'CIT/{image}_{scenario}_{action}'
