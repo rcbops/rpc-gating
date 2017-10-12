@@ -53,6 +53,8 @@
                 --repo "$REPO" \
                 clone \
                   --ref $RC_BRANCH \
+                publish_tag \
+                    --version "${VERSION}" \
                 generate_release_notes \
                     --script "optional:gating/generate_release_notes/pre" \
                     --script "gating/generate_release_notes/run" \
@@ -60,7 +62,6 @@
                     --prev-version "${PREVIOUS_VERSION}" \
                     --out-file "${RELEASE_NOTES_FILE}" \
                 create_release \
-                    --version "${VERSION}" \
                     --bodyfile "${RELEASE_NOTES_FILE}" \
                 update_rc_branch \
                     --mainline "${MAINLINE}" \
@@ -93,14 +94,18 @@
                                      optional:/opt/myscript<br>
                 --file TEXT          Read release notes from this file.<br>
                 --text TEXT          Text of the release notes.<br>
-                --ref TEXT           Ref that will be released. Release notes scripts<br>
-                                     compare from --prev-version to --ref. May be omitted if<br>
-                                     --ref has already been supplied to clone<br>
+                --version TEXT       Symbolic name of Release (eg r14.1.99)  [required]<br>
                 --prev-version TEXT  Last released version. Release notes scripts should<br>
-                                     compare prev-version to ref  [required]<br>
+                                     compare prev-version to version  [required]<br>
                 --clone-dir TEXT     Root of the repo dir. May be omitted if clone was used<br>
                                      earlier in the chain.<br>
                 --out-file TEXT      Release notes will be written to this file  [required]<br>
+                --help               Show this message and exit.<br>
+              <br>publish_tag:<br>
+                --clone-dir TEXT     Root of the repo dir. May be omitted if clone was used<br>
+                                     earlier in the chain.<br>
+                --ref TEXT           ref to checkout<br>
+                --version TEXT       Symbolic name of Release (eg r14.1.99)  [required]<br>
                 --help               Show this message and exit.<br>
               <br>add_issue_url_to_pr:<br>
                 --pull-request-number TEXT  Pull request to update  [required]<br>
@@ -130,9 +135,7 @@
                                  --ref supplied to clone<br>
                 --help           Show this message and exit.<br>
               <br>create_release:<br>
-                --version TEXT   Symbolic name of Release (eg r14.1.99)  [required]<br>
-                --ref TEXT       Reference to create release from (branch, SHA etc) May be<br>
-                                 omitted if supplied to clone earlier in the chain.<br>
+                --version TEXT   Symbolic name of Release (eg r14.1.99)<br>
                 --bodyfile TEXT  File containing release message body  [required]<br>
                 --help           Show this message and exit.<br>
               <br>mail:<br>
