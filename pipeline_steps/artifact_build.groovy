@@ -30,9 +30,9 @@ def get_rpc_repo_creds(){
 def apt() {
   common.use_node('ArtifactBuilder2') {
     withCredentials(get_rpc_repo_creds()) {
-      common.prepareRpcGit()
+      common.prepareRpcGit("auto", env.WORKSPACE)
       ansiColor('xterm') {
-        dir("/opt/rpc-openstack/") {
+        dir("${env.WORKSPACE}/rpc-openstack") {
           sh """#!/bin/bash
           scripts/artifacts-building/apt/build-apt-artifacts.sh
           """
