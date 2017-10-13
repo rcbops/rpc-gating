@@ -87,7 +87,6 @@
     # Context is used to define the origin checkout prior to leaping.
     context:
       - kilo
-      - "r11.0.0"
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
@@ -107,8 +106,12 @@
           irr_flavor: "performance2-15"
     # Context is used to define the origin checkout prior to leaping.
     context:
+      - "r12.1.2"
+      - "r12.2.0"
+      - "r12.2.2"
+      - "r12.2.5"
+      - "r12.2.8"
       - liberty
-      - "r12.0.0"
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
