@@ -1,32 +1,27 @@
-# the github trigger for pipeline/worflow jobs will only trigger for pushes
-# to the branch that was built previously. This means that the job must
-# be run manually once to establish the branch.
-# This is also why there is separate merge trigger job, as it ensures that
-# JJB still runs on pushes to master, even if the JJB job is used to test_client
-# an alternative branch.
+# This job is specified as `freestyle` as using a pipeline job with github
+# trigger causes the job to be triggered irrespective of which branch was
+# pushed to.  Additionally, the environment variables we were trying to use to
+# determine the branch to pushed to were not being passed into the job by the
+# plugins in question.
+# Also, having a separate merge trigger job ensures that JJB still runs on
+# pushes to master, even if the JJB job is used to test an alternative branch.
 - job:
-    name: 'Merge-Trigger-JJB'
-    project-type: workflow
-    logrotate:
-      daysToKeep: 14
+    name: "Merge-Trigger-JJB"
+    project-type: freestyle
+    scm:
+      - git:
+          url: https://github.com/rcbops/rpc-gating
+          branches:
+           - master
     properties:
-      - rpc-gating-github
-    parameters:
-      - rpc_gating_params
+      - build-discarder:
+          num-to-keep: 30
     triggers:
-      - github # triggered post merge, not on PR
-    dsl: |
-      if (env.GIT_BRANCH == "master"){
-          library "rpc-gating@${RPC_GATING_BRANCH}"
-          common.shared_slave(){
-            stage('Run Jenkins Job Builder') {
-              git branch: "master", url: "https://github.com/rcbops/rpc-gating"
-              build job: "Jenkins-Job-Builder"
-            } // stage
-          } // node
-      } else {
-        print ("Not running JJB as job was triggered by a push to a branch other than master")
-      }
+        - github
+    builders:
+      - trigger-builds:
+        - project:
+            - "Jenkins-Job-Builder"
 
 # Node CentOS to ensure the CIT slave is used. If a pub cloud ubuntu slave is used,
 # the Jenkins API won't be reachable.
