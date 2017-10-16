@@ -34,17 +34,6 @@
             glance_default_store: "swift"
             neutron_legacy_ha_tool_enabled: true
           DEPLOY_TELEGRAF: "yes"
-      - r14.2.0-liberty:
-          UPGRADE_FROM_REF: "liberty"
-          branch: "r14.2.0"
-          branches: "r14.2.0"
-          KIBANA_SELENIUM_BRANCH: "newton"
-          SERIES_USER_VARS: |
-            tempest_test_sets: 'all'
-            lxc_container_vg_name: "USE_DIR_NOT_VG"
-            glance_default_store: "swift"
-            neutron_legacy_ha_tool_enabled: true
-          DEPLOY_TELEGRAF: "yes"
     image:
       - trusty:
           DEFAULT_IMAGE: "ubuntu-14.04-amd64"

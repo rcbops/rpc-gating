@@ -15,10 +15,6 @@
           branch: newton
           branches: "newton"
           UPGRADE_FROM_REF: "liberty"
-      - r14.2.0-liberty:
-          branch: "r14.2.0"
-          branches: "r14.2.0"
-          UPGRADE_FROM_REF: "liberty"
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
