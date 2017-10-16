@@ -1,0 +1,97 @@
+- project:
+    name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branches:
+      - "master"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    scenario:
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branches:
+      - "newton.*"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    scenario:
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-mitaka"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branches:
+      - "mitaka.*"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "ceph"
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-liberty"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branches:
+      - "liberty.*"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "ceph"
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-kilo"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branches:
+      - "kilo.*"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    jobs:
+      - 'PR_{name}-{image}-{scenario}-{action}'
