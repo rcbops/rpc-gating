@@ -27,9 +27,7 @@
           ACTION_STAGES: >-
             Leapfrog Upgrade,
             Install Tempest,
-            Tempest Tests,
-            Prepare Kibana Selenium,
-            Kibana Tests
+            Tempest Tests
           GENERATE_TEST_NETWORKS: "6"
           GENERATE_TEST_SERVERS: "4"
           GENERATE_TEST_VOLUMES: "12"
