@@ -238,20 +238,17 @@
               deploy.deploy_sh(
                 environment_vars: environment_vars
               ) // deploy_sh
+              if (env.STAGES.contains("Leapfrog Upgrade")) {{
+                deploy.upgrade_leapfrog(environment_vars: environment_vars)
+              }}
               parallel(
                 "tempest": {{
                   tempest.tempest()
                 }},
                 "horizon": {{
                   horizon.horizon_integration()
-                }},
-                "kibana": {{
-                  kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
                 }}
               ) // parallel
-              if (env.STAGES.contains("Leapfrog Upgrade")) {{
-                deploy.upgrade_leapfrog(environment_vars: environment_vars)
-              }}
             }} finally {{
               common.rpco_archive_artifacts("MNAIO")
             }}
