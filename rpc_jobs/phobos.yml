@@ -1,0 +1,194 @@
+- job:
+    name: Phobos-Deploy
+    project-type: workflow
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 60
+    parameters:
+      # See params.yml
+      - rpc_gating_params
+      - rpc_repo_params:
+          RPC_BRANCH: newton
+      - rpc_eng_ops_params:
+          RPC_ENG_OPS_BRANCH: master
+      - string:
+          name: RPC_MAAS_BRANCH
+          default: master
+          description: |
+            Branch of rpc-maas repo used for verify-maas in the verification
+            stages. This does not affect the version of rpc-maas that is
+            deployed. That is determined by the version required by rpco.
+      - bool:
+          name: DEPLOY
+          default: true
+          description: Execute a deploy? Disable for verify only. Jira issues are created for failures only if deploy is enabled.
+      - bool:
+          name: SLACK_NOTIFICATIONS
+          default: true
+          description: Send slack notifications pre and post deploy?
+      - bool:
+          name: PRE_DEPLOY_PAUSE
+          default: true
+          description: Wait 15 minutes between warning users and executing the deploy?
+      - choice:
+          name: MAAS_CREDENTIALS_METHOD
+          choices:
+            - "Token obtained via Jenkins Service Account"
+            - "Token supplied at runtime via Job Parameter"
+          description: "How to get the MaaS token."
+      - string:
+          name: MAAS_TOKEN
+          description: |
+            Required if MAAS_CREDENTIALS_METHOD is "Token supplied at runtime via Job Parameter"
+            This should be an authentication token valid against the MaaS api for the phobos dedicated account.
+            Tokens can be obtained from pitchfork.
+
+    dsl: |
+      void slack_notify(message, color){
+        if(env.SLACK_NOTIFICATIONS == "true"){
+          msg_plus_link="${message} (${env.BUILD_URL})"
+          slackSend(channel: "#rpc-releng", message: msg_plus_link, color: color)
+          slackSend(channel: "#rpc-eng-ops", message: msg_plus_link, color: color)
+        }
+      }
+      void verify(){
+        sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+          sh """#!/bin/bash
+      # Deliberate outdent to match bash's heredoc requirements.
+      sudo -E bash <<EOF
+              cd rpc-eng-ops/phobos-re-automation
+              # Need a newer ansible than newton supports, for using the
+              # shade openstack modules
+              rm -rf phobos_verification_venv
+              virtualenv phobos_verification_venv >/dev/null
+              . phobos_verification_venv/bin/activate > /dev/null
+              set -xeu
+              pip install ansible==2.4.0.0 netaddr==0.7.19 shade==1.24.0 >/dev/null
+              export OS_CLIENT_CONFIG_FILE="/tmp/phobos_verification_clouds.yml"
+              vars_files="\$(for i in \$(ls /etc/openstack_deploy/user_*.yml); do echo -ne "-e @\$i "; done)"
+              ansible-playbook \
+                -i /opt/rpc-openstack/openstack-ansible/playbooks/inventory/ \
+                -e rpc_eng_ops_version="${RPC_ENG_OPS_BRANCH}" \
+                -e rpc_eng_ops_repo="${RPC_ENG_OPS_REPO}" \
+                -e maas_use_api="true" \
+                -e maas_verify_status="true" \
+                -e maas_verify_wait="false" \
+                \\\$vars_files \
+                verify.yml
+      EOF
+          """
+        } // sshagent
+      }
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.use_node("deploy-phobos"){
+        try {
+          withCredentials([
+              string(
+                credentialsId: "PHOBOS_DEDICATED_ACCOUNT_NUMBER",
+                variable: "RAX_DEDICATED_ACCOUNT_NUMBER"
+              ),
+              usernamePassword(
+                credentialsId: "rpc_jenkins_svc",
+                usernameVariable: "RAX_SSO_USER",
+                passwordVariable: "RAX_SSO_PASSWORD"
+              ),
+              usernamePassword(
+                credentialsId: "phobos_verification_admin",
+                usernameVariable: "PHOBOS_VERIFICATION_ADMIN_USER",
+                passwordVariable: "PHOBOS_VERIFICATION_ADMIN_PASSWORD"
+              )
+              // MAAS_TOKEN is added to env in "Check MaaS Credentials"
+          ]){
+            // do checkout before warning users to ensure branch is valid.
+            stage("Checkout"){
+              dir("rpc-eng-ops"){
+                git branch: env.RPC_ENG_OPS_BRANCH, url: env.RPC_ENG_OPS_REPO, credentialsId: 'rpc-jenkins-svc-github-ssh-key'
+              }
+              // Shell used instead of git function as I want to make all
+              // modifications to the exisiting clone expicit
+              sh """#!/bin/bash -xeu
+                cd /opt/rpc-openstack
+                # log current HEAD
+                git show
+                git status
+
+                pushd openstack-ansible
+                  sudo git stash
+                  sudo git reset --hard
+                popd
+                sudo git fetch --all
+                sudo git stash
+                sudo git reset --hard
+                sudo git checkout "${env.RPC_BRANCH}"
+                sudo git reset --hard origin/${env.RPC_BRANCH}
+                sudo git submodule update --init
+
+                cd /opt/rpc-maas
+                sudo git fetch --all
+                sudo git stash
+                sudo git reset --hard
+                sudo git checkout ${env.RPC_MAAS_BRANCH}
+                sudo git reset --hard origin/${env.RPC_MAAS_BRANCH}
+              """
+            }
+            stage("Check MaaS Credentials"){
+              // MaaS credentials check must be performed on an internal
+              // slave as it may use the internal identity api which
+              // isn't available from phobos.
+              common.internal_slave(){
+                dir("rpc-eng-ops"){
+                  git branch: env.RPC_ENG_OPS_BRANCH, url: env.RPC_ENG_OPS_REPO, credentialsId: 'rpc-jenkins-svc-github-ssh-key'
+                }
+                sh """#!/bin/bash
+                  scl enable python27 ${WORKSPACE}/rpc-eng-ops/phobos-re-automation/maas_creds_check.sh
+                """
+                // Ensure that the MAAS_TOKEN env var is correct
+                // whether the token was obtained from the service account
+                // or supplied via job param.
+                env.MAAS_TOKEN = readFile file: "MAAS_TOKEN"
+              }
+            }
+            stage("Pre Deployment Verify"){
+              verify()
+            }
+            stage("Pre Deploy Warning"){
+                if (env.PRE_DEPLOY_PAUSE == "true"){
+                  slack_notify("Phobos Deploy starting in 15 minutes.", "warning")
+                  sleep(time: 15, unit: "MINUTES")
+                }
+                slack_notify("Phobos Deploy starting now.", "warning")
+            }
+            stage("Deploy"){
+              if (env.DEPLOY == "true"){
+                sh """#!/bin/bash -xeu
+                  sudo -E rpc-eng-ops/phobos-re-automation/deploy.sh
+                """
+              }
+            }
+            stage("Post Deployment Verification"){
+              // no point verifying twice if we're not running a deploy
+              if (env.DEPLOY == "true"){
+                verify()
+              }
+            }
+            if(env.DEPLOY == "true"){
+              slack_notify("Phobos Deploy Complete", "good")
+            }
+          } // withCredentials
+        } catch (e) {
+          if(env.DEPLOY == "true"){
+            slack_notify("Phobos Deploy Failed", "danger")
+            common.create_jira_issue("RE", "PHOBOS DEPLOY / ${env.BUILD_TAG}")
+          } else {
+            slack_notify("Phobos Verification Failed", "warning")
+          }
+          throw e
+        } finally {
+          sh """#!/bin/bash -xeu
+            # All files in the workspace must be owned by jenkins
+            # so they can be cleaned up by jenkins.
+            sudo chown -R jenkins:jenkins . &>/dev/null
+          """
+        }
+      } // phobos node
