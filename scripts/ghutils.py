@@ -255,14 +255,8 @@ def create_release(repo, version, bodyfile):
     version = try_context(ctx_obj, version, "version", "version")
     # Store version in context for use in notifications
     ctx_obj.version = version
-    # Create a subject for use by notifications
-    ctx_obj.release_subject = "Version {v} of {o}/{r} released".format(
-        v=version,
-        o=repo.owner.login,
-        r=repo.name
-    )
     try:
-        repo.create_release(
+        release = repo.create_release(
             tag_name=version,
             name=version,
             body=release_notes,
@@ -278,6 +272,8 @@ def create_release(repo, version, bodyfile):
             raise SystemExit(6)
         else:
             raise e
+    else:
+        ctx_obj.release_url = release.html_url
 
 
 @cli.command()

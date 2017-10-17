@@ -66,8 +66,7 @@
                 update_rc_branch \
                     --mainline "${MAINLINE}" \
                 mailgun \
-                    --to "${NOTIFICATION_ADDRESS}" \
-                    --body "${RELEASE_NOTES_FILE}"
+                    --to "${NOTIFICATION_ADDRESS}"
           description: |
             Commands and available options.
               Note that options that are also used
@@ -78,10 +77,9 @@
                 --to TEXT                Must be added to authorised recipients list if<br>
                                          using a free mailgun account.  [required]<br>
                 --subject TEXT           Subject of release announcement message. May be<br>
-                                         omitted if create_release is used as that generates<br>
-                                         a subject.<br>
-                --body TEXT              Contents of release announcement message May be<br>
-                                         omitted if generate_release_notes is used.<br>
+                                         omitted if create_release is used.<br>
+                --body TEXT              Body of release announcement message. May be omitted if<br>
+                                         omitted if create_release is used.<br>
                 --mailgun-api-key TEXT   [required]<br>
                 --mailgun-endpoint TEXT  [required]<br>
                 --help                   Show this message and exit.<br>
@@ -142,7 +140,7 @@
                 Send mail via local MTA<br>
                 --to TEXT       [required]<br>
                 --subject TEXT  Subject of release announcement message. May be omitted if<br>
-                                create_release is used as that generates a subject.<br>
-                --body TEXT     Contents of release announcement message May be omitted if<br>
-                                generate_release_notes is used.<br>
+                                create_release is used.<br>
+                --body TEXT     Body of release announcement message. May be omitted if<br>
+                                create_release is used.<br>
                 --help          Show this message and exit.<br>
