@@ -2,7 +2,7 @@
     name: 'RPC-Hardening-Jobs'
     series:
       - master:
-          branch: master
+          branch: newton
           USER_VARS: |
             tempest_test_sets: 'scenario'
     context:
