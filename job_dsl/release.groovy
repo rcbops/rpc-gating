@@ -10,11 +10,11 @@ common.shared_slave(){
         variable: 'PAT'
       ),
       string(
-        credentialsId: 'mailgun_hughsaunders_endpoint',
+        credentialsId: 'mailgun_mattt_endpoint',
         variable: 'MAILGUN_ENDPOINT'
       ),
       string(
-        credentialsId: 'mailgun_hughsaunders_api_key',
+        credentialsId: 'mailgun_mattt_api_key',
         variable: 'MAILGUN_API_KEY'
       )
     ]){
