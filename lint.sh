@@ -47,7 +47,14 @@ check_groovy(){
          return
        }
   extract_groovy_from_jjb
-  groovy scripts/syntax.groovy pipeline_steps/*.groovy tmp_groovy/*.groovy job_dsl/*.groovy
+  # pipeline_steps/*.groovy includes pipeline_steps/NonCPS.groovy, However
+  # NonCPS must be loaded before any scripts that use it, so it's explicitly
+  # included first.
+  groovy scripts/syntax.groovy \
+    pipeline_steps/NonCPS.groovy \
+    pipeline_steps/*.groovy \
+    tmp_groovy/*.groovy \
+    job_dsl/*.groovy
 
   if [[ $? == 0 ]]
   then
