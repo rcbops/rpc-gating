@@ -34,6 +34,51 @@ def try_context(ctx_obj, var, var_name, context_attr):
     return var
 
 
+def generate_message_data(subject, body):
+    """Return e-mail message data."""
+    ctx_obj = click.get_current_context().obj
+    owner = ctx_obj.owner.login
+    repo = ctx_obj.name
+
+    if not subject:
+        try:
+            version = ctx_obj.version
+        except AttributeError:
+            logger.error(
+                "`version` is missing from the Click context object, if "
+                "this notification is not being sent at the same time as the "
+                "release is created, `--subject` must be supplied."
+            )
+            raise
+        subject = "New release: {o}/{r} version {v}".format(
+            v=version,
+            o=owner,
+            r=repo,
+        )
+
+    if not body:
+        try:
+            url = ctx_obj.release_url
+        except AttributeError:
+            logger.error(
+                "`release_url` is missing from the Click context object, if "
+                "this notification is not being sent at the same time as the "
+                "release is created, `--body` must be supplied."
+            )
+            raise
+        body = (
+            "The release notes for this new release can be found on at "
+            "{link}\n\nRegards,\nRelease Engineering"
+        ).format(link=url)
+    logger.debug("E-mail subject: {subject}".format(subject=subject))
+    logger.debug("E-mail body:\n{body}".format(body=body))
+    return {
+        "from": "RPC-Jenkins@rackspace.com",
+        "subject": subject,
+        "body": body,
+    }
+
+
 @click.group()
 @click.option("--debug/--no-debug")
 def cli(debug):
@@ -48,21 +93,18 @@ def cli(debug):
 @click.option(
     "--subject",
     help="Subject of release announcement message."
-         " May be omitted if create_release is used as that"
-         " generates a subject.")
+         " May be omitted if create_release is used.")
 @click.option(
     "--body",
-    help="Contents of release announcement message"
-         " May be omitted if generate_release_notes is used.")
+    help="Body of release announcement message."
+         " May be omitted if create_release is used.")
 def mail(to, subject, body):
     """Send mail via local MTA"""
-    ctx_obj = click.get_current_context().obj
-    subject = try_context(ctx_obj, subject, "subject", "release_subject")
-    body = try_context(ctx_obj, body, "body", "release_notes")
-    msg = MIMEText(body)
-    msg["From"] = "RPC-Jenkins@rackspace.com"
+    data = generate_message_data(subject=subject, body=body)
+    msg = MIMEText(data["body"])
+    msg["From"] = data["from"]
     msg["To"] = to
-    msg["Subject"] = subject
+    msg["Subject"] = data["subject"]
     logger.debug("Sending notification mail To: {to} Subject:{s}".format(
         to=to, s=subject
     ))
@@ -79,26 +121,23 @@ def mail(to, subject, body):
 @click.option(
     "--subject",
     help="Subject of release announcement message."
-         " May be omitted if create_release is used as that"
-         " generates a subject.")
+         " May be omitted if create_release is used.")
 @click.option(
     "--body",
-    help="Contents of release announcement message"
-         " May be omitted if generate_release_notes is used.")
+    help="Body of release announcement message."
+         " May be omitted if create_release is used.")
 @click.option("--mailgun-api-key", required=True, envvar="MAILGUN_API_KEY")
 @click.option("--mailgun-endpoint", required=True, envvar="MAILGUN_ENDPOINT")
 def mailgun(to, subject, body, mailgun_api_key, mailgun_endpoint):
     """Send mail via mailgun api."""
-    ctx_obj = click.get_current_context().obj
-    subject = try_context(ctx_obj, subject, "subject", "release_subject")
-    body = try_context(ctx_obj, body, "body", "release_notes")
+    msg = generate_message_data(subject=subject, body=body)
     return requests.post(
         "{endpoint}/messages".format(endpoint=mailgun_endpoint),
         auth=("api", mailgun_api_key),
-        data={"from": "RPC-Jenkins@rackspace.com",
+        data={"from": msg["from"],
               "to": [to],
-              "subject": subject,
-              "text": body
+              "subject": msg["subject"],
+              "text": msg["body"],
               }
     )
 
