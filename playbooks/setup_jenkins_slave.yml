@@ -31,6 +31,9 @@
         PrintLastLog: "no"
         GatewayPorts: "yes"
         Compression: "yes"
+        ClientAliveInterval: "60"
+        ClientAliveCountMax: "10"
+        TCPKeepAlive: "yes"
   tasks:
     - meta: flush_handlers
 
@@ -130,6 +133,15 @@
           retries: 3
           delay: 2
 
+    - meta: flush_handlers
+
+    - name: Wait for ssh connectivity
+      wait_for_connection:
+        delay: "{{ jenkins_wait_params.delay }}"
+        timeout: "{{ jenkins_wait_params.timeout }}"
+        sleep: "{{ jenkins_wait_params.sleep }}"
+
+    - meta: reset_connection
 
       # pip module didn't work here as it couldn't locate the virtualenv binary
     - name: Start slave
