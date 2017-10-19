@@ -1,6 +1,8 @@
 - project:
-    name: "rpc-openstack"
+    name: "rpc-openstack-master-premerge"
+    repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "master"
     branches:
       - "master"
     image:
@@ -16,11 +18,13 @@
           REGIONS: "DFW"
           FALLBACK_REGIONS: "IAD"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-newton"
+    name: "rpc-openstack-newton-premerge"
+    repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "newton"
     branches:
       - "newton.*"
     image:
@@ -38,11 +42,13 @@
           REGIONS: "DFW"
           FALLBACK_REGIONS: "IAD"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-mitaka"
+    name: "rpc-openstack-mitaka-premerge"
+    repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "mitaka"
     branches:
       - "mitaka.*"
     image:
@@ -57,11 +63,13 @@
           REGIONS: "DFW"
           FALLBACK_REGIONS: "IAD"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-liberty"
+    name: "rpc-openstack-liberty-premerge"
+    repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "liberty"
     branches:
       - "liberty.*"
     image:
@@ -76,11 +84,13 @@
           REGIONS: "DFW"
           FALLBACK_REGIONS: "IAD"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-kilo"
+    name: "rpc-openstack-kilo-premerge"
+    repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "kilo"
     branches:
       - "kilo.*"
     image:
@@ -94,4 +104,23 @@
           REGIONS: "DFW"
           FALLBACK_REGIONS: "IAD"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-master-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "master"
+    jira_project_key: "RO"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "IAD"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'

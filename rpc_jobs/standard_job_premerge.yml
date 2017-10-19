@@ -1,6 +1,11 @@
 - project:
     name: "gating-pre-merge"
+    repo_name: "rpc-gating"
     repo_url: "https://github.com/rcbops/rpc-gating"
+    # `series` defaults to `master` and can be omitted.  Note that `series` is
+    # only used in the job name and does not necessarily need to map to a
+    # branch name (thought in most cases it will).
+    #series: "master"
     branches:
       - "master"
     image:
@@ -10,10 +15,11 @@
     action:
       - "test"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - job-template:
-    name: 'PR_{name}-{image}-{scenario}-{action}'
+    name: 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+    series: "master"
     project-type: pipeline
     concurrent: true
     FLAVOR: "performance1-1"

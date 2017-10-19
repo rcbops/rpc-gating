@@ -1,6 +1,7 @@
  - project:
     name: "rpc-octavia"
 
+    repo_name: "rpc-octavia"
     # URL of the rpc-octavia repository
     repo_url: "https://github.com/rcbops/rpc-octavia"
 
@@ -26,5 +27,5 @@
 
     # Link to the standard pre-merge-template
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
     # add post_merge whe available
