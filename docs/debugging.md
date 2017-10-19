@@ -26,7 +26,7 @@ it's inefficient to wade through it when looking for the cause of a failure.
 ## Artifacts
 While command outputs as viewed in blue ocean or the console are useful, they
 don't tell the whole story. Jobs can produce artifacts which are stored
-for a [set time](https://github.com/rcbops/rpc-gating/blob/master/playbooks/upload_to_cloud_files.yml#L13-L19) after the completion of a job. Any job can produce artifacts
+for a [set time](https://github.com/rcbops/rpc-gating/blob/master/playbooks/upload_to_swift.yml) after the completion of a job. Any job can produce artifacts
 and use the provided functions to publish those. Jobs artifacts should include
 everything required to debug a build.
 

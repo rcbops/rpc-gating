@@ -16,7 +16,7 @@ import os
 import re
 
 
-import pyrax
+import openstack.connection
 import jenkins_node
 from rackspace_monitoring.providers import get_driver
 from rackspace_monitoring.types import Provider
@@ -84,16 +84,16 @@ class Cleanup:
         return Cls(self.username, self.api_key)
 
     @log
-    def init_pyrax(self, region):
+    def init_os_sdk(self, region):
         self.region = region
-        pyrax.set_setting("identity_type", "rackspace")
-        pyrax.set_credentials(self.username, self.api_key)
-        self.cs = pyrax.connect_to_cloudservers(
-            region, verify_ssl=True)
+        self.conn = openstack.connection.from_config(
+            cloud_name="public_cloud",
+        )
+        self.conn.profile.set_region("compute", self.region)
 
     @log
     def cache_servers(self):
-        self.servers = self.cs.servers.list()
+        self.servers = self.conn.compute.servers()
         self.servers_by_region[self.region] = self.servers
         self.unprotected_servers = (
             server for server in self.servers
@@ -117,13 +117,13 @@ class Cleanup:
         max_age = datetime.timedelta(hours=self.age_limit)
 
         for server in self.unprotected_servers:
-            created_time = dateutil.parser.parse(server.created)
+            created_time = dateutil.parser.parse(server.created_at)
             age = current_time - created_time
             errored = server.status == "ERROR"
             if errored or age > max_age:
                 _indp("Deleting {name} Errored: {error} Age: {age}".format(
                     name=server.name, error=errored, age=age))
-                server.delete()
+                self.conn.compute.delete_server(server.id)
 
     @log
     def cache_maas_objects(self):
@@ -258,7 +258,7 @@ class Cleanup:
     def multi_region_cloudservers_cleanup(self):
         for region in self.regions:
             _indp("Current Region: {r}".format(r=region))
-            self.init_pyrax(region=region)
+            self.init_os_sdk(region=region)
             self.cache_servers()
             self.cleanup_instances()
 

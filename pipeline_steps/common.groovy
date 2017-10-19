@@ -340,7 +340,7 @@ def archive_artifacts(){
         junit allowEmptyResults: true, testResults: '*.xml'
       }
     }
-    pubcloud.uploadToCloudFiles(
+    pubcloud.uploadToSwift(
       container: "jenkins_logs",
     )
     publishHTML(
@@ -375,19 +375,47 @@ List get_cloud_creds(){
   ]
 }
 
-def writePyraxCfg(Map args){
-  String cfg = """[rackspace_cloud]
-username = ${args.username}
-api_key = ${args.api_key}
+def writeCloudsCfg(Map args){
+  String cfg = """clouds:
+  public_cloud:
+    profile: rackspace
+    auth_type: rackspace_apikey
+    auth:
+      username: ${args.username}
+      api_key: ${args.api_key}
 """
 
   String tmp_dir = pwd(tmp:true)
-  String pyrax_cfg = "${tmp_dir}/.pyrax.cfg"
+  String clouds_cfg = "${tmp_dir}/clouds.yaml"
   sh """
-    echo "${cfg}" > ${pyrax_cfg}
+    echo "${cfg}" > ${clouds_cfg}
   """
 
-  return pyrax_cfg
+  return clouds_cfg
+}
+
+def writeRaxmonCfg(Map args){
+  String cfg = """[credentials]
+username=${args.username}
+api_key=${args.api_key}
+
+[api]
+url=https://monitoring.api.rackspacecloud.com/v1.0
+
+[auth_api]
+url=https://identity.api.rackspacecloud.com/v2.0/tokens
+
+[ssl]
+verify=true
+"""
+
+  String tmp_dir = pwd(tmp:true)
+  String raxrc_cfg = "${tmp_dir}/.raxrc.cfg"
+  sh """
+    echo "${cfg}" > ${raxrc_cfg}
+  """
+
+  return raxrc_cfg
 }
 
 def prepareConfigs(Map args){

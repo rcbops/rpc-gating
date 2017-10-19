@@ -40,11 +40,11 @@ def prepare(Map args) {
             args.inventory = "inventory"
           }
           unstash(args.inventory)
-          pyrax_cfg = common.writePyraxCfg(
+          raxrc_cfg = common.writeRaxmonCfg(
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY
           )
-          withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
+          withEnv(["RAXMON_RAXRC=${raxrc_cfg}"]){
             common.venvPlaybook(
               playbooks: ['multi_node_aio_maas_entities.yml'],
               args: [
@@ -100,11 +100,11 @@ def entity_cleanup(Map args){
               args.inventory = "inventory"
             }
             unstash(args.inventory)
-            pyrax_cfg = common.writePyraxCfg(
+            raxrc_cfg = common.writeRaxmonCfg(
               username: env.PUBCLOUD_USERNAME,
               api_key: env.PUBCLOUD_API_KEY
             )
-            withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
+            withEnv(["RAXMON_RAXRC=${raxrc_cfg}"]){
               common.venvPlaybook(
                 playbooks: ['multi_node_aio_maas_cleanup.yml'],
                 args: [

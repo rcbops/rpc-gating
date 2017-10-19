@@ -9,11 +9,14 @@ jenkinsapi
 jira
 jmespath
 packaging
-pyrax
 python-dateutil
 python-subunit
 pytz
 PyYAML
 rackspace_monitoring
+rackspace_monitoring_cli
+rackspaceauth
+shade
 six
+python-swiftclient
 urllib3

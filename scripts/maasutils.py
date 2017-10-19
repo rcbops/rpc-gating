@@ -1,28 +1,25 @@
 #!/usr/bin/env python
 import click
-import pyrax
+from rackspace_monitoring.providers import get_driver
+from rackspace_monitoring.types import Provider
 import requests
 
 
 @click.option("--username", required=True)
 @click.option("--api-key", required=True)
 @click.group()
-def cli(api_key, username):
-    pyrax.set_setting("identity_type", "rackspace")
-    pyrax.set_credentials(
-        username,
-        api_key
-    )
+@click.pass_context
+def cli(ctxt, api_key, username):
+    Cls = get_driver(Provider.RACKSPACE)
+    ctxt.obj = Cls(username, api_key)
 
 
 @click.command()
-def get_token_url():
-    token = pyrax.identity.token
+@click.pass_obj
+def get_token_url(raxmon):
+    token = raxmon.connection.auth_token
+    url = raxmon.connection.get_endpoint()
 
-    monitoring_service = next(
-        b for b in pyrax.identity.service_catalog if b["type"] == "rax:monitor"
-    )
-    url = monitoring_service["endpoints"][0]["publicURL"]
     click.echo("MAAS_AUTH_TOKEN={token} MAAS_API_URL={url}".format(
         token=token, url=url))
     return token, url
@@ -51,10 +48,10 @@ def set_webhook_token(ctx, webhook_token):
 
 
 @click.command()
+@click.pass_obj
 @click.option("--label", help="label of entity to get ID for", required=True)
-def get_entity_id(label):
-    mon = pyrax.cloud_monitoring
-    entities = mon.list_entities()
+def get_entity_id(raxmon, label):
+    entities = raxmon.list_entities()
     for e in entities:
         if label == e.label:
             click.echo(e.id)

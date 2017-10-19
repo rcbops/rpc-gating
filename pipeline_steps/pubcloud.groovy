@@ -7,11 +7,11 @@ def cleanup(Map args){
         args.inventory = "inventory"
       }
       unstash(args.inventory)
-      pyrax_cfg = common.writePyraxCfg(
+      clouds_cfg = common.writeCloudsCfg(
         username: env.PUBCLOUD_USERNAME,
         api_key: env.PUBCLOUD_API_KEY
       )
-      withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
+      withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
         common.venvPlaybook(
           playbooks: ['cleanup_pubcloud.yml'],
           args: [
@@ -50,11 +50,11 @@ def savePubCloudSlave(Map args){
       withCredentials(common.get_cloud_creds()){
 
         dir("rpc-gating/playbooks"){
-          pyrax_cfg = common.writePyraxCfg(
+          clouds_cfg = common.writeCloudsCfg(
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY
           )
-          env.RAX_CREDS_FILE = pyrax_cfg
+          env.OS_CLIENT_CONFIG_FILE = clouds_cfg
           env.SAVE_IMAGE_NAME = args.image
           common.venvPlaybook(
             playbooks: ['save_pubcloud.yml'],
@@ -99,11 +99,11 @@ String getPubCloudSlave(Map args){
       }
       withCredentials(common.get_cloud_creds()){
         dir("rpc-gating/playbooks"){
-          pyrax_cfg = common.writePyraxCfg(
+          clouds_cfg = common.writeCloudsCfg(
             username: env.PUBCLOUD_USERNAME,
             api_key: env.PUBCLOUD_API_KEY
           )
-          env.RAX_CREDS_FILE = pyrax_cfg
+          env.OS_CLIENT_CONFIG_FILE = clouds_cfg
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
                         "instance_prep.yml",
@@ -210,18 +210,18 @@ def runonpubcloud(Map args=[:], body){
   } //outer try
 }
 
-def uploadToCloudFiles(Map args){
+def uploadToSwift(Map args){
   if(fileExists("${WORKSPACE}/artifacts")){
     print("WORKSPACE/artifacts directory found, Preparing to upload artifacts.")
     withCredentials(common.get_cloud_creds()) {
       dir("rpc-gating/playbooks") {
-        pyrax_cfg = common.writePyraxCfg(
+        clouds_cfg = common.writeCloudsCfg(
           username: env.PUBCLOUD_USERNAME,
           api_key: env.PUBCLOUD_API_KEY
         )
-          withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
+          withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
             common.venvPlaybook(
-              playbooks: ["upload_to_cloud_files.yml"],
+              playbooks: ["upload_to_swift.yml"],
               vars: [
                 container: args.container,
                 description_file: args.description_file

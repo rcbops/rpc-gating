@@ -90,7 +90,13 @@
                 passwordVariable: "JENKINS_API_KEY"
               ),
             ]){
-              sh "python scripts/periodic_cleanup.py"
+              clouds_cfg = common.writeCloudsCfg(
+                username: env.PUBCLOUD_USERNAME,
+                api_key: env.PUBCLOUD_API_KEY,
+              )
+              withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+                sh "python scripts/periodic_cleanup.py"
+              }
             }
           }
         }

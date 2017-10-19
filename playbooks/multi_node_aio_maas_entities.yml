@@ -2,5 +2,12 @@
 - hosts: job_nodes
   connection: local
   gather_facts: False
-  roles:
-    - { role: maas_entities, state: 'present'}
+  tasks:
+    - name: Create host entities
+      command: "raxmon-entities-create --label {{ item }}"
+      with_items: "{{ entity_labels }}"
+      delegate_to: localhost
+      register: create_entities
+      until: create_entities|success
+      retries: 3
+      delay: 5
