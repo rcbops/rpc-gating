@@ -21,6 +21,12 @@ run_hook(){
 cd ${WORKSPACE}/repo
 run_hook "gating/update_dependencies/pre"
 run_hook "gating/update_dependencies/run"
+
+if [[ "${READ_ONLY_TEST:-true}" == "true" ]]; then
+  echo "Read only test complete."
+  exit 0
+fi
+
 if [[ -z "$(git status -s)" ]]
 then
   echo "Repo is clean, prep script made no changes to be committed."
