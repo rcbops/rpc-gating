@@ -7,10 +7,11 @@
     action:     "test"
     jira_project_key: "RE"
     jobs:
-      - 'PM_{name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM_{job_name_prefix}-{branch}-{image}-{scenario}-{action}'
 
 - job-template:
-    name: 'PM_{name}-{branch}-{image}-{scenario}-{action}'
+    name: 'PM_{job_name_prefix}-{branch}-{image}-{scenario}-{action}'
+    job_name_prefix: "{name}"
     project-type: pipeline
     concurrent: true
     FLAVOR: "performance1-1"

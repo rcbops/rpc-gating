@@ -26,5 +26,5 @@
 
     # Link to the standard pre-merge-template
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{job_name_prefix}-{image}-{scenario}-{action}'
     # add post_merge whe available
