@@ -16,10 +16,11 @@
           REGIONS: "DFW"
           FALLBACK_REGIONS: "IAD"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{job_name_prefix}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-openstack-newton"
+    job_name_prefix: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branches:
       - "newton.*"
@@ -38,10 +39,11 @@
           REGIONS: "DFW"
           FALLBACK_REGIONS: "IAD"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{job_name_prefix}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-openstack-mitaka"
+    job_name_prefix: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branches:
       - "mitaka.*"
@@ -61,6 +63,7 @@
 
 - project:
     name: "rpc-openstack-liberty"
+    job_name_prefix: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branches:
       - "liberty.*"
@@ -80,6 +83,7 @@
 
 - project:
     name: "rpc-openstack-kilo"
+    job_name_prefix: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branches:
       - "kilo.*"

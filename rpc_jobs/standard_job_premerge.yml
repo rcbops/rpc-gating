@@ -10,10 +10,11 @@
     action:
       - "test"
     jobs:
-      - 'PR_{name}-{image}-{scenario}-{action}'
+      - 'PR_{job_name_prefix}-{image}-{scenario}-{action}'
 
 - job-template:
-    name: 'PR_{name}-{image}-{scenario}-{action}'
+    name: 'PR_{job_name_prefix}-{image}-{scenario}-{action}'
+    job_name_prefix: "{name}"
     project-type: pipeline
     concurrent: true
     FLAVOR: "performance1-1"
