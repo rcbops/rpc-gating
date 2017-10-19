@@ -72,7 +72,8 @@
 
             try {{
               ansiColor('xterm') {{
-                dir("${{env.WORKSPACE}}/${{env.ghprbGhRepository}}") {{
+                String repo_name = env.REPO_URL.split('/')[-1]
+                dir("${{env.WORKSPACE}}/${{repo_name}}") {{
                   withCredentials(common.get_cloud_creds()) {{
 
                     stage('Checkout') {{
