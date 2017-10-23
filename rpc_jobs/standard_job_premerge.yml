@@ -75,6 +75,7 @@
       env.RE_JOB_ACTION = "{action}"
       env.RE_JOB_FLAVOR = "{FLAVOR}"
       env.RE_JOB_TRIGGER = "PR"
+      env.RE_JOB_REPO_NAME = "{repo_name}"
 
       // Apply a global three hour timeout
       timeout(time: 3, unit: 'HOURS'){{
