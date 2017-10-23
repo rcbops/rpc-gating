@@ -343,7 +343,8 @@
                   deploy.upgrade_leapfrog(environment_vars: environment_vars)
                 }}
                 tempest.tempest()
-                kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
+                // See Issue: RO-2781 
+                // kibana.kibana(env.KIBANA_SELENIUM_BRANCH)
               }} catch (e) {{
                 print(e)
                 currentBuild.result = 'FAILURE'
