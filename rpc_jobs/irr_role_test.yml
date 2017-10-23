@@ -182,7 +182,7 @@
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      timeout(time: 3, unit: 'HOURS'){{
+      timeout(time: 5, unit: 'HOURS'){{
         common.shared_slave() {{
             irr_role_tests.run_irr_tests()
         }} // cit node
