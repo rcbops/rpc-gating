@@ -65,7 +65,7 @@ def parse_jjb_file(in_dir, in_file):
 
 
 def parse_job_name(job_name, file_name):
-    regex = '^([a-zA-Z0-9]+-?)+([_]([{][a-zA-Z0-9]+[}]-?)+)?$'
+    regex = '^([a-zA-Z0-9]+-?)+([_]([{][a-zA-Z0-9_]+[}]-?)+)?$'
     match = re.match(regex, job_name)
     if not match:
         out = "Lint error: Job name \"%s\" in \"%s\"" % (job_name, file_name)

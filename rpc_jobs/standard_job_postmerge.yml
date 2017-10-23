@@ -1,16 +1,19 @@
 - project:
     name:       "gating-post-merge"
+    repo_name:  "rpc-gating"
     repo_url:   "https://github.com/rcbops/rpc-gating"
-    branch:     "master"
+    # `branch` defaults to `master` and can be omitted.
+    #branch:     "master"
     image:      "xenial"
     scenario:   "functional"
     action:     "test"
     jira_project_key: "RE"
     jobs:
-      - 'PM_{name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - job-template:
-    name: 'PM_{name}-{branch}-{image}-{scenario}-{action}'
+    name: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    branch: "master"
     project-type: pipeline
     concurrent: true
     FLAVOR: "performance1-1"
@@ -40,7 +43,6 @@
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      properties([pipelineTriggers([githubPush()])])
 
       env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
 
@@ -53,6 +55,7 @@
       env.RE_JOB_ACTION = "{action}"
       env.RE_JOB_FLAVOR = "{FLAVOR}"
       env.RE_JOB_TRIGGER = "PM"
+      env.RE_JOB_REPO_NAME = "{repo_name}"
       env.RE_JOB_BRANCH = "{branch}"
 
       // Not part of the published interface, used by this job later on
@@ -72,8 +75,7 @@
 
             try {{
               ansiColor('xterm') {{
-                String repo_name = env.REPO_URL.split('/')[-1]
-                dir("${{env.WORKSPACE}}/${{repo_name}}") {{
+                dir("${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}") {{
                   withCredentials(common.get_cloud_creds()) {{
 
                     stage('Checkout') {{

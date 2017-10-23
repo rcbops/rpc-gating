@@ -152,6 +152,12 @@
         ztrigger: pr
       - series: kilo
         ztrigger: pr
+      # The periodic tests for the following are now
+      # handled by the standard postmerge jobs
+      # defined in rpc_openstack.yml
+      - series: master
+        ztrigger: periodic
+        action: deploy
     jobs:
       - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
 
