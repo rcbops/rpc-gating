@@ -158,6 +158,18 @@
       - series: master
         ztrigger: periodic
         action: deploy
+      - series: newton
+        ztrigger: periodic
+        action: deploy
+      - series: mitaka
+        ztrigger: periodic
+        action: deploy
+      - series: liberty
+        ztrigger: periodic
+        action: deploy
+      - series: kilo
+        ztrigger: periodic
+        action: deploy
     jobs:
       - 'RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}'
 
