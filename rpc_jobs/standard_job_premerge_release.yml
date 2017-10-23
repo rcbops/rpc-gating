@@ -1,0 +1,85 @@
+- project:
+    name: "RE-Release-PR"
+    repo:
+      - rpc-openstack:
+          URL: "https://github.com/rcbops/rpc-openstack"
+          BRANCH: "master"
+      - rpc-openstack:
+          URL: "https://github.com/rcbops/rpc-openstack"
+          BRANCH: "newton"
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
+
+- job-template:
+    RPC_GATING_BRANCH: master
+    name: 'RE-Release-PR_{repo}-{BRANCH}'
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${{RPC_GATING_BRANCH}}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/release.groovy
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 10
+      - github:
+          url: "{URL}"
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_(cit_)?release.*'
+          only-trigger-phrase: false
+          white-list-target-branches:
+            - "{BRANCH}"
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/release'
+          cancel-builds-on-update: true
+    parameters:
+      - rpc_gating_params
+      - string:
+          name: "URL"
+          description: URL of the repo to be release tested
+          default: "{URL}"
+      - string:
+          name: "BRANCH"
+          description: Branch of the repo to be release tested
+          default: "{BRANCH}"
+      - string:
+          name: "COMMAND"
+          description: |
+            # ORG - Owner of the repo
+            # For PR tests this needs to be derived from the PR details.
+            # As such this environment variable is set in
+            # job_dsl/release.groovy instead of here.
+
+            # REPO - Name of the repo containing project to be released
+            # For PR tests this needs to be derived from the PR details.
+            # As such this environment variable is set in
+            # job_dsl/release.groovy instead of here
+
+            # RC_BRANCH - the rc/stabilisation branch, usually master-rc
+            # For PR tests this needs to be the head of the PR so that
+            # the contexts of the PR are included in the releasenotes
+            # generation. As such this environment variable is set in
+            # job_dsl/release.groovy instead of here.
+          default: >-
+            python rpc-gating/scripts/release.py
+                --debug
+                --org "${{ORG}}"
+                --repo "${{REPO}}"
+                clone
+                  --ref "${{RC_BRANCH}}"
+                generate_release_notes
+                    --script "optional:gating/generate_release_notes/pre"
+                    --script "gating/generate_release_notes/run"
+                    --script "optional:gating/generate_release_notes/post"
+                    --prev-version "{BRANCH}"
+                    --version "${{RC_BRANCH}}"
+                    --out-file "${{WORKSPACE}}/artifacts/release_notes"
