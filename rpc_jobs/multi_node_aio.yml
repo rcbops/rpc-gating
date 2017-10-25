@@ -31,11 +31,14 @@
             neutron_legacy_ha_tool_enabled: true
           UPGRADE_FROM_REF: "kilo"
           DEPLOY_TELEGRAF: "yes"
-      - master:
-          branch: master
-          SERIES_USER_VARS: |
-            tempest_test_sets: 'all'
-          DEPLOY_TELEGRAF: "yes"
+      # NOTE(mattt): master builds are currently failing since rpco no longer
+      #              uses submodules.  Disabling temporarily since no one is
+      #              relying on these builds at present.
+      #- master:
+      #    branch: master
+      #    SERIES_USER_VARS: |
+      #      tempest_test_sets: 'all'
+      #    DEPLOY_TELEGRAF: "yes"
     image:
       - xenial:
           DEFAULT_IMAGE: "ubuntu-16.04-amd64"
