@@ -51,7 +51,7 @@
           name: "BRANCH"
           description: Branch of the repo to be release tested
           default: "{BRANCH}"
-      - string:
+      - text:
           name: "COMMAND"
           description: |
             # ORG - Owner of the repo
@@ -69,17 +69,17 @@
             # the contexts of the PR are included in the releasenotes
             # generation. As such this environment variable is set in
             # job_dsl/release.groovy instead of here.
-          default: >-
-            python rpc-gating/scripts/release.py
-                --debug
-                --org "${{ORG}}"
-                --repo "${{REPO}}"
-                clone
-                  --ref "${{RC_BRANCH}}"
-                generate_release_notes
-                    --script "optional:gating/generate_release_notes/pre"
-                    --script "gating/generate_release_notes/run"
-                    --script "optional:gating/generate_release_notes/post"
-                    --prev-version "{BRANCH}"
-                    --version "${{RC_BRANCH}}"
+          default: |
+            python rpc-gating/scripts/release.py \
+                --debug \
+                --org "${{ORG}}" \
+                --repo "${{REPO}}" \
+                clone \
+                  --ref "${{RC_BRANCH}}" \
+                generate_release_notes \
+                    --script "optional:gating/generate_release_notes/pre" \
+                    --script "gating/generate_release_notes/run" \
+                    --script "optional:gating/generate_release_notes/post" \
+                    --prev-version "{BRANCH}" \
+                    --version "${{RC_BRANCH}}" \
                     --out-file "${{WORKSPACE}}/artifacts/release_notes"
