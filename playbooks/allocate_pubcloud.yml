@@ -28,7 +28,7 @@
 
     - name: Create fallback region list
       set_fact:
-        fallback_regions_shuff: "{{ (fallback_regions|replace(',', ' ')).split(',')|map('trim')|map('upper')|select|difference(regions)|shuffle }}"
+        fallback_regions_shuff: "{{ (fallback_regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|difference(regions)|shuffle }}"
 
       # As this is a with_items loop not, do-until, we have to use
       # failed_when: false. Otherwise the loop would exit after
