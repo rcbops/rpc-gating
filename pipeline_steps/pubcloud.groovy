@@ -106,6 +106,7 @@ String getPubCloudSlave(Map args){
           env.RAX_CREDS_FILE = pyrax_cfg
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
+                        "instance_prep.yml",
                         "drop_ssh_auth_keys.yml"],
             args: [
               "-i inventory",
