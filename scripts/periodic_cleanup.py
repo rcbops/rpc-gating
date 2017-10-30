@@ -67,9 +67,9 @@ class Cleanup:
     @log
     def read_env_vars(self):
         self.age_limit = int(os.environ.get("INSTANCE_AGE_LIMIT", 48))
-        self.instance_prefix = os.environ.get("INSTANCE_PREFIX")
-        if not self.instance_prefix:
-            raise ValueError("INSTANCE_PREFIX must not be empty")
+        self.protected_prefix = os.environ.get("PROTECTED_PREFIX")
+        if not self.protected_prefix:
+            raise ValueError("PROTECTED_PREFIX must not be empty")
 
         self.username = os.environ["PUBCLOUD_USERNAME"]
         self.api_key = os.environ["PUBCLOUD_API_KEY"]
@@ -95,9 +95,9 @@ class Cleanup:
     def cache_servers(self):
         self.servers = self.cs.servers.list()
         self.servers_by_region[self.region] = self.servers
-        self.prefixed_servers = (
+        self.unprotected_servers = (
             server for server in self.servers
-            if re.match(self.instance_prefix, server.name)
+            if not re.match(self.protected_prefix, server.name)
         )
 
     def get_servers_from_all_regions(self):
@@ -111,12 +111,12 @@ class Cleanup:
         Delete instances if they are in an error state or are over the
         age defined in INSTANCE_AGE_LIMIT.
 
-        Instances that don't match INSTANCE_PREFIX are ignored.
+        Instances that don't match PROTECTED_PREFIX are cleaned up
         """
         current_time = datetime.datetime.now(tzutc())
         max_age = datetime.timedelta(hours=self.age_limit)
 
-        for server in self.prefixed_servers:
+        for server in self.unprotected_servers:
             created_time = dateutil.parser.parse(server.created)
             age = current_time - created_time
             errored = server.status == "ERROR"
@@ -169,10 +169,10 @@ class Cleanup:
             # --- Check various conditions for deletion,
             # continue if any are not met ---
 
-            if not re.match(self.instance_prefix, hostname):
+            if re.match(self.protected_prefix, hostname):
                 print()
                 continue
-            print("[prefix match]", end=" ")
+            print("[not protected]", end=" ")
 
             # entities with URIs are tied to cloud instances and cannot be
             # manually deleted
@@ -229,8 +229,8 @@ class Cleanup:
             hostname = self._hostname_from_label(label)
             _indp("Agent token: {}".format(label), end=" ")
 
-            if re.match(self.instance_prefix, hostname):
-                print ("[prefix match]", end=" ")
+            if not re.match(self.protected_prefix, hostname):
+                print ("[not protected]", end=" ")
             else:
                 print()
                 continue
@@ -268,7 +268,7 @@ class Cleanup:
         try:
             jenkins_node.delete_inactive_nodes(
                 jenkins=self.jenkins_client,
-                instance_prefix=self.instance_prefix,
+                protected_prefix=self.protected_prefix,
             )
         except Exception as e:
             print("Failure encoutered while cleaning up "
