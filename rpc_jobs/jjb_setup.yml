@@ -36,13 +36,6 @@
             name: JOBS
             description: "Which jobs to update and with what options."
             default: -r rpc_jobs
-        - bool:
-            name: IGNORE_CACHE
-            description: "Ignore cache when updating jobs."
-        - bool:
-            name: DELETE_OLD
-            description: "Remove jobs that are no longer defined."
-            default: false
         - rpc_gating_params
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
@@ -72,16 +65,14 @@
       url=${JENKINS_URL}
       EOF
 
-                if [ "$IGNORE_CACHE" = "true" ]; then
-                    JJB_ARGS="--ignore-cache"
-                fi
-                if [ "$DELETE_OLD" = "true" ]; then
+                if [[ "$RPC_GATING_BRANCH" == "master" ]]; then
                     UPDATE_ARGS="--delete-old"
                 fi
 
                 jenkins-jobs --conf jenkins_jobs.ini \
                              --user $JENKINS_USER \
                              --password $JENKINS_API_PASSWORD \
+                             --ignore-cache \
                              \$JJB_ARGS update \$UPDATE_ARGS $JOBS
               """
             }
