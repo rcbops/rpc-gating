@@ -36,11 +36,12 @@ def try_context(ctx_obj, var, var_name, context_attr):
 
 def generate_message_data(subject, body):
     """Return e-mail message data."""
-    ctx_obj = click.get_current_context().obj
-    owner = ctx_obj.owner.login
-    repo = ctx_obj.name
+    if not (subject or body):
+        ctx_obj = click.get_current_context().obj
 
     if not subject:
+        owner = ctx_obj.owner.login
+        repo = ctx_obj.name
         try:
             version = ctx_obj.version
         except AttributeError:
@@ -67,13 +68,13 @@ def generate_message_data(subject, body):
             )
             raise
         body = (
-            "The release notes for this new release can be found on at "
+            "The release notes for this new release can be found on "
             "{link}\n\nRegards,\nRelease Engineering"
         ).format(link=url)
     logger.debug("E-mail subject: {subject}".format(subject=subject))
     logger.debug("E-mail body:\n{body}".format(body=body))
     return {
-        "from": "RPC-Jenkins@rackspace.com",
+        "from": "RPC-Jenkins@mailgun.rpc.jenkins.cit.rackspace.net",
         "subject": subject,
         "body": body,
     }
@@ -131,15 +132,20 @@ def mail(to, subject, body):
 def mailgun(to, subject, body, mailgun_api_key, mailgun_endpoint):
     """Send mail via mailgun api."""
     msg = generate_message_data(subject=subject, body=body)
-    return requests.post(
+    post_data = {"from": msg["from"],
+                 "to": [to],
+                 "subject": msg["subject"],
+                 "text": msg["body"],
+                 }
+    logger.debug("Mailgun post data: {}".format(post_data))
+    response = requests.post(
         "{endpoint}/messages".format(endpoint=mailgun_endpoint),
         auth=("api", mailgun_api_key),
-        data={"from": msg["from"],
-              "to": [to],
-              "subject": msg["subject"],
-              "text": msg["body"],
-              }
+        data=post_data
     )
+    logger.debug("Mailgun response: {}".format(response.text))
+    response.raise_for_status()
+    return response
 
 
 if __name__ == "__main__":
