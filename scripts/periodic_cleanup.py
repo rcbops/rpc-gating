@@ -106,7 +106,9 @@ class Cleanup:
 
     @log
     def cleanup_instances(self):
-        """ Delete instances if they are in an error state or are over the
+        """Cleanup Instances.
+
+        Delete instances if they are in an error state or are over the
         age defined in INSTANCE_AGE_LIMIT.
 
         Instances that don't match INSTANCE_PREFIX are ignored.
@@ -149,8 +151,7 @@ class Cleanup:
 
     @log
     def cleanup_maas_entities(self):
-        """ Remove maas entities that relate to deleted instances """
-
+        """Remove maas entities that relate to deleted instances."""
         self.cache_maas_objects()
 
         # An entity will be kept if an associated agent has connected within
@@ -263,7 +264,7 @@ class Cleanup:
 
     @log
     def cleanup_jenkins_nodes(self):
-        """ Remove offline jenkins nodes that match instance prefix """
+        """Remove offline unprotected jenkins nodes."""
         try:
             jenkins_node.delete_inactive_nodes(
                 jenkins=self.jenkins_client,
