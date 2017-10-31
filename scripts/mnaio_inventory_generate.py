@@ -67,6 +67,7 @@ def host_ops(hostvars, hostname, num):
     hostvars.update({
       "ansible_host": "10.0.236.%s" % ip_last_octet,
       'server_hostname': hostname,
+      'server_domain_name': 'openstack_local',
       'server_vm': True,
       'server_preseed_ks': 'vm',
       'server_vm_fixed_addr': '10.0.2.%s' % ip_last_octet,

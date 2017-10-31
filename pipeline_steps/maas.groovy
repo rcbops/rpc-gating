@@ -2,13 +2,26 @@ String get_mnaio_entity_names() {
   String entities = sh (
     script: """#!/usr/bin/env python
 from ansible.parsing.dataloader import DataLoader
-from ansible.inventory.manager import InventoryManager
+from ansible import __version__ as ansible_version
+from distutils.version import LooseVersion
 import json
+
 loader = DataLoader()
-inventory = InventoryManager(loader=loader, sources=['playbooks/inventory/'])
+
+if LooseVersion(ansible_version) < '2.4':
+    from ansible.vars import VariableManager
+    from ansible.inventory import Inventory
+    variable_manager = VariableManager()
+    inventory = Inventory(loader=loader, variable_manager=variable_manager, host_list='playbooks/inventory/')
+    host_list = inventory.get_group('pxe_servers').hosts
+else:
+    from ansible.inventory.manager import InventoryManager
+    inventory = InventoryManager(loader=loader, sources=['playbooks/inventory/'])
+    host_list = inventory.get_hosts(pattern="pxe_servers")
+
 print(
     json.dumps(
-        ["%s.{{ server_name }}" % hostname for hostname in inventory.get_hosts(pattern="pxe_servers")]
+        ["%s.{{ server_name }}" % hostname for hostname in host_list]
     )
 )
     """,
