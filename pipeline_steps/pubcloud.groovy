@@ -66,7 +66,7 @@ def savePubCloudSlave(Map args){
           )
           stash (
             name: args.inventory,
-            include: "${args.inventory}/hosts"
+            includes: "${args.inventory}/hosts"
           )
         } // dir
       } //withCredentials
@@ -116,7 +116,7 @@ String getPubCloudSlave(Map args){
           )
           stash (
             name: args.inventory,
-            include: "${args.inventory}/hosts"
+            includes: "${args.inventory}/hosts"
           )
         }
       }

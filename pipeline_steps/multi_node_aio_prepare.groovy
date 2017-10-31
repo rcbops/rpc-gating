@@ -112,7 +112,7 @@ def connect_deploy_node(name, instance_ip) {
   dir("rpc-gating/playbooks"){
     stash (
       name: inventory_name,
-      include: inventory_path
+      includes: "${inventory_name}/hosts"
     )
   }
   ssh_slave.connect(port: 2222, inventory: inventory_name)
