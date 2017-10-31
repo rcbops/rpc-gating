@@ -8,6 +8,7 @@ import git
 import github3
 import json
 import logging
+import re
 
 from notifications import try_context
 
@@ -42,6 +43,7 @@ def cli(ctxt, org, repo, pat, debug):
     logging.basicConfig(level=level)
     gh = github3.login(token=pat)
     repo_ = gh.repository(org, repo)
+    repo_.org = gh.organization(org)
     if not repo_:
         raise ValueError("Failed to connect to repo {o}/{r}".format(
             o=org, r=repo
@@ -126,6 +128,26 @@ def branch_api_request(repo, branch, method, postfix="", data=None):
         headers={'Accept': 'application/vnd.github.loki-preview+json'},
         data=data)
     return response
+
+
+@cli.command()
+@click.pass_context
+@click.option('--url-match', help="Print wehbooks whose URLs match this regex")
+def get_webhooks(ctx, url_match):
+    """List the webhooks for all repos in an org.
+
+    A repo must be supplied, it will be used to determine the organisation.
+    """
+    if url_match:
+        url_match_re = re.compile(url_match)
+    org = ctx.obj.org
+    for repo in org.iter_repos():
+        for hook in repo.iter_hooks():
+            for k, v in hook.config.items():
+                if (url_match and url_match_re.search(v)) or not url_match:
+                    print "{org}.{repo}.{name}.{k}: {v}".format(
+                        org=org.login, repo=repo.name,
+                        name=hook.name, k=k, v=v)
 
 
 @cli.command()
