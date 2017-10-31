@@ -8,7 +8,7 @@
   hosts: deploy-phobos
   user: jenkins
   vars:
-    tunnel_host: "webhookproxy.uk.rs.wherenow.org"
+    tunnel_host: "webhookproxy.re.rpc.rackspace.com"
     tunnel_user: phobos
     # Remote port will be opened on tunnel host, and connections to it
     # will be forwarded via the ssh tunnel to port 22 on the phobos deploy host
