@@ -70,6 +70,16 @@
           default: "{RPC_BRANCH}"
 
 - parameter:
+    name: rpc_eng_ops_params
+    parameters:
+      - string:
+          name: "RPC_ENG_OPS_REPO"
+          default: "git@github.com:rcbops/rpc-eng-ops"
+      - string:
+          name: "RPC_ENG_OPS_BRANCH"
+          default: "{RPC_ENG_OPS_BRANCH}"
+
+- parameter:
     name: osa_ops_params
     parameters:
       - string:
