@@ -194,14 +194,20 @@ def runonpubcloud(Map args=[:], body){
     print(e)
     throw e
   }finally {
-    try {
-      delPubCloudSlave(args)
-    } catch (e){
-      print "Error while cleaning up, swallowing this exception to prevent "\
-            +"cleanup errors from failing the build: ${e}"
-      common.create_jira_issue("RE", "Cleanup Failure: ${env.BUILD_TAG}")
-    }
-  }
+    // Cleanup relies on the inventory file, if its not there don't try.
+    // Periodic cleanup will remove the instance.
+    // The inventory file may be missing if the job is aborted before or
+    // during instance allocation, either manualy or via a PR update.
+    if (fileExists("${args.inventory_path}/hosts")){
+      try {
+        delPubCloudSlave(args)
+      } catch (e){
+        print "Error while cleaning up, swallowing this exception to prevent "\
+              +"cleanup errors from failing the build: ${e}"
+        common.create_jira_issue("RE", "Cleanup Failure: ${env.BUILD_TAG}")
+      } // inner try
+    } // if
+  } //outer try
 }
 
 def uploadToCloudFiles(Map args){
