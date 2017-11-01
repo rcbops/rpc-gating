@@ -123,7 +123,7 @@
                 sudo git stash
                 sudo git reset --hard
                 sudo git checkout "${env.RPC_BRANCH}"
-                sudo git reset --hard origin/${env.RPC_BRANCH}
+                sudo git reset --hard origin/${env.RPC_BRANCH} || sudo git reset --hard ${env.RPC_BRANCH}
                 sudo git submodule update --init
 
                 cd /opt/rpc-maas
@@ -131,7 +131,7 @@
                 sudo git stash
                 sudo git reset --hard
                 sudo git checkout ${env.RPC_MAAS_BRANCH}
-                sudo git reset --hard origin/${env.RPC_MAAS_BRANCH}
+                sudo git reset --hard origin/${env.RPC_MAAS_BRANCH} || sudo git reset --hard ${env.RPC_MAAS_BRANCH}
               """
             }
             stage("Check MaaS Credentials"){
