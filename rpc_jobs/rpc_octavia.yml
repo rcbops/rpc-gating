@@ -25,7 +25,9 @@
     action:
       - "test"
 
+    jira_project_key: "K8S"
+
     # Link to the standard pre-merge-template
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
-    # add post_merge whe available
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
