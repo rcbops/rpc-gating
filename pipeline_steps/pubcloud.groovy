@@ -201,6 +201,17 @@ def runonpubcloud(Map args=[:], body){
     if (fileExists("${args.inventory_path}/hosts")){
       try {
         delPubCloudSlave(args)
+      // catch timeouts
+      } catch (hudson.AbortException | org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e){
+          // Ideally timeouts would be within the node block so that cleanup
+          // cannot fail due to timeout. However that is more complicated
+          // when the node block is reused in different situations (eg
+          // runonpubcloud).
+          // As we are planning to move to node pool, its not worth investing
+          // the time to refactor that, so drop timeout exceptions instead
+          // of creating useless jira issues.
+          print "Caught timeout exception, dropping (${e})"
+      // catch all other exceptions
       } catch (e){
         print "Error while cleaning up, swallowing this exception to prevent "\
               +"cleanup errors from failing the build: ${e}"
