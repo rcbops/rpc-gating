@@ -4,15 +4,14 @@
     parameters:
       - string:
           name: "INSTANCE_AGE_LIMIT"
-          default: "24"
+          default: "12"
           description: |
             Hours. Instances older than this will be removed.
       - string:
-          name: "INSTANCE_PREFIX"
-          default: "ra|ri|om|su"
+          name: "PROTECTED_PREFIX"
+          default: "long-running-slave|influx-|WEBHOOK-PROXY"
           description: |
-            Only instances whose names match the supplied prefix pattern will
-            be cleaned up.
+            Instances that match this prefix regex will not be cleaned up.
       - string:
           name: "REGIONS"
           default: "DFW IAD ORD HKG SYD"

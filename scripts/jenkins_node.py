@@ -48,11 +48,11 @@ def delete_node(jenkins, name):
     jenkins.delete_node(nodename=name)
 
 
-def delete_inactive_nodes(jenkins, instance_prefix):
+def delete_inactive_nodes(jenkins, protected_prefix):
     for node_id, node in jenkins.get_nodes().iteritems():
         # Ignore nodes that are coming online for the first time
         # which won't have an offline cause.
-        if (re.match(instance_prefix, node_id) and not node.is_online()
+        if (not re.match(protected_prefix, node_id) and not node.is_online()
             and node.poll(tree="offlineCauseReason")
                 .get("offlineCauseReason")):
             try:
