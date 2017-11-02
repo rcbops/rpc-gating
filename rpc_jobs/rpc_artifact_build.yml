@@ -141,7 +141,7 @@
           // We can run all the artifact build processes in parallel
           // for PR's because they do not upload anything.
           if (env.trigger == "pr") {{
-            parallel(
+            Map branches = python_parallel + container_parallel + [
               "apt": {{
                 // We do not need to download existing data from
                 // rpc-repo for PR's as they do not upload their
@@ -157,14 +157,9 @@
                 // distro-specific. We take the first one for
                 // convenience.
                 artifact_build.git(image_list[env.series][0])
-              }},
-              "python": {{
-                parallel python_parallel
-              }},
-              "container": {{
-                parallel container_parallel
               }}
-            ) // parallel
+            ]
+            parallel branches
           }} else {{
             // When the job is periodic, the jobs must run in a
             // particular sequence in order to ensure that each
