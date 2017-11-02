@@ -79,7 +79,7 @@
                   withCredentials(common.get_cloud_creds()) {{
 
                     stage('Checkout') {{
-                      git branch: env.BRANCH, url: env.REPO_URL
+                      common.clone_with_pr_refs(env.REPO_URL, env.BRANCH)
                     }} // stage
 
                     stage('Execute Pre Script') {{
