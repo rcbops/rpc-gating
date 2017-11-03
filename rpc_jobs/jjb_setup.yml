@@ -65,7 +65,8 @@
       url=${JENKINS_URL}
       EOF
 
-                if [[ "$RPC_GATING_BRANCH" == "master" ]]; then
+                if [[ "$RPC_GATING_BRANCH" == "master" ]] && [[ "$JOBS" == "-r rpc_jobs" ]]; then
+                    echo "Setting --delete-old as RPC_GATING_BRANCH=master and JOBS='-r rpc_jobs'"
                     UPDATE_ARGS="--delete-old"
                 fi
 
