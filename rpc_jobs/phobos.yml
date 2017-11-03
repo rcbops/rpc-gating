@@ -50,6 +50,8 @@
           msg_plus_link="${message} (${env.BUILD_URL})"
           slackSend(channel: "#rpc-releng", message: msg_plus_link, color: color)
           slackSend(channel: "#rpc-eng-ops", message: msg_plus_link, color: color)
+          slackSend(channel: "#ceph", message: msg_plus_link, color: color)
+          slackSend(channel: "#rpc-engineering", message: msg_plus_link, color: color)
         }
       }
       void verify(){
