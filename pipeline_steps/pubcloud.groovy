@@ -59,7 +59,7 @@ def savePubCloudSlave(Map args){
           common.venvPlaybook(
             playbooks: ['save_pubcloud.yml'],
             args: [
-              "-i inventory",
+              "-i ${args.inventory}",
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
             ],
             vars: args
@@ -109,7 +109,7 @@ String getPubCloudSlave(Map args){
                         "instance_prep.yml",
                         "drop_ssh_auth_keys.yml"],
             args: [
-              "-i inventory",
+              "-i ${args.inventory}",
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
             ],
             vars: args
