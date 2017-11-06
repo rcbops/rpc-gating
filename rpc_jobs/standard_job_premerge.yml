@@ -12,6 +12,7 @@
       - "xenial"
     scenario:
       - "functional"
+      - "lint"
     action:
       - "test"
     jobs:

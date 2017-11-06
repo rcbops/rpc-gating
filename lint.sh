@@ -106,8 +106,13 @@ check_python(){
 
 check_webhooktranslator(){
     pushd webhooktranslator
-    tox && echo "Webhook Translator Unit tests pass" \
+    # A temporary workdir is created to workaround an issue where the absolute path to the
+    # Python virtual environment, created by tox, is too long and so causing pip to fail.
+    # https://rpc-openstack.atlassian.net/browse/RE-53
+    tmp_webhook_tox_dir=$(mktemp -d)
+    tox --workdir $tmp_webhook_tox_dir && echo "Webhook Translator Unit tests pass" \
       || { echo "Webhook Translator Unit tests fail"; rc=1; }
+    rm -r $tmp_webhook_tox_dir
     popd
 }
 
