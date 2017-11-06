@@ -122,10 +122,13 @@
                 }} // dir
               }} // ansiColor
             }} catch (e) {{
+              print(e)
+              currentBuild.result="FAILURE"
               common.create_jira_issue(JIRA_PROJECT_KEY,
                                        env.BUILD_TAG,
                                        env.BUILD_URL,
                                        "Task")
+              throw e
             }} finally {{
               common.archive_artifacts()
             }} // try
