@@ -1,0 +1,90 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Create archive
+      command: "tar -cjf {{ archive_name }} {{ artifacts_dir }}"
+      args:
+        chdir: "{{ artifacts_parent_dir }}"
+      tags:
+        - skip_ansible_lint
+
+    - name: Create a public Cloud Files container
+      os_object:
+        container: "{{ container }}"
+        container_access: "public"
+        region_name: "{{ region }}"
+        cloud: "{{ cloud_name }}"
+
+    - name: Authenticate to the cloud and retrieve the service catalog
+      os_auth:
+        cloud: "{{ cloud_name }}"
+        region_name: "{{ region }}"
+      no_log: true
+
+    - set_fact:
+        object_store: "{{ service_catalog | selectattr('type', 'equalto', 'object-store') | first }}"
+
+    - set_fact:
+        rax_pub_cloud: "{{ 'clouddrive.com' in object_store['endpoints'][0]['publicURL'] }}"
+
+    - set_fact:
+        object_cdn: "{{ service_catalog | selectattr('type', 'equalto', 'rax:object-cdn') | first }}"
+      when: rax_pub_cloud
+
+    # os_object does not currently support setting object expiration header field
+    - name: Upload file to Cloud Files
+      command: "swift upload {{ container }} {{ archive_name }} --header 'X-Delete-After:2592000'"
+      args:
+        chdir: "{{ artifacts_parent_dir }}"
+      no_log: true
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
+
+    - name: Get Rackspace CloudFiles CDN URL
+      uri:
+        url: "{{ (object_cdn['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}/{{ container }}"
+        method: HEAD
+        headers:
+          X-AUTH-TOKEN: "{{ auth_token }}"
+        status_code: 204
+      no_log: true
+      register: object_cdn_data
+      when: rax_pub_cloud
+
+    - set_fact:
+        container_public_url: "{{ object_cdn_data['x_cdn_ssl_uri'] }}"
+      when: rax_pub_cloud
+
+    - set_fact:
+        container_public_url: "{{ object_store['endpoints'][0]['publicURL'] }}"
+      when: not rax_pub_cloud
+
+    - name: Read artifact description file
+      set_fact:
+        artifact_description: "{{ lookup('file', description_file) }}"
+      no_log: True
+      when:
+        - description_file is defined
+        - description_file != None
+
+    - name: Create artifact report location if doesn't exist
+      file:
+        path: "{{ report_dir }}"
+        state: directory
+
+    - name: Generate HTML report with file URL
+      template:
+        src: swift.html.j2
+        dest: "{{ report_dir }}/index.html"
+  vars:
+    region: "DFW"
+    cloud_name: "public_cloud"
+    build_tag: "{{ lookup('env','BUILD_TAG') }}"
+    archive_name: "artifacts_{{ build_tag }}.tar.bz2"
+    workspace: "{{ lookup('env', 'WORKSPACE') }}"
+    artifacts_parent_dir: "{{ workspace }}"
+    artifacts_dir: "artifacts"
+    report_dir: "{{ artifacts_parent_dir }}/artifacts_report"

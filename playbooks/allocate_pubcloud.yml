@@ -3,12 +3,12 @@
   connection: local
   gather_facts: False
   vars:
-    count: 1
     keyname: "jenkins"
     # Each region in the primary regions list will be tried this number of times.
     primary_region_attempts: 3
     inventory_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks/inventory"
     user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
+    cloud_name: "public_cloud"
   tasks:
 
     # Region should be a CSV string.
@@ -34,26 +34,20 @@
       # failed_when: false. Otherwise the loop would exit after
       # the first failure.
       # When is used to skip further attempts once instances have booted.
-    - name: Provision a set of public cloud instances
-      rax:
+    - name: Provision a cloud instance
+      os_server:
         name: "{{ instance_name }}"
         flavor: "{{ flavor }}"
+        state: present
+        cloud: "{{ cloud_name }}"
+        region_name: "{{ item }}"
         image: "{{ image }}"
-        count: "{{ count }}"
         key_name: "{{ keyname }}"
-        region: "{{ item }}"
-        # TODO(odyssey4me):
-        # In Ansible<2.3 there is a bug which prevents the rax module from
-        # reading user_data files. To work around that bug, we supply the
-        # contents of the user_data file rather than the path to it. This
-        # bug is fixed in 2.3, so once we upgrade to 2.3+, we can set
-        # user_data: user_data_path
-        user_data: "{{ lookup('file', user_data_path) }}"
+        userdata: "{{ lookup('file', user_data_path) }}"
         meta:
           build_config: core
         wait: yes
-        wait_timeout: 900
-        auto_increment: no
+        timeout: 900
       register: result
       with_items: "{{ regions_shuf + fallback_regions_shuff }}"
       when:
@@ -62,28 +56,7 @@
 
     - name: Extract instance boot result from loop results array
       set_fact:
-        rax: "{{ (result |json_query('results[?changed]'))[0] }}"
-
-    - name: Instance exists but wasn't created succesfully
-      fail:
-        msg: |
-          This state can occur when an instance fails to build in time.
-          The api confirms that the existence exists, but it didn't go
-          into the active state within the timeout.
-
-          This state can also occur when trying to boot an instance with the
-          same name as an existing instance. In that case the rax module
-          sees that the instance exists but it didn't create it. It's important
-          to fail in that case so that a job doesn't run on a dirty node.
-      when:
-        - rax.success|length < count
-        - rax.instances|length == count
-
-    - name: Fail if the required number of instances aren't available
-      fail:
-        msg: "At least one public cloud instance failed to start :("
-      when:
-        - rax.success|length < count
+        instance: "{{ (result |json_query('results[?changed]'))[0] }}"
 
     - name: Create inventory directory
       file:
@@ -97,9 +70,7 @@
           hosts
 
           [hosts]
-          {% for instance in rax.success %}
-          {{instance.name}} ansible_host={{instance.accessIPv4}} ansible_user=root rax_region={{rax.item}}
-          {% endfor %}
+          {{instance.server.name}} ansible_host={{instance.server.accessIPv4}} ansible_user=root rax_region={{instance.server.region}}
         dest: '{{ inventory_path }}/hosts'
 
     - name: Show generated inventory
@@ -109,8 +80,7 @@
     - name: Wait for SSH to be available on all hosts
       wait_for:
         port: 22
-        host: "{{ item.accessIPv4 }}"
-      with_items: "{{ rax.success }}"
+        host: "{{ instance.server.accessIPv4 }}"
 
     - name: Wait for startup tasks to finish
       pause:

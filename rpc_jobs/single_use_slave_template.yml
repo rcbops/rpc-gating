@@ -38,8 +38,7 @@
           }
 
           stage("Upload"){
-            // upload the artifact to cloudfiles
-            pubcloud.uploadToCloudFiles(
+            pubcloud.uploadToSwift(
               container: "jenkins_logs",
             )
           }
