@@ -95,14 +95,14 @@ class Cleanup:
     def cache_servers(self):
         self.servers = self.cs.servers.list()
         self.servers_by_region[self.region] = self.servers
-        self.unprotected_servers = (
+        self.unprotected_servers = [
             server for server in self.servers
             if not re.match(self.protected_prefix, server.name)
-        )
+        ]
 
     def get_servers_from_all_regions(self):
         # flatten servers by region into list
-        return (s for sl in self.servers_by_region.values() for s in sl)
+        return [s for sl in self.servers_by_region.values() for s in sl]
 
     @log
     def cleanup_instances(self):
@@ -136,9 +136,9 @@ class Cleanup:
                     # block
                     objs._load_all()
                     setattr(self, mtype, objs)
-            self.server_names = (
+            self.server_names = [
                 s.name for s in self.get_servers_from_all_regions()
-            )
+            ]
         except libcloud.common.exceptions.BaseHTTPError as e:
             print(
                 "Failed to query MaaS for entities"
@@ -188,7 +188,7 @@ class Cleanup:
 
             # sort agents with most recently connected agent last
             agents = sorted(
-                (a for a in self.agents if a.id == entity.agent_id),
+                [a for a in self.agents if a.id == entity.agent_id],
                 key=attrgetter('last_connected')
             )
             if agents:
