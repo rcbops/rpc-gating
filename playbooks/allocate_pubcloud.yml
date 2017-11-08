@@ -44,6 +44,7 @@
         image: "{{ image }}"
         key_name: "{{ keyname }}"
         userdata: "{{ lookup('file', user_data_path) }}"
+        config_drive: yes
         meta:
           build_config: core
         wait: yes
