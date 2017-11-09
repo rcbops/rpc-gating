@@ -20,13 +20,16 @@ install(){
   pip install -c constraints.txt -r test-requirements.txt >/dev/null
 }
 
+create_jjb_ini(){
+  # work around for ip6 issues in docker image used for gating UG-652
+  echo -e "[jenkins]\nurl=http://127.0.0.1:8080" > lint_jjb.ini
+}
+
 check_jjb(){
   which jenkins-jobs >/dev/null \
     || { echo "jenkins-jobs unavailble, please install jenkins-job-builder from pip"
          return
        }
-  # work around for ip6 issues in docker image used for gating UG-652
-  echo -e "[jenkins]\nurl=http://127.0.0.1:8080" > lint_jjb.ini
   jenkins-jobs --conf lint_jjb.ini test -r rpc_jobs >/dev/null \
     && echo "JJB Syntax ok" \
     || { echo "JJB Syntax fail"; rc=1; }
@@ -116,8 +119,49 @@ check_webhooktranslator(){
     popd
 }
 
+check_jenkins_name_lengths(){
+  # The interpreter line in virtualenv scripts will look like this:
+  #
+  # #!/var/lib/jenkins/workspace/OnMetal-Multi-Node-AIO_newton141-trusty-leapfrogupgrade-small-periodic@3/.venv/bin/python
+  #
+  # We can break that down as follows:
+  #
+  # #!/var/lib/jenkins/workspace/ => 30 chars
+  # @3/.venv/bin/python           => 20 chars
+  #
+  # Since the interpreter line cannot exceed 127 chars, that means job names cannot be more than 77 chars.
+
+  max_chars=77
+  too_long=0
+
+  which jenkins-jobs >/dev/null \
+    || { echo "jenkins-jobs unavailble, please install jenkins-job-builder from pip"
+         return
+       }
+  jobs=$(jenkins-jobs --conf lint_jjb.ini test -r rpc_jobs 2>&1 | grep "INFO:jenkins_jobs.builder:Job name:" | awk '{print $NF}')
+
+  echo -e "\n\n** Scanning for job names for those that are longer than ${max_chars} characters ... **"
+
+  if [[ -z $jobs ]]; then
+    echo -e "** We expected at least one job to exist, but found none. Please investigate! **\n\n"
+    rc=1
+  else
+    for job in $jobs; do
+      length=${#job}
+      if [[ $length -gt $max_chars ]]; then
+        echo -e "${length}\t${job}"
+        rc=1
+        too_long=$((${too_long}+1))
+      fi
+    done
+    echo -e "** ${too_long} problematic job name(s) found! **\n\n"
+  fi
+}
+
 [[ ${RPC_GATING_LINT_USE_VENV:-yes} == yes ]] && install
+create_jjb_ini
 check_jjb
+check_jenkins_name_lengths
 check_groovy
 check_ansible
 check_bash
