@@ -12,7 +12,6 @@
       - mitaka:
           branch: mitaka
           branches: "mitaka.*"
-          UPGRADE_FROM_REF: "liberty"
       - newton:
           branch: newton
           branches: "newton.*"
@@ -32,13 +31,6 @@
             Tempest Tests,
             Prepare Kibana Selenium,
             Kibana Tests
-      - majorupgrade:
-          ACTION_STAGES: >-
-            Install Tempest,
-            Tempest Tests,
-            Prepare Kibana Selenium,
-            Kibana Tests,
-            Major Upgrade
       # A minimum set of stages is chosen deliberately
       # to test the convergance of the upgrade itself
       # without additional complexity. Once this is
@@ -91,17 +83,6 @@
       # of time they take to execute.
       - action: minorupgrade
         ztrigger: pr
-      # Major upgrades are only run for mitaka
-      # for the moment as no other major upgrade
-      # testing or tooling has been implemented.
-      - series: kilo
-        action: majorupgrade
-      - series: liberty
-        action: majorupgrade
-      - series: newton
-        action: majorupgrade
-      - series: master
-        action: majorupgrade
       # Xenial builds are run for newton and above
       # as it is not supported distro before newton.
       - series: kilo
