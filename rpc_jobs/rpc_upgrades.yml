@@ -20,6 +20,7 @@
       - "r12.2.2_to_newton_leap"
       - "r12.1.2_to_newton_leap"
       - "kilo_to_newton_leap" 
+      - "r14.4.1_to_newton_minor"
     jira_project_key: "RLM"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
