@@ -1,0 +1,97 @@
+### tests rpc-upgrades to <scenario> leaped from <action>
+- project:
+    name: "rpc-upgrades-aio-newton-head"
+    repo_name: "rpc-upgrades"
+    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    series: "master"
+    branches:
+     - "master"
+    image:
+      - aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "liberty_to_newton_leap"
+      - "r12.2.8_to_newton_leap"
+#      - "r12.2.5_to_newton_leap"
+#      - "r12.2.2_to_newton_leap"
+#      - "r12.1.2_to_newton_leap"
+#      - "kilo_to_newton_leap" 
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-newton-release"
+    repo_name: "rpc-upgrades"
+    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    series: "master"
+    branches:
+     - "master"
+    image:
+      - aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "liberty_to_r14.4.1_leap"
+#      - "r12.2.8_to_r14.4.1_leap"
+#      - "r12.2.5_to_r14.4.1_leap"
+#      - "r12.2.2_to_r14.4.1_leap"
+#      - "r12.1.2_to_r14.4.1_leap"
+#      - "kilo_to_r14.4.1_leap"
+      - "r11.1.6_to_r14.4.1_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-mnaio-newton-head"
+    repo_name: "rpc-upgrades"
+    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    image:
+      - mnaio:
+          FLAVOR: "onmetal-io1"
+          IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+    scenario:
+      - "swift"
+    action:
+      - "liberty_to_newton_leap"
+#      - "r12.2.8_to_newton_leap"
+#      - "r12.2.5_to_newton_leap"
+#      - "r12.2.2_to_newton_leap"
+#      - "r12.1.2_to_newton_leap"
+#      - "kilo_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+#- project:
+#    name: "rpc-upgrades-mnaio-newton-release"
+#    repo_name: "rpc-upgrades"
+#    repo_url: "http://github.com/rcbops/rpc-upgrades"
+#    branches:
+#     - "master"
+#    image:
+#      - mnaio:
+#          FLAVOR: "onmetal-io1"
+#          IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+#    scenario:
+#      - "swift"
+#    action:
+#      - "liberty_to_r14.4.1_leap"
+#      - "r12.2.8_to_r14.4.1_leap"
+#      - "r12.2.5_to_r14.4.1_leap"
+#      - "r12.2.2_to_r14.4.1_leap"
+#      - "r12.1.2_to_r14.4.1_leap"
+#      - "kilo_to_r14.4.1_leap"
+#    jira_project_key: "RLM"
+#    jobs:
+#      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
