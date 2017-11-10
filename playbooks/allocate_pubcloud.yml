@@ -52,7 +52,7 @@
       register: result
       with_items: "{{ regions_shuf + fallback_regions_shuff }}"
       when:
-        - result is undefined or result.server.status != 'ACTIVE'
+        - result is undefined or 'server' not in result or result.server.status != 'ACTIVE'
       failed_when: false
 
     - name: Extract instance boot result from loop results array
