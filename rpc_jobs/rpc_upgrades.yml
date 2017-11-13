@@ -15,10 +15,10 @@
     action:
       - "liberty_to_newton_leap"
       - "r12.2.8_to_newton_leap"
-#      - "r12.2.5_to_newton_leap"
-#      - "r12.2.2_to_newton_leap"
-#      - "r12.1.2_to_newton_leap"
-#      - "kilo_to_newton_leap" 
+      - "r12.2.5_to_newton_leap"
+      - "r12.2.2_to_newton_leap"
+      - "r12.1.2_to_newton_leap"
+      - "kilo_to_newton_leap" 
     jira_project_key: "RLM"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
@@ -39,12 +39,11 @@
       - "swift"
     action:
       - "liberty_to_r14.4.1_leap"
-#      - "r12.2.8_to_r14.4.1_leap"
-#      - "r12.2.5_to_r14.4.1_leap"
-#      - "r12.2.2_to_r14.4.1_leap"
-#      - "r12.1.2_to_r14.4.1_leap"
-#      - "kilo_to_r14.4.1_leap"
-      - "r11.1.6_to_r14.4.1_leap"
+      - "r12.2.8_to_r14.4.1_leap"
+      - "r12.2.5_to_r14.4.1_leap"
+      - "r12.2.2_to_r14.4.1_leap"
+      - "r12.1.2_to_r14.4.1_leap"
+      - "kilo_to_r14.4.1_leap"
     jira_project_key: "RLM"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
