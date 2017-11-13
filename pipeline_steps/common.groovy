@@ -684,4 +684,102 @@ void internal_slave(body){
   use_node("CentOS", body)
 }
 
+// Build an array suitable for passing to withCredentials
+// from a space or comma separated list of credential IDs.
+@NonCPS
+List build_creds_array(String list_of_cred_ids){
+    print("Building credentials array from the following list of IDs: ${list_of_cred_ids}")
+    Map creds_bundles = [
+      "cloud_creds": ['dev_pubcloud_username',
+                      'dev_pubcloud_api_key',
+                      'dev_pubcloud_tenant_id'],
+      "rpc_repo": ['RPC_REPO_IP',
+                   'RPC_REPO_SSH_USERNAME_TEXT',
+                   'RPC_REPO_SSH_USER_PRIVATE_KEY_FILE',
+                   'RPC_REPO_SSH_HOST_PUBLIC_KEY_FILE',
+                   'RPC_REPO_GPG_SECRET_KEY_FILE',
+                   'RPC_REPO_GPG_PUBLIC_KEY_FILE'
+                  ]
+    ]
+    // only needs to contain creds that should be exposed.
+    // every cred added should also be documented in RE for Projects
+    Map available_creds = [
+      "dev_pubcloud_username": string(
+        credentialsId: "dev_pubcloud_username",
+        variable: "PUBCLOUD_USERNAME"
+      ),
+      "dev_pubcloud_api_key": string(
+        credentialsId: "dev_pubcloud_api_key",
+        variable: "PUBCLOUD_API_KEY"
+      ),
+      "dev_pubcloud_tenant_id": string(
+        credentialsId: "dev_pubcloud_tenant_id",
+        variable: "PUBCLOUD_TENANT_ID"
+      ),
+      "id_rsa_cloud10_jenkins_file": file(
+        credentialsId: 'id_rsa_cloud10_jenkins_file',
+        variable: 'JENKINS_SSH_PRIVKEY'
+      ),
+      "RPC_REPO_IP": string(
+        credentialsId: "RPC_REPO_IP",
+        variable: "REPO_HOST"
+      ),
+      "RPC_REPO_SSH_USERNAME_TEXT": string(
+        credentialsId: "RPC_REPO_SSH_USERNAME_TEXT",
+        variable: "REPO_USER"
+      ),
+      "RPC_REPO_SSH_USER_PRIVATE_KEY_FILE": file(
+        credentialsId: "RPC_REPO_SSH_USER_PRIVATE_KEY_FILE",
+        variable: "REPO_USER_KEY"
+      ),
+      "RPC_REPO_SSH_HOST_PUBLIC_KEY_FILE": file(
+        credentialsId: "RPC_REPO_SSH_HOST_PUBLIC_KEY_FILE",
+        variable: "REPO_HOST_PUBKEY"
+      ),
+      "RPC_REPO_GPG_SECRET_KEY_FILE": file(
+        credentialsId: "RPC_REPO_GPG_SECRET_KEY_FILE",
+        variable: "GPG_PRIVATE"
+      ),
+      "RPC_REPO_GPG_PUBLIC_KEY_FILE": file(
+        credentialsId: "RPC_REPO_GPG_PUBLIC_KEY_FILE",
+        variable: "GPG_PUBLIC"
+      )
+    ]
+
+
+    // split string into list, reject empty items. 
+    List requested_creds = list_of_cred_ids.split(/[, ]+/).findAll({
+      it.size() > 0
+    })
+
+    // check for invalid values
+    List invalid = requested_creds - (creds_bundles.keySet()
+                                      + available_creds.keySet())
+    if (invalid != []){
+      throw new Exception("Attempt to use unknown credential(s): ${invalid}")
+    }
+    // expand bundles into sublists, then flatten the list
+    List requested_bundle_expanded = requested_creds.collect({
+      creds_bundles[it] ?: it
+    }).flatten()
+    print ("Expanded Credentials: ${requested_bundle_expanded}")
+    // convert list of ids to list of objects
+    List creds_array = requested_bundle_expanded.collect({
+      available_creds[it]
+    })
+    print ("Final Credentials Array: ${creds_array}")
+    return creds_array
+}
+
+// Supply credentials to a closure. Similar to withCredentials except
+// that this function takes a string containing a list of credential IDs
+// instead of an array of credentials objects. This is so that a string can
+// be used in a JJB Project to request credentials.
+void withRequestedCredentials(String list_of_cred_ids, Closure body){
+  List creds = build_creds_array(list_of_cred_ids)
+  withCredentials(creds){
+    body()
+  }
+}
+
 return this
