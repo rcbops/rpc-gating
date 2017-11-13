@@ -78,8 +78,8 @@
       env.RE_JOB_TRIGGER = "PR"
       env.RE_JOB_REPO_NAME = "{repo_name}"
 
-      // Apply a global three hour timeout
-      timeout(time: 3, unit: 'HOURS'){{
+      // Apply a global six hour timeout
+      timeout(time: 6, unit: 'HOURS'){{
         common.shared_slave() {{
           pubcloud.runonpubcloud {{
 
