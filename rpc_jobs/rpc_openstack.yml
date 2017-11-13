@@ -15,8 +15,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -39,8 +37,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -60,8 +56,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -81,8 +75,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -101,8 +93,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -120,8 +110,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -141,8 +129,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -161,8 +147,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -181,8 +165,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -201,7 +183,5 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "IAD"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'

@@ -4,8 +4,8 @@
     IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     FLAVOR: "performance2-15"
     # Available Regions: IAD DFW ORD HKG SYD
-    REGIONS: "DFW"
-    FALLBACK_REGIONS: ""
+    REGIONS: "DFW ORD"
+    FALLBACK_REGIONS: "IAD"
 
     # rpc_params
     DEPLOY_SWIFT: "yes"

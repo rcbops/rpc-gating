@@ -10,7 +10,6 @@
       - aio:
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-          REGIONS: "DFW ORD"
     scenario:
       - "swift"
     action:
@@ -36,7 +35,6 @@
       - aio:
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-          REGIONS: "DFW ORD"
     scenario:
       - "swift"
     action:
@@ -62,6 +60,7 @@
           FLAVOR: "onmetal-io1"
           IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
           REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
     scenario:
       - "swift"
     action:
