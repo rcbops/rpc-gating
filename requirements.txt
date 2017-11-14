@@ -8,6 +8,7 @@ jenkins-job-builder
 jenkinsapi
 jira
 jmespath
+openstacksdk
 packaging
 python-dateutil
 python-subunit
