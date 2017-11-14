@@ -28,7 +28,23 @@
               ]
             ]
           )
-        }
+        },
+        "Artefact Publication": {
+          build(
+            job: "RE-unit-test-artefact-publication",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Single Use Slave": {
+          build(
+            job: "RE-unit-test-single-use-slave",
             wait: true,
             parameters: [
               [
@@ -40,3 +56,5 @@
           )
         }
       ]
+
+#TODO: Jira Issue Manipulation, Validation of Published Artefacts.
