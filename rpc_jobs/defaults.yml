@@ -17,6 +17,7 @@
     TRIGGER_USER_VARS: ""
     SERIES_USER_VARS: ""
     UPGRADE_FROM_REF: ""
+    credentials: ""
     # jenkins_node_params
     # See also playbooks/setup_jenkins_slave.yml where these values are
     # defaulted for jobs that don't include the relevant params.

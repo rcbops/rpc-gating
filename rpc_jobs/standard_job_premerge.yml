@@ -78,6 +78,8 @@
       env.RE_JOB_TRIGGER = "PR"
       env.RE_JOB_REPO_NAME = "{repo_name}"
 
+      String credentials = "{credentials}"
+
       // Apply a global six hour timeout
       timeout(time: 6, unit: 'HOURS'){{
         common.shared_slave() {{
@@ -94,7 +96,7 @@
             try {{
               ansiColor('xterm') {{
                 dir("${{env.WORKSPACE}}/${{env.ghprbGhRepository}}") {{
-                  withCredentials(common.get_cloud_creds()) {{
+                  withRequestedCredentials(credentials) {{
 
                     stage('Checkout') {{
                       print("Triggered by PR: ${{env.ghprbPullLink}}")
