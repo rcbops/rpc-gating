@@ -60,6 +60,8 @@
           name: BRANCH
           default: "{branch}"
           description: Branch of the repo under test
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
     triggers:
       - timed: "@daily"
 
@@ -86,81 +88,77 @@
       // to create failure tickets in the correct project.
       JIRA_PROJECT_KEY = "{jira_project_key}"
 
-      timeout(time: 6, unit: 'HOURS'){{
-        common.shared_slave() {{
-          pubcloud.runonpubcloud {{
-            // Set the default environment variables used
-            // by the artifact and test result collection.
-            env.RE_HOOK_ARTIFACT_DIR="${{env.WORKSPACE}}/artifacts"
-            env.RE_HOOK_RESULT_DIR="${{env.WORKSPACE}}/results"
+      common.standard_job_slave(env.SLAVE_TYPE) {{
+        // Set the default environment variables used
+        // by the artifact and test result collection.
+        env.RE_HOOK_ARTIFACT_DIR="${{env.WORKSPACE}}/artifacts"
+        env.RE_HOOK_RESULT_DIR="${{env.WORKSPACE}}/results"
 
-            // Set the job result default
-            currentBuild.result="SUCCESS"
+        // Set the job result default
+        currentBuild.result="SUCCESS"
 
-            try {{
-              ansiColor('xterm') {{
-                common.withRequestedCredentials(credentials) {{
+        try {{
+          ansiColor('xterm') {{
+            common.withRequestedCredentials(credentials) {{
 
-                  stage('Checkout') {{
-                    common.clone_with_pr_refs(
-                      "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
-                      env.REPO_URL,
-                      env.BRANCH,
-                    )
-                  }} // stage
+              stage('Checkout') {{
+                common.clone_with_pr_refs(
+                  "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
+                  env.REPO_URL,
+                  env.BRANCH,
+                )
+              }} // stage
 
-                  stage('Execute Pre Script') {{
-                    // Retry the 'pre' stage 3 times. The 'pre' stage is considered
-                    // to be preparation for the test, so let's try and make sure
-                    // it has the best chance of success possible.
-                    retry(3) {{
-                      sh """#!/bin/bash -xeu
-                        cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                        if [[ -e gating/post_merge_test/pre ]]; then
-                          gating/post_merge_test/pre
-                        fi
-                      """
-                    }}
-                  }} // stage
+              stage('Execute Pre Script') {{
+                // Retry the 'pre' stage 3 times. The 'pre' stage is considered
+                // to be preparation for the test, so let's try and make sure
+                // it has the best chance of success possible.
+                retry(3) {{
+                  sh """#!/bin/bash -xeu
+                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                    if [[ -e gating/post_merge_test/pre ]]; then
+                      gating/post_merge_test/pre
+                    fi
+                  """
+                }}
+              }} // stage
 
-                  try{{
-                    stage('Execute Run Script') {{
-                      sh """#!/bin/bash -xeu
-                        cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                        gating/post_merge_test/run
-                      """
-                    }} // stage
-                  }} finally {{
-                    stage('Execute Post Script') {{
-                      // We do not want the 'post' execution to fail the test,
-                      // but we do want to know if it fails so we make it only
-                      // return status.
-                      post_result = sh(
-                        returnStatus: true,
-                        script: """#!/bin/bash -xeu
-                                   cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                                   if [[ -e gating/post_merge_test/post ]]; then
-                                     gating/post_merge_test/post
-                                   fi"""
-                      )
-                      if (post_result != 0) {{
-                        print("Post-Merge Test (post) failed with return code ${{post_result}}")
-                      }} // if
-                    }} // inner try
-                  }} // stage
-                }} // withCredentials
-              }} // ansiColor
-            }} catch (e) {{
-              print(e)
-              currentBuild.result="FAILURE"
-              common.create_jira_issue(JIRA_PROJECT_KEY,
-                                       env.BUILD_TAG,
-                                       env.BUILD_URL,
-                                       "Task")
-              throw e
-            }} finally {{
-              common.archive_artifacts()
-            }} // try
-          }} // pubcloud slave
-        }} // cit node
-      }} // timeout
+              try{{
+                stage('Execute Run Script') {{
+                  sh """#!/bin/bash -xeu
+                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                    gating/post_merge_test/run
+                  """
+                }} // stage
+              }} finally {{
+                stage('Execute Post Script') {{
+                  // We do not want the 'post' execution to fail the test,
+                  // but we do want to know if it fails so we make it only
+                  // return status.
+                  post_result = sh(
+                    returnStatus: true,
+                    script: """#!/bin/bash -xeu
+                               cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                               if [[ -e gating/post_merge_test/post ]]; then
+                                 gating/post_merge_test/post
+                               fi"""
+                  )
+                  if (post_result != 0) {{
+                    print("Post-Merge Test (post) failed with return code ${{post_result}}")
+                  }} // if
+                }} // inner try
+              }} // stage
+            }} // withCredentials
+          }} // ansiColor
+        }} catch (e) {{
+          print(e)
+          currentBuild.result="FAILURE"
+          common.create_jira_issue(JIRA_PROJECT_KEY,
+                                   env.BUILD_TAG,
+                                   env.BUILD_URL,
+                                   "Task")
+          throw e
+        }} finally {{
+          common.archive_artifacts()
+        }} // try
+      }}

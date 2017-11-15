@@ -682,6 +682,27 @@ void internal_slave(body){
   use_node("CentOS", body)
 }
 
+void standard_job_slave(String slave_type, Closure body){
+  timeout(time: 6, unit: 'HOURS'){
+    shared_slave(){
+      if (slave_type == "instance"){
+        pubcloud.runonpubcloud(){
+          body()
+        }
+      } else if (slave_type == "container"){
+        dir("rpc-gating"){
+          container = docker.build env.BUILD_TAG.toLowerCase()
+        }
+        container.inside {
+          body()
+        }
+      } else {
+        throw new Exception("slave_type '$slave_type' is not supported.")
+      }
+    }
+  }
+}
+
 // Build an array suitable for passing to withCredentials
 // from a space or comma separated list of credential IDs.
 @NonCPS
