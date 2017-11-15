@@ -99,51 +99,56 @@
 
             try {{
               ansiColor('xterm') {{
-                dir("${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}") {{
-                  common.withRequestedCredentials(credentials) {{
+                common.withRequestedCredentials(credentials) {{
 
-                    stage('Checkout') {{
-                      common.clone_with_pr_refs(env.REPO_URL, env.BRANCH)
-                    }} // stage
+                  stage('Checkout') {{
+                    common.clone_with_pr_refs(
+                      "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
+                      env.REPO_URL,
+                      env.BRANCH,
+                    )
+                  }} // stage
 
-                    stage('Execute Pre Script') {{
-                      // Retry the 'pre' stage 3 times. The 'pre' stage is considered
-                      // to be preparation for the test, so let's try and make sure
-                      // it has the best chance of success possible.
-                      retry(3) {{
-                        sh """#!/bin/bash -xeu
-                          if [[ -e gating/post_merge_test/pre ]]; then
-                            gating/post_merge_test/pre
-                          fi
-                        """
-                      }}
-                    }} // stage
+                  stage('Execute Pre Script') {{
+                    // Retry the 'pre' stage 3 times. The 'pre' stage is considered
+                    // to be preparation for the test, so let's try and make sure
+                    // it has the best chance of success possible.
+                    retry(3) {{
+                      sh """#!/bin/bash -xeu
+                        cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                        if [[ -e gating/post_merge_test/pre ]]; then
+                          gating/post_merge_test/pre
+                        fi
+                      """
+                    }}
+                  }} // stage
 
-                    try{{
-                      stage('Execute Run Script') {{
-                        sh """#!/bin/bash -xeu
-                          gating/post_merge_test/run
-                        """
-                      }} // stage
-                    }} finally {{
-                      stage('Execute Post Script') {{
-                        // We do not want the 'post' execution to fail the test,
-                        // but we do want to know if it fails so we make it only
-                        // return status.
-                        post_result = sh(
-                          returnStatus: true,
-                          script: """#!/bin/bash -xeu
-                                     if [[ -e gating/post_merge_test/post ]]; then
-                                       gating/post_merge_test/post
-                                     fi"""
-                        )
-                        if (post_result != 0) {{
-                          print("Post-Merge Test (post) failed with return code ${{post_result}}")
-                        }} // if
-                      }} // inner try
+                  try{{
+                    stage('Execute Run Script') {{
+                      sh """#!/bin/bash -xeu
+                        cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                        gating/post_merge_test/run
+                      """
                     }} // stage
-                  }} // withCredentials
-                }} // dir
+                  }} finally {{
+                    stage('Execute Post Script') {{
+                      // We do not want the 'post' execution to fail the test,
+                      // but we do want to know if it fails so we make it only
+                      // return status.
+                      post_result = sh(
+                        returnStatus: true,
+                        script: """#!/bin/bash -xeu
+                                   cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                                   if [[ -e gating/post_merge_test/post ]]; then
+                                     gating/post_merge_test/post
+                                   fi"""
+                      )
+                      if (post_result != 0) {{
+                        print("Post-Merge Test (post) failed with return code ${{post_result}}")
+                      }} // if
+                    }} // inner try
+                  }} // stage
+                }} // withCredentials
               }} // ansiColor
             }} catch (e) {{
               print(e)
