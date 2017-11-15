@@ -55,6 +55,10 @@
         - result is undefined or 'server' not in result or result.server.status != 'ACTIVE'
       failed_when: false
 
+    - name: Show results of instance provision task
+      debug:
+        var: result
+
     - name: Extract instance boot result from loop results array
       set_fact:
         instance: "{{ (result |json_query('results[?changed]'))[0] }}"
