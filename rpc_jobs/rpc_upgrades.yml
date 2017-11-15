@@ -7,9 +7,12 @@
     branches:
      - "master"
     image:
-      - aio:
+      - trusty_aio:
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - xenial_aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     scenario:
       - "swift"
     action:
@@ -24,6 +27,14 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    exclude:
+      - image: "xenial_aio"
+        action: "liberty_to_newton_leap"
+        action: "r12.2.8_to_newton_leap"
+        action: "r12.2.5_to_newton_leap"
+        action: "r12.2.2_to_newton_leap"
+        action: "r12.1.2_to_newton_leap"
+        action: "kilo_to_newton_leap"
 
 - project:
     name: "rpc-upgrades-aio-newton-release"

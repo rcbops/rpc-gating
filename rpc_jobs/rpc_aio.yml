@@ -31,17 +31,6 @@
             Tempest Tests,
             Prepare Kibana Selenium,
             Kibana Tests
-      # A minimum set of stages is chosen deliberately
-      # to test the convergance of the upgrade itself
-      # without additional complexity. Once this is
-      # working well, additional stages may be added.
-      - minorupgrade:
-          ACTION_STAGES: >-
-            Minor Upgrade
-          # NOTE: Once the newton stabilization branch has been created
-          #       (newton-14.2 or similar), we'll need to find a way to
-          #       set this differently depending on the newton series.
-          UPGRADE_FROM_REF: "r14.1.0"
     scenario:
       - swift
       - ceph:
@@ -66,23 +55,6 @@
           branches: "do_not_build_on_pr"
           NUM_TO_KEEP: 10
     exclude:
-      # Minor upgrades are only being executed
-      # for r14.1.0->newton for now until
-      # the minor upgrade testing process is
-      # stabilised.
-      - series: kilo
-        action: minorupgrade
-      - series: liberty
-        action: minorupgrade
-      - series: mitaka
-        action: minorupgrade
-      - series: master
-        action: minorupgrade
-      # Minorupgrades are only being executed
-      # as periodics for now due to the length
-      # of time they take to execute.
-      - action: minorupgrade
-        ztrigger: pr
       # Xenial builds are run for newton and above
       # as it is not supported distro before newton.
       - series: kilo
@@ -103,12 +75,6 @@
       # consume the cluster, not deploy it. At that
       # time the scenario can be added back again.
       - series: newton
-        scenario: ceph
-      # Ceph builds are not tested for minor upgrades
-      # at this time due to the minor upgrades only being
-      # targeted at newton or above, which do not support
-      # the ceph scenario.
-      - action: minorupgrade
         scenario: ceph
       # Ceph builds are not run for Xenial at this time
       # as ceph cluster deployment is not supported for
@@ -254,7 +220,6 @@
               Tempest Tests
               Prepare Kibana Selenium
               Kibana Tests
-              Minor Upgrade
               Major Upgrade
               Leapfrog Upgrade
               Pause (use to hold instance for investigation before cleanup)
@@ -328,9 +293,7 @@
                   ]
                 aio_prepare.prepare()
                 deploy.deploy_sh(environment_vars: environment_vars)
-                if (env.STAGES.contains("Minor Upgrade")) {{
-                  deploy.upgrade_minor(environment_vars: environment_vars)
-                }} else if (env.STAGES.contains("Major Upgrade")) {{
+                if (env.STAGES.contains("Major Upgrade")) {{
                   deploy.upgrade_major(environment_vars: environment_vars)
                 }} else if (env.STAGES.contains("Leapfrog Upgrade")) {{
                   deploy.upgrade_leapfrog(environment_vars: environment_vars)
