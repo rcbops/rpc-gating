@@ -70,10 +70,6 @@ def upgrade(String stage_name, String upgrade_script, List env_vars,
   ) // conditionalStage
 }
 
-def upgrade_minor(Map args) {
-  upgrade("Minor Upgrade", "deploy.sh", args.environment_vars)
-}
-
 def upgrade_major(Map args) {
   // Required to run first for major upgrade resource generation
   tempest.tempest_install()

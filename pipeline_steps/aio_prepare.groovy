@@ -2,8 +2,7 @@ def prepare(){
   common.conditionalStage(
     stage_name: "Prepare Deployment",
     stage: {
-      if (env.STAGES.contains("Minor Upgrade")
-          || env.STAGES.contains("Major Upgrade")
+      if (env.STAGES.contains("Major Upgrade")
           || env.STAGES.contains("Leapfrog Upgrade")) {
         common.prepareRpcGit(env.UPGRADE_FROM_REF)
       } else {
