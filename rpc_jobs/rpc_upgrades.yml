@@ -73,6 +73,7 @@
       - "r12.2.2_to_r14.4.1_leap"
       - "r12.1.2_to_r14.4.1_leap"
       - "kilo_to_r14.4.1_leap"
+      - "kilo_to_r14.2.0_leap"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
