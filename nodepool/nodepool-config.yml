@@ -1,0 +1,89 @@
+---
+# Documentation reference:
+# https://docs.openstack.org/infra/nodepool/feature/zuulv3/configuration.html
+
+images-dir: /opt/nodepool/images
+
+zookeeper-servers:
+  - host: localhost
+    port: 2181
+
+labels:
+  - name: ubuntu-xenial
+    # TODO(odyssey4me):
+    # This is a temporarily low setting as the nodes will
+    # not be used until the jenkins integration is complete.
+    # It is here purely to validate that everything is
+    # working as it should be.
+    min-ready: 3
+    # TODO(odyssey4me):
+    # This is purely here for test purposes to make sure any
+    # existing nodes that haven't been used will get recreated
+    # every hour.
+    max-ready-age: 3600
+
+providers:
+  - name: pubcloud-iad
+    region-name: 'IAD'
+    cloud: public_cloud
+    api-timeout: 60
+    boot-timeout: 120
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    image-name-format: nodepool-{image_name}-{timestamp}
+    diskimages: &provider_diskimage_block
+      - name: ubuntu-xenial
+        config-drive: true
+    pools: &provider_pools_block
+      - name: main
+        max-servers: 2
+        availability-zones: []
+        labels:
+          - name: ubuntu-xenial
+            diskimage: ubuntu-xenial
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
+
+  - name: pubcloud-dfw
+    region-name: 'DFW'
+    cloud: public_cloud
+    api-timeout: 60
+    boot-timeout: 120
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    image-name-format: nodepool-{image_name}-{timestamp}
+    diskimages: *provider_diskimage_block
+    pools: *provider_pools_block
+
+  - name: pubcloud-ord
+    region-name: 'ORD'
+    cloud: public_cloud
+    api-timeout: 60
+    boot-timeout: 120
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    image-name-format: nodepool-{image_name}-{timestamp}
+    diskimages: *provider_diskimage_block
+    pools: *provider_pools_block
+
+diskimages:
+  - name: ubuntu-xenial
+    # Build fresh images every 24 hrs.
+    # This ensures that any merged config changes
+    # to the diskimage-build scripts or diskimage
+    # config take effect within a reasonable time.
+    rebuild-age: 86400
+    formats:
+      - vhd
+    elements:
+      - ubuntu-minimal
+      - growroot
+      - openssh-server
+      - simple-init
+      - vm
+    release: xenial
+    env-vars:
+      TMPDIR: /opt/nodepool/dib_tmp
+      DIB_CHECKSUM: '1'
+      DIB_IMAGE_CACHE: /opt/nodepool/dib_cache
+      DIB_GRUB_TIMEOUT: '0'
+      DIB_DISTRIBUTION_MIRROR: 'http://mirror.rackspace.com/ubuntu'
+      DIB_DEBIAN_COMPONENTS: 'main,universe'

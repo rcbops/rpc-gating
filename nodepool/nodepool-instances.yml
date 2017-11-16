@@ -1,0 +1,21 @@
+---
+# We set out a cluster of three zookeeper instances
+# to make sure that there is an odd number for quorum
+# management, and more than one to ensure that when
+# it gets upgraded that there is no data loss.
+instance_list:
+  - name: nodepool-server-iad-1
+    flavor: general1-8
+    region: IAD
+    metadata:
+      group: "nodepool_server"
+  - name: nodepool-server-iad-2
+    flavor: general1-8
+    region: IAD
+    metadata:
+      group: "nodepool_server"
+  - name: nodepool-server-iad-3
+    flavor: general1-8
+    region: IAD
+    metadata:
+      group: "nodepool_server"

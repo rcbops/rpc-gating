@@ -1,0 +1,48 @@
+---
+# the location of the nodepool config file source
+nodepool_file_nodepool_yaml_src: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/nodepool/nodepool-config.yml"
+
+# where to clone the nodepool git repo to on the target
+nodepool_git_dest: "{{ ansible_user_dir }}/src/git.openstack.org/openstack-infra/nodepool"
+
+# which version of nodepool to clone
+nodepool_git_version: d20a13da9dba90e357cd91a9aa58fd8c6b5f2e2d # HEAD of 'feature/zuulv3' as of 7 Nov 2017
+
+# where to clone the diskimage-builder git repo to on the target
+diskimage_builder_git_dest: "{{ ansible_user_dir }}/src/git.openstack.org/openstack/diskimage-builder"
+
+# which version of diskimage-builder to clone
+diskimage_builder_git_version: bc6c928bb960729e8df60562adafe2d50a1f55ec # HEAD of 'master' as of 7 Nov 2017
+
+# enable installation of zookeeper from apt packages
+zookeeper_debian_apt_install: yes
+
+# set the host group for zookeeper's cluster
+zookeeper_hosts: "{{ groups['nodepool_server'] }}"
+
+# log rotation
+logrotate_configs:
+  - name: nodepool-builder
+    log: /var/log/nodepool/builder-debug.log /var/log/nodepool/nodepool-builder.log
+    options:
+      - compress
+      - missingok
+      - rotate 7
+      - daily
+      - notifempty
+  - name: nodepool-launcher
+    log: /var/log/nodepool/launcher-debug.log /var/log/nodepool/nodepool-launcher.log
+    options:
+      - compress
+      - missingok
+      - rotate 7
+      - daily
+      - notifempty
+  - name: zookeeper
+    log: /var/log/zookeeper/zookeeper.log
+    options:
+      - compress
+      - missingok
+      - rotate 7
+      - daily
+      - notifempty

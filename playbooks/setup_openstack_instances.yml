@@ -1,0 +1,73 @@
+---
+# This playbook requires a data structure like this
+# in order to execute:
+#
+# instance_list:
+#   - name: instance1
+#     flavor: general1-1
+#     region: DFW
+#     metadata:
+#       group: mygroup
+
+- name: Create/delete OpenStack Instances
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars:
+    default_metadata:
+      # NOTE(odyssey4me):
+      # There is a build_config option to have MaaS setup
+      # by the public cloud automation when the instance
+      # is being built, but that option will not be available
+      # in Phobos, so we'll rather do it using our MaaS
+      # deployment tooling.
+      build_config: core
+  tasks:
+    - name: Unlock instances scheduled to be changed
+      os_server_actions:
+        action: unlock
+        server: "{{ instance['name'] | lower }}"
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ instance['region'] | default('IAD') }}"
+        wait: yes
+        timeout: 900
+      when:
+        - "instance['name'] in groups['all']"
+      with_items: "{{ instance_list | default([]) }}"
+      loop_control:
+        loop_var: instance
+
+    - name: Create/delete OpenStack Instances
+      os_server:
+        # We use lower case for the instance name
+        # so that the server name matches the DNS
+        # name when the server comes up.
+        name: "{{ instance['name'] | lower }}"
+        flavor: "{{ instance['flavor'] | default('general1-8') }}"
+        state: "{{ instance['state'] | default('present') }}"
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ instance['region'] | default('IAD') }}"
+        image: "{{ instance['image'] | default('Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)') }}"
+        key_name: "{{ keyname | default('jenkins') }}"
+        userdata: "{{ instance['userdata'] | default(omit) }}"
+        config_drive: yes
+        meta: "{{ default_metadata | combine(instance['metadata'] | default({})) }}"
+        wait: yes
+        timeout: 900
+      with_items: "{{ instance_list | default([]) }}"
+      loop_control:
+        loop_var: instance
+
+    - name: Lock instances to prevent changes
+      os_server_actions:
+        action: lock
+        server: "{{ instance['name'] | lower }}"
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ instance['region'] | default('IAD') }}"
+        wait: yes
+        timeout: 900
+      when:
+        - "instance['state'] | default('present') != 'absent'"
+      with_items: "{{ instance_list | default([]) }}"
+      loop_control:
+        loop_var: instance
