@@ -45,6 +45,7 @@ def create_node(jenkins, host_ip, name, credential_description, executors,
 
 
 def delete_node(jenkins, name):
+    print("Removing Slave from Jenkins: {}".format(name))
     jenkins.delete_node(nodename=name)
 
 
