@@ -1,11 +1,27 @@
 ### tests rpc-upgrades to <scenario> leaped from <action>
 - project:
-    name: "rpc-upgrades-aio-newton-head"
+    name: "rpc-upgrades-aio-newton-head-pr"
     repo_name: "rpc-upgrades"
     repo_url: "http://github.com/rcbops/rpc-upgrades"
-    series: "master"
     branches:
      - "master"
+    image:
+      - trusty_aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "liberty_to_newton_leap"
+      - "kilo_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-pm"
+    repo_name: "rpc-upgrades"
+    repo_url: "http://github.com/rcbops/rpc-upgrades"
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -25,7 +41,6 @@
       - "r14.4.1_to_newton_minor"
     jira_project_key: "RLM"
     jobs:
-      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     exclude:
       - image: "xenial_aio"
@@ -42,14 +57,11 @@
         action: "kilo_to_newton_leap"
 
 - project:
-    name: "rpc-upgrades-aio-newton-release"
+    name: "rpc-upgrades-aio-newton-release-pm"
     repo_name: "rpc-upgrades"
     repo_url: "http://github.com/rcbops/rpc-upgrades"
-    series: "master"
-    branches:
-     - "master"
     image:
-      - aio:
+      - trusty_aio:
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
     scenario:
@@ -63,19 +75,17 @@
       - "kilo_to_r14.4.1_leap"
     jira_project_key: "RLM"
     jobs:
-      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-upgrades-mnaio-newton-head"
+    name: "rpc-upgrades-mnaio-newton-head-pm"
     repo_name: "rpc-upgrades"
     repo_url: "http://github.com/rcbops/rpc-upgrades"
-    branches:
-     - "master"
     image:
-      - mnaio:
+      # in mnaio builds, the OS equals the VMs OS
+      - trusty_mnaio:
           FLAVOR: "onmetal-io1"
-          IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
           REGIONS: "IAD"
           FALLBACK_REGIONS: ""
     scenario:
@@ -92,15 +102,14 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 #- project:
-#    name: "rpc-upgrades-mnaio-newton-release"
+#    name: "rpc-upgrades-mnaio-newton-release-pm"
 #    repo_name: "rpc-upgrades"
 #    repo_url: "http://github.com/rcbops/rpc-upgrades"
-#    branches:
-#     - "master"
 #    image:
-#      - mnaio:
+#      # in mnaio builds, the OS equals the VMs OS
+#      - trusty_mnaio:
 #          FLAVOR: "onmetal-io1"
-#          IMAGE: "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)"
+#          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
 #    scenario:
 #      - "swift"
 #    action:
