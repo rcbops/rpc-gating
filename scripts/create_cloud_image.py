@@ -16,10 +16,27 @@
 
 """Basic tool to save an image of a server an OpenStack Cloud."""
 
+from __future__ import print_function
+
 import argparse
 from time import sleep
 
 import openstack.connection
+
+
+def find_new_image(conn, current_ids, name):
+    print("Looking for images with name: {}".format(name))
+    for image in conn.image.images():
+        if image.name == name:
+            print("Found image matching {}".format(name))
+            if image.id not in current_ids:
+                print("Found new image matching {}".format(name))
+                return image
+            else:
+                print ("Skipping {name}/{id} as it predates the "
+                       "required image."
+                       .format(name=name, id=image.id))
+    raise Exception("Image {i} not found.".format(i=name))
 
 
 def main():
@@ -61,6 +78,9 @@ def main():
 
     args = parser.parse_args()
 
+    print("Creating image: {name} from Instance: {instance}"
+          .format(name=args.imagename, instance=args.serveruuid))
+
     conn = openstack.connection.from_config(
         cloud_name=args.cloudname, options=args,
     )
@@ -70,25 +90,47 @@ def main():
         if image.name == args.imagename
     ]
     current_ids = [image.id for image in current_images]
+    print("Existing image IDs: {}".format(current_ids))
 
     conn.compute.create_server_image(
         server=args.serveruuid, name=args.imagename
     )
-
-    for image in conn.image.images():
-        if image.name == args.imagename and image.id not in current_ids:
-            saved_image = image
+    for _ in xrange(240):
+        try:
+            saved_image = find_new_image(conn, current_ids, args.imagename)
             break
+        except Exception:
+            sleep(60)
+    else:
+        raise Exception("Failed to get image after creating it: {i}"
+                        .format(i=args.imagename))
 
-    timeout = 900
-    while timeout > 0 and saved_image.status not in ("active", "error"):
-        timeout -= 60
-        sleep(60)
+    print("Waiting for image:{i} to achieve active status."
+          .format(i=saved_image.name))
+    for attempt in xrange(240):
         saved_image = conn.image.get_image(saved_image)
+        if saved_image.status == "active":
+            print("Image {i} is now active after {a} mins."
+                  .format(i=saved_image.name, a=attempt))
+            break
+        elif saved_image.status == "error":
+            raise Exception("Image failed to save: {i}"
+                            .format(i=args.imagename))
+        print("Current status for image:{i} is '{s}'"
+              .format(i=saved_image.name, s=saved_image.status))
+        sleep(60)
+    else:
+        raise Exception("Time out waiting for image {i} to become active."
+                        " Waited {a} minutes."
+                        .format(i=saved_image.name, a=attempt))
 
-    if saved_image.status == "active":
-        for image in current_images:
-            conn.image.delete_image(image)
+    if current_images:
+        print("Deleting old images that use the same name:")
+    for image in current_images:
+        print("Deleting Image: {n}/{id}".format(n=image.name, id=image.id))
+        conn.image.delete_image(image)
+
+    print ("Image Creation Complete.")
 
 
 if __name__ == "__main__":
