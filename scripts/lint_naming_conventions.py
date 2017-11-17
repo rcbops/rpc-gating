@@ -25,14 +25,16 @@ def parse_args():
 
 
 def parse_jjb_file(in_dir, in_file):
+    print("Checking {}/{}".format(in_dir, in_file))
     _rc = 0
     filename = os.path.join(in_dir, in_file)
     file_yaml = ''
     # blanket catch errors reading/parsing yaml
     try:
         file_yaml = yaml.safe_load(open(filename).read())
-    except:
-        out = "Lint error: yaml parsing error parsing file %s\n" % (filename)
+    except Exception as e:
+        out = ("Lint error: yaml parsing error parsing file {f}.\n"
+               "Error: {e}\n").format(f=filename, e=e)
         sys.stderr.write(out)
         return 1
 
@@ -97,9 +99,9 @@ if __name__ == "__main__":
                     pass
                 else:
                     if (_file.endswith(".yml")) or (_file.endswith(".yaml")):
-                        if parse_jjb_file(_dir, _file):
+                        if parse_jjb_file(root, _file):
                             rc = 1
-                    if parse_file_name(_dir, _file):
+                    if parse_file_name(root, _file):
                         rc = 1
     if rc:
         out = "RPC-Gating naming conventions:\n\t%s\n" % \

@@ -1,0 +1,37 @@
+- job:
+    name: RE-unit-test-artefact-publication
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.shared_slave(){
+        // Do something that creates an artifact
+        stage("Build"){
+          sh """
+            mkdir -p artifacts
+            date > artifacts/datestamp
+          """
+        }
+
+        stage("Upload"){
+          pubcloud.uploadToSwift(
+            container: "jenkins_logs",
+          )
+        }
+
+        stage("Publish"){
+          // link to artifacts from Jenkins UI
+          publishHTML(
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportFiles: "index.html",
+            reportName: "Build Artifact Links",
+            reportDir: "${WORKSPACE}/artifacts_report"
+          )
+        }
+      }

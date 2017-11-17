@@ -1,0 +1,60 @@
+- job:
+    name: 'RPC-Gating-Unit-Tests'
+    project-type: pipeline
+    concurrent: true
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_(cit_)?unit_?tests.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/re_unit_tests'
+          cancel-builds-on-update: true
+    properties:
+      - rpc-gating-github
+    dsl: |
+      parallel [
+        "With Requested Credentials": {
+          build(
+            job: "RE-unit-test-withRequestedCredentials",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Artefact Publication": {
+          build(
+            job: "RE-unit-test-artefact-publication",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Single Use Slave": {
+          build(
+            job: "RE-unit-test-single-use-slave",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        }
+      ]
+
+#TODO: Jira Issue Manipulation, Validation of Published Artefacts.

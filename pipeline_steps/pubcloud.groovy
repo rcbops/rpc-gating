@@ -175,7 +175,7 @@ void add_instance_env_params_to_args(Map args){
 The args required are shown in allocate_pubcloud.yml, they can
 be supplied uppercase in the env dictionary, or lower case as
 direct arguments. */
-def runonpubcloud(Map args=[:], body){
+def runonpubcloud(Map args=[:], Closure body){
   add_instance_env_params_to_args(args)
   // randomised inventory_path to avoid parallel conflicts
   if (env.WORKSPACE == null){

@@ -29,29 +29,8 @@
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.shared_slave(){
         pubcloud.runonpubcloud {
-          // Do something that creates an artifact
-          stage("Build"){
-            sh """
-              mkdir -p artifacts
-              date > artifacts/datestamp
-            """
-          }
-
-          stage("Upload"){
-            pubcloud.uploadToSwift(
-              container: "jenkins_logs",
-            )
-          }
-
-          stage("Publish"){
-            // link to artifacts from Jenkins UI
-            publishHTML(
-              alwaysLinkToLastBuild: true,
-              keepAll: true,
-              reportFiles: "index.html",
-              reportName: "Build Artifact Links",
-              reportDir: "${WORKSPACE}/artifacts_report"
-            )
-          }
+          sh """
+            echo "I'm running on a single use slave!"
+          """
         }
       }

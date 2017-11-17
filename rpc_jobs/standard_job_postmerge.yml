@@ -80,6 +80,8 @@
       env.RE_JOB_REPO_NAME = "{repo_name}"
       env.RE_JOB_BRANCH = "{branch}"
 
+      String credentials = "{credentials}"
+
       // Not part of the published interface, used by this job later on
       // to create failure tickets in the correct project.
       JIRA_PROJECT_KEY = "{jira_project_key}"
@@ -98,7 +100,7 @@
             try {{
               ansiColor('xterm') {{
                 dir("${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}") {{
-                  withCredentials(common.get_cloud_creds()) {{
+                  withCredentials(credentials) {{
 
                     stage('Checkout') {{
                       common.clone_with_pr_refs(env.REPO_URL, env.BRANCH)
