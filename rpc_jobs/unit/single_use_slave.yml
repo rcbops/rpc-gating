@@ -1,5 +1,5 @@
 - job:
-    name: Single-Use-Slave-Example
+    name: RE-unit-test-single-use-slave
     project-type: workflow
     concurrent: true
     properties:
@@ -11,8 +11,8 @@
       - instance_params:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           FLAVOR: "performance1-1"
-          REGIONS: "{REGIONS}"
-          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
+          REGIONS: "DFW ORD"
+          FALLBACK_REGIONS: "IAD"
       - rpc_gating_params
       - string:
           name: STAGES
