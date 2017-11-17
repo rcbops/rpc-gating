@@ -96,7 +96,7 @@
             try {{
               ansiColor('xterm') {{
                 dir("${{env.WORKSPACE}}/${{env.ghprbGhRepository}}") {{
-                  withRequestedCredentials(credentials) {{
+                  common.withRequestedCredentials(credentials) {{
 
                     stage('Checkout') {{
                       print("Triggered by PR: ${{env.ghprbPullLink}}")

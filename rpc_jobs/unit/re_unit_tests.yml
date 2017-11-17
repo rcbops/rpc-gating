@@ -14,8 +14,13 @@
           cancel-builds-on-update: true
     properties:
       - rpc-gating-github
+    parameters:
+      - rpc_gating_params
     dsl: |
-      parallel [
+      if(env.ghprbPullId != null){
+        env.RPC_GATING_BRANCH="origin/pr/${env.ghprbPullId}/merge"
+      }
+      parallel ([
         "With Requested Credentials": {
           build(
             job: "RE-unit-test-withRequestedCredentials",
@@ -55,6 +60,6 @@
             ]
           )
         }
-      ]
+      ])
 
 #TODO: Jira Issue Manipulation, Validation of Published Artefacts.

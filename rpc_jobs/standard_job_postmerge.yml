@@ -100,7 +100,7 @@
             try {{
               ansiColor('xterm') {{
                 dir("${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}") {{
-                  withCredentials(credentials) {{
+                  common.withRequestedCredentials(credentials) {{
 
                     stage('Checkout') {{
                       common.clone_with_pr_refs(env.REPO_URL, env.BRANCH)
