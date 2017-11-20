@@ -40,38 +40,33 @@ def cleanup(Map args){
  *
  */
 def savePubCloudSlave(Map args){
-  common.conditionalStep(
-    step_name: 'Save Slave',
-    step: {
-      add_instance_env_params_to_args(args)
-      if (!("inventory" in args)){
-        args.inventory = "inventory"
-      }
-      withCredentials(common.get_cloud_creds()){
+  add_instance_env_params_to_args(args)
+  if (!("inventory" in args)){
+    args.inventory = "inventory"
+  }
+  withCredentials(common.get_cloud_creds()){
 
-        dir("rpc-gating/playbooks"){
-          clouds_cfg = common.writeCloudsCfg(
-            username: env.PUBCLOUD_USERNAME,
-            api_key: env.PUBCLOUD_API_KEY
-          )
-          env.OS_CLIENT_CONFIG_FILE = clouds_cfg
-          env.SAVE_IMAGE_NAME = args.image
-          common.venvPlaybook(
-            playbooks: ['save_pubcloud.yml'],
-            args: [
-              "-i ${args.inventory}",
-              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
-            ],
-            vars: args
-          )
-          stash (
-            name: args.inventory,
-            includes: "${args.inventory}/hosts"
-          )
-        } // dir
-      } //withCredentials
-    } //step
-  ) //conditionalStep
+    dir("rpc-gating/playbooks"){
+      clouds_cfg = common.writeCloudsCfg(
+        username: env.PUBCLOUD_USERNAME,
+        api_key: env.PUBCLOUD_API_KEY
+      )
+      env.OS_CLIENT_CONFIG_FILE = clouds_cfg
+      env.SAVE_IMAGE_NAME = args.image
+      common.venvPlaybook(
+        playbooks: ['save_pubcloud.yml'],
+        args: [
+          "-i ${args.inventory}",
+          "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+        ],
+        vars: args
+      )
+      stash (
+        name: args.inventory,
+        includes: "${args.inventory}/hosts"
+      )
+    } // dir
+  } //withCredentials
 } //save
 
 
