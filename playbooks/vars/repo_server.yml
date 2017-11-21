@@ -1,0 +1,13 @@
+---
+repo_server_cloud_name: public_cloud
+repo_server_instance_name: repo-server
+# commented for testing
+#repo_server_regions:
+#  - DFW
+#  - IAD
+#  - ORD
+repo_server_regions:
+  - DFW
+repo_server_volumes:
+  - /dev/xvde
+repo_server_volume_size: 1024
