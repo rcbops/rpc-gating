@@ -6,7 +6,8 @@
     # Available Regions: IAD DFW ORD HKG SYD
     REGIONS: "DFW ORD"
     FALLBACK_REGIONS: "IAD"
-
+    # standard_job_params
+    SLAVE_TYPE: "instance"
     # rpc_params
     DEPLOY_SWIFT: "yes"
     DEPLOY_CEPH: "no"

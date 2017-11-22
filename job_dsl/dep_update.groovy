@@ -9,18 +9,16 @@ common.shared_slave(){
   }
 
   stage("Checkout"){
-    dir("repo"){
-      if ( env.ghprbPullId != null ) {
-        repo_url = "https://github.com/${env.ghprbGhRepository}.git"
-        repo_branch = "origin/pr/${env.ghprbPullId}/merge"
-        print("Triggered by PR: ${env.ghprbPullLink}")
-      } else {
-        repo_url = env.URL
-        repo_branch = env.BRANCH
-      }
-      print("Repo: ${repo_url} Branch: ${repo_branch}")
-      common.clone_with_pr_refs(repo_url, repo_branch)
-    } // dir
+    if ( env.ghprbPullId != null ) {
+      repo_url = "https://github.com/${env.ghprbGhRepository}.git"
+      repo_branch = "origin/pr/${env.ghprbPullId}/merge"
+      print("Triggered by PR: ${env.ghprbPullLink}")
+    } else {
+      repo_url = env.URL
+      repo_branch = env.BRANCH
+    }
+    print("Repo: ${repo_url} Branch: ${repo_branch}")
+    common.clone_with_pr_refs("repo", repo_url, repo_branch)
   } // stage
 
   stage("Dependency Update"){

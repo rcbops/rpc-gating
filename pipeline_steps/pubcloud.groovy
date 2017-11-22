@@ -225,21 +225,19 @@ def uploadToSwift(Map args){
   if(fileExists("${WORKSPACE}/artifacts")){
     print("WORKSPACE/artifacts directory found, Preparing to upload artifacts.")
     withCredentials(common.get_cloud_creds()) {
-      dir("rpc-gating/playbooks") {
-        clouds_cfg = common.writeCloudsCfg(
-          username: env.PUBCLOUD_USERNAME,
-          api_key: env.PUBCLOUD_API_KEY
-        )
-          withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
-            common.venvPlaybook(
-              playbooks: ["upload_to_swift.yml"],
-              vars: [
-                container: args.container,
-                description_file: args.description_file
-              ]
-            ) // venvPlaybook
-          } // withEnv
-      } // dir
+      clouds_cfg = common.writeCloudsCfg(
+        username: env.PUBCLOUD_USERNAME,
+        api_key: env.PUBCLOUD_API_KEY
+      )
+      withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+        common.venvPlaybook(
+          playbooks: ["rpc-gating/playbooks/upload_to_swift.yml"],
+          vars: [
+            container: args.container,
+            description_file: args.description_file
+          ]
+        ) // venvPlaybook
+      } // withEnv
     } // withCredentials
   } else {
     print("WORKSPACE/artifacts not found, skipping artifact upload")

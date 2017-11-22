@@ -336,9 +336,7 @@ def rpco_archive_artifacts(String build_type = "AIO"){
 def archive_artifacts(){
   stage('Compress and Publish Artifacts'){
     if (env.RE_HOOK_RESULT_DIR != null){
-      dir(env.RE_HOOK_RESULT_DIR){
-        junit allowEmptyResults: true, testResults: '*.xml'
-      }
+      junit allowEmptyResults: true, testResults: "${env.RE_HOOK_RESULT_DIR}/*.xml"
     }
     pubcloud.uploadToSwift(
       container: "jenkins_logs",
@@ -433,25 +431,22 @@ def prepareConfigs(Map args){
 }
 
 def prepareRpcGit(String branch = "auto", String dest = "/opt"){
-  dir("${dest}/rpc-openstack"){
-
-    if (branch == "auto"){
-      /* if job is triggered by PR, then we need to set RPC_REPO and
-         RPC_BRANCH using the env vars supplied by ghprb.
-      */
-      if ( env.ghprbPullId != null ){
-        env.RPC_REPO = "https://github.com/${env.ghprbGhRepository}.git"
-        branch = "origin/pr/${env.ghprbPullId}/merge"
-        print("Triggered by PR: ${env.ghprbPullLink}")
-      } else {
-        branch = env.RPC_BRANCH
-      }
+  if (branch == "auto"){
+    /* if job is triggered by PR, then we need to set RPC_REPO and
+       RPC_BRANCH using the env vars supplied by ghprb.
+    */
+    if ( env.ghprbPullId != null ){
+      env.RPC_REPO = "https://github.com/${env.ghprbGhRepository}.git"
+      branch = "origin/pr/${env.ghprbPullId}/merge"
+      print("Triggered by PR: ${env.ghprbPullLink}")
+    } else {
+      branch = env.RPC_BRANCH
     }
+  }
 
-    print("Repo: ${env.RPC_REPO} Branch: ${branch}")
+  print("Repo: ${env.RPC_REPO} Branch: ${branch}")
 
-    clone_with_pr_refs(env.RPC_REPO, branch)
-  } // dir
+  clone_with_pr_refs("${dest}/rpc-openstack", env.RPC_REPO, branch)
 }
 
 // Clone repo with Refspecs required for PRs.
@@ -464,6 +459,7 @@ def prepareRpcGit(String branch = "auto", String dest = "/opt"){
 // Note: Creds are not supplied for https connections
 // If you need autheniticated access, use ssh:// or git@
 void clone_with_pr_refs(
+  String directory='./',
   String repo="git@github.com:${env.ghprbGhRepository}",
   String ref="origin/pr/${env.ghprbPullId}/merge",
   String refspec='+refs/pull/\\*:refs/remotes/origin/pr/\\*'\
@@ -483,6 +479,8 @@ void clone_with_pr_refs(
   print "Cloning Repo: ${repo}@${ref}"
   sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
     sh """#!/bin/bash -xe
+      mkdir -p ${directory}
+      cd ${directory}
       # use init + fetch to avoid the "dir not empty git fail"
       git init .
       # If the git repo previously existed, we remove the origin
@@ -682,6 +680,27 @@ void shared_slave(body){
 
 void internal_slave(body){
   use_node("CentOS", body)
+}
+
+void standard_job_slave(String slave_type, Closure body){
+  timeout(time: 6, unit: 'HOURS'){
+    shared_slave(){
+      if (slave_type == "instance"){
+        pubcloud.runonpubcloud(){
+          body()
+        }
+      } else if (slave_type == "container"){
+        dir("rpc-gating"){
+          container = docker.build env.BUILD_TAG.toLowerCase()
+        }
+        container.inside {
+          body()
+        }
+      } else {
+        throw new Exception("slave_type '$slave_type' is not supported.")
+      }
+    }
+  }
 }
 
 // Build an array suitable for passing to withCredentials

@@ -198,3 +198,14 @@
       - string:
           name: "DEPLOY_INFLUX"
           default: "{DEPLOY_INFLUX}"
+
+- parameter:
+    name: standard_job_params
+    parameters:
+      - string:
+          name: "SLAVE_TYPE"
+          default: "{SLAVE_TYPE}"
+          description: >
+            Standard jobs can be run on different types of slave. The default
+            for this parameter is set to "instance" for a compute instances. To
+            use a Docker container set this parameter to "container".
