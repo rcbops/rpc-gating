@@ -1,108 +1,21 @@
 ---
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  vars:
-    keyname: jenkins
-    flavor: "general1-8"
-    image: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    instance_metadata:
-      build_config: core
-      group: "repo_all"
-    user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
-  vars_files:
-    - vars/repo_server.yml
-  tasks:
-    - name: Provision cloud instances
-      os_server:
-        name: "{{ repo_server_instance_name }}-{{ item | lower }}"
-        flavor: "{{ flavor }}"
-        state: present
-        cloud: "{{ repo_server_cloud_name }}"
-        region_name: "{{ item }}"
-        image: "{{ image }}"
-        key_name: "{{ keyname }}"
-        userdata: "{{ lookup('file', user_data_path) }}"
-        config_drive: yes
-        meta: "{{ instance_metadata }}"
-        wait: yes
-        timeout: 900
-      with_items: "{{ repo_server_regions }}"
-      register: _create_instance
-      async: 900
-      poll: 0
-
-    - name: Create data volumes
-      os_volume:
-        display_name: "{{ repo_server_instance_name }}-{{ item[0] | lower }}-{{ item[1]|regex_replace('/dev/', '') }}"
-        volume_type: "SATA"
-        size: "{{ repo_server_volume_size }}"
-        state: present
-        cloud: "{{ repo_server_cloud_name }}"
-        region_name: "{{ item[0] }}"
-        wait: yes
-        timeout: 900
-      with_nested:
-        - "{{ repo_server_regions }}"
-        - "{{ repo_server_volumes }}"
-      register: _create_volume
-      async: 900
-      poll: 0
-
-    - name: Wait for cloud instances to be created
-      async_status:
-        jid: "{{ item['ansible_job_id'] }}"
-      register: _create_instance_jobs
-      until: _create_instance_jobs['finished'] | bool
-      delay: 5
-      retries: 180
-      with_items: "{{ _create_instance['results'] }}"
-      when:
-        - item['ansible_job_id'] is defined
-
-    - name: Wait for data volumes to be created
-      async_status:
-        jid: "{{ item['ansible_job_id'] }}"
-      register: _create_volume_jobs
-      until: _create_volume_jobs['finished'] | bool
-      delay: 5
-      retries: 180
-      with_items: "{{ _create_volume['results'] }}"
-      when:
-        - item['ansible_job_id'] is defined
-
-    - name: Attach the data volumes
-      os_server_volume:
-        server: "{{ repo_server_instance_name }}-{{ item[0] | lower }}"
-        volume: "{{ repo_server_instance_name }}-{{ item[0] | lower }}-{{ item[1]|regex_replace('/dev/', '') }}"
-        device: "{{ item[1] }}"
-        state: present
-        cloud: "{{ repo_server_cloud_name }}"
-        region_name: "{{ item[0] }}"
-        wait: yes
-        timeout: 900
-      with_nested:
-        - "{{ repo_server_regions }}"
-        - "{{ repo_server_volumes }}"
-      register: _attach_volume
-
-    - name: Refresh dynamic inventory for any changes made
-      meta: refresh_inventory
-
 - hosts: repo_all
   user: root
   gather_facts: no
-  vars_files:
-    - vars/repo_server.yml
   tasks:
     - name: Gather facts
       setup:
         gather_subset: "!facter,!ohai"
 
+    - set_fact:
+        repo_server_volumes: "{{ item['volumes'] }}"
+      when: "{{ item['name'] == inventory_hostname }}"
+      with_items: "{{ instance_list | default([]) }}"
+
     - name: Create vg0 volume group
       lvg:
         vg: vg0
-        pvs: "{{ repo_server_volumes|join(',') }}"
+        pvs: "{{ repo_server_volumes | map(attribute='device') | join(',') }}"
         state: present
 
     - name: Create repo logical volume
@@ -133,27 +46,9 @@
   vars:
     is_metal: true
     openstack_release: testing
-  vars_files:
-    - vars/repo_server.yml
   pre_tasks:
     - name: Gather facts
       setup:
         gather_subset: "!facter,!ohai"
   roles:
     - role: "repo_server"
-
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  tasks:
-    - name: Lock instances to prevent accidental deletion
-      os_server_actions:
-        action: lock
-        server: "{{ repo_server_instance_name }}-{{ item | lower }}"
-        cloud: "{{ repo_server_cloud_name }}"
-        region_name: "{{ item }}"
-        wait: yes
-        timeout: 900
-      with_items: "{{ repo_server_regions }}"
-  vars_files:
-    - vars/repo_server.yml
