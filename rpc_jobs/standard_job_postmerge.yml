@@ -153,10 +153,23 @@
         }} catch (e) {{
           print(e)
           currentBuild.result="FAILURE"
-          common.create_jira_issue(JIRA_PROJECT_KEY,
-                                   env.BUILD_TAG,
-                                   env.BUILD_URL,
-                                   "Task")
+          // Try and ascertain the cause of the exception.
+          // If it was caused by a user, its a manual abort and
+          // an issue shouldn't be created. If it was created by
+          // SYSTEM or the exception doesn't contain enough information
+          // then an issue should be created.
+          String user
+          try {{
+            user = e.getCauses()[0].getUser().toString()
+          }} catch (f){{
+            user = 'SYSTEM'
+          }}
+          if(user == 'SYSTEM'){{
+            common.create_jira_issue(JIRA_PROJECT_KEY,
+                                     env.BUILD_TAG,
+                                     env.BUILD_URL,
+                                     "Task")
+          }}
           throw e
         }} finally {{
           common.archive_artifacts()
