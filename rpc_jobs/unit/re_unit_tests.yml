@@ -60,6 +60,19 @@
             ]
           )
         }
+        "Skip Build Check": {
+          build(
+            job: "RE-unit-test-skip-build-check",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        }
       ])
 
 #TODO: Jira Issue Manipulation, Validation of Published Artefacts.
