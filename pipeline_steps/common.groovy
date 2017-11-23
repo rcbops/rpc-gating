@@ -694,6 +694,7 @@ void standard_job_slave(String slave_type, Closure body){
           container = docker.build env.BUILD_TAG.toLowerCase()
         }
         container.inside {
+          configure_git()
           body()
         }
       } else {
