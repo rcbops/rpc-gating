@@ -1,0 +1,54 @@
+---
+- hosts: repo_all
+  user: root
+  gather_facts: no
+  tasks:
+    - name: Gather facts
+      setup:
+        gather_subset: "!facter,!ohai"
+
+    - set_fact:
+        repo_server_volumes: "{{ item['volumes'] }}"
+      when: "{{ item['name'] == inventory_hostname }}"
+      with_items: "{{ instance_list | default([]) }}"
+
+    - name: Create vg0 volume group
+      lvg:
+        vg: vg0
+        pvs: "{{ repo_server_volumes | map(attribute='device') | join(',') }}"
+        state: present
+
+    - name: Create repo logical volume
+      lvol:
+        lv: repo
+        vg: vg0
+        size: 100%PVS
+        shrink: no
+        state: present
+
+    - name: Create filesystem on /dev/vg0/repo
+      filesystem:
+        fstype: ext4
+        force: no
+        dev: /dev/vg0/repo
+        resizefs: yes # suicide?
+
+    - name: Mount /dev/vg0/repo
+      mount:
+        path: /var/www/repo
+        src: /dev/vg0/repo
+        fstype: ext4
+        state: mounted
+
+- hosts: repo_all
+  user: root
+  gather_facts: no
+  vars:
+    is_metal: true
+    openstack_release: testing
+  pre_tasks:
+    - name: Gather facts
+      setup:
+        gather_subset: "!facter,!ohai"
+  roles:
+    - role: "repo_server"

@@ -67,8 +67,21 @@ void install_ansible(){
   """
 }
 
+/* Run ansible-galaxy within the rpc-gating venv
+ * Args:
+ *  args: list of string args to pass to ansible-galaxy
+ */
+def venvGalaxy(String[] args){
+  ansiColor('xterm'){
+    sh """#!/bin/bash -x
+      which scl && source /opt/rh/python27/enable
+      set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
+      ansible-galaxy ${args.join(' ')}
+    """
+  } //color
+} //venvGalaxy
 
-/* Run ansible-playbooks within a venev
+/* Run ansible-playbooks within the rpc-gating venv
  * Sadly the standard ansibleplaybook step doesn't allow specifying a custom
  * ansible path. It does allow selection of an ansible tool, but those are
  * statically configured in global jenkins config.
@@ -381,6 +394,23 @@ def writeCloudsCfg(Map args){
     auth:
       username: ${args.username}
       api_key: ${args.api_key}
+    # The default regions include LON which is not
+    # in the same catalog, causing errors when
+    # using the ansible dynamic inventory due to
+    # missing endpoints. We therefore specify all
+    # the regions in the US catalog.
+    regions:
+      - IAD
+      - DFW
+      - ORD
+      - HKG
+      - SYD
+# This configuration is used by ansible
+# when using the openstack dynamic inventory.
+ansible:
+  use_hostnames: True
+  expand_hostvars: False
+  fail_on_errors: True
 """
 
   String tmp_dir = pwd(tmp:true)

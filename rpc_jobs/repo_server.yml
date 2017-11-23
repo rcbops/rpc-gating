@@ -1,0 +1,105 @@
+- job:
+    name: Setup-Repo-Servers
+    project-type: pipeline
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    # Commented for now
+    #triggers:
+    #  - timed: "@daily"
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.shared_slave(){
+        try{
+          common.withRequestedCredentials("cloud_creds, id_rsa_cloud10_jenkins_file"){
+            stage("Prepare Ansible Roles"){
+              // Getting the roles is a bit flaky sometimes, so we
+              // implement a retry to improve the chances of success.
+              retry(3){
+                common.venvGalaxy(
+                  "install",
+                  "-r ${env.WORKSPACE}/rpc-gating/repo_server/role_requirements.yml",
+                  "-p ${env.WORKSPACE}/roles"
+                )
+              }
+            } // stage
+
+            stage("Prepare Environment"){
+              // write the clouds.yaml file
+              env.OS_CLIENT_CONFIG_FILE = common.writeCloudsCfg(
+                username: env.PUBCLOUD_USERNAME,
+                api_key: env.PUBCLOUD_API_KEY
+              )
+
+              // Tell ansible where to find roles
+              env.ANSIBLE_ROLES_PATH = "${env.WORKSPACE}/roles"
+
+              // Tell ansible where the dynamic inventory is
+              env.ANSIBLE_INVENTORY = "${env.WORKSPACE}/rpc-gating/scripts/ansible_v2.3.2.0-1_contrib_inventory_openstack.py"
+
+              // Tell ansible where the ssh private key is
+              env.ANSIBLE_PRIVATE_KEY_FILE = "${env.JENKINS_SSH_PRIVKEY}"
+
+            } // stage
+
+            stage("Prepare Instances"){
+              dir('rpc-gating/playbooks'){
+
+                // Run the setup playbook
+                common.venvPlaybook(
+                  playbooks: [
+                    "setup_openstack_instances.yml"
+                  ],
+                  args: [
+                    "-v",
+                    "-e '@${env.WORKSPACE}/rpc-gating/repo_server/instances.yml'"
+                  ]
+                ) //venvPlaybook
+
+                // We need an inventory refresh, so we execute
+                // this using a fresh shell instead of including
+                // the playbooks in the previous ansible-playbook
+                // play list.
+
+                // Run the instance prep plays
+                common.venvPlaybook(
+                  playbooks: [
+                    "drop_ssh_auth_keys.yml",
+                    "slave_security.yml"
+                  ],
+                  args: [
+                    "-v",
+                    "-e target_hosts=repo_all"
+                  ]
+                ) //venvPlaybook
+
+              } //dir
+            } // stage
+
+            stage("Setup Repo Servers"){
+              dir('rpc-gating/playbooks'){
+
+                // Run the setup playbook
+                common.venvPlaybook(
+                  playbooks: [
+                    "repo_server.yml"
+                  ],
+                  args: [
+                    "-v",
+                    "-e '@${env.WORKSPACE}/rpc-gating/repo_server/instances.yml'"
+                  ]
+                ) //venvPlaybook
+
+              } //dir
+            } // stage
+          } //withCredentials
+        } catch (e) {
+          print(e)
+          throw(e)
+        } finally {
+          common.archive_artifacts()
+        }
+      } // cit node
