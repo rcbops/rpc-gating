@@ -801,4 +801,39 @@ void withRequestedCredentials(String list_of_cred_ids, Closure body){
   }
 }
 
+
+Cause getRootCause(Cause cause){
+    if (cause.class.toString().contains("UpstreamCause")) {
+         for (upCause in cause.upstreamCauses) {
+             return getRootCause(upCause)
+         }
+     } else {
+        return cause
+     }
+}
+
+void setTriggerVars(){
+  List causes = currentBuild.rawBuild.getCauses()
+  Cause root_cause = getRootCause(causes[0])
+  env.RE_JOB_TRIGGER_DETAIL="No detail available"
+  if (root_cause instanceof Cause.UpstreamCause){
+      env.RE_JOB_TRIGGER="UPSTREAM"
+      env.RE_JOB_TRIGGER_DETAIL = "${root_cause.getUpstreamProject()}/${root_cause.getUpstreamBuild()}"
+  } else if (root_cause instanceof Cause.UserIdCause){
+      env.RE_JOB_TRIGGER = "USER"
+      env.RE_JOB_TRIGGER_DETAIL = root_cause.getUserName()
+  } else if (root_cause instanceof hudson.triggers.TimerTrigger.TimerTriggerCause) {
+      env.RE_JOB_TRIGGER = "TIMER"
+  } else if (root_cause instanceof com.cloudbees.jenkins.GitHubPushCause){
+      env.RE_JOB_TRIGGER = "PUSH"
+      env.RE_JOB_TRIGGER_DETAIL = root_cause.getShortDescription()
+  } else if (root_cause instanceof org.jenkinsci.plugins.ghprb.GhprbCause){
+      env.RE_JOB_TRIGGER="PULL"
+      env.RE_JOB_TRIGGER_DETAIL = "${root_cause.title}/${root_cause.pullID}"
+  } else {
+      env.RE_JOB_TRIGGER="OTHER"
+  }
+  print ("Trigger: ${env.RE_JOB_TRIGGER} (${env.RE_JOB_TRIGGER_DETAIL})")
+}
+
 return this

@@ -78,9 +78,12 @@
       env.RE_JOB_SCENARIO = "{scenario}"
       env.RE_JOB_ACTION = "{action}"
       env.RE_JOB_FLAVOR = "{FLAVOR}"
-      env.RE_JOB_TRIGGER = "PM"
       env.RE_JOB_REPO_NAME = "{repo_name}"
       env.RE_JOB_BRANCH = "{branch}"
+
+      // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
+      common.setTriggerVars()
+
 
       String credentials = "{credentials}"
 
