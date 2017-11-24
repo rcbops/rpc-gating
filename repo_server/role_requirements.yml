@@ -1,0 +1,8 @@
+- name: apt_package_pinning
+  scm: git
+  src: https://git.openstack.org/openstack/openstack-ansible-apt_package_pinning
+  version: e5034411a1e4502e633a000cd1bfe02566bf8712
+- name: repo_server
+  scm: git
+  src: https://git.openstack.org/openstack/openstack-ansible-repo_server
+  version: f4731abfb090b7e730bd728a3f7751c791ae9f86

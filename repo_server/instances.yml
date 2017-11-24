@@ -1,0 +1,32 @@
+---
+instance_list:
+  - name: repo-server-dfw-1
+    flavor: general1-8
+    region: DFW
+    volumes:
+      - name: repo-server-dfw-1-xvde
+        device: /dev/xvde
+        type: SATA
+        size: 1024
+    metadata:
+      group: "repo_all"
+  - name: repo-server-iad-1
+    flavor: general1-8
+    region: IAD
+    volumes:
+      - name: repo-server-iad-1-xvde
+        device: /dev/xvde
+        type: SATA
+        size: 1024
+    metadata:
+      group: "repo_all"
+  - name: repo-server-ord-1
+    flavor: general1-8
+    region: ORD
+    volumes:
+      - name: repo-server-ord-1-xvde
+        device: /dev/xvde
+        type: SATA
+        size: 1024
+    metadata:
+      group: "repo_all"

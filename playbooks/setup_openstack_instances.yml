@@ -8,6 +8,22 @@
 #     region: DFW
 #     metadata:
 #       group: mygroup
+#
+# Additionally, you can optionally specify volumes
+# to be created and attached:
+#
+# instance_list:
+#   - name: instance1
+#     flavor: general1-1
+#     region: DFW
+#     volumes:
+#       - name: vol1
+#         device: /dev/xvde
+#         type: SATA
+#         size: 1024
+#     metadata:
+#       group: mygroup
+#
 
 - name: Create/delete OpenStack Instances
   hosts: localhost
@@ -23,7 +39,7 @@
       # deployment tooling.
       build_config: core
   tasks:
-    - name: Unlock instances scheduled to be changed
+    - name: Unlock instances scheduled to be deleted or where volumes may need to be added
       os_server_actions:
         action: unlock
         server: "{{ instance['name'] | lower }}"
@@ -31,8 +47,7 @@
         region_name: "{{ instance['region'] | default('IAD') }}"
         wait: yes
         timeout: 900
-      when:
-        - "instance['name'] in groups['all']"
+      when: "{{ instance['name'] in groups['all'] and (instance['state'] | default('present') == 'absent' or (instance['state'] | default('present') == 'present' and 'volumes' in instance)) }}"
       with_items: "{{ instance_list | default([]) }}"
       loop_control:
         loop_var: instance
@@ -58,7 +73,46 @@
       loop_control:
         loop_var: instance
 
-    - name: Lock instances to prevent changes
+    # NOTE(mattt): Currently we do not support detaching/deleting volumes, this
+    #              functionality will need to come at a later time.
+    - name: Create data volumes
+      os_volume:
+        display_name: "{{ item[1]['name'] }}"
+        volume_type: "{{ item[1]['type'] }}"
+        size: "{{ item[1]['size'] }}"
+        state: present
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ item[0]['region'] }}"
+        wait: yes
+        timeout: 900
+      when:
+        - "'state' not in item[0] or item[0]['state'] != 'absent'"
+      with_subelements:
+        - "{{ instance_list | default([]) }}"
+        - volumes
+        - skip_missing: True
+
+    - name: Attach the data volumes
+      os_server_volume:
+        server: "{{ item[0]['name'] }}"
+        volume: "{{ item[1]['name'] }}"
+        device: "{{ item[1]['device'] }}"
+        state: present
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ item[0]['region'] }}"
+        wait: yes
+        timeout: 900
+      when:
+        - "'state' not in item[0] or item[0]['state'] != 'absent'"
+      with_subelements:
+        - "{{ instance_list | default([]) }}"
+        - volumes
+        - skip_missing: True
+
+    - name: Refresh dynamic inventory for any changes made
+      meta: refresh_inventory
+
+    - name: Lock instances to prevent accidental deletion
       os_server_actions:
         action: lock
         server: "{{ instance['name'] | lower }}"
@@ -66,8 +120,7 @@
         region_name: "{{ instance['region'] | default('IAD') }}"
         wait: yes
         timeout: 900
-      when:
-        - "instance['state'] | default('present') != 'absent'"
+      when: "{{ instance['name'] in groups['all'] }}"
       with_items: "{{ instance_list | default([]) }}"
       loop_control:
         loop_var: instance
