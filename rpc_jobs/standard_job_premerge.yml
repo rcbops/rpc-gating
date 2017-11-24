@@ -67,6 +67,9 @@
           cancel-builds-on-update: true
 
     dsl: |
+      if ("{repo_name}" == "rpc-gating"){{
+        env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
+      }}
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
 
       // Pass details about the job parameters through

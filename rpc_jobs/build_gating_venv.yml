@@ -17,8 +17,10 @@
         node('pubcloud_multiuse'){
           try{
             deleteDir()
+            common.clone_with_pr_refs('rpc-gating',
+                                      'git@github.com:rcbops/rpc-gating',
+                                      env.RPC_GATING_BRANCH)
             dir('rpc-gating'){
-              git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
               // run in docker to ensure all the required apt packages are available
               container = docker.build env.BUILD_TAG.toLowerCase()
             }
