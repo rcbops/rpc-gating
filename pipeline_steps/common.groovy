@@ -484,7 +484,7 @@ void clone_with_pr_refs(
       # use init + fetch to avoid the "dir not empty git fail"
       git init .
       # If the git repo previously existed, we remove the origin
-      git remote remove origin || true
+      git remote rm origin || true
       git remote add origin "${repo}"
       # Don't quote refspec as it should be separate args to git.
       git fetch --tags origin ${refspec}
@@ -653,14 +653,14 @@ void use_node(String label=null, body){
     try {
       print "Preparing ${env.NODE_NAME} for use"
       deleteDir()
-      dir("rpc-gating"){
-        if (! env.RPC_GATING_BRANCH){
-          env.RPC_GATING_BRANCH="master"
-        }
-        git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
+      if (! env.RPC_GATING_BRANCH){
+        env.RPC_GATING_BRANCH="master"
       }
-      install_ansible()
       configure_git()
+      clone_with_pr_refs('rpc-gating',
+                         'git@github.com:rcbops/rpc-gating',
+                         env.RPC_GATING_BRANCH)
+      install_ansible()
       print "${env.NODE_NAME} preparation complete, now ready for use."
       body()
     } catch (e){
