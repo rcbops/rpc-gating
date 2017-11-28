@@ -73,8 +73,6 @@
       loop_control:
         loop_var: instance
 
-    # NOTE(mattt): Currently we do not support detaching/deleting volumes, this
-    #              functionality will need to come at a later time.
     - name: Create data volumes
       os_volume:
         display_name: "{{ item[1]['name'] }}"
@@ -86,12 +84,34 @@
         wait: yes
         timeout: 900
       when:
-        - "'state' not in item[0] or item[0]['state'] != 'absent'"
+        - "{{ item[0]['state'] | default('present') != 'absent' }}"
       with_subelements:
         - "{{ instance_list | default([]) }}"
         - volumes
         - skip_missing: True
 
+    - name: Delete data volumes on deleted instances
+      os_volume:
+        display_name: "{{ item[1]['name'] }}"
+        volume_type: "{{ item[1]['type'] }}"
+        size: "{{ item[1]['size'] }}"
+        state: absent
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ item[0]['region'] }}"
+        wait: yes
+        timeout: 900
+      when:
+        - "{{ item[0]['state'] | default('present') == 'absent' and item[1]['state'] | default('present') == 'absent' }}"
+      with_subelements:
+        - "{{ instance_list | default([]) }}"
+        - volumes
+        - skip_missing: True
+
+    # NOTE(mattt):
+    # At present we do not support detaching / deleting volumes attached to a
+    # running instance. We'd need to do some poking around inside the instance
+    # to check if the disk is in use before we know it's safe to detach /
+    # delete, and this will require a bunch more testing.
     - name: Attach the data volumes
       os_server_volume:
         server: "{{ item[0]['name'] }}"
@@ -103,7 +123,7 @@
         wait: yes
         timeout: 900
       when:
-        - "'state' not in item[0] or item[0]['state'] != 'absent'"
+        - "{{ item[0]['state'] | default('present') != 'absent' and item[1]['state'] | default('present') != 'absent' }}"
       with_subelements:
         - "{{ instance_list | default([]) }}"
         - volumes
