@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# blah blah blah
+
 rc=0
 venv=.lintvenv
 # exclude venv and git dir from linting
