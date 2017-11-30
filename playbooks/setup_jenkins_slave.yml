@@ -76,7 +76,7 @@
         state: present
         regexp: 'jenkins'
         line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
-      when: "{{ allow_jenkins_sudo }}"
+      when: allow_jenkins_sudo | bool
 
     - name: Copy constraints file over to cloud server
       copy:
