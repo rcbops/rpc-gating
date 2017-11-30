@@ -1,0 +1,16 @@
+- name: AnsibleShipyard.zookeeper
+  scm: git
+  src: https://github.com/AnsibleShipyard/ansible-zookeeper
+  version: 769c5e974a50291e8556b789e57f809d87063262
+- name: openstack.nodepool
+  scm: git
+  src: https://github.com/openstack/ansible-role-nodepool
+  version: 6757bae61fd541595ff4e1eb63aef557ea586707
+- name: openstack.diskimage-builder
+  scm: git
+  src: https://github.com/openstack/ansible-role-diskimage-builder
+  version: 63c794fddb026b405d7f0730011ae9887b48c698
+- name: openstack.logrotate
+  scm: git
+  src: https://github.com/openstack/ansible-role-logrotate
+  version: 2aea7ee54c8f2b61a29c5d06fd69e77d16173899

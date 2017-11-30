@@ -1,18 +1,24 @@
+---
 - name: Secure Slave
-  hosts: job_nodes
+  hosts: "{{ target_hosts | default('job_nodes') }}"
   user: root
   vars:
     ip_address_whitelist: "{{ lookup('env', 'SSH_IP_ADDRESS_WHITELIST') }}"
-  pre_tasks:
-    - name: Install apt packages
+    ports_whitelist: "{{ lookup('env', 'FIREWALL_OPEN_PORTS') }}"
+  tasks:
+
+    - name: Wait for a successful connection
+      wait_for_connection:
+        connect_timeout: 2
+        delay: 5
+        sleep: 5
+        timeout: 60
+
+    - name: Install firewall package
       apt:
         pkg: "ufw"
         state: installed
         update_cache: yes
-
-    - name: Reset UFW
-      ufw:
-        state: reset
 
     - name: Allow ssh from whitelist
       ufw:
@@ -28,12 +34,27 @@
         port: 22
       when: ip_address_whitelist == ""
 
+    - name: Whitelist ports
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+      with_items: "[ {{ ports_whitelist }} ]"
+
     - name: Enable firewall
       ufw:
         state: enabled
         policy: deny
 
-  roles:
-    - role: jnv.unattended-upgrades
+    - include_role:
+        name: willshersystems.sshd
+      vars:
+        sshd:
+          PasswordAuthentication: "no"
+          X11Forwarding: "no"
+          PrintLastLog: "no"
+          GatewayPorts: "yes"
+          Compression: "yes"
 
-- include: slave_open_ports.yml
+    - include_role:
+        name: jnv.unattended-upgrades
+

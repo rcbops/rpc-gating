@@ -24,8 +24,6 @@
   roles:
     - role: willshersystems.sshd
       sshd:
-        ListenAddress:
-          - "0.0.0.0"
         PasswordAuthentication: "no"
         X11Forwarding: "no"
         PrintLastLog: "no"

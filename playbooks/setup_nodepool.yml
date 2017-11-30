@@ -1,0 +1,233 @@
+---
+# We need to target all hosts in the group first to gather facts,
+# otherwise any tasks using the group host_vars will fail.
+- name: Gather facts from nodepool_server group
+  hosts: "nodepool_server"
+  gather_facts: no
+  user: root
+  tasks:
+    - name: Wait for a successful connection
+      wait_for_connection:
+        connect_timeout: 2
+        delay: 5
+        sleep: 5
+        timeout: 60
+
+    - name: Gather facts
+      setup:
+        gather_subset: "!facter,!ohai"
+
+- name: Setup nodepool servers serially
+  hosts: "nodepool_server"
+  gather_facts: no
+  user: root
+  # NOTE(odyssey4me):
+  # The zookeeper service loses all its data when it restarts,
+  # which may happen when packages are upgraded. To ensure that
+  # this is not an issue for us we execute the playbook in
+  # serial so that the cluster always retains its quorum.
+  serial: 1
+  vars_files:
+    - vars/nodepool.yml
+  handlers:
+    - name: Restart zookeeper
+      service:
+        name: zookeeper
+        daemon_reload: yes
+        state: restarted
+      listen: Restart all services
+
+    - name: Restart nodepool-builder
+      service:
+        name: nodepool-builder
+        daemon_reload: yes
+        state: restarted
+      listen: Restart all services
+
+    - name: Restart nodepool-launcher
+      service:
+        name: nodepool-launcher
+        daemon_reload: yes
+        state: restarted
+      listen: Restart all services
+
+  tasks:
+    - name: Install prerequisite distro packages
+      apt:
+        name:
+          # requirement for cloning the repos
+          # we install from
+          - git
+          # requirements for pip installs
+          - gcc
+          - libffi-dev
+          - libssl-dev
+          - python-pip
+          - python-virtualenv
+          # requirement for zookeeper
+          - openjdk-8-jre-headless
+          # requirements for ansible
+          # TODO(odyssey4me):
+          # Remove aptitude when we shift to using
+          # ansible 2.4
+          - aptitude
+          - python-apt
+          - python-minimal
+        update_cache: yes
+      notify:
+        - Restart all services
+
+    - name: Install prerequisite pip packages
+      pip:
+        name:
+          - rackspaceauth
+      notify:
+        - Restart nodepool-launcher
+        - Restart nodepool-builder
+
+    # install extra packages for diskimage-builder
+    # The native xenial package which provides vhd-utils (blktap-utils) does not support
+    # the 'convert' command which is required in order to properly prepare VHD images for
+    # the Xen hosts used by Rackspace Public Cloud. We therefore make use of the same PPA
+    # used by openstack-infra which has the modified version available.
+    # https://launchpad.net/~openstack-ci-core/+archive/ubuntu/vhd-util
+    # built from: https://github.com/emonty/vhd-util
+    # deployed by: https://github.com/openstack-infra/puppet-diskimage_builder/blob/339340409823927bb987f0195c6cedfdace05f4a/manifests/init.pp#L26
+
+    - name: Add vhd-util PPA
+      apt_repository:
+        filename: "vhd-util"
+        repo: "ppa:openstack-ci-core/vhd-util"
+        update_cache: yes
+      notify:
+        - Restart nodepool-builder
+
+    - name: Install vhd-util
+      apt:
+        name: "vhd-util"
+      notify:
+        - Restart nodepool-builder
+
+    # the default /etc/hosts file results in the name of the instance
+    # resolving to its own private address first, causing zookeeper
+    # to listen on the wrong address, and thus clustering to fail
+    - name: Prepare /etc/hosts for the zookeeper group
+      copy:
+        content: |
+          127.0.0.1 localhost
+          # The following lines are desirable for IPv6 capable hosts
+          ::1 ip6-localhost ip6-loopback
+          fe00::0 ip6-localnet
+          ff00::0 ip6-mcastprefix
+          ff02::1 ip6-allnodes
+          ff02::2 ip6-allrouters
+          ff02::3 ip6-allhosts
+          # zookeeper hosts
+          {% for host in zookeeper_hosts %}
+          {{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
+          {{ hostvars[host].ansible_default_ipv6.address }} {{ host }}
+          {% endfor %}
+        dest: "/etc/hosts"
+      notify:
+        - Restart zookeeper
+
+    - name: Configure firewall to allow cluster traffic (ipv4)
+      ufw:
+        rule: allow
+        from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
+      with_items: "{{ zookeeper_hosts }}"
+      notify:
+        - Restart zookeeper
+
+    - name: Configure firewall to allow cluster traffic (ipv6)
+      ufw:
+        rule: allow
+        from_ip: "{{ hostvars[item].ansible_default_ipv6.address }}"
+      with_items: "{{ zookeeper_hosts }}"
+      notify:
+        - Restart zookeeper
+
+    - name: Setup zookeeper
+      include_role:
+        name: AnsibleShipyard.zookeeper
+
+    - name: Setup diskimage-builder
+      include_role:
+        name: openstack.diskimage-builder
+
+    # NOTE(odyssey4me):
+    # We execute the pre-tasks for the role to create the nodepool
+    # user/group so that we can put the various files in need in-place
+    # before we setup all the services.
+    - name: Create nodepool user directories
+      include_role:
+        name: openstack.nodepool
+      vars:
+        nodepool_task_manager:
+          - pre
+
+    - name: Create openstack config directory
+      file:
+        path: "/var/lib/nodepool/.config/openstack"
+        owner: "nodepool"
+        group: "nodepool"
+        mode: "0700"
+        state: directory
+
+    - name: Copy clouds.yaml
+      copy:
+        src: "{{ lookup('env', 'OS_CLIENT_CONFIG_FILE') }}"
+        dest: "/var/lib/nodepool/.config/openstack/clouds.yaml"
+        owner: "nodepool"
+        group: "nodepool"
+        mode: "0600"
+      notify:
+        - Restart nodepool-builder
+        - Restart nodepool-launcher
+
+    - name: Create ssh config directory
+      file:
+        path: "/home/nodepool/.ssh"
+        owner: "nodepool"
+        group: "nodepool"
+        mode: "0700"
+        state: directory
+
+    - name: Copy private key
+      copy:
+        src: "{{ lookup('env', 'JENKINS_SSH_PRIVKEY') }}"
+        dest: "/home/nodepool/.ssh/id_rsa"
+        owner: "nodepool"
+        group: "nodepool"
+        mode: "0600"
+      notify:
+        - Restart nodepool-launcher
+
+    - name: Allow passwordless sudo for nodepool
+      lineinfile:
+        dest: /etc/sudoers.d/nodepool
+        create: yes
+        state: present
+        regexp: '^%nodepool'
+        line: '%nodepool ALL=NOPASSWD: ALL'
+        validate: visudo -cf %s
+      notify:
+        - Restart nodepool-builder
+
+    - name: Create diskimage-builder tmp directory
+      file:
+        path: "/opt/nodepool/dib_tmp"
+        owner: "nodepool"
+        group: "nodepool"
+        state: directory
+      notify:
+        - Restart nodepool-builder
+
+    - name: Setup nodepool services
+      include_role:
+        name: openstack.nodepool
+
+    - name: Setup log rotation
+      include_role:
+        name: openstack.logrotate
+

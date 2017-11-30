@@ -72,7 +72,7 @@ check_ansible(){
          return
        }
   mkdir -p playbooks/roles
-  ansible-galaxy install -r role_requirements.yml -p playbooks/roles
+  find . -name "role_requirements.yml" -exec ansible-galaxy install -p playbooks/roles -r "{}" \;
   ansible-playbook --syntax-check playbooks/*.yml \
     && echo "Playbook Syntax OK" \
     || { echo "Playbook syntax fail"; rc=1; }

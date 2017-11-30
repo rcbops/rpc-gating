@@ -9,7 +9,7 @@
             Hours. Instances older than this will be removed.
       - string:
           name: "PROTECTED_PREFIX"
-          default: "long-running-slave|influx-|WEBHOOK-PROXY"
+          default: "long-running-slave|influx-|WEBHOOK-PROXY|nodepool"
           description: |
             Instances that match this prefix regex will not be cleaned up.
       - string:
