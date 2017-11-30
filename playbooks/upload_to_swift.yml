@@ -7,6 +7,7 @@
       command: "tar -cjf {{ archive_name }} {{ artifacts_dir }}"
       args:
         chdir: "{{ artifacts_parent_dir }}"
+        warn: no
       tags:
         - skip_ansible_lint
 
