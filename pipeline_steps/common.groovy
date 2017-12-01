@@ -546,6 +546,42 @@ def docker_cache_workaround(){
    sh "touch -t 201704100000 *.txt"
 }
 
+/* Used to check whether a pull request only includes changes
+ * to files that match the skip regex. If the regex is an
+ * empty string, that is treated as matching nothing.
+ */
+Boolean skip_build_check(String regex) {
+  print "Skipping pattern: '$regex'"
+  if (regex != "") {
+    def rc = sh(
+      script: """#!/bin/bash
+        set -xeu
+        cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+        git status
+        git show --stat=400,400 | awk '/\\|/{print \$1}' \
+            |python -c 'import re, sys; all(re.search(r"${regex}", line, re.VERBOSE) for line in sys.stdin) and sys.exit(0) or sys.exit(1)'
+        """,
+        returnStatus: true
+    )
+    if (rc==0) {
+      print "All change files match skip pattern. Skipping..."
+      return true
+    } else if(rc==1) {
+      print "One or more change files not matched by skip pattern. Continuing..."
+      return false
+    } else if(rc==128) {
+      throw new Exception("Directory is not a git repo, cannot compile changes.")
+    }
+  } else {
+    return false
+  } // if
+}
+
+/* DEPRECATED FUNCTION
+ * This function should be removed once it is no longer in use. It remains
+ * while still required by old-style jobs and has been replaced in standard
+ * jobs by `skip_build_check`.
+ */
 def is_doc_update_pr(String git_dir) {
   if (env.ghprbPullId != null) {
     dir(git_dir) {

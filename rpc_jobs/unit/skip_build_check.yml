@@ -1,0 +1,76 @@
+- job:
+    name: RE-unit-test-skip-build-check
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.shared_slave{
+
+        env.RE_JOB_REPO_NAME = "test_repository"
+
+        stage("Setup repository") {
+          sh """#!/bin/bash -xeu
+            mkdir ${env.RE_JOB_REPO_NAME}
+            cd ${env.RE_JOB_REPO_NAME}
+            git init .
+            mkdir changes_can_be_skipped
+            touch changes_can_be_skipped/skip_me
+            mkdir changes_must_be_tested
+            touch changes_must_be_tested/test_me
+            git add -A
+            git commit -m Setup
+            """
+        }
+
+        skip_pattern = "^changes_can_be_skipped/"
+
+        stage("Ensure true when empty commit") {
+          sh """#!/bin/bash -xeu
+            cd ${env.RE_JOB_REPO_NAME}
+            git commit --allow-empty -m 'No changes; can be skipped'
+          """
+          Boolean skip_build = common.skip_build_check(skip_pattern)
+          assert skip_build
+        }
+
+        stage("Ensure false when some changes match pattern") {
+          sh """#!/bin/bash -xeu
+            cd ${env.RE_JOB_REPO_NAME}
+            echo '# another test edit' > changes_can_be_skipped/skip_me
+            echo '# test edit' > changes_must_be_tested/test_me
+            git add -A
+            git commit -m 'These changes must not be skipped'
+          """
+          Boolean skip_build = common.skip_build_check(skip_pattern)
+          assert ! skip_build
+        }
+
+        stage("Ensure true when all changes match pattern") {
+          sh """#!/bin/bash -xeu
+            cd ${env.RE_JOB_REPO_NAME}
+            echo '# test edit' > changes_can_be_skipped/skip_me
+            touch changes_can_be_skipped/skip_me_as_well
+            git add -A
+            git commit -m 'These changes can be skipped'
+          """
+          Boolean skip_build = common.skip_build_check(skip_pattern)
+          assert skip_build
+        }
+
+        stage("Ensure false when all changes match pattern") {
+          sh """#!/bin/bash -xeu
+            cd ${env.RE_JOB_REPO_NAME}
+            echo '# another test edit' > changes_must_be_tested/test_me
+            touch changes_must_be_tested/test_me_as_well
+            git add -A
+            git commit -m 'These changes must also not be skipped'
+          """
+          Boolean skip_build = common.skip_build_check(skip_pattern)
+          assert ! skip_build
+        }
+      }

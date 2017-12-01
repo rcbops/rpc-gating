@@ -5,6 +5,13 @@
     series: "master"
     branches:
       - "master"
+    skip_pattern: >-
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
@@ -46,6 +53,13 @@
     series: "newton"
     branches:
       - "newton.*"
+    skip_pattern: >-
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
@@ -89,6 +103,13 @@
     series: "mitaka"
     branches:
       - "mitaka.*"
+    skip_pattern: >-
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
@@ -108,6 +129,13 @@
     series: "liberty"
     branches:
       - "liberty.*"
+    skip_pattern: >-
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
@@ -127,6 +155,13 @@
     series: "kilo"
     branches:
       - "kilo.*"
+    skip_pattern: >-
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
