@@ -141,6 +141,24 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-liberty-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "liberty"
+    branches:
+      - "liberty.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "flake8"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-openstack-kilo-premerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
