@@ -67,12 +67,12 @@
     scenario:
       - "swift"
     action:
-      - "liberty_to_r14.4.1_leap"
-      - "r12.2.8_to_r14.4.1_leap"
-      - "r12.2.5_to_r14.4.1_leap"
-      - "r12.2.2_to_r14.4.1_leap"
-      - "r12.1.2_to_r14.4.1_leap"
-      - "kilo_to_r14.4.1_leap"
+      - "liberty_to_r14.5.0_leap"
+      - "r12.2.8_to_r14.5.0_leap"
+      - "r12.2.5_to_r14.5.0_leap"
+      - "r12.2.2_to_r14.5.0_leap"
+      - "r12.1.2_to_r14.5.0_leap"
+      - "kilo_to_r14.5.0_leap"
       - "kilo_to_r14.2.0_leap"
     jira_project_key: "RLM"
     jobs:
@@ -114,12 +114,12 @@
 #    scenario:
 #      - "swift"
 #    action:
-#      - "liberty_to_r14.4.1_leap"
-#      - "r12.2.8_to_r14.4.1_leap"
-#      - "r12.2.5_to_r14.4.1_leap"
-#      - "r12.2.2_to_r14.4.1_leap"
-#      - "r12.1.2_to_r14.4.1_leap"
-#      - "kilo_to_r14.4.1_leap"
+#      - "liberty_to_r14.5.0_leap"
+#      - "r12.2.8_to_r14.5.0_leap"
+#      - "r12.2.5_to_r14.5.0_leap"
+#      - "r12.2.2_to_r14.5.0_leap"
+#      - "r12.1.2_to_r14.5.0_leap"
+#      - "kilo_to_r14.5.0_leap"
 #    jira_project_key: "RLM"
 #    jobs:
 #      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
