@@ -183,6 +183,7 @@
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     scenario:
+      - "ironic"
       - "swift"
     action:
       - deploy:
@@ -202,6 +203,7 @@
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
     scenario:
+      - "ironic"
       - "swift"
     action:
       - deploy:
