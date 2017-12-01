@@ -102,7 +102,7 @@ check_naming_standards() {
 }
 
 check_python(){
-  flake8 --exclude=.lintvenv,webhooktranslator . \
+  flake8 --exclude=.lintvenv,webhooktranslator,playbooks/roles . \
     && echo "Python syntax ok" \
     || { echo "Python syntax fail"; rc=1; }
 }
