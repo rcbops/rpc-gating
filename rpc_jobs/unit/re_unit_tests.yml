@@ -59,7 +59,7 @@
               ]
             ]
           )
-        }
+        },
         "Skip Build Check": {
           build(
             job: "RE-unit-test-skip-build-check",
@@ -72,7 +72,7 @@
               ]
             ]
           )
-        }
+        },
       ])
 
 #TODO: Jira Issue Manipulation, Validation of Published Artefacts.
