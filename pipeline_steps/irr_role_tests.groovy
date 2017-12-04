@@ -26,7 +26,8 @@ def run_irr_tests() {
       currentBuild.result="FAILURE"
       throw e
     } finally {
-      common.safe_jira_comment("${currentBuild.result}: [${env.BUILD_TAG}|${env.BUILD_URL}]")
+      common.safe_jira_comment("${currentBuild.result}: [${env.BUILD_TAG}|${env.BUILD_URL}]",
+                               env.ghprbGhRepository)
       common.archive_artifacts()
     }
   } // pubcloud slave

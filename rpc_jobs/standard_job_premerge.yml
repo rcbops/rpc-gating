@@ -184,7 +184,8 @@
             currentBuild.result="FAILURE"
             throw e
           }} finally {{
-            common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
+            common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]",
+                                     env.RE_JOB_REPO_NAME)
             common.archive_artifacts()
           }} // try
         }}
