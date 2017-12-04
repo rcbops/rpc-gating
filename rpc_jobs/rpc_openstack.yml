@@ -123,6 +123,26 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-mitaka-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "mitaka"
+    branches:
+      - "mitaka.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "bashate"
+      - "flake8"
+      - "releasenotes"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-openstack-liberty-premerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
@@ -149,6 +169,24 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-liberty-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "liberty"
+    branches:
+      - "liberty.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "flake8"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-openstack-kilo-premerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
@@ -170,6 +208,24 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-kilo-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "kilo"
+    branches:
+      - "kilo.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "flake8"
+    action:
+      - "tox-test"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
