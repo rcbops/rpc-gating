@@ -7,6 +7,11 @@
           num-to-keep: 30
     parameters:
       - rpc_gating_params
+      - string:
+          name: skip_pattern
+          default: |
+            \.fileextension$
+            | ^changes_can_be_skipped/
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.shared_slave{
@@ -26,8 +31,6 @@
             git commit -m Setup
             """
         }
-
-        skip_pattern = "^changes_can_be_skipped/"
 
         stage("Ensure true when empty commit") {
           sh """#!/bin/bash -xeu
