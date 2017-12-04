@@ -6,6 +6,7 @@
 #   - name: instance1
 #     flavor: general1-1
 #     region: DFW
+#     state: present
 #     metadata:
 #       group: mygroup
 #
@@ -16,11 +17,13 @@
 #   - name: instance1
 #     flavor: general1-1
 #     region: DFW
+#     state: present
 #     volumes:
 #       - name: vol1
 #         device: /dev/xvde
 #         type: SATA
 #         size: 1024
+#         state: present
 #     metadata:
 #       group: mygroup
 #
