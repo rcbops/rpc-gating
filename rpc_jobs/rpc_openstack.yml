@@ -5,7 +5,7 @@
     series: "master"
     branches:
       - "master"
-    skip_pattern: >-
+    skip_pattern: |
       \.md$
       | \.rst$
       | ^releasenotes/
@@ -53,7 +53,7 @@
     series: "newton"
     branches:
       - "newton.*"
-    skip_pattern: >-
+    skip_pattern: |
       \.md$
       | \.rst$
       | ^releasenotes/
@@ -103,7 +103,7 @@
     series: "mitaka"
     branches:
       - "mitaka.*"
-    skip_pattern: >-
+    skip_pattern: |
       \.md$
       | \.rst$
       | ^releasenotes/
@@ -129,7 +129,7 @@
     series: "liberty"
     branches:
       - "liberty.*"
-    skip_pattern: >-
+    skip_pattern: |
       \.md$
       | \.rst$
       | ^releasenotes/
@@ -155,7 +155,7 @@
     series: "kilo"
     branches:
       - "kilo.*"
-    skip_pattern: >-
+    skip_pattern: |
       \.md$
       | \.rst$
       | ^releasenotes/

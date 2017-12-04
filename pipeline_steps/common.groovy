@@ -551,26 +551,28 @@ def docker_cache_workaround(){
  * empty string, that is treated as matching nothing.
  */
 Boolean skip_build_check(String regex) {
-  print "Skipping pattern: '$regex'"
+  print "Skipping pattern:\n'$regex'"
   if (regex != "") {
-    def rc = sh(
-      script: """#!/bin/bash
-        set -xeu
-        cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-        git status
-        git show --stat=400,400 | awk '/\\|/{print \$1}' \
-            |python -c 'import re, sys; all(re.search(r"${regex}", line, re.VERBOSE) for line in sys.stdin) and sys.exit(0) or sys.exit(1)'
-        """,
-        returnStatus: true
-    )
-    if (rc==0) {
-      print "All change files match skip pattern. Skipping..."
-      return true
-    } else if(rc==1) {
-      print "One or more change files not matched by skip pattern. Continuing..."
-      return false
-    } else if(rc==128) {
-      throw new Exception("Directory is not a git repo, cannot compile changes.")
+    withEnv(["SKIP_REGEX=$regex"]) {
+      def rc = sh(
+        script: """#!/bin/bash
+          set -xeu
+          cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+          git status
+          git show --stat=400,400 | awk '/\\|/{print \$1}' \
+              |python -c 'import os, re, sys; all(re.search(os.environ["SKIP_REGEX"], line, re.VERBOSE) for line in sys.stdin) and sys.exit(0) or sys.exit(1)'
+          """,
+          returnStatus: true
+      )
+      if (rc==0) {
+        print "All change files match skip pattern. Skipping..."
+        return true
+      } else if(rc==1) {
+        print "One or more change files not matched by skip pattern. Continuing..."
+        return false
+      } else if(rc==128) {
+        throw new Exception("Directory is not a git repo, cannot compile changes.")
+      }
     }
   } else {
     return false
