@@ -56,7 +56,8 @@
       }
       void verify(){
         sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
-          sh """#!/bin/bash
+          retry(3){
+            sh """#!/bin/bash
       # Deliberate outdent to match bash's heredoc requirements.
       sudo -E bash <<EOF
               cd rpc-eng-ops/phobos-re-automation
@@ -69,6 +70,7 @@
               pip install ansible==2.4.0.0 netaddr==0.7.19 shade==1.24.0 >/dev/null
               export OS_CLIENT_CONFIG_FILE="/tmp/phobos_verification_clouds.yml"
               vars_files="\$(for i in \$(ls /etc/openstack_deploy/user_*.yml); do echo -ne "-e @\$i "; done)"
+              # Note long retry period is to allow rabbit queues to settle, see RE-1200
               ansible-playbook \
                 -i /opt/rpc-openstack/openstack-ansible/playbooks/inventory/ \
                 -e rpc_eng_ops_version="${RPC_ENG_OPS_BRANCH}" \
@@ -76,11 +78,14 @@
                 -e maas_use_api="true" \
                 -e maas_verify_status="true" \
                 -e maas_verify_wait="false" \
+                -e maas_verify_delay="60" \
+                -e maas_verify_retries="15" \
                 -e WORKSPACE="${WORKSPACE}" \
                 \\\$vars_files \
                 verify.yml
       EOF
-          """
+            """
+          } // retry
         } // sshagent
       }
       library "rpc-gating@${RPC_GATING_BRANCH}"
