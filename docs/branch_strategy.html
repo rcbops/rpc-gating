@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/gitgraph.js/1.11.4/gitgraph.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gitgraph.js/1.11.4/gitgraph.js"> </script>
+  <style>
+    .gitgraph{
+      left: 0px;
+      margin-top: 30px;
+    }
+    .notes{
+      position: absolute;
+      top: 0px;
+      left: 330px;
+      width: 400px;
+    }
+    .stage {
+      position: relative
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+  </style>
+</head>
+<body>
+<script>
+
+  var myTemplateConfig = {
+    colors: ["#93a883", "#839fa8", "#9d83a8"], // branches colors, 1 per column
+    branch: {
+      lineWidth: 8,
+      spacingX: 50,
+      showLabel: true
+    },
+    commit: {
+      spacingY: -80,
+      dot: {
+        size: 12
+      },
+      message: {
+        displayAuthor: false,
+        displayBranch: false,
+        displayHash: false,
+        font: "normal 12pt Arial"
+      },
+    }
+  };
+  var myTemplate = new GitGraph.Template(myTemplateConfig);
+
+  var config = {
+    template: myTemplate,
+    mode: "extended"
+  }
+
+   // used to ensure each canvas gets a unique id
+   var canvasCounter = 0
+
+   // Add all the elements for a gitgraph, title and description.
+   function stage(config, title, notes_text){
+     var body = document.getElementsByTagName("BODY")[0];
+     var stage = document.createElement("div")
+     var notes = document.createElement("div")
+     var clear = document.createElement("div")
+     stage.classList.add("stage")
+     notes.classList.add("notes")
+     clear.classList.add("clear")
+     notes.innerHTML = `<h1>${title}</h1> <p>${notes_text}</p>`
+
+     canvasCounter++
+     var canvas = document.createElement("canvas")
+     canvas.id="gitgraph"+canvasCounter
+     canvas.classList.add("gitgraph")
+
+     stage.appendChild(canvas)
+     stage.appendChild(notes)
+     stage.appendChild(clear)
+     body.appendChild(stage)
+
+     config['elementId'] = canvas.id
+     var gg = new GitGraph(config)
+     var branch = gg.branch("mainline")
+     return branch
+   }
+
+  var mainline = stage(config,"RC Branch", "An RC branch is created from a point on mainline. Mainline progresses.")
+  mainline.commit("A")
+  mainline.commit({message: "B", tag: "mainline-rc"})
+  var rc = mainline.branch("mainline-rc")
+  mainline.commit("C")
+  mainline.commit({message: "D", tag: ""})
+
+  mainline = stage(config, "Cherrypicks", "If a release blocking problem is found in the RC branch, the fix is cherry picked from mainline.")
+  mainline.commit("A")
+  mainline.commit({message: "B"})
+  var rc = mainline.branch("mainline-rc")
+  mainline.commit("C")
+  mainline.commit({message: "D", tag: ""})
+  rc.commit({message: "E, cherry-picked from D", tag: ""})
+
+  mainline = stage(config, "Release", "Head of the RC branch is tagged, then the RC branch is reset to the head of mainline.")
+  mainline.commit("A")
+  mainline.commit({message: "B", tag: "x.y.z"})
+  mainline.commit("C")
+  mainline.commit({message: "D", tag: "mainline-rc"})
+
+  mainline = stage(config, "Hotfix","Two branches are created from the broken release tag: series-version and series-version-hotfix. The required fix is cherrypicked into series-version-hotfix. A PR is then created from series-version-hotfix to series-version. If tests pass, then the PR is merged, and the head of series-version is tagged.")
+  mainline.commit({message:"A",tag: "x.y.z"})
+  var hotfix_target = mainline.branch("series-version")
+  var hotfix = mainline.branch("series-version-hotfix")
+  mainline.commit("B")
+  mainline.commit("C")
+  mainline.commit("D")
+  hotfix.commit({message:"E, cherry-picked from C", tag: ""})
+  hotfix.merge(hotfix_target)
+  hotfix_target.tag("x.y.z+1")
+  mainline.commit("F")
+</script>
+</body>
+</html>
