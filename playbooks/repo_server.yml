@@ -7,9 +7,10 @@
       setup:
         gather_subset: "!facter,!ohai"
 
-    - set_fact:
+    - name: "Create fact for instance's volumes"
+      set_fact:
         repo_server_volumes: "{{ item['volumes'] }}"
-      when: "{{ item['name'] == inventory_hostname }}"
+      when: "item['name'] == inventory_hostname"
       with_items: "{{ instance_list | default([]) }}"
 
     - name: Create vg0 volume group
