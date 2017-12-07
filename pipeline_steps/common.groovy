@@ -621,20 +621,19 @@ def is_doc_update_pr(String git_dir) {
  */
 def get_jira_issue_key(String repo_path="rpc-openstack"){
   def key_regex = "[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"
-  dir(repo_path){
-    commits = sh(
-      returnStdout: true,
-      script: """
-        git log --pretty=%B upstream/${ghprbTargetBranch}..${ghprbSourceBranch}""")
-    print("looking for Jira issue keys in the following commits: ${commits}")
-    try{
-      String key = (commits =~ key_regex)[0]
-      print ("First Found Jira Issue Key: ${key}")
-      return key
-    } catch (e){
-      throw new Exception("""
-  No JIRA Issue key were found in commits ${repo_path}:${ghprbSourceBranch}""")
-    }
+  commits = sh(
+    returnStdout: true,
+    script: """#!/bin/bash -e
+      cd ${repo_path}
+      git log --pretty=%B origin/${ghprbTargetBranch}..origin/${ghprbSourceBranch}""")
+  print("Looking for Jira issue keys in the following commits: ${commits}")
+  try{
+    String key = (commits =~ key_regex)[0]
+    print ("First Found Jira Issue Key: ${key}")
+    return key
+  } catch (e){
+    throw new Exception("""
+No JIRA Issue key were found in commits ${repo_path}:${ghprbSourceBranch}""")
   }
 }
 
