@@ -42,7 +42,7 @@
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     properties:
       - build-discarder:
-          num-to-keep: "30"
+          num-to-keep: 14
       - github:
           url: "{repo_url}"
     parameters:
