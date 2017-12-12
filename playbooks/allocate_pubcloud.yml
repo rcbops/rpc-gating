@@ -94,7 +94,7 @@
 
     - name: Wait for startup tasks to finish
       pause:
-        minutes: 5
+        minutes: 1
 
 - hosts: singleuseslave
   remote_user: root
