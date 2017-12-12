@@ -1,9 +1,7 @@
 ---
-- hosts: localhost
-  connection: local
+- hosts: job_nodes
   gather_facts: no
   vars:
-    region: "{{ rax_region }}"
     script_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts"
     os_client_config_file: "{{ lookup('env', 'OS_CLIENT_CONFIG_FILE') }}"
     image_name: "{{ lookup('env', 'SAVE_IMAGE_NAME') }}"
@@ -15,23 +13,28 @@
        msg: "The SAVE_IMAGE_NAME environment variable must be set."
       when: image_name == ""
 
+    - debug:
+        msg: "Creating image:{{ image_name }} in region:{{ rax_region }} from instance: {{ instance_name }}"
+
     - name: Get instance info
       os_server_facts:
         server: "{{ instance_name }}"
-        region_name: "{{ region }}"
+        region_name: "{{ rax_region }}"
         cloud: "{{ cloud_name }}"
+      delegate_to: localhost
 
     - name: Confirm one instance matching name
       fail:
         msg: "The number of servers matching the instance name is not 1."
       when: openstack_servers | length != 1
+      delegate_to: localhost
 
     - set_fact:
         instance: "{{ openstack_servers[0] }}"
+      delegate_to: localhost
 
     - name: Execute public cloud instance cleanup script
       script: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/rax_instance_clean.sh"
-      delegate_to: "{{ instance.accessIPv4 }}"
 
     # This task is executed asynchronously so that
     # Ansible does not wait for completion before
@@ -42,14 +45,14 @@
       async: 1
       poll: 0
       ignore_errors: true
-      delegate_to: "{{ instance.accessIPv4 }}"
 
     # In order to ensure the integrity of the instance image
-    # we wait 30 seconds to give it a chance to complete shut
+    # we wait 60 seconds to give it a chance to complete shut
     # down before executing the save.
     - name: Pause for a minute to allow the instance to shut down
       pause:
         minutes: 1
+      delegate_to: localhost
 
     - name: Save public cloud instance
       command: >-
@@ -59,3 +62,4 @@
                                                 --cloudname {{ cloud_name }}
       environment:
         OS_CLIENT_CONFIG_FILE: "{{ os_client_config_file }}"
+      delegate_to: localhost

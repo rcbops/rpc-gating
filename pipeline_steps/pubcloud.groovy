@@ -40,38 +40,33 @@ def cleanup(Map args){
  *
  */
 def savePubCloudSlave(Map args){
-  common.conditionalStep(
-    step_name: 'Save Slave',
-    step: {
-      add_instance_env_params_to_args(args)
-      if (!("inventory" in args)){
-        args.inventory = "inventory"
-      }
-      withCredentials(common.get_cloud_creds()){
+  add_instance_env_params_to_args(args)
+  if (!("inventory" in args)){
+    args.inventory = "inventory"
+  }
+  withCredentials(common.get_cloud_creds()){
 
-        dir("rpc-gating/playbooks"){
-          clouds_cfg = common.writeCloudsCfg(
-            username: env.PUBCLOUD_USERNAME,
-            api_key: env.PUBCLOUD_API_KEY
-          )
-          env.OS_CLIENT_CONFIG_FILE = clouds_cfg
-          env.SAVE_IMAGE_NAME = args.image
-          common.venvPlaybook(
-            playbooks: ['save_pubcloud.yml'],
-            args: [
-              "-i ${args.inventory}",
-              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
-            ],
-            vars: args
-          )
-          stash (
-            name: args.inventory,
-            includes: "${args.inventory}/hosts"
-          )
-        } // dir
-      } //withCredentials
-    } //step
-  ) //conditionalStep
+    dir("rpc-gating/playbooks"){
+      clouds_cfg = common.writeCloudsCfg(
+        username: env.PUBCLOUD_USERNAME,
+        api_key: env.PUBCLOUD_API_KEY
+      )
+      env.OS_CLIENT_CONFIG_FILE = clouds_cfg
+      env.SAVE_IMAGE_NAME = args.image
+      common.venvPlaybook(
+        playbooks: ['save_pubcloud.yml'],
+        args: [
+          "-i ${args.inventory}",
+          "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+        ],
+        vars: args
+      )
+      stash (
+        name: args.inventory,
+        includes: "${args.inventory}/hosts"
+      )
+    } // dir
+  } //withCredentials
 } //save
 
 
@@ -177,10 +172,10 @@ be supplied uppercase in the env dictionary, or lower case as
 direct arguments. */
 def runonpubcloud(Map args=[:], Closure body){
   add_instance_env_params_to_args(args)
-  // randomised inventory_path to avoid parallel conflicts
   if (env.WORKSPACE == null){
     throw new Exception("runonpubcloud must be run from within a node")
   }
+  // randomised inventory_path to avoid parallel conflicts
   args.inventory="inventory.${common.rand_int_str()}"
   args.inventory_path="${WORKSPACE}/rpc-gating/playbooks/${args.inventory}"
   String instance_name = common.gen_instance_name()
@@ -189,6 +184,24 @@ def runonpubcloud(Map args=[:], Closure body){
     getPubCloudSlave(args)
     common.use_node(instance_name){
       body()
+      // Read the image_name file from the single use slave.
+        try {
+          sh """#!/bin/bash -xeu
+            cp /gating/thaw/image_name $WORKSPACE/image_name
+          """
+          args.image = readFile("${WORKSPACE}/image_name").trim()
+          print ("Read image name from /gating/thaw/image_name: ${args.image}.")
+          print ("Snapshot Enabled")
+        } catch (e){
+          args.image = null
+          print ("/gating/thaw/image_name not found, not taking snapshot")
+        }
+    } // single use slave
+    // When the above use_node block ends, the workspace on the slave is wiped.
+    // This means that any repos in the workspace will not be in the snapshot.
+    // Execute the save from outside the instance.
+    if(args.image != null){
+      savePubCloudSlave(args)
     }
   }catch (e){
     print(e)

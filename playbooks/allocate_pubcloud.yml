@@ -63,6 +63,11 @@
       set_fact:
         instance: "{{ (result |json_query('results[?changed]'))[0] }}"
 
+    - name: Add Host
+      add_host:
+        hostname: "singleuseslave"
+        ansible_ssh_host: "{{instance.server.accessIPv4}}"
+
     - name: Create inventory directory
       file:
         path: "{{ inventory_path }}"
@@ -90,3 +95,18 @@
     - name: Wait for startup tasks to finish
       pause:
         minutes: 5
+
+- hosts: singleuseslave
+  tasks:
+    - name: Check for thaw hook
+      stat:
+        path: /gating/thaw/run
+      register: thaw
+
+    - name: Execute thaw hook
+      shell: |
+        set -xeu
+        /gating/thaw/run
+      args:
+        executable: /bin/bash
+      when: thaw.stat.exists|bool

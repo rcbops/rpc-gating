@@ -15,7 +15,7 @@
       // to ensure that the job is always executed the same
       // way.
       env.FLAVOR = "performance1-1"
-      env.STAGES = "Allocate Resources, Save Slave, Cleanup"
+      env.STAGES = "Allocate Resources, Cleanup"
       image_list = [
         [ src: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)",
           dest: "Ubuntu 16.04 LTS prepared for RPC deployment" ],
