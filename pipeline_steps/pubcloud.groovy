@@ -101,7 +101,6 @@ String getPubCloudSlave(Map args){
           env.OS_CLIENT_CONFIG_FILE = clouds_cfg
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
-                        "instance_prep.yml",
                         "drop_ssh_auth_keys.yml"],
             args: [
               "-i ${args.inventory}",

@@ -1,6 +1,0 @@
-- hosts: job_nodes
-  remote_user: root
-  gather_facts: False
-  tasks:
-    - name: RLM-275 Adds python packages if python is not present
-      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal python-yaml)
