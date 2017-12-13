@@ -10,9 +10,9 @@ common.shared_slave(){
     // of the environment variables automatically as
     // they will not be provided by a human.
     if ( env.ghprbPullId != null ) {
-      List org_repo = env.ghprbGhRepository.split("/")
-      env.ORG = org_repo[0]
-      env.REPO = org_repo[1]
+      List source_repo = env.ghprbAuthorRepoGitUrl.split("/")
+      env.ORG = source_repo[-2]
+      env.REPO = source_repo[-1].tokenize(".")[0]
       env.RC_BRANCH = env.ghprbSourceBranch
     }
     withCredentials([
