@@ -87,10 +87,7 @@
             // Here we only create a JIRA issue when we are not running the job
             // against a testing branch or against a specific job
             if (env.RPC_GATING_BRANCH == "master" && env.JOBS == "-r rpc_jobs") {
-              common.create_jira_issue("RE",
-                                       env.BUILD_TAG,
-                                       env.BUILD_URL,
-                                       "Task")
+              common.build_failure_issue("RE")
             }
             throw e
           } // catch

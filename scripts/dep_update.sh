@@ -48,13 +48,13 @@ else
   issue=$(python ${WORKSPACE}/rpc-gating/scripts/jirautils.py \
         --user "${JIRA_USER}" \
         --password "${JIRA_PASS}" \
-        create_issue \
+        get_or_create_issue \
           --project "${JIRA_PROJECT_KEY}" \
           --summary "${jira_summary}" \
           --description "${message}" \
-          --type "${JIRA_ISSUE_TYPE}" \
           --label RE_DEP_UPDATE \
-          --existing-issue-query "project = ${JIRA_PROJECT_KEY} AND status = BACKLOG AND summary ~ \"${jira_summary}\""
+          --label jenkins \
+          --label "${repo}_${branch}"
   )
   echo "Issue: ${issue}"
 

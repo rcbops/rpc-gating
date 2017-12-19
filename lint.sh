@@ -39,7 +39,7 @@ check_jjb(){
 # This pulls job.dsl from jjb templates so they can be checked for groovy syntax
 extract_groovy_from_jjb(){
   mkdir -p tmp_groovy
-  for jjbfile in rpc_jobs/*.yml
+  for jjbfile in $(find rpc_jobs -iname \*.yml)
   do
     scripts/extract_dsl.py --jjbfile "${jjbfile}" --outdir tmp_groovy
   done

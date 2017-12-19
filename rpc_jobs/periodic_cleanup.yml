@@ -61,10 +61,7 @@
                 }
               } catch(e) {
                 print(e)
-                common.create_jira_issue("RE",
-                                         env.BUILD_TAG,
-                                         env.BUILD_URL,
-                                         "Task")
+                common.build_failure_issue("RE")
                 throw e
               }
             }
@@ -116,10 +113,7 @@
             }
           } catch(e) {
             print(e)
-            common.create_jira_issue("RE",
-                                     env.BUILD_TAG,
-                                     env.BUILD_URL,
-                                     "Task")
+            common.build_failure_issue("RE")
             throw e
           }
         } // internal_slave
