@@ -47,6 +47,8 @@
 
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.internal_slave(){
-          webhooks.webhooks()
-      } // cit node
+      common.globalWraps(){
+        common.internal_slave(){
+            webhooks.webhooks()
+        } // cit node
+      } // globalWraps

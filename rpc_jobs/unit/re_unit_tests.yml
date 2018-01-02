@@ -86,6 +86,19 @@
             ]
           )
         },
+        "Global Wraps Check": {
+          build(
+            job: "RE-unit-test-globalwraps",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
       ])
 
 #TODO: Jira Issue Manipulation, Validation of Published Artefacts.

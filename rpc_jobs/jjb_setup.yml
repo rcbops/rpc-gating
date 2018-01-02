@@ -39,21 +39,22 @@
         - rpc_gating_params
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.internal_slave(){
-        try {
-          dir("rpc-gating"){
-            stage('Run JJB'){
-              withCredentials([
-                usernamePassword(
-                  credentialsId: "service_account_jenkins_api_creds",
-                  usernameVariable: "JENKINS_USER",
-                  passwordVariable: "JENKINS_API_PASSWORD"
-                )
-              ]){
-                sh """#!/bin/bash -xe
-                  source ../.venv/bin/activate
+      common.globalWraps(){
+        common.internal_slave(){
+          try {
+            dir("rpc-gating"){
+              stage('Run JJB'){
+                withCredentials([
+                  usernamePassword(
+                    credentialsId: "service_account_jenkins_api_creds",
+                    usernameVariable: "JENKINS_USER",
+                    passwordVariable: "JENKINS_API_PASSWORD"
+                  )
+                ]){
+                  sh """#!/bin/bash -xe
+                    source ../.venv/bin/activate
 
-                  cat > jenkins_jobs.ini << EOF
+                    cat > jenkins_jobs.ini << EOF
       [job-builder]
       ignore_cache=False
       keep_descriptions=False
@@ -66,30 +67,31 @@
       url=${JENKINS_URL}
       EOF
 
-                  if [[ "$RPC_GATING_BRANCH" == "master" ]] && [[ "$JOBS" == "-r rpc_jobs" ]]; then
-                      echo "Setting --delete-old as RPC_GATING_BRANCH=master and JOBS='-r rpc_jobs'"
-                      UPDATE_ARGS="--delete-old"
-                  fi
+                    if [[ "$RPC_GATING_BRANCH" == "master" ]] && [[ "$JOBS" == "-r rpc_jobs" ]]; then
+                        echo "Setting --delete-old as RPC_GATING_BRANCH=master and JOBS='-r rpc_jobs'"
+                        UPDATE_ARGS="--delete-old"
+                    fi
 
-                  jenkins-jobs --conf jenkins_jobs.ini \
-                               --user $JENKINS_USER \
-                               --password $JENKINS_API_PASSWORD \
-                               --ignore-cache \
-                               \$JJB_ARGS update \$UPDATE_ARGS $JOBS
-                """
+                    jenkins-jobs --conf jenkins_jobs.ini \
+                                 --user $JENKINS_USER \
+                                 --password $JENKINS_API_PASSWORD \
+                                 --ignore-cache \
+                                 \$JJB_ARGS update \$UPDATE_ARGS $JOBS
+                  """
+                }
               }
             }
-          }
-        } catch(e) {
-          print(e)
-          // Here we only create a JIRA issue when we are not running the job
-          // against a testing branch or against a specific job
-          if (env.RPC_GATING_BRANCH == "master" && env.JOBS == "-r rpc_jobs") {
-            common.create_jira_issue("RE",
-                                     env.BUILD_TAG,
-                                     env.BUILD_URL,
-                                     "Task")
-          }
-          throw e
-        }
-      }
+          } catch(e) {
+            print(e)
+            // Here we only create a JIRA issue when we are not running the job
+            // against a testing branch or against a specific job
+            if (env.RPC_GATING_BRANCH == "master" && env.JOBS == "-r rpc_jobs") {
+              common.create_jira_issue("RE",
+                                       env.BUILD_TAG,
+                                       env.BUILD_URL,
+                                       "Task")
+            }
+            throw e
+          } // catch
+        } // internal_slave
+      } // globalWraps

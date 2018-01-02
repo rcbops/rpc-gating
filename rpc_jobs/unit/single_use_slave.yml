@@ -27,7 +27,7 @@
               Destroy Slave
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.shared_slave(){
+      common.globalWraps(){
         pubcloud.runonpubcloud {
           sh """
             echo "I'm running on a single use slave!"

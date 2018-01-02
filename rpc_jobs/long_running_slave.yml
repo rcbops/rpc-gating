@@ -33,7 +33,7 @@
 
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.shared_slave(){
+      common.globalWraps(){
           dir("rpc-maas"){
             git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
           }
@@ -95,4 +95,4 @@
             // this doesn't run by default as cleanup isn't included in stages
             pubcloud.delPubCloudSlave(instance_name: instance_name)
           }
-      } // cit node
+      } // globalWraps

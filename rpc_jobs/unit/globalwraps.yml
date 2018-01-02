@@ -1,0 +1,14 @@
+- job:
+    name: RE-unit-test-globalwraps
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        print ("This print will be wrapped by the global wrappers.")
+      }

@@ -10,22 +10,22 @@
       - rpc_gating_params
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
 
-      // These are defined statically instead of parameters
-      // to ensure that the job is always executed the same
-      // way.
-      env.FLAVOR = "performance1-1"
-      env.STAGES = "Allocate Resources, Cleanup"
-      image_list = [
-        [ src: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)",
-          dest: "Ubuntu 16.04 LTS prepared for RPC deployment" ],
-        [ src: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)",
-          dest: "Ubuntu 14.04 LTS prepared for RPC deployment" ]
-      ]
-      region_list = [
-        "DFW", "HKG", "IAD", "ORD", "SYD"
-      ]
-      common.shared_slave(){
+        // These are defined statically instead of parameters
+        // to ensure that the job is always executed the same
+        // way.
+        env.FLAVOR = "performance1-1"
+        env.STAGES = "Allocate Resources, Cleanup"
+        image_list = [
+          [ src: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)",
+            dest: "Ubuntu 16.04 LTS prepared for RPC deployment" ],
+          [ src: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)",
+            dest: "Ubuntu 14.04 LTS prepared for RPC deployment" ]
+        ]
+        region_list = [
+          "DFW", "HKG", "IAD", "ORD", "SYD"
+        ]
         try {
           currentBuild.result = "SUCCESS"
           // Define the parallel build map
@@ -53,5 +53,5 @@
           print e
           currentBuild.result = "FAILURE"
           throw e
-        }
-      }
+        } // try
+      } // globalWraps

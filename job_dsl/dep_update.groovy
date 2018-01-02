@@ -2,7 +2,7 @@
 // as this file won't be templated by JJB.
 // Alternative is to use parameters with JJB vars as the defaults.
 library "rpc-gating@${RPC_GATING_BRANCH}"
-common.shared_slave(){
+common.globalWraps(){
   try {
     stage("Configure Git"){
       common.configure_git()
@@ -66,4 +66,4 @@ common.shared_slave(){
     } // if
     throw e
   } // try
-} // shared_slave
+} // globalWraps

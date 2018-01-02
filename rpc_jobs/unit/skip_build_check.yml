@@ -14,7 +14,7 @@
             | ^changes_can_be_skipped/
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.shared_slave{
+      common.globalWraps{
 
         env.RE_JOB_REPO_NAME = "test_repository"
 
