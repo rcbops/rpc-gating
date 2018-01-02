@@ -41,6 +41,8 @@
         }
       }
 
+      // end of functions
+
       common.globalWraps(){
         // run node cleanups on all nodes
         def nodes = getLongRunningNodes()

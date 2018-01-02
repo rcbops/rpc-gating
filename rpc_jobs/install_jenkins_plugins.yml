@@ -2,6 +2,9 @@
     name: 'Install-Jenkins-Plugins'
     project-type: workflow
     concurrent: false
+    properties:
+      - build-discarder:
+          days-to-keep: 7
     parameters:
       # See params.yml
       - rpc_gating_params

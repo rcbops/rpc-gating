@@ -4,6 +4,8 @@
     concurrent: false
     properties:
       - rpc-gating-github
+      - build-discarder:
+          days-to-keep: 7
     triggers:
       - github # triggered post merge, not on PR
     parameters:
