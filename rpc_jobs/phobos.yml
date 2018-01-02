@@ -89,7 +89,7 @@
         } // sshagent
       }
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      timestamps(){
+      common.globalWraps(){
         common.use_node("deploy-phobos"){
           try {
             withCredentials([
@@ -125,7 +125,6 @@
                   # log current HEAD
                   git show
                   git status
-  
                   pushd openstack-ansible
                     sudo git stash
                     sudo git reset --hard
@@ -198,4 +197,4 @@
             """
           }
         } // phobos node
-      } // timestamps
+      } // globalWraps
