@@ -45,6 +45,8 @@
             Tokens can be obtained from pitchfork.
 
     dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+
       void slack_notify(message, color){
         if(env.SLACK_NOTIFICATIONS == "true"){
           msg_plus_link="${message} (${env.BUILD_URL})"
@@ -88,7 +90,9 @@
           } // retry
         } // sshagent
       }
-      library "rpc-gating@${RPC_GATING_BRANCH}"
+
+      // end of functions
+
       common.globalWraps(){
         common.use_node("deploy-phobos"){
           try {

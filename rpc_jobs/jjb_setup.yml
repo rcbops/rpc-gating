@@ -29,8 +29,9 @@
     name: 'Jenkins-Job-Builder'
     project-type: workflow
     description: Creates and updates jobs with Jenkins Job Builder.
-    build-discarder:
-        days-to-keep: 20
+    properties:
+      - build-discarder:
+          days-to-keep: 20
     parameters:
         - string:
             name: JOBS

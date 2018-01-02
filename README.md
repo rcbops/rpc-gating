@@ -17,7 +17,8 @@
    - ansible-playbook (pip/ansible)
 
 
-## Naming Conventions
+# Conventions
+## Naming
 ### Files
 - Use `_` as the word delimiter
 - All lowercase
@@ -33,3 +34,23 @@
   - `RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}`
   - `RPC-AIO_master-xenial-deploy-swift-periodic`
   - `Merge-Trigger-JJB`
+
+
+## Required Properties
+### Retention Policy
+Every Job must have a retention policy either based on days or number of builds.
+
+Example job with number of builds retention policy:
+```
+  - job:
+      properties:
+        - build-discarder:
+            num-to-keep: 30
+```
+Example job with number of days retention policy:
+```
+  - job:
+      properties:
+        - build-discarder:
+            days-to-keep: 30
+```
