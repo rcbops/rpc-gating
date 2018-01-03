@@ -31,13 +31,11 @@ def apt() {
   common.use_node('ArtifactBuilder2') {
     withCredentials(get_rpc_repo_creds()) {
       common.prepareRpcGit("auto", env.WORKSPACE)
-      ansiColor('xterm') {
-        dir("${env.WORKSPACE}/rpc-openstack") {
-          sh """#!/bin/bash
-          scripts/artifacts-building/apt/build-apt-artifacts.sh
-          """
-        } // dir
-      } // ansiColor
+      dir("${env.WORKSPACE}/rpc-openstack") {
+        sh """#!/bin/bash
+        scripts/artifacts-building/apt/build-apt-artifacts.sh
+        """
+      } // dir
     } // withCredentials
   } // use_node
 }
@@ -47,13 +45,11 @@ def git(String image) {
     try {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit()
-        ansiColor('xterm') {
-          dir("/opt/rpc-openstack/") {
-            sh """#!/bin/bash
-            scripts/artifacts-building/git/build-git-artifacts.sh
-            """
-          } // dir
-        } // ansiColor
+        dir("/opt/rpc-openstack/") {
+          sh """#!/bin/bash
+          scripts/artifacts-building/git/build-git-artifacts.sh
+          """
+        } // dir
       } // withCredentials
     } catch (e) {
       print(e)
@@ -69,13 +65,11 @@ def python(String image) {
     try {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit()
-        ansiColor('xterm') {
-          dir("/opt/rpc-openstack/") {
-            sh """#!/bin/bash
-            scripts/artifacts-building/python/build-python-artifacts.sh
-            """
-          } // dir
-        } // ansiColor
+        dir("/opt/rpc-openstack/") {
+          sh """#!/bin/bash
+          scripts/artifacts-building/python/build-python-artifacts.sh
+          """
+        } // dir
       } // withCredentials
     } catch (e) {
       print(e)
@@ -91,13 +85,11 @@ def container(String image) {
     try {
       withCredentials(get_rpc_repo_creds()) {
         common.prepareRpcGit()
-        ansiColor('xterm') {
-          dir("/opt/rpc-openstack/") {
-            sh """#!/bin/bash
-            scripts/artifacts-building/containers/build-process.sh
-            """
-          } // dir
-        } // ansiColor
+        dir("/opt/rpc-openstack/") {
+          sh """#!/bin/bash
+          scripts/artifacts-building/containers/build-process.sh
+          """
+        } // dir
       } // withCredentials
     } catch (e) {
       print(e)

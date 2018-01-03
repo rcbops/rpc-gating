@@ -72,13 +72,11 @@ void install_ansible(){
  *  args: list of string args to pass to ansible-galaxy
  */
 def venvGalaxy(String[] args){
-  ansiColor('xterm'){
-    sh """#!/bin/bash -x
-      which scl && source /opt/rh/python27/enable
-      set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
-      ansible-galaxy ${args.join(' ')}
-    """
-  } //color
+  sh """#!/bin/bash -x
+    which scl && source /opt/rh/python27/enable
+    set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
+    ansible-galaxy ${args.join(' ')}
+  """
 } //venvGalaxy
 
 /* Run ansible-playbooks within the rpc-gating venv
@@ -93,26 +91,24 @@ def venvGalaxy(String[] args){
  */
 def venvPlaybook(Map args){
   withEnv(get_deploy_script_env()){
-    ansiColor('xterm'){
-      if (!('vars' in args)){
-        args.vars=[:]
-      }
-      if (!('args' in args)){
-        args.args=[]
-      }
-      for (int i=0; i<args.playbooks.size(); i++){
-        String playbook = args.playbooks[i]
-        // randomised vars file path for parallel safety
-        String vars_file="vars.${playbook.split('/')[-1]}.${rand_int_str()}"
-        write_json(file: vars_file, obj: args.vars)
-        sh """#!/bin/bash -x
-          which scl && source /opt/rh/python27/enable
-          set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
-          export ANSIBLE_HOST_KEY_CHECKING=False
-          ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
-        """
-      } //for
-    } //color
+    if (!('vars' in args)){
+      args.vars=[:]
+    }
+    if (!('args' in args)){
+      args.args=[]
+    }
+    for (int i=0; i<args.playbooks.size(); i++){
+      String playbook = args.playbooks[i]
+      // randomised vars file path for parallel safety
+      String vars_file="vars.${playbook.split('/')[-1]}.${rand_int_str()}"
+      write_json(file: vars_file, obj: args.vars)
+      sh """#!/bin/bash -x
+        which scl && source /opt/rh/python27/enable
+        set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
+        export ANSIBLE_HOST_KEY_CHECKING=False
+        ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
+      """
+    } //for
   } //withenv
 } //venvplaybook
 
@@ -160,13 +156,11 @@ def openstack_ansible(Map args){
   }
   def full_env = args.environment_vars + get_deploy_script_env()
 
-  ansiColor('xterm'){
-    dir(args.path) {
-      withEnv(full_env){
-        sh """#!/bin/bash
-        openstack-ansible ${args.playbook} ${args.args}
-        """
-      }
+  dir(args.path) {
+    withEnv(full_env){
+      sh """#!/bin/bash
+      openstack-ansible ${args.playbook} ${args.args}
+      """
     }
   }
 }
@@ -834,7 +828,7 @@ List build_creds_array(String list_of_cred_ids){
     ]
 
 
-    // split string into list, reject empty items. 
+    // split string into list, reject empty items.
     List requested_creds = list_of_cred_ids.split(/[, ]+/).findAll({
       it.size() > 0
     })
