@@ -123,7 +123,22 @@ class Cleanup:
             if errored or age > max_age:
                 _indp("Deleting {name} Errored: {error} Age: {age}".format(
                     name=server.name, error=errored, age=age))
-                self.conn.compute.delete_server(server.id)
+                try:
+                    self.conn.compute.delete_server(server.id)
+                except openstack.exceptions.HttpException as e:
+                    details = "Instance {id} is locked".format(
+                        id=server.id
+                    )
+                    if e.details == details:
+                        _indp(
+                            "Failed to delete server: {id},"
+                            " error: {err}".format(
+                                id=server.id,
+                                err=e.details
+                            )
+                        )
+                    else:
+                        raise e
 
     @log
     def cache_maas_objects(self):
