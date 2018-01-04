@@ -119,8 +119,12 @@ def get_host_groups(inventory, refresh=False):
 
 
 def append_hostvars(hostvars, groups, key, server, namegroup=False):
+    # NOTE(mattt): Patched locally until
+    #              https://github.com/ansible/ansible/pull/34452 merges
+    #              and we're able to bump to latest 2.3 release.
     hostvars[key] = dict(
         ansible_ssh_host=server['interface_ip'],
+        ansible_host=server['interface_ip'],
         openstack=server)
     for group in get_groups_from_server(server, namegroup=namegroup):
         groups[group].append(key)
