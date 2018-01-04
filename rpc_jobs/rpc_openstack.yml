@@ -15,6 +15,9 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
+      - deploy_no_artifacts:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -37,6 +40,9 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
+      - deploy_no_artifacts:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
