@@ -92,85 +92,27 @@ def venvGalaxy(String[] args){
  *  args: list of string args to pass to ansible-playbook
  */
 def venvPlaybook(Map args){
-  withEnv(get_deploy_script_env()){
-    ansiColor('xterm'){
-      if (!('vars' in args)){
-        args.vars=[:]
-      }
-      if (!('args' in args)){
-        args.args=[]
-      }
-      for (int i=0; i<args.playbooks.size(); i++){
-        String playbook = args.playbooks[i]
-        // randomised vars file path for parallel safety
-        String vars_file="vars.${playbook.split('/')[-1]}.${rand_int_str()}"
-        write_json(file: vars_file, obj: args.vars)
-        sh """#!/bin/bash -x
-          which scl && source /opt/rh/python27/enable
-          set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
-          export ANSIBLE_HOST_KEY_CHECKING=False
-          ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
-        """
-      } //for
-    } //color
-  } //withenv
-} //venvplaybook
-
-def calc_ansible_forks(){
-  String forks = sh (script: """#!/bin/bash
-    CPU_NUM=\$(grep -c ^processor /proc/cpuinfo)
-    if [ \${CPU_NUM} -lt "10" ]; then
-      ANSIBLE_FORKS=\${CPU_NUM}
-    else
-      ANSIBLE_FORKS=10
-    fi
-    echo -n "\${ANSIBLE_FORKS}"
-  """, returnStdout: true)
-  print "Ansible forks: ${forks}"
-  return forks
-}
-
-/* this is a func rather than a var, so that the linter doesn't try
-to evaluate ${forks} and fail.
-These vars should be set every time deploy.sh or test-upgrade is run
-*/
-List get_deploy_script_env(){
-  String forks = calc_ansible_forks()
-  return [
-    'ANSIBLE_FORCE_COLOR=true',
-    'ANSIBLE_HOST_KEY_CHECKING=False',
-    'TERM=linux',
-    "FORKS=${forks}",
-    "ANSIBLE_FORKS=${forks}",
-    'ANSIBLE_SSH_RETRIES=3',
-    'ANSIBLE_GIT_RELEASE=ssh_retry', //only used in mitaka and below
-    'ANSIBLE_GIT_REPO=https://github.com/hughsaunders/ansible' // only used in mitaka and below
-  ]
-}
-
-def openstack_ansible(Map args){
-  if (!('path' in args)){
-    args.path = "/opt/rpc-openstack/openstack-ansible/playbooks"
-  }
-  if (!('args' in args)){
-    args.args = ""
-  }
-  if (!('environment_vars' in args)){
-    args.environment_vars = []
-  }
-  def full_env = args.environment_vars + get_deploy_script_env()
-
   ansiColor('xterm'){
-    dir(args.path) {
-      withEnv(full_env){
-        sh """#!/bin/bash
-        openstack-ansible ${args.playbook} ${args.args}
-        """
-      }
+    if (!('vars' in args)){
+      args.vars=[:]
     }
-  }
-}
-
+    if (!('args' in args)){
+      args.args=[]
+    }
+    for (int i=0; i<args.playbooks.size(); i++){
+      String playbook = args.playbooks[i]
+      // randomised vars file path for parallel safety
+      String vars_file="vars.${playbook.split('/')[-1]}.${rand_int_str()}"
+      write_json(file: vars_file, obj: args.vars)
+      sh """#!/bin/bash -x
+        which scl && source /opt/rh/python27/enable
+        set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
+        export ANSIBLE_HOST_KEY_CHECKING=False
+        ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
+      """
+    } //for
+  } //color
+} //venvplaybook
 
 /*
  * JsonSluperClassic and JsonOutput are not serializable, so they
@@ -183,23 +125,8 @@ def openstack_ansible(Map args){
  * does not. This makes Classic preferable for pipeline use.
  */
 @NonCPS
-def _parse_json_string(Map args){
-  return (new JsonSlurperClassic()).parseText(args.json_text)
-}
-
-@NonCPS
 def _write_json_string(Map args){
     return (new JsonOutput()).toJson(args.obj)
-}
-
-/* Read Json file and return object
- * Args:
- *  file: String path of file to read
- */
-def parse_json(Map args){
-    return this._parse_json_string(
-      json_text: readFile(file: args.file)
-    )
 }
 
 /* Write object to file as JSON
@@ -212,20 +139,6 @@ def write_json(Map args){
     file: args.file,
     text: this._write_json_string(obj: args.obj)
   )
-}
-
-/* Run a bash script
- * Args:
- *  script: Script or path to script from the current directory to run
- *  environment_vars: Environment variables to set
- */
-def run_script(Map args) {
-  withEnv(args.environment_vars) {
-    sh """
-        #!/bin/bash
-        sudo -E ./${args.script}
-        """
-  }
 }
 
 /* Run a stage if the stage name is contained in an env var
@@ -444,20 +357,6 @@ verify=true
   """
 
   return raxrc_cfg
-}
-
-def prepareConfigs(Map args){
-  dir("rpc-gating/playbooks"){
-    withCredentials(get_cloud_creds()) {
-      venvPlaybook(
-        playbooks: ["aio_config.yml"],
-        args: [
-          "-i inventory",
-          "--extra-vars \"@vars/${args.deployment_type}.yml\""
-        ]
-      )
-    }
-  }
 }
 
 def prepareRpcGit(String branch = "auto", String dest = "/opt"){
