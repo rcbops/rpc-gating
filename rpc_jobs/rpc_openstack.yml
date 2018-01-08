@@ -170,7 +170,7 @@
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-newton-postmerge"
+    name: "rpc-openstack-newton-aio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "newton"
@@ -195,6 +195,28 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio
+      - xenial_mnaio_no_artifacts
+    scenario:
+      - "ironic"
+      - "swift"
+    action:
+      - deploy:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    scenario:
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-openstack-mitaka-postmerge"
