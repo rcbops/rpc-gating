@@ -114,33 +114,6 @@ def venvPlaybook(Map args){
   } //color
 } //venvplaybook
 
-/*
- * JsonSluperClassic and JsonOutput are not serializable, so they
- * can only be used in @NonCPS methods. However readFile and writeFile
- * cannotbe used in NonCPS methods, so reading and writing json
- * requires one function to handle the io, and another to do the.
- * conversion.
- *
- * JsonSluperClassic returns a serializable object, but JsonSlurper
- * does not. This makes Classic preferable for pipeline use.
- */
-@NonCPS
-def _write_json_string(Map args){
-    return (new JsonOutput()).toJson(args.obj)
-}
-
-/* Write object to file as JSON
- * Args:
- *  file: String path of file to write
- *  obj: Object to translate into JSON
- */
-def write_json(Map args){
-  writeFile(
-    file: args.file,
-    text: this._write_json_string(obj: args.obj)
-  )
-}
-
 /* Run a stage if the stage name is contained in an env var
  * Args:
  *   - stage_name: String name of this stage
@@ -696,7 +669,7 @@ List build_creds_array(String list_of_cred_ids){
     ]
 
 
-    // split string into list, reject empty items. 
+    // split string into list, reject empty items.
     List requested_creds = list_of_cred_ids.split(/[, ]+/).findAll({
       it.size() > 0
     })
