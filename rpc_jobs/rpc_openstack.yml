@@ -4,7 +4,7 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     series: "master"
     branches:
-      - "master"
+      - "master.*"
     skip_pattern: |
       \.md$
       | \.rst$
@@ -22,9 +22,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-      - deploy_no_artifacts:
-          FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -34,7 +31,7 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     series: "master"
     branches:
-      - "master"
+      - "master.*"
     image:
       - container:
           SLAVE_TYPE: "container"
@@ -75,9 +72,6 @@
     action:
       - deploy:
           FLAVOR: "performance2-15"
-      - deploy_no_artifacts:
-          FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -157,6 +151,10 @@
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_loose_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
       - "ironic"
       - "swift"
@@ -178,11 +176,15 @@
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_loose_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-      - xenial_loose:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-      - trusty_loose:
+      - trusty_loose_artifacts:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+      - trusty_no_artifacts:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     scenario:
       - "ironic"
