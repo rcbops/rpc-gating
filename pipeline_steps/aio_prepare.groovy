@@ -8,20 +8,18 @@ def prepare(){
       } else {
         common.prepareRpcGit()
       }
-      ansiColor('xterm'){
-        dir("/opt/rpc-openstack"){
-          withEnv( common.get_deploy_script_env() + [
-            "DEPLOY_AIO=yes",
-            "DEPLOY_OA=no",
-            "DEPLOY_SWIFT=${env.DEPLOY_SWIFT}",
-            "DEPLOY_ELK=${env.DEPLOY_ELK}",
-            "DEPLOY_IRONIC=${env.DEPLOY_IRONIC}",
-            "DEPLOY_RPC=no"
-          ]){
-            sh """#!/bin/bash
-            scripts/deploy.sh
-            """
-          }
+      dir("/opt/rpc-openstack"){
+        withEnv( common.get_deploy_script_env() + [
+          "DEPLOY_AIO=yes",
+          "DEPLOY_OA=no",
+          "DEPLOY_SWIFT=${env.DEPLOY_SWIFT}",
+          "DEPLOY_ELK=${env.DEPLOY_ELK}",
+          "DEPLOY_IRONIC=${env.DEPLOY_IRONIC}",
+          "DEPLOY_RPC=no"
+        ]){
+          sh """#!/bin/bash
+          scripts/deploy.sh
+          """
         }
       }
       // If this branch can prepare its own configs, common.prepareConfigs

@@ -29,13 +29,11 @@ def deploy_sh(Map args) {
         )
       ]){
         withEnv(environment_vars) {
-          ansiColor('xterm') {
-            dir("/opt/rpc-openstack/") {
-              sh """#!/bin/bash
-              scripts/deploy.sh
-              """
-            } // dir
-          } // ansiColor
+          dir("/opt/rpc-openstack/") {
+            sh """#!/bin/bash
+            scripts/deploy.sh
+            """
+          } // dir
         } // withEnv
       } //withCredentials
     } // stage
