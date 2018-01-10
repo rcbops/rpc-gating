@@ -80,40 +80,6 @@
           default: "{RPC_ENG_OPS_BRANCH}"
 
 - parameter:
-    name: osa_ops_params
-    parameters:
-      - string:
-          name: OSA_OPS_REPO
-          default: https://github.com/openstack/openstack-ansible-ops
-      - string:
-          name: OSA_OPS_BRANCH
-          default: 169b4751680292aa3a2f8b081cb356acbcc3a043
-      - string:
-          name: DEFAULT_IMAGE
-          default: "{DEFAULT_IMAGE}"
-          description: Version of Ubuntu image to use for VMs (14.04.5 or 16.04.2)
-      - string:
-          name: DEFAULT_KERNEL
-          default: "linux-image-4.4.0-66-generic"
-          description: Ubuntu Kernel package to use for VMs (linux-image-4.4.0-66-generic, linux-image-3.13.0-34-generic, etc.)
-      - bool:
-          name: PARTITION_HOST
-          default: true
-          description: Enable partitioning of host data disk device
-      - string:
-          name: DATA_DISK_DEVICE
-          default: "{DATA_DISK_DEVICE}"
-          description: The data disk to use for VMs (if unset the largest unpartitioned device will be used)
-      - string:
-          name: "ADDITIONAL_COMPUTE_NODES"
-          default: "{ADDITIONAL_COMPUTE_NODES}"
-          description: "The number of additional compute nodes to deploy."
-      - string:
-          name: "ADDITIONAL_VOLUME_NODES"
-          default: "{ADDITIONAL_VOLUME_NODES}"
-          description: "The number of additional volume nodes to deploy."
-
-- parameter:
     name: rpc_deploy_params
     parameters:
       - string:
@@ -175,19 +141,6 @@
       - string:
           name: "RPC_MAAS_BRANCH"
           default: "{RPC_MAAS_BRANCH}"
-
-- parameter:
-    name: generate_test_params
-    parameters:
-      - string:
-          name: "GENERATE_TEST_NETWORKS"
-          default: "{GENERATE_TEST_NETWORKS}"
-      - string:
-          name: "GENERATE_TEST_SERVERS"
-          default: "{GENERATE_TEST_SERVERS}"
-      - string:
-          name: "GENERATE_TEST_VOLUMES"
-          default: "{GENERATE_TEST_VOLUMES}"
 
 - parameter:
     name: tigkstack_params
