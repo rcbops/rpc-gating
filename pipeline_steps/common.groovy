@@ -440,20 +440,6 @@ verify=true
   return raxrc_cfg
 }
 
-def prepareConfigs(Map args){
-  dir("rpc-gating/playbooks"){
-    withCredentials(get_cloud_creds()) {
-      venvPlaybook(
-        playbooks: ["aio_config.yml"],
-        args: [
-          "-i inventory",
-          "--extra-vars \"@vars/${args.deployment_type}.yml\""
-        ]
-      )
-    }
-  }
-}
-
 def prepareRpcGit(String branch = "auto", String dest = "/opt"){
   if (branch == "auto"){
     /* if job is triggered by PR, then we need to set RPC_REPO and
