@@ -618,13 +618,6 @@ def safe_jira_comment(body, String repo_path="rpc-openstack"){
   }
 }
 
-def delete_workspace() {
-  dir(env.WORKSPACE) {
-    print "Deleting workspace..."
-    deleteDir()
-  }
-}
-
 def create_jira_issue(String project="RE",
                       String tag=env.BUILD_TAG,
                       String link=env.BUILD_URL,
