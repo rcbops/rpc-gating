@@ -1,0 +1,34 @@
+ - project:
+    name: "rpc-ceph-post-merge"
+
+    repo_name: "rpc-ceph"
+    # URL of the rpc-octavia repository
+    repo_url: "https://github.com/rcbops/rpc-ceph"
+
+    # currently we only do master. Once RPC-O switches
+    # to Pike we will retire os-octavia and use the
+    # upstream installer
+    branches:
+      - "master"
+
+    # Use image for RPC-O install
+    image:
+      - xenial:
+          FLAVOR: "general1-8"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+
+    scenario:
+      - "functional"
+
+    # rpc-ceph ignores that setting for now
+    action:
+      - "test"
+
+    jira_project_key: "CEPHSTORA"
+
+    # Required to properly test deployment of rpc-maas
+    credentials: "cloud_creds"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
