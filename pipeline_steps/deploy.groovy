@@ -74,20 +74,4 @@ def upgrade_major(Map args) {
   upgrade("Major Upgrade", "test-upgrade.sh", args.environment_vars)
 }
 
-def upgrade_leapfrog(Map args) {
-  // for a PR to kilo, we don't want to checkout the PR commit at this point
-  // as it's already been used to deploy kilo.
-  String branch = "auto"
-  if (env.SERIES == "kilo" && env.TRIGGER == "pr"){
-    branch="newton"
-  }
-  // Required to run first for leapfrog resource generation
-  tempest.tempest_install()
-  upgrade("Leapfrog Upgrade",
-          "leapfrog/ubuntu14-leapfrog.sh",
-          args.environment_vars,
-          branch)
-  influx.build_report(leapfrog: true)
-}
-
 return this;

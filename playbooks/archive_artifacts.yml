@@ -26,22 +26,6 @@
       tags:
         - skip_ansible_lint
 
-    - name: Grab leapfrog upgrade .leap marker files
-      command: >
-               rsync
-               --archive
-               --compress
-               --verbose
-               --rsh 'ssh -o StrictHostKeyChecking=no'
-               --include '*.leap'
-               --exclude '*'
-               {{ inventory_hostname }}:/opt/rpc-leapfrog/leap42/
-               {{ artifacts_dir }}/{{ ansible_hostname }}/leap_marker_files
-      delegate_to: "localhost"
-      ignore_errors: yes
-      tags:
-        - skip_ansible_lint
-
     - name: List containers
       command: "lxc-ls -1"
       failed_when:
