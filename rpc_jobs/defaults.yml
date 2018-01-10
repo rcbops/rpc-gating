@@ -8,16 +8,8 @@
     FALLBACK_REGIONS: "IAD"
     # standard_job_params
     SLAVE_TYPE: "instance"
-    # rpc_params
-    DEPLOY_SWIFT: "yes"
-    DEPLOY_CEPH: "no"
-    DEPLOY_ELK: "yes"
     # Misc
     CRON: "H H(9-21) * * 1-5"
-    CONTEXT_USER_VARS: ""
-    TRIGGER_USER_VARS: ""
-    SERIES_USER_VARS: ""
-    UPGRADE_FROM_REF: ""
     credentials: ""
     skip_pattern: ""
     # jenkins_node_params

@@ -80,38 +80,6 @@
           default: "{RPC_ENG_OPS_BRANCH}"
 
 - parameter:
-    name: rpc_deploy_params
-    parameters:
-      - string:
-          name: "DEPLOY_SWIFT"
-          default: "{DEPLOY_SWIFT}"
-          description: "Deploy Swift? yes/no"
-      - string:
-          name: "DEPLOY_CEPH"
-          default: "{DEPLOY_CEPH}"
-          description: "Deploy Ceph? yes/no"
-      - string:
-          name: "DEPLOY_ELK"
-          default: "{DEPLOY_ELK}"
-          description: "Deploy ELK? yes/no"
-      - string:
-          name: "DEPLOY_MAAS"
-          default: "{DEPLOY_MAAS}"
-          description: "Deploy and verify maas? yes/no"
-      - string:
-          name: "DEPLOY_IRONIC"
-          default: "{DEPLOY_IRONIC}"
-          description: "Deploy Ironic? yes/no"
-      - text:
-          name: "USER_VARS"
-          default: "{USER_VARS}"
-          description: "OSA/RPC USER_VARS to inject for this build"
-      - string:
-          name: "UPGRADE_FROM_REF"
-          default: "{UPGRADE_FROM_REF}"
-          description: "An tag/sha/ref to upgrade from"
-
-- parameter:
     name: rpc_gating_params
     parameters:
       - string:
@@ -123,16 +91,6 @@
             workspace. The clone source is always rcbops/rpc-gating.
 
 - parameter:
-    name: kibana_selenium_params
-    parameters:
-      - string:
-          name: "KIBANA_SELENIUM_REPO"
-          default: "https://github.com/rcbops-qe/kibana-selenium.git"
-      - string:
-          name: "KIBANA_SELENIUM_BRANCH"
-          default: "{KIBANA_SELENIUM_BRANCH}"
-
-- parameter:
     name: rpc_maas_params
     parameters:
       - string:
@@ -141,16 +99,6 @@
       - string:
           name: "RPC_MAAS_BRANCH"
           default: "{RPC_MAAS_BRANCH}"
-
-- parameter:
-    name: tigkstack_params
-    parameters:
-      - string:
-          name: "DEPLOY_TELEGRAF"
-          default: "{DEPLOY_TELEGRAF}"
-      - string:
-          name: "DEPLOY_INFLUX"
-          default: "{DEPLOY_INFLUX}"
 
 - parameter:
     name: standard_job_params
