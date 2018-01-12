@@ -175,6 +175,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio
+      - xenial_mnaio_loose_artifacts
       - xenial_mnaio_no_artifacts
     scenario:
       - "ironic"
@@ -227,6 +228,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio
+      - xenial_mnaio_loose_artifacts
       - xenial_mnaio_no_artifacts
     scenario:
       - "ironic"
