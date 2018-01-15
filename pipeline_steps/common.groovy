@@ -469,8 +469,17 @@ void clone_with_pr_refs(
       "ref not supplied to common.clone_with_pr_refs or env.ghprbPullID not "\
       + "set, attempting to checkout PR for a periodic build?")
   }
+  if (is_internal_repo_id(repo)) {
+    clone_internal_repo(directory, repo, ref, refspec)
+  } else {
+    clone_external_repo(directory, repo, ref, refspec)
+  }
+}
+
+
+void clone_repo(String directory, String ssh_key, String repo, String ref, String refspec) {
   print "Cloning Repo: ${repo}@${ref}"
-  sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+  sshagent (credentials:[ssh_key]){
     sh """#!/bin/bash -xe
       mkdir -p ${directory}
       cd ${directory}
@@ -486,6 +495,43 @@ void clone_with_pr_refs(
     """
   }
 }
+
+
+Boolean is_internal_repo_id(String repo_url) {
+    return repo_url.startsWith("internal:")
+}
+
+
+void clone_internal_repo(String directory, String internal_repo, String ref, String refspec) {
+  repo_secret_id = internal_repo.split(":", 2)[1]
+  repo_creds = [
+    string(
+      credentialsId: repo_secret_id,
+      variable: "INTERNAL_REPO_URL"
+    ),
+  ]
+
+  internal_slave() {
+    withCredentials(repo_creds) {
+      clone_repo(directory, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
+    }
+
+    if (directory.endsWith("/")) {
+      directory_pattern = directory.minus(env.WORKSPACE + "/") + "**"
+    } else {
+      directory_pattern = directory.minus(env.WORKSPACE + "/") + "/**"
+    }
+    print "Internal repo stash include pattern: \"${directory_pattern}\"."
+    stash includes: directory_pattern, name: "repo-clone"
+  }
+  unstash "repo-clone"
+}
+
+
+void clone_external_repo(String directory, String repo, String ref, String refspec) {
+    clone_repo(directory, "rpc-jenkins-svc-github-ssh-key", repo, ref, refspec)
+}
+
 
 void configure_git(){
   print "Configuring Git"
