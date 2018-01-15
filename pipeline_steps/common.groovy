@@ -136,11 +136,8 @@ List get_deploy_script_env(){
     'ANSIBLE_FORCE_COLOR=true',
     'ANSIBLE_HOST_KEY_CHECKING=False',
     'TERM=linux',
-    "FORKS=${forks}",
     "ANSIBLE_FORKS=${forks}",
     'ANSIBLE_SSH_RETRIES=3',
-    'ANSIBLE_GIT_RELEASE=ssh_retry', //only used in mitaka and below
-    'ANSIBLE_GIT_REPO=https://github.com/hughsaunders/ansible' // only used in mitaka and below
   ]
 }
 
@@ -206,20 +203,6 @@ def write_json(Map args){
     file: args.file,
     text: this._write_json_string(obj: args.obj)
   )
-}
-
-/* Run a bash script
- * Args:
- *  script: Script or path to script from the current directory to run
- *  environment_vars: Environment variables to set
- */
-def run_script(Map args) {
-  withEnv(args.environment_vars) {
-    sh """
-        #!/bin/bash
-        sudo -E ./${args.script}
-        """
-  }
 }
 
 /* Run a stage if the stage name is contained in an env var
@@ -440,20 +423,6 @@ verify=true
   return raxrc_cfg
 }
 
-def prepareConfigs(Map args){
-  dir("rpc-gating/playbooks"){
-    withCredentials(get_cloud_creds()) {
-      venvPlaybook(
-        playbooks: ["aio_config.yml"],
-        args: [
-          "-i inventory",
-          "--extra-vars \"@vars/${args.deployment_type}.yml\""
-        ]
-      )
-    }
-  }
-}
-
 def prepareRpcGit(String branch = "auto", String dest = "/opt"){
   if (branch == "auto"){
     /* if job is triggered by PR, then we need to set RPC_REPO and
@@ -646,13 +615,6 @@ def safe_jira_comment(body, String repo_path="rpc-openstack"){
     print "Jira Comment Added: [${key}] ${body}"
   } catch (e){
     print ("Error while attempting to add a build result comment to a JIRA issue: ${e}")
-  }
-}
-
-def delete_workspace() {
-  dir(env.WORKSPACE) {
-    print "Deleting workspace..."
-    deleteDir()
   }
 }
 

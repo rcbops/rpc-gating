@@ -8,16 +8,8 @@
     FALLBACK_REGIONS: "IAD"
     # standard_job_params
     SLAVE_TYPE: "instance"
-    # rpc_params
-    DEPLOY_SWIFT: "yes"
-    DEPLOY_CEPH: "no"
-    DEPLOY_ELK: "yes"
     # Misc
     CRON: "H H(9-21) * * 1-5"
-    CONTEXT_USER_VARS: ""
-    TRIGGER_USER_VARS: ""
-    SERIES_USER_VARS: ""
-    UPGRADE_FROM_REF: ""
     credentials: ""
     skip_pattern: ""
     # jenkins_node_params
@@ -27,9 +19,3 @@
     JENKINS_NODE_EXECUTORS: "2"
     jenkins_node_exclusive: true
     allow_jenkins_sudo: true
-    # generate_test_params
-    GENERATE_TEST_NETWORKS: "0"
-    GENERATE_TEST_SERVERS: "0"
-    GENERATE_TEST_VOLUMES: "0"
-    ADDITIONAL_COMPUTE_NODES: "0"
-    ADDITIONAL_VOLUME_NODES: "0"
