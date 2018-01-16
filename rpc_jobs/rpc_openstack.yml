@@ -89,7 +89,6 @@
       - "ansible-lint"
       - "bashate"
       - "flake8"
-      - "release-script"
       - "releasenotes"
     action:
       - "tox-test"
