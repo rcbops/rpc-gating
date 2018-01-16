@@ -214,6 +214,14 @@
     action:
       - deploy:
           FLAVOR: "7"
+    exclude:
+      - scenario: ironic
+        image: trusty
+      - scenario: ironic
+        image: trusty_loose_artifacts
+      - scenario: ironic
+        image: trusty_no_artifacts
+
     # This is the build that will be triggered by the push trigger job
     trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     jobs:
