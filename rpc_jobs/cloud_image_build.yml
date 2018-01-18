@@ -10,48 +10,50 @@
       - rpc_gating_params
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
 
-      // These are defined statically instead of parameters
-      // to ensure that the job is always executed the same
-      // way.
-      env.FLAVOR = "performance1-1"
-      env.STAGES = "Allocate Resources, Cleanup"
-      image_list = [
-        [ src: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)",
-          dest: "Ubuntu 16.04 LTS prepared for RPC deployment" ],
-        [ src: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)",
-          dest: "Ubuntu 14.04 LTS prepared for RPC deployment" ]
-      ]
-      region_list = [
-        "DFW", "HKG", "IAD", "ORD", "SYD"
-      ]
-      common.shared_slave(){
-        try {
-          currentBuild.result = "SUCCESS"
-          // Define the parallel build map
-          cloudimage_parallel = [:]
-          for (r in region_list) {
-            // Need to bind the image variable before the closure - can't do 'for (region in ...)'
-            // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-            def region = r
-            for (i in image_list) {
-              def image = i
-              cloudimage_parallel["${region} - ${image.dest}"] = {
-                stage("${region} - ${image.dest}"){
-                  artifact_build.cloudimage(
-                    src_image: image.src,
-                    dest_image: image.dest,
-                    region: region
-                  )
+        // These are defined statically instead of parameters
+        // to ensure that the job is always executed the same
+        // way.
+        env.FLAVOR = "performance1-1"
+        env.STAGES = "Allocate Resources, Cleanup"
+        image_list = [
+          [ src: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)",
+            dest: "Ubuntu 16.04 LTS prepared for RPC deployment" ],
+          [ src: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)",
+            dest: "Ubuntu 14.04 LTS prepared for RPC deployment" ]
+        ]
+        region_list = [
+          "DFW", "HKG", "IAD", "ORD", "SYD"
+        ]
+        common.shared_slave(){
+          try {
+            currentBuild.result = "SUCCESS"
+            // Define the parallel build map
+            cloudimage_parallel = [:]
+            for (r in region_list) {
+              // Need to bind the image variable before the closure - can't do 'for (region in ...)'
+              // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
+              def region = r
+              for (i in image_list) {
+                def image = i
+                cloudimage_parallel["${region} - ${image.dest}"] = {
+                  stage("${region} - ${image.dest}"){
+                    artifact_build.cloudimage(
+                      src_image: image.src,
+                      dest_image: image.dest,
+                      region: region
+                    )
+                  }
                 }
               }
             }
-          }
-          // Execute the builds in all regions for all images in parallel
-          parallel cloudimage_parallel
-        } catch (e) {
-          print e
-          currentBuild.result = "FAILURE"
-          throw e
-        }
-      }
+            // Execute the builds in all regions for all images in parallel
+            parallel cloudimage_parallel
+          } catch (e) {
+            print e
+            currentBuild.result = "FAILURE"
+            throw e
+          } // try
+        } // shared slave
+      } // globalWraps

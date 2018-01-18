@@ -23,29 +23,31 @@
           status-context: 'ops-fabric-chatbot-gate'
     dsl: |
       library "rpc-gating@${env.RPC_GATING_BRANCH}"
-      common.shared_slave(){
-        common.clone_with_pr_refs()
-        stage("Build Docker Image"){
-            chatbot_container = docker.build env.BUILD_TAG.toLowerCase()
-        }
-        chatbot_container.inside {
-          timeout(time: 5, units: "MINUTES"){
-            stage("Install Deps"){
-              // Install deps is run here to ensure project level npm deps
-              // are installed.
-              sh """#!/bin/bash -xe
-                ./install-deps.sh
-              """
-            }
-            stage("Run Tests"){
-              sh """#!/bin/bash -xe
-                ./gate.sh
-              """
-            }
-            stage("Collect Results"){
-              sh "ls *-results.xml"
-              junit testResults: '*-results.xml'
-            }
-          } // timeout
-        } // docker container
-      } // shared_slave
+      common.globalWraps(){
+        common.shared_slave(){
+          common.clone_with_pr_refs()
+          stage("Build Docker Image"){
+              chatbot_container = docker.build env.BUILD_TAG.toLowerCase()
+          }
+          chatbot_container.inside {
+            timeout(time: 5, units: "MINUTES"){
+              stage("Install Deps"){
+                // Install deps is run here to ensure project level npm deps
+                // are installed.
+                sh """#!/bin/bash -xe
+                  ./install-deps.sh
+                """
+              }
+              stage("Run Tests"){
+                sh """#!/bin/bash -xe
+                  ./gate.sh
+                """
+              }
+              stage("Collect Results"){
+                sh "ls *-results.xml"
+                junit testResults: '*-results.xml'
+              }
+            } // timeout
+          } // docker container
+        } // shared_slave
+      } // global wraps

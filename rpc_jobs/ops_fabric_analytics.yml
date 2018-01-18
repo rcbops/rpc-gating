@@ -23,18 +23,20 @@
           status-context: 'ops-fabric-analytics-gate'
     dsl: |
       library "rpc-gating@${env.RPC_GATING_BRANCH}"
-      common.shared_slave(){
-        common.clone_with_pr_refs()
-        stage("Build Docker Image"){
-            analytics_container = docker.build env.BUILD_TAG.toLowerCase()
-        }
-        analytics_container.inside {
-          timeout(time: 5, units: "MINUTES"){
-            stage("Run Tests"){
-              sh """#!/bin/bash -xe
-                cd ./source && tox
-              """
-            }
-          } // timeout
-        } // docker container
-      } // shared_slave
+      common.globalWraps(){
+        common.shared_slave(){
+          common.clone_with_pr_refs()
+          stage("Build Docker Image"){
+              analytics_container = docker.build env.BUILD_TAG.toLowerCase()
+          }
+          analytics_container.inside {
+            timeout(time: 5, units: "MINUTES"){
+              stage("Run Tests"){
+                sh """#!/bin/bash -xe
+                  cd ./source && tox
+                """
+              }
+            } // timeout
+          } // docker container
+        } // shared_slave
+      } // globalWraps

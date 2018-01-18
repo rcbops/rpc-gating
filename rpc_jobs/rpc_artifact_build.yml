@@ -89,130 +89,132 @@
           cancel-builds-on-update: true
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      image_list = [
-        master: [
-            "Ubuntu 16.04.2 LTS prepared for RPC deployment"
-        ],
-        newton: [
-            "Ubuntu 16.04.2 LTS prepared for RPC deployment",
-            "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-        ]
-      ]
-      env.trigger="{ztrigger}"
-      env.series="{series}"
-      common.shared_slave() {{
-        try {{
-          currentBuild.result = "SUCCESS"
-          // We need to checkout the rpc-openstack repo on the CIT Slave
-          // so that we can check whether the patch is a docs-only patch
-          // before allocating resources unnecessarily.
-          common.prepareRpcGit("auto", env.WORKSPACE)
-          if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
-            return
-          }}
-
-          // Python artifacts can be built in parallel for all
-          // distributions (images) supported by a series.
-          python_parallel = [:]
-          for (x in image_list[env.series]) {{
-            // Need to bind the image variable before the closure - can't do 'for (image in ...)'
-            // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-            def image = x
-            python_parallel[image] = {{
-              artifact_build.python(image)
-            }}
-          }}
-
-          // Container artifacts can be built in parallel for all
-          // distributions (images) supported by a series. This
-          // can currently only be done in parallel for PR's due
-          // to a race condition when updating the image index.
-          // ref: RE-115
-          container_parallel = [:]
-          for (x in image_list[env.series]) {{
-            // Need to bind the image variable before the closure - can't do 'for (image in ...)'
-            // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-            def image = x
-            container_parallel[image] = {{
-              artifact_build.container(image)
-            }}
-          }}
-
-          // We can run all the artifact build processes in parallel
-          // for PR's because they do not upload anything.
-          if (env.trigger == "pr") {{
-            Map branches = python_parallel + container_parallel + [
-              "apt": {{
-                // We do not need to download existing data from
-                // rpc-repo for PR's as they do not upload their
-                // changes. We only need to do that when making
-                // changes to the data. Skipping the data sync
-                // for PR's saves a ton of time.
-                env.PULL_FROM_MIRROR = "NO"
-                artifact_build.apt()
-              }},
-              "git": {{
-                // We only care about building these on one of the
-                // images because the artifacts produced are not
-                // distro-specific. We take the first one for
-                // convenience.
-                artifact_build.git(image_list[env.series][0])
-              }}
+        common.globalWraps(){{
+          image_list = [
+            master: [
+                "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+            ],
+            newton: [
+                "Ubuntu 16.04.2 LTS prepared for RPC deployment",
+                "Ubuntu 14.04.5 LTS prepared for RPC deployment"
             ]
-            parallel branches
-          }} else {{
-            // When the job is periodic, the jobs must run in a
-            // particular sequence in order to ensure that each
-            // artifact set is built and uploaded so that it can
-            // be used in the step that follows.
-
-            // The apt artifacts are built on a long-lived slave
-            // with a single executor, so no locking is required.
-            stage('Apt'){{
-              artifact_build.apt()
-            }}
-
-            // We lock the git job per series to ensure that no
-            // more than one job for each series executes at the
-            // same time.
-            // We use the first available image for the series
-            // as the artifacts are not distribution-specific.
-            stage('Git'){{
-              lock("artifact_git_${{env.series}}"){{
-                artifact_build.git(image_list[env.series][0])
+          ]
+          env.trigger="{ztrigger}"
+          env.series="{series}"
+          common.shared_slave() {{
+            try {{
+              currentBuild.result = "SUCCESS"
+              // We need to checkout the rpc-openstack repo on the CIT Slave
+              // so that we can check whether the patch is a docs-only patch
+              // before allocating resources unnecessarily.
+              common.prepareRpcGit("auto", env.WORKSPACE)
+              if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
+                return
               }}
-            }}
 
-            // We lock the python job per series to ensure that no
-            // more than one job for each series executes at the
-            // same time.
-            stage('Python'){{
-              lock("artifact_python_${{env.series}}"){{
-                parallel python_parallel
-              }}
-            }}
-
-            // We lock the container job with a static lock value
-            // to ensure that no two container build processes can
-            // run at the same time. We also ensure that the job
-            // does each supported distribution in series. This is
-            // necessary due to a race condition when updating the
-            // image index.
-            // ref: RE-115
-            lock('artifact_container'){{
-              for (x in image_list[env.series]){{
+              // Python artifacts can be built in parallel for all
+              // distributions (images) supported by a series.
+              python_parallel = [:]
+              for (x in image_list[env.series]) {{
+                // Need to bind the image variable before the closure - can't do 'for (image in ...)'
+                // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
                 def image = x
-                stage("Container ${{image}}"){{
+                python_parallel[image] = {{
+                  artifact_build.python(image)
+                }}
+              }}
+
+              // Container artifacts can be built in parallel for all
+              // distributions (images) supported by a series. This
+              // can currently only be done in parallel for PR's due
+              // to a race condition when updating the image index.
+              // ref: RE-115
+              container_parallel = [:]
+              for (x in image_list[env.series]) {{
+                // Need to bind the image variable before the closure - can't do 'for (image in ...)'
+                // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
+                def image = x
+                container_parallel[image] = {{
                   artifact_build.container(image)
-                }} //stage
-              }} //for
-            }} //lock
-          }} //if
-        }} catch (e) {{
-          print e
-          currentBuild.result = "FAILURE"
-          throw e
-        }} finally {{
-          common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
-        }}
-      }} // node
+                }}
+              }}
+
+              // We can run all the artifact build processes in parallel
+              // for PR's because they do not upload anything.
+              if (env.trigger == "pr") {{
+                Map branches = python_parallel + container_parallel + [
+                  "apt": {{
+                    // We do not need to download existing data from
+                    // rpc-repo for PR's as they do not upload their
+                    // changes. We only need to do that when making
+                    // changes to the data. Skipping the data sync
+                    // for PR's saves a ton of time.
+                    env.PULL_FROM_MIRROR = "NO"
+                    artifact_build.apt()
+                  }},
+                  "git": {{
+                    // We only care about building these on one of the
+                    // images because the artifacts produced are not
+                    // distro-specific. We take the first one for
+                    // convenience.
+                    artifact_build.git(image_list[env.series][0])
+                  }}
+                ]
+                parallel branches
+              }} else {{
+                // When the job is periodic, the jobs must run in a
+                // particular sequence in order to ensure that each
+                // artifact set is built and uploaded so that it can
+                // be used in the step that follows.
+
+                // The apt artifacts are built on a long-lived slave
+                // with a single executor, so no locking is required.
+                stage('Apt'){{
+                  artifact_build.apt()
+                }}
+
+                // We lock the git job per series to ensure that no
+                // more than one job for each series executes at the
+                // same time.
+                // We use the first available image for the series
+                // as the artifacts are not distribution-specific.
+                stage('Git'){{
+                  lock("artifact_git_${{env.series}}"){{
+                    artifact_build.git(image_list[env.series][0])
+                  }}
+                }}
+
+                // We lock the python job per series to ensure that no
+                // more than one job for each series executes at the
+                // same time.
+                stage('Python'){{
+                  lock("artifact_python_${{env.series}}"){{
+                    parallel python_parallel
+                  }}
+                }}
+
+                // We lock the container job with a static lock value
+                // to ensure that no two container build processes can
+                // run at the same time. We also ensure that the job
+                // does each supported distribution in series. This is
+                // necessary due to a race condition when updating the
+                // image index.
+                // ref: RE-115
+                lock('artifact_container'){{
+                  for (x in image_list[env.series]){{
+                    def image = x
+                    stage("Container ${{image}}"){{
+                      artifact_build.container(image)
+                    }} //stage
+                  }} //for
+                }} //lock
+              }} //if
+            }} catch (e) {{
+              print e
+              currentBuild.result = "FAILURE"
+              throw e
+            }} finally {{
+              common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
+            }}
+          }} // node
+        }} // globalWraps

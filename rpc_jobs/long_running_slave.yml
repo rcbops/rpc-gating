@@ -33,66 +33,68 @@
 
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.shared_slave(){
-          dir("rpc-maas"){
-            git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
-          }
-          String instance_name = common.gen_instance_name("long-running-slave")
-          pubcloud.getPubCloudSlave(instance_name: instance_name)
-          try{
-            withCredentials([
-              file(
-                credentialsId: 'id_rsa_cloud10_jenkins_file',
-                variable: 'jenkins_ssh_privkey'
-              ),
-              string(
-                credentialsId: "MAAS_WEBHOOK_NOTIFICATION_PLAN_ID",
-                variable: "MAAS_WEBHOOK_NOTIFICATION_PLAN_ID"
-              ),
-              usernamePassword(
-                credentialsId: "RPCJENKINS_PUBLIC_CLOUD_API_KEY",
-                usernameVariable: "rpcjenkins_pubcloud_username",
-                passwordVariable: "rpcjenkins_pubcloud_api_key"
-              ),
-            ]){
-              dir('rpc-gating/playbooks'){
-                common.venvPlaybook(
-                  playbooks: [
-                    "slave_security.yml",
-                    "deploy_docker.yml",
-                    "${WORKSPACE}/rpc-maas/playbooks/maas-agent-all.yml",
-                    "${WORKSPACE}/rpc-maas/playbooks/maas-host-cdm.yml"
-                  ],
-                  args: [
-                    "-i inventory",
-                    "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
-                    "-u root"
-                  ],
-                  vars: [
-                    WORKSPACE: "${env.WORKSPACE}",
-                    maas_username: "${env.rpcjenkins_pubcloud_username}",
-                    maas_api_key: "${env.rpcjenkins_pubcloud_api_key}",
-                    maas_auth_method: "password",
-                    maas_notification_plan: "${env.MAAS_WEBHOOK_NOTIFICATION_PLAN_ID}",
-                    maas_use_api: true,
-                    maas_entity_name: instance_name,
-                    entity_name: instance_name,
-                    maas_excluded_checks_regex: "disk_utilisation",
-                    // 5 is the maximum allowed consecutive count
-                    maas_alarm_local_consecutive_count: 5,
-                    maas_memory_used_percentage_warning_threshold: 99.0,
-                    maas_memory_used_percentage_critical_threshold: 99.0,
-                    maas_cpu_idle_percent_avg_warning_threshold: 1.0,
-                    maas_cpu_idle_percent_avg_critical_threshold: 1.0
-                  ]
-                ) //venvPlaybook
-              } //dir
-            } //withCredentials
-          } catch (e){
-            print(e)
-            throw(e)
-          } finally {
-            // this doesn't run by default as cleanup isn't included in stages
-            pubcloud.delPubCloudSlave(instance_name: instance_name)
-          }
-      } // cit node
+      common.globalWraps(){
+        common.shared_slave(){
+            dir("rpc-maas"){
+              git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
+            }
+            String instance_name = common.gen_instance_name("long-running-slave")
+            pubcloud.getPubCloudSlave(instance_name: instance_name)
+            try{
+              withCredentials([
+                file(
+                  credentialsId: 'id_rsa_cloud10_jenkins_file',
+                  variable: 'jenkins_ssh_privkey'
+                ),
+                string(
+                  credentialsId: "MAAS_WEBHOOK_NOTIFICATION_PLAN_ID",
+                  variable: "MAAS_WEBHOOK_NOTIFICATION_PLAN_ID"
+                ),
+                usernamePassword(
+                  credentialsId: "RPCJENKINS_PUBLIC_CLOUD_API_KEY",
+                  usernameVariable: "rpcjenkins_pubcloud_username",
+                  passwordVariable: "rpcjenkins_pubcloud_api_key"
+                ),
+              ]){
+                dir('rpc-gating/playbooks'){
+                  common.venvPlaybook(
+                    playbooks: [
+                      "slave_security.yml",
+                      "deploy_docker.yml",
+                      "${WORKSPACE}/rpc-maas/playbooks/maas-agent-all.yml",
+                      "${WORKSPACE}/rpc-maas/playbooks/maas-host-cdm.yml"
+                    ],
+                    args: [
+                      "-i inventory",
+                      "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+                      "-u root"
+                    ],
+                    vars: [
+                      WORKSPACE: "${env.WORKSPACE}",
+                      maas_username: "${env.rpcjenkins_pubcloud_username}",
+                      maas_api_key: "${env.rpcjenkins_pubcloud_api_key}",
+                      maas_auth_method: "password",
+                      maas_notification_plan: "${env.MAAS_WEBHOOK_NOTIFICATION_PLAN_ID}",
+                      maas_use_api: true,
+                      maas_entity_name: instance_name,
+                      entity_name: instance_name,
+                      maas_excluded_checks_regex: "disk_utilisation",
+                      // 5 is the maximum allowed consecutive count
+                      maas_alarm_local_consecutive_count: 5,
+                      maas_memory_used_percentage_warning_threshold: 99.0,
+                      maas_memory_used_percentage_critical_threshold: 99.0,
+                      maas_cpu_idle_percent_avg_warning_threshold: 1.0,
+                      maas_cpu_idle_percent_avg_critical_threshold: 1.0
+                    ]
+                  ) //venvPlaybook
+                } //dir
+              } //withCredentials
+            } catch (e){
+              print(e)
+              throw(e)
+            } finally {
+              // this doesn't run by default as cleanup isn't included in stages
+              pubcloud.delPubCloudSlave(instance_name: instance_name)
+            }
+        } // cit node
+      } // globalWraps
