@@ -45,8 +45,6 @@
             Tokens can be obtained from pitchfork.
 
     dsl: |
-      library "rpc-gating@${RPC_GATING_BRANCH}"
-
       void slack_notify(message, color){
         if(env.SLACK_NOTIFICATIONS == "true"){
           msg_plus_link="${message} (${env.BUILD_URL})"
@@ -90,10 +88,8 @@
           } // retry
         } // sshagent
       }
-
-      // end of functions
-
-      common.globalWraps(){
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      timestamps(){
         common.use_node("deploy-phobos"){
           try {
             withCredentials([
@@ -129,6 +125,7 @@
                   # log current HEAD
                   git show
                   git status
+  
                   pushd openstack-ansible
                     sudo git stash
                     sudo git reset --hard
@@ -201,4 +198,4 @@
             """
           }
         } // phobos node
-      } // globalWraps
+      } // timestamps

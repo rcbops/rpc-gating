@@ -25,7 +25,6 @@ create_jjb_ini(){
   echo -e "[jenkins]\nurl=http://127.0.0.1:8080" > lint_jjb.ini
 }
 
-# Check JJB for syntax
 check_jjb(){
   which jenkins-jobs >/dev/null \
     || { echo "jenkins-jobs unavailble, please install jenkins-job-builder from pip"
@@ -88,21 +87,18 @@ check_bash(){
   done < <(find ${fargs[@]} -iname \*.sh)
 }
 
-check_jjb_lint() {
-  # Check JJB for internal standards:
-  #   * naming conventions
-  #   * retention policy
+check_naming_standards() {
   # Limits lint to only gating unique files
   # Excludes webhooktranslator as it has additional packaging
-  # and its own tox.
+  # and it's own tox
   # Excludes NonCPS.groovy as this filename is required, but
   # not matching rpc-gating conventions
   dirs_to_lint="pipeline_steps,rpc_jobs,scripts"
   exclude_files="NonCPS.groovy"
-  python scripts/lint_jjb.py \
+  python scripts/lint_naming_conventions.py \
     --dirs ${dirs_to_lint} --exclude ${exclude_files} \
-    && echo "JJB Lint: OK" \
-    || { echo "JJB Lint: FAIL"; rc=1; }
+    && echo "Naming conventions: OK" \
+    || { echo "Naming conventions: FAIL"; rc=1; }
 }
 
 check_python(){
@@ -170,7 +166,7 @@ check_groovy
 check_ansible
 check_bash
 check_python
-check_jjb_lint
+check_naming_standards
 check_webhooktranslator
 
 if [[ $rc == 0 ]]
