@@ -55,21 +55,6 @@
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
-- project:
-    name: "RPC-Ceph-Jobs"
-    repo:
-      - rpc-ceph:
-          irr_repo_url: https://github.com/rcbops/rpc-ceph
-    series:
-      - master
-    image:
-      - xenial:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    context:
-      - master
-    jobs:
-      - 'RPC-IRR_{repo}-{series}-{image}-{context}'
-
 
 - job-template:
     # DEFAULTS
