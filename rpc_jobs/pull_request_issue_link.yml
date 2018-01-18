@@ -28,8 +28,6 @@
     properties:
       - github:
           url: "{repo_url}"
-      - build-discarder:
-          days-to-keep: 7
     parameters:
       - rpc_gating_params
       - string:
@@ -37,8 +35,6 @@
           default: "{repo}"
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.globalWraps(){{
-        common.shared_slave() {{
-          github.add_issue_url_to_pr()
-        }} // shared slave
-      }} // globalWraps
+      common.shared_slave() {{
+        github.add_issue_url_to_pr()
+      }}
