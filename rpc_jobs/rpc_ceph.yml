@@ -15,6 +15,7 @@
     # rpc-ceph ignores that setting for now
     scenario:
       - "functional"
+      - "keystone_rgw"
 
     # rpc-ceph ignores that setting for now
     action:
