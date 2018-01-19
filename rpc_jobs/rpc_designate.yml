@@ -1,0 +1,55 @@
+ - project:
+    name: "rpc-designate-pre-merge"
+
+    repo_name: "rpc-designate"
+    # URL of the rpc-designate repository
+    repo_url: "https://github.com/rcbops/rpc-designate"
+
+    # currently we only do master. Once RPC-O switches
+    # to Pike we may retire rpc-designate and use the
+    # upstream installer
+    branches:
+      - "master"
+
+    # Use image for RPC-O install
+    image:
+      - xenial:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+
+    # Designate ignores these setting for now
+    scenario:
+      - "functional"
+    action:
+      - "test"
+
+    jira_project_key: "RI"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+ - project:
+    name: "rpc-designate-post-merge"
+
+    repo_name: "rpc-designate"
+    # URL of the rpc-designate repository
+    repo_url: "https://github.com/rcbops/rpc-designate"
+
+    # Use image for RPC-O install
+    image:
+      - xenial:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+
+    # Designate ignores these setting for now
+    scenario:
+      - "functional"
+    action:
+      - "test"
+
+    jira_project_key: "RI"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
