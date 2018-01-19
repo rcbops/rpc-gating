@@ -190,6 +190,27 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-master-rc-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "master-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio
+      - xenial_mnaio_loose_artifacts
+      - xenial_mnaio_no_artifacts
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-openstack-newton-aio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
@@ -215,9 +236,6 @@
         image: trusty
       - scenario: ironic
         image: trusty_loose_artifacts
-      - scenario: ironic
-        image: trusty_no_artifacts
-
     # This is the build that will be triggered by the push trigger job
     trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     jobs:
@@ -235,6 +253,26 @@
       - xenial_mnaio_loose_artifacts
     scenario:
       - "ironic"
+      - "swift"
+    action:
+      - deploy:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-rc-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio
+      - xenial_mnaio_loose_artifacts
+    scenario:
       - "swift"
     action:
       - deploy:
