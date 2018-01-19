@@ -40,21 +40,6 @@
     jobs:
       - 'RPC-IRR_{repo}-{series}-{image}-{context}'
 
-- project:
-    name: "RPC-Logstash-Jobs"
-    repo:
-      - rpc-role-logstash:
-          irr_repo_url: https://github.com/rcbops/rpc-role-logstash
-    series:
-      - master
-    image:
-      - xenial:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    context:
-      - master
-    jobs:
-      - 'RPC-IRR_{repo}-{series}-{image}-{context}'
-
 
 - job-template:
     # DEFAULTS
