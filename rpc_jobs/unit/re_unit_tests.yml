@@ -73,6 +73,19 @@
             ]
           )
         },
+        "Phobos VPN Check": {
+          build(
+            job: "RE-unit-test-phobos-vpn",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
       ])
 
 #TODO: Jira Issue Manipulation, Validation of Published Artefacts.

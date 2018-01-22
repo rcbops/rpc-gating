@@ -773,6 +773,40 @@ void standard_job_slave(String slave_type, Closure body){
   }
 }
 
+
+void connect_phobos_vpn(String gateway){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "phobos_vpn_ipsec",
+      usernameVariable: "ipsec_id",
+      passwordVariable: "ipsec_secret"
+    ),
+    usernamePassword(
+      credentialsId: "phobos_vpn_xauth",
+      usernameVariable: "xauth_user",
+      passwordVariable: "xauth_pass"
+    )
+  ]){
+    dir('rpc-gating/playbooks'){
+      venvPlaybook(
+        playbooks: [
+          "phobos_vpn.yml"
+        ],
+        args: [
+          "-u root"
+        ],
+        vars: [
+          ipsec_id: env.ipsec_id,
+          ipsec_secret: env.ipsec_secret,
+          xauth_user: env.xauth_user,
+          xauth_pass: env.xauth_pass,
+          gateway: gateway
+        ]
+      ) //venvPlaybook
+    } // dir
+  } // withCredentials
+}
+
 // Build an array suitable for passing to withCredentials
 // from a space or comma separated list of credential IDs.
 @NonCPS
