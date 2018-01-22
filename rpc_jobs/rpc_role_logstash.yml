@@ -1,0 +1,51 @@
+- project:
+    name: "rpc-role-logstash-pre-merge"
+
+    repo_name: "rpc-role-logstash"
+    repo_url: "https://github.com/rcbops/rpc-role-logstash"
+
+    branches:
+      - "master"
+
+    image:
+      - xenial:
+          FLAVOR: "general1-8"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+
+    # rpc-role-logstash ignores that setting for now
+    scenario:
+      - "functional"
+
+    # rpc-role-logstash ignores that setting for now
+    action:
+      - "test"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+# NOTE(mattt): There's currently no PM job setup for this role, so leaving
+#              this disabled until the project owner requests periodic
+#              testing.
+#- project:
+#    name: "rpc-role-logstash-post-merge"
+#
+#    repo_name: "rpc-role-logstash"
+#    repo_url: "https://github.com/rcbops/rpc-role-logstash"
+#
+#    image:
+#      - xenial:
+#          FLAVOR: "general1-8"
+#          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+#
+#    # rpc-role-logstash ignores that setting for now
+#    scenario:
+#      - "functional"
+#
+#    # rpc-role-logstash ignores that setting for now
+#    action:
+#      - "test"
+#
+#    # Link to the standard pre-merge-template
+#    jobs:
+#      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
