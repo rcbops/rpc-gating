@@ -5,7 +5,7 @@
     series:
       - master:
           branch: master
-          branches: "master"
+          branches: "master.*"
       - newton:
           branch: newton
           branches: "newton.*"
