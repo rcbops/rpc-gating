@@ -24,6 +24,29 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
+- project:
+    name: "rpc-role-logstash-tox-premerge"
+
+    repo_name: "rpc-role-logstash"
+    repo_url: "https://github.com/rcbops/rpc-role-logstash"
+
+    branches:
+      - "master"
+
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+
+    scenario:
+      - "ansible-lint"
+      - "bashate"
+
+    action:
+      - "tox-test"
+
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
 # NOTE(mattt): There's currently no PM job setup for this role, so leaving
 #              this disabled until the project owner requests periodic
 #              testing.
