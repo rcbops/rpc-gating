@@ -1,0 +1,15 @@
+[Unit]
+Description=Cisco VPN connection to phobos
+Documentation=man:vpnc(8) http://www.unix-ag.uni-kl.de/~massar/vpnc/
+Requires=network.target
+After=network.target
+ConditionPathExists=/dev/net/tun
+
+[Service]
+Type=forking
+PIDFile=/run/vpnc/phobos.pid
+
+ExecStart=/usr/sbin/vpnc --pid-file /run/vpnc/phobos.pid /etc/vpnc/phobos.conf
+
+[Install]
+WantedBy=multi-user.target
