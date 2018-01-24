@@ -53,6 +53,8 @@
 
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.internal_slave(){
-        influx.setup()
-      } // cit node
+      common.globalWraps(){
+        common.internal_slave(){
+          influx.setup()
+        } // cit node
+      } // globalWraps

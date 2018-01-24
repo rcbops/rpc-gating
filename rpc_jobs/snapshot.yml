@@ -40,52 +40,52 @@
           description: Version of rpc-gating to use.
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
-      stage('Build Image'){
-        if(env.CREATE_RPCO_SNAPSHOT == 'true'){
-          // kick off rpco job
-          retry(5){
-            build(
-              job: "PM_rpc-openstack-newton-xenial-swift-deploy",
-              wait: true,
-              parameters: [
-                [
-                  $class: 'StringParameterValue',
-                  name: 'FLAVOR',
-                  value: "general1-8"
-                ],
-                [
-                  $class: 'StringParameterValue',
-                  name: 'REGIONS',
-                  value: "DFW"
-                ],
-                [
-                  $class: 'StringParameterValue',
-                  name: 'FALLBACK_REGIONS',
-                  value: ""
-                ],
-                [
-                  $class: 'StringParameterValue',
-                  name: 'RPC_GATING_BRANCH',
-                  value: "RE-35"
-                ],
-                [
-                  $class: 'StringParameterValue',
-                  name: 'BRANCH',
-                  value: "RE-35"
-                ],
-                [
-                  $class: 'BooleanParameterValue',
-                  name: 'SNAPSHOT',
-                  value: true
+      common.globalWraps(){
+        env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+        stage('Build Image'){
+          if(env.CREATE_RPCO_SNAPSHOT == 'true'){
+            // kick off rpco job
+            retry(5){
+              build(
+                job: "PM_rpc-openstack-newton-xenial-swift-deploy",
+                wait: true,
+                parameters: [
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'FLAVOR',
+                    value: "general1-8"
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'REGIONS',
+                    value: "DFW"
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'FALLBACK_REGIONS',
+                    value: ""
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'RPC_GATING_BRANCH',
+                    value: "RE-35"
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'BRANCH',
+                    value: "RE-35"
+                  ],
+                  [
+                    $class: 'BooleanParameterValue',
+                    name: 'SNAPSHOT',
+                    value: true
+                  ]
                 ]
-              ]
-            )
-          } // retry
-        } // if
-      } // stage
-      if (env.BUILD_FROM_SNAPSHOT == 'true'){
-        common.shared_slave(){
+              )
+            } // retry
+          } // if
+        } // stage
+        if (env.BUILD_FROM_SNAPSHOT == 'true'){
           pubcloud.runonpubcloud(){
             stage('Run Tempest on Instance created from Image'){
               sh """#!/bin/bash -xeu
@@ -99,5 +99,5 @@
               """
             } // stage
           } // Run on pub cloud
-        } // shared slave
-      } // if
+        } // if
+      } // globalWraps

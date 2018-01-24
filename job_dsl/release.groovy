@@ -1,6 +1,5 @@
 library "rpc-gating@${RPC_GATING_BRANCH}"
-common.shared_slave(){
-
+common.globalWraps(){
   stage("Configure Git"){
     common.configure_git()
   }
@@ -37,4 +36,4 @@ common.shared_slave(){
       } // sshagent
     } // withCredentials
   } // stage
-}
+} // globalWraps

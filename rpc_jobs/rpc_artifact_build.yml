@@ -89,18 +89,18 @@
           cancel-builds-on-update: true
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      image_list = [
-        master: [
-            "Ubuntu 16.04.2 LTS prepared for RPC deployment"
-        ],
-        newton: [
-            "Ubuntu 16.04.2 LTS prepared for RPC deployment",
-            "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      common.globalWraps(){{
+        image_list = [
+          master: [
+              "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+          ],
+          newton: [
+              "Ubuntu 16.04.2 LTS prepared for RPC deployment",
+              "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+          ]
         ]
-      ]
-      env.trigger="{ztrigger}"
-      env.series="{series}"
-      common.shared_slave() {{
+        env.trigger="{ztrigger}"
+        env.series="{series}"
         try {{
           currentBuild.result = "SUCCESS"
           // We need to checkout the rpc-openstack repo on the CIT Slave
@@ -215,4 +215,4 @@
         }} finally {{
           common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
         }}
-      }} // node
+      }} // globalWraps

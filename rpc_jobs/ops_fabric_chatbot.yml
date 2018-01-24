@@ -23,7 +23,7 @@
           status-context: 'ops-fabric-chatbot-gate'
     dsl: |
       library "rpc-gating@${env.RPC_GATING_BRANCH}"
-      common.shared_slave(){
+      common.globalWraps(){
         common.clone_with_pr_refs()
         stage("Build Docker Image"){
             chatbot_container = docker.build env.BUILD_TAG.toLowerCase()
@@ -48,4 +48,4 @@
             }
           } // timeout
         } // docker container
-      } // shared_slave
+      } // global wraps

@@ -9,7 +9,7 @@
       - rpc_gating_params
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.shared_slave(){
+      common.globalWraps(){
         // Do something that creates an artifact
         stage("Build"){
           sh """

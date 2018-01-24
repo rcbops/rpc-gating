@@ -68,112 +68,114 @@
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      common.globalWraps(){{
 
-      env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+        env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
 
-      // Pass details about the job parameters through
-      // to the target environment so that scripts can
-      // use them to adapt behaviour.
-      env.RE_JOB_NAME = "{name}"
-      env.RE_JOB_IMAGE = "{image}"
-      env.RE_JOB_SCENARIO = "{scenario}"
-      env.RE_JOB_ACTION = "{action}"
-      env.RE_JOB_FLAVOR = "{FLAVOR}"
-      env.RE_JOB_REPO_NAME = "{repo_name}"
-      env.RE_JOB_BRANCH = "{branch}"
+        // Pass details about the job parameters through
+        // to the target environment so that scripts can
+        // use them to adapt behaviour.
+        env.RE_JOB_NAME = "{name}"
+        env.RE_JOB_IMAGE = "{image}"
+        env.RE_JOB_SCENARIO = "{scenario}"
+        env.RE_JOB_ACTION = "{action}"
+        env.RE_JOB_FLAVOR = "{FLAVOR}"
+        env.RE_JOB_REPO_NAME = "{repo_name}"
+        env.RE_JOB_BRANCH = "{branch}"
 
-      // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
-      common.setTriggerVars()
+        // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
+        common.setTriggerVars()
 
 
-      String credentials = "{credentials}"
+        String credentials = "{credentials}"
 
-      // Not part of the published interface, used by this job later on
-      // to create failure tickets in the correct project.
-      JIRA_PROJECT_KEY = "{jira_project_key}"
+        // Not part of the published interface, used by this job later on
+        // to create failure tickets in the correct project.
+        JIRA_PROJECT_KEY = "{jira_project_key}"
 
-      common.standard_job_slave(env.SLAVE_TYPE) {{
-        // Set the default environment variables used
-        // by the artifact and test result collection.
-        env.RE_HOOK_ARTIFACT_DIR="${{env.WORKSPACE}}/artifacts"
-        env.RE_HOOK_RESULT_DIR="${{env.WORKSPACE}}/results"
+        common.standard_job_slave(env.SLAVE_TYPE) {{
+          // Set the default environment variables used
+          // by the artifact and test result collection.
+          env.RE_HOOK_ARTIFACT_DIR="${{env.WORKSPACE}}/artifacts"
+          env.RE_HOOK_RESULT_DIR="${{env.WORKSPACE}}/results"
 
-        // Set the job result default
-        currentBuild.result="SUCCESS"
+          // Set the job result default
+          currentBuild.result="SUCCESS"
 
-        try {{
-          common.withRequestedCredentials(credentials) {{
-
-            stage('Checkout') {{
-              common.clone_with_pr_refs(
-                "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
-                env.REPO_URL,
-                env.BRANCH,
-              )
-            }} // stage
-
-            stage('Execute Pre Script') {{
-              // Retry the 'pre' stage 3 times. The 'pre' stage is considered
-              // to be preparation for the test, so let's try and make sure
-              // it has the best chance of success possible.
-              retry(3) {{
-                sh """#!/bin/bash -xeu
-                  cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                  if [[ -e gating/post_merge_test/pre ]]; then
-                    gating/post_merge_test/pre
-                  fi
-                """
-              }}
-            }} // stage
-
-            try{{
-              stage('Execute Run Script') {{
-                sh """#!/bin/bash -xeu
-                  cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                  gating/post_merge_test/run
-                """
-              }} // stage
-            }} finally {{
-              stage('Execute Post Script') {{
-                // We do not want the 'post' execution to fail the test,
-                // but we do want to know if it fails so we make it only
-                // return status.
-                post_result = sh(
-                  returnStatus: true,
-                  script: """#!/bin/bash -xeu
-                             cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                             if [[ -e gating/post_merge_test/post ]]; then
-                               gating/post_merge_test/post
-                             fi"""
-                )
-                if (post_result != 0) {{
-                  print("Post-Merge Test (post) failed with return code ${{post_result}}")
-                }} // if
-              }} // inner try
-            }} // stage
-          }} // withCredentials
-        }} catch (e) {{
-          print(e)
-          currentBuild.result="FAILURE"
-          // Try and ascertain the cause of the exception.
-          // If it was caused by a user, its a manual abort and
-          // an issue shouldn't be created. If it was created by
-          // SYSTEM or the exception doesn't contain enough information
-          // then an issue should be created.
-          String user
           try {{
-            user = e.getCauses()[0].getUser().toString()
-          }} catch (f){{
-            user = 'SYSTEM'
-          }}
-          if(user == 'SYSTEM' && JIRA_PROJECT_KEY != ''){{
-            common.create_jira_issue(JIRA_PROJECT_KEY,
-                                     env.BUILD_TAG,
-                                     env.BUILD_URL,
-                                     "Task")
-          }}
-          throw e
-        }} finally {{
-          common.archive_artifacts()
-        }} // try
-      }}
+            common.withRequestedCredentials(credentials) {{
+
+              stage('Checkout') {{
+                common.clone_with_pr_refs(
+                  "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
+                  env.REPO_URL,
+                  env.BRANCH,
+                )
+              }} // stage
+
+              stage('Execute Pre Script') {{
+                // Retry the 'pre' stage 3 times. The 'pre' stage is considered
+                // to be preparation for the test, so let's try and make sure
+                // it has the best chance of success possible.
+                retry(3) {{
+                  sh """#!/bin/bash -xeu
+                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                    if [[ -e gating/post_merge_test/pre ]]; then
+                      gating/post_merge_test/pre
+                    fi
+                  """
+                }}
+              }} // stage
+
+              try{{
+                stage('Execute Run Script') {{
+                  sh """#!/bin/bash -xeu
+                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                    gating/post_merge_test/run
+                  """
+                }} // stage
+              }} finally {{
+                stage('Execute Post Script') {{
+                  // We do not want the 'post' execution to fail the test,
+                  // but we do want to know if it fails so we make it only
+                  // return status.
+                  post_result = sh(
+                    returnStatus: true,
+                    script: """#!/bin/bash -xeu
+                               cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                               if [[ -e gating/post_merge_test/post ]]; then
+                                 gating/post_merge_test/post
+                               fi"""
+                  )
+                  if (post_result != 0) {{
+                    print("Post-Merge Test (post) failed with return code ${{post_result}}")
+                  }} // if
+                }} // inner try
+              }} // stage
+            }} // withCredentials
+          }} catch (e) {{
+            print(e)
+            currentBuild.result="FAILURE"
+            // Try and ascertain the cause of the exception.
+            // If it was caused by a user, its a manual abort and
+            // an issue shouldn't be created. If it was created by
+            // SYSTEM or the exception doesn't contain enough information
+            // then an issue should be created.
+            String user
+            try {{
+              user = e.getCauses()[0].getUser().toString()
+            }} catch (f){{
+              user = 'SYSTEM'
+            }}
+            if(user == 'SYSTEM' && JIRA_PROJECT_KEY != ''){{
+              common.create_jira_issue(JIRA_PROJECT_KEY,
+                                       env.BUILD_TAG,
+                                       env.BUILD_URL,
+                                       "Task")
+            }}
+            throw e
+          }} finally {{
+            common.archive_artifacts()
+          }} // try
+        }} // standard_job_slave
+      }} // globalWraps

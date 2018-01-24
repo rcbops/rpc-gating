@@ -743,32 +743,30 @@ void use_node(String label=null, body){
 
 //shortcut functions for a shared slave or internal shared slave
 
-void shared_slave(body){
+void shared_slave(Closure body){
   use_node("pubcloud_multiuse", body)
 }
 
-void internal_slave(body){
+void internal_slave(Closure body){
   use_node("CentOS", body)
 }
 
 void standard_job_slave(String slave_type, Closure body){
   timeout(time: 8, unit: 'HOURS'){
-    shared_slave(){
-      if (slave_type == "instance"){
-        pubcloud.runonpubcloud(){
-          body()
-        }
-      } else if (slave_type == "container"){
-        dir("rpc-gating"){
-          container = docker.build env.BUILD_TAG.toLowerCase()
-        }
-        container.inside {
-          configure_git()
-          body()
-        }
-      } else {
-        throw new Exception("slave_type '$slave_type' is not supported.")
+    if (slave_type == "instance"){
+      pubcloud.runonpubcloud(){
+        body()
       }
+    } else if (slave_type == "container"){
+      dir("rpc-gating"){
+        container = docker.build env.BUILD_TAG.toLowerCase()
+      }
+      container.inside {
+        configure_git()
+        body()
+      }
+    } else {
+      throw new Exception("slave_type '$slave_type' is not supported.")
     }
   }
 }
@@ -905,7 +903,6 @@ void withRequestedCredentials(String list_of_cred_ids, Closure body){
   }
 }
 
-
 Cause getRootCause(Cause cause){
     if (cause.class.toString().contains("UpstreamCause")) {
          for (upCause in cause.upstreamCauses) {
@@ -938,6 +935,24 @@ void setTriggerVars(){
       env.RE_JOB_TRIGGER="OTHER"
   }
   print ("Trigger: ${env.RE_JOB_TRIGGER} (${env.RE_JOB_TRIGGER_DETAIL})")
+}
+
+// add wrappers that should be used for all jobs.
+// max log size is in MB
+void globalWraps(Closure body){
+  // global timeout is long, so individual jobs can set shorter timeouts and
+  // still have to cleanup, archive atefacts etc.
+  timestamps{
+    timeout(time: 10, unit: 'HOURS'){
+      shared_slave(){
+        wrap([$class: 'LogfilesizecheckerWrapper', 'maxLogSize': 200, 'failBuild': true, 'setOwn': true]) {
+          print("common.globalWraps pre body")
+          body()
+          print("common.globalWraps post body")
+        } // log size
+      } // shared slave
+    } // timeout
+  } // timestamps
 }
 
 return this

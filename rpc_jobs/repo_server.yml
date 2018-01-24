@@ -11,7 +11,7 @@
       - timed: "@daily"
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.shared_slave(){
+      common.globalWraps(){
         try{
           common.withRequestedCredentials("cloud_creds, id_rsa_cloud10_jenkins_file"){
             stage("Prepare Ansible Roles"){
@@ -101,4 +101,4 @@
         } finally {
           common.archive_artifacts()
         }
-      } // cit node
+      } // globalWraps
