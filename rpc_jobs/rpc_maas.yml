@@ -11,10 +11,12 @@
     scenario:
       - master:
           FLAVOR: "performance2-15"
+          TRIGGER_PR_PHRASE_ONLY: true
       - pike:
           FLAVOR: "general1-8"
       - ocata:
           FLAVOR: "general1-8"
+          TRIGGER_PR_PHRASE_ONLY: true
       - newton:
           FLAVOR: "general1-8"
       - ceph:
@@ -38,7 +40,8 @@
       - newton
       - mitaka
       - liberty
-      - kilo
+      - kilo:
+          TRIGGER_PR_PHRASE_ONLY: true
     action:
       - deploy:
           FLAVOR: "general1-8"
