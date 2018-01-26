@@ -2,7 +2,7 @@
 - project:
     name: "rpc-upgrades-aio-newton-head-pr"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     branches:
      - "master"
     image:
@@ -21,7 +21,7 @@
 - project:
     name: "rpc-upgrades-aio-tox-pr"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     branches:
      - "master"
     image:
@@ -43,7 +43,7 @@
 - project:
     name: "rpc-upgrades-aio-newton-head-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -81,7 +81,7 @@
 - project:
     name: "rpc-upgrades-aio-newton-release-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -103,7 +103,7 @@
 - project:
     name: "rpc-upgrades-mnaio-newton-head-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
@@ -127,7 +127,7 @@
 - project:
     name: "rpc-upgrades-mnaio-newton-release-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
