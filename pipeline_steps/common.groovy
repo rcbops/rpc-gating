@@ -326,7 +326,9 @@ def rpco_archive_artifacts(String build_type = "AIO"){
 def archive_artifacts(){
   stage('Compress and Publish Artifacts'){
     if (env.RE_HOOK_RESULT_DIR != null){
-      junit allowEmptyResults: true, testResults: "${env.RE_HOOK_RESULT_DIR}/*.xml"
+      dir(env.RE_HOOK_RESULT_DIR) {
+        junit allowEmptyResults: true, testResults: '*.xml'
+      }
     }
     pubcloud.uploadToSwift(
       container: "jenkins_logs",
