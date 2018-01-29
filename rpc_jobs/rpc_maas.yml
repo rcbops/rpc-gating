@@ -1,0 +1,49 @@
+- project:
+    name: "rpc-maas-master-xenial-premerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    series: "master"
+    branches:
+      - "master.*"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - master:
+          FLAVOR: "performance2-15"
+          TRIGGER_PR_PHRASE_ONLY: true
+      - pike:
+          FLAVOR: "general1-8"
+      - ocata:
+          FLAVOR: "general1-8"
+          TRIGGER_PR_PHRASE_ONLY: true
+      - newton:
+          FLAVOR: "general1-8"
+      - ceph:
+          FLAVOR: "general1-8"
+    action:
+      - "deploy"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-trusty-premerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    series: "master"
+    branches:
+      - "master.*"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    scenario:
+      - newton
+      - mitaka
+      - liberty
+      - kilo:
+          TRIGGER_PR_PHRASE_ONLY: true
+    action:
+      - deploy:
+          FLAVOR: "general1-8"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
