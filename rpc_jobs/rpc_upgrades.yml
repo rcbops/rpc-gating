@@ -32,6 +32,7 @@
     scenario:
       - "swift"
     action:
+      - "mitaka_to_newton_major"
       - "liberty_to_newton_leap"
       - "r12.2.8_to_newton_leap"
       - "r12.2.5_to_newton_leap"
