@@ -2,7 +2,7 @@
 - project:
     name: "rpc-upgrades-aio-newton-head-pr"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     branches:
      - "master"
     image:
@@ -19,9 +19,31 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-upgrades-aio-tox-pr"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "ansible-syntax"
+      - "bashate"
+      - "pep8"
+      - "releasenotes"
+      - "docs"
+    action:
+      - "tox-test"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-upgrades-aio-newton-head-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -59,7 +81,7 @@
 - project:
     name: "rpc-upgrades-aio-newton-release-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -81,7 +103,7 @@
 - project:
     name: "rpc-upgrades-mnaio-newton-head-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
@@ -105,7 +127,7 @@
 - project:
     name: "rpc-upgrades-mnaio-newton-release-pm"
     repo_name: "rpc-upgrades"
-    repo_url: "http://github.com/rcbops/rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
