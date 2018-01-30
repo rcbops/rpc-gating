@@ -9,7 +9,7 @@
       # See params.yml
       - rpc_gating_params
       - rpc_repo_params:
-          RPC_BRANCH: newton
+          RPC_BRANCH: newton-rc
       - rpc_eng_ops_params:
           RPC_ENG_OPS_BRANCH: master
       - string:
