@@ -188,7 +188,7 @@
           } catch (e) {
             if(env.DEPLOY == "true"){
               slack_notify("Phobos Deploy Failed", "danger")
-              common.create_jira_issue("RE", "PHOBOS DEPLOY / ${env.BUILD_TAG}")
+              common.build_failure_issue("RE")
             } else {
               slack_notify("Phobos Verification Failed", "warning")
             }

@@ -1,0 +1,187 @@
+- job:
+    name: RE-unit-test-jira
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      def cleanup(String issue, String issue_query){
+        // remove build specific label to avoid adding an extra label
+        // to jira every time this job runs.
+        common.jira_set_labels(issue, base_labels)
+        common.jira_close(issue)
+        issues = common.jira_query(issue_query)
+        print issues
+        assert issues.size() == 0
+      }
+
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.shared_slave{
+        project = "SAN" // sandbox project
+        base_labels = ['re_unit', 'RE-unit-test-jira', 'jenkins']
+        labels = base_labels + env.BUILD_TAG
+        issue_query = "labels = \"re_unit\" AND labels = \"${env.BUILD_TAG}\" and project = ${project} and status = BACKLOG"
+
+        try {
+          stage("Test query command with issue key"){
+            String key = "SAN-1"
+            List issues = common.jira_query("key = ${key}")
+            print issues
+            assert issues.size() == 1
+            assert key == issues[0]
+          }
+
+          stage("Test create issue"){
+            List issues = common.jira_query(issue_query)
+            print issues
+            assert issues.size() == 0
+            issue = common.create_jira_issue(
+              project,
+              "Test create issue ${env.BUILD_TAG}",
+              "",
+              labels
+            )
+            issues = common.jira_query(issue_query)
+            print issues
+            print issue
+            assert issues.size() == 1
+            assert issues[0] == issue
+            cleanup(issues[0], issue_query)
+          }
+
+          stage("Test get or create issue"){
+            List issues = common.jira_query(issue_query)
+            print issues
+            assert issues.size() == 0
+
+            // Create issue
+            issue = common.get_or_create_jira_issue(
+              project,
+              "BACKLOG",
+              "Test get or create issue ${env.BUILD_TAG}",
+              "",
+              labels
+            )
+            // Assert issue exists
+            issues = common.jira_query(issue_query)
+            print issues
+            print issue
+            assert issues.size() == 1
+            assert issues[0] == issue
+
+            // Attempt to create same issue again
+            issue_2 = common.get_or_create_jira_issue(
+              project,
+              "BACKLOG",
+              "Test get or create issue ${env.BUILD_TAG}",
+              "",
+              labels
+            )
+
+            // Assert that the same issue key is retrieved both times
+            print issue
+            print issue_2
+            assert issue == issue_2
+
+            // Assert that only 1 matching issue exists
+            issues = common.jira_query(issue_query)
+            print issues
+            assert issues.size() == 1
+            assert issues[0] == issue
+            cleanup(issues[0], issue_query)
+          }
+          stage("Test close_all max issue limit"){
+            // Create 3 test issues
+            // intrange not serializable :(
+            for (i in [1,2,3]){
+              common.create_jira_issue(
+                project,
+                "Test delete max ${env.BUILD_TAG} ${i}",
+                "",
+                labels + "delete_max"
+              )
+            } //end for
+            try {
+              // Try and delete a maximum of two issues
+              test_query = issue_query + " AND labels = \"delete_max\""
+              common.jira_close_all(test_query, 2)
+              // Should not get here, as exception should be thrown
+              throw new Exception("RE Jira unit test failed: Test max issue limit")
+            } catch (hudson.AbortException e){
+              // test pass
+            } catch (Exception e){
+              // test fail
+              throw e
+            } finally {
+              // should pass with max_issues=3
+              common.jira_close_all(test_query, 3)
+            }
+          }
+          stage("Test close_all allow_all_projects=false fails with no project in query"){
+            try {
+              // should fail as project not specified in query
+              common.jira_close_all("labels = \"test_close_all_no_matches\"", 0)
+              throw new Exception("RE Jira unit test failed: Test close_all allow_all_projects")
+            } catch (hudson.AbortException e){
+              // test pass
+            } catch (Exception e){
+              // test fail
+              throw e
+            }
+
+          }
+          stage("Test close_all allow_all_projects=true succeeds with no project in query"){
+            // should match nothing and successfully delete nothing
+            common.jira_close_all("labels = \"test_close_all_no_matches\"", 0,
+                                  true)
+          }
+        // default catch allows Exception and all subclasses which doesn't
+        // include AssertionError which is a subclass of Error.
+        } catch (Error | Exception e) {
+          print ("Jira unit test try/catch block 1 error: ${e}")
+          common.jira_close_all(issue_query)
+          throw e
+        }
+
+        // This stage uses the job name as a label rather than the build tag,
+        // concurrent runs will interfere. A lock is used to serialise.
+        stage("Test build_failure_issue"){
+          lock("unit_test_jira_build_failure_issue_test"){
+            try {
+              labels = ["jenkins-build-failure", "jenkins", env.JOB_NAME ]
+              issue_query = "labels = \"${env.JOB_NAME}\" AND labels = \"jenkins-build-failure\" AND labels = \"jenkins\" AND project = ${project} AND status = BACKLOG"
+
+              List issues = common.jira_query(issue_query)
+              print issues
+              assert issues.size() == 0
+
+              // Create issue and add a comment
+              common.build_failure_issue(project)
+              issues = common.jira_query(issue_query)
+              print issues
+              assert issues.size() == 1
+              comments = common.jira_comments(issues[0])
+              print comments
+              assert comments.size() == 1
+
+              // Ensure that duplicate issue is not created, and that
+              // a comment is added to the existing issue
+              common.build_failure_issue(project)
+              issues = common.jira_query(issue_query)
+              print issues
+              assert issues.size() == 1
+              comments = common.jira_comments(issues[0])
+              print comments
+              assert comments.size() == 2
+              cleanup(issues[0], issue_query)
+            } catch (Error | Exception e) {
+              print ("Jira unit test try/catch block 2 error: ${e}")
+              common.jira_close_all("project = ${project} AND labels = \"${env.JOB_NAME}\" AND status = BACKLOG")
+              throw e
+            }
+          }
+        }
+      } // shared slave

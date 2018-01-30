@@ -664,10 +664,146 @@ def safe_jira_comment(body, String repo_path="rpc-openstack"){
   }
 }
 
-def create_jira_issue(String project="RE",
-                      String tag=env.BUILD_TAG,
-                      String link=env.BUILD_URL,
-                      String type="Issue-releng-platform-alert"){
+// This function creates or updates issues related to build failures.
+// Should be used to report build failures by calling:
+//    common.build_failure_issue(project)
+String build_failure_issue(String project){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    return sh(script: """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/jirautils.py \
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        build_failure_issue \
+          --project "${project}" \
+          --job-name "${env.JOB_NAME}" \
+          --job-url "${env.JOB_URL}" \
+          --build-tag "${env.BUILD_TAG}" \
+          --build-url "${env.BUILD_URL}"
+    """, returnStdout: true).trim()
+  }
+}
+
+
+// Create String of jirautils.py/create_jira_issue options for labels
+// eg: --label "jenkins" --label "maas"
+@NonCPS
+String generate_label_options(List labels){
+  List terms = []
+  for (label in labels) {
+      terms += "--label \"${label}\""
+  }
+  return terms.join(" ")
+}
+
+
+// This method creates a jira issue. Doesn't check for duplicates or
+// do anthing fancy. Use build_failure_issue for build failures.
+String create_jira_issue(String project,
+                         String summary,
+                         String description,
+                         List labels = []){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    return sh (script:"""#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/jirautils.py \
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        create_issue \
+          --summary "${summary}" \
+          --description "${description}" \
+          --project "${project}" ${generate_label_options(labels)}
+    """, returnStdout: true).trim()
+  }
+}
+
+
+String get_or_create_jira_issue(String project,
+                                String status = "BACKLOG",
+                                String summary,
+                                String description,
+                                List labels = []){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    return sh (script: """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/jirautils.py \
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        get_or_create_issue \
+          --status "${status}" \
+          --summary "${summary}" \
+          --description "${description}" \
+          --project "${project}" ${generate_label_options(labels)}
+    """, returnStdout: true).trim()
+  }
+}
+
+
+List jira_query(String query){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    return sh (script: """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/jirautils.py \
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        query \
+          --query "${query}"
+    """,
+    returnStdout: true).tokenize()
+  }
+}
+
+List jira_comments(String key){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    return sh (script: """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/jirautils.py \
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        comments \
+          --issue "${key}"
+    """,
+    returnStdout: true).tokenize('\n')
+  }
+}
+
+
+void jira_close(String key){
   withCredentials([
     usernamePassword(
       credentialsId: "jira_user_pass",
@@ -681,11 +817,54 @@ def create_jira_issue(String project="RE",
       python rpc-gating/scripts/jirautils.py \
         --user '$JIRA_USER' \
         --password '$JIRA_PASS' \
-        create_issue \
-          --summary "JBF: ${tag}" \
-          --description "Jenkins Build Failed :( [${tag}|${link}]" \
-          --project '$project' \
-          --type '$type'
+        close \
+          --issue "${key}"
+    """
+  }
+}
+
+void jira_close_all(String query, Integer max_issues=30,
+                    Boolean allow_all_projects=false){
+  allow_all_projects_str = ""
+  if (allow_all_projects){
+    allow_all_projects_str = "--allow-all-projects"
+  }
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    sh """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/jirautils.py \
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        close_all \
+          --query "${query}" \
+          --max-issues ${max_issues} ${allow_all_projects_str}
+    """
+  }
+}
+
+void jira_set_labels(String key, List labels){
+  withCredentials([
+    usernamePassword(
+      credentialsId: "jira_user_pass",
+      usernameVariable: "JIRA_USER",
+      passwordVariable: "JIRA_PASS"
+    )
+  ]){
+    sh """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/jirautils.py \
+        --user '$JIRA_USER' \
+        --password '$JIRA_PASS' \
+        set_labels \
+          --issue "${key}" ${generate_label_options(labels)}
     """
   }
 }

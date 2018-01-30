@@ -227,7 +227,10 @@ def runonpubcloud(Map args=[:], Closure body){
       } catch (e){
         print "Error while cleaning up, swallowing this exception to prevent "\
               +"cleanup errors from failing the build: ${e}"
-        common.create_jira_issue("RE", "Cleanup Failure: ${env.BUILD_TAG}")
+        common.create_jira_issue("RE",
+                                 "Cleanup Failure: ${env.BUILD_TAG}",
+                                 "[${env.BUILD_TAG}|${env.BUILD_URL}]",
+                                 ["jenkins", "cleanup_fail"])
       } // inner try
     } // if
   } //outer try

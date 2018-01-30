@@ -59,10 +59,7 @@ common.globalWraps(){
     print(e)
     // Only create failure card when run as a post-merge job
     if ( env.ghprbPullId == null ) {
-      common.create_jira_issue("RE",
-                               env.BUILD_TAG,
-                               env.BUILD_URL,
-                               "Task")
+      common.build_failure_issue("RE")
     } // if
     throw e
   } // try
