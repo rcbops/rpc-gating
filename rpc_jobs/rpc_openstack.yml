@@ -196,7 +196,6 @@
     branch: "master-rc"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio
       - xenial_mnaio_loose_artifacts
       - xenial_mnaio_no_artifacts
     scenario:
@@ -270,7 +269,6 @@
     branch: "newton-rc"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio
       - xenial_mnaio_loose_artifacts
     scenario:
       - "swift"
