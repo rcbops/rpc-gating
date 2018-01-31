@@ -13,8 +13,8 @@
       | ^gating/post_merge_test/
       | ^gating/update_dependencies/
     image:
-      - xenial:
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
       - ironic:
           TRIGGER_PR_PHRASE_ONLY: true
@@ -149,7 +149,7 @@
     branch: "master"
     jira_project_key: "RO"
     image:
-      - xenial:
+      - xenial_strict_artifacts:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
       - xenial_loose_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
@@ -174,7 +174,6 @@
     branch: "master"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio
       - xenial_mnaio_loose_artifacts
       - xenial_mnaio_no_artifacts
     scenario:
