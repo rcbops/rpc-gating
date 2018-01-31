@@ -5,6 +5,9 @@
     properties:
       - build-discarder:
           num-to-keep: 60
+    triggers:
+      # Starting between 04:00-05:00 UTC every Monday and Thursday
+      - timed: "H 4 * * 1,4"
     parameters:
       # See params.yml
       - rpc_gating_params
