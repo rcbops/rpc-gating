@@ -8,6 +8,7 @@
     FALLBACK_REGIONS: "IAD"
     # standard_job_params
     SLAVE_TYPE: "instance"
+    SLAVE_CONTAINER_BASE_IMAGE: "ubuntu"
     # Misc
     CRON: "H H(9-21) * * 1-5"
     credentials: ""

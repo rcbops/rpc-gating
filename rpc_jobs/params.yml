@@ -110,3 +110,11 @@
             Standard jobs can be run on different types of slave. The default
             for this parameter is set to "instance" for a compute instances. To
             use a Docker container set this parameter to "container".
+      - string:
+          name: "SLAVE_CONTAINER_BASE_IMAGE"
+          default: "{SLAVE_CONTAINER_BASE_IMAGE}"
+          description: >
+            When SLAVE_TYPE is set to "container", you can optionally override
+            the base image used to build the docker image when running a docker
+            build. The default defined in the Dockerfile and on the parameter is
+            "ubuntu".

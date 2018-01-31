@@ -16,6 +16,7 @@
       - rpc_gating_params
       - standard_job_params:
           SLAVE_TYPE: "instance"
+          SLAVE_CONTAINER_BASE_IMAGE: "ubuntu"
       - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
@@ -31,22 +32,39 @@
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
         common.standard_job_slave(env.SLAVE_TYPE){
-          String virt_type = sh(script: """#!/bin/bash
-            systemd-detect-virt
+          String inside_container = sh(script: """#!/bin/bash
+            test -f /.dockerenv && echo "yes" || echo "no"
+          """, returnStdout: true).trim()
+
+          String distro = sh(script: """#!/bin/bash
+            source /etc/lsb-release
+            echo \${DISTRIB_RELEASE}
           """, returnStdout: true).trim()
 
           sh """
-            echo "I'm a ${env.SLAVE_TYPE} slave, running ${virt_type}"
+            echo "I'm an Ubuntu ${distro} ${env.SLAVE_TYPE} slave"
           """
 
           // NOTE(mattt): If env.SLAVE_TYPE is set to an unrecognized type, an
           // exception will be raised in common.standard_job_slave()
           stage("Ensure virt type matches env.SLAVE_TYPE") {
             if (env.SLAVE_TYPE == "instance") {
-              assert virt_type == "xen"
+              assert inside_container == "no"
             } else {
-              assert virt_type == "docker"
-            }
-          }
-        }
-      }
+              assert inside_container == "yes"
+            } // if
+          } // stage
+
+          stage("Ensure container distro matches env.SLAVE_CONTAINER_BASE_IMAGE") {
+            if (env.SLAVE_TYPE == "container") {
+              if (env.SLAVE_CONTAINER_BASE_IMAGE == "ubuntu") {
+                assert distro == "16.04"
+              } else {
+                assert distro == env.SLAVE_CONTAINER_BASE_IMAGE.split(":")[1]
+              } // if
+            } else {
+              print 'Skipped as env.SLAVE_TYPE != "container"'
+            } // if
+          } // stage
+        } // standard_job_slave
+      } // globalWraps
