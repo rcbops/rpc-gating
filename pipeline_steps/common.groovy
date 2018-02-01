@@ -944,6 +944,25 @@ void standard_job_slave(String slave_type, Closure body){
         configure_git()
         body()
       }
+    } else if (slave_type == "dockerfile"){
+      if ( env.ghprbPullId != null ) {
+        clone_with_pr_refs(
+          "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+        )
+      } else {
+        clone_with_pr_refs(
+          "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+          env.REPO_URL,
+          env.BRANCH,
+        )
+      }
+      dir("${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}"){
+        container = docker.build env.BUILD_TAG.toLowerCase()
+      }
+      container.inside {
+        configure_git()
+        body()
+      }
     } else {
       throw new Exception("slave_type '$slave_type' is not supported.")
     }
