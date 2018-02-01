@@ -36,12 +36,13 @@ logger = logging.getLogger("release")
 @click.option(
     '--version',
     help="Symbolic name of Release (eg r14.1.99)"
+         " Required when using --script."
 )
 @click.option(
     "--prev-version",
     help="Last released version. Release notes scripts should compare "
-         "prev-version to version",
-    required=True
+         "prev-version to version. "
+         "Required when using --script.",
 )
 @click.option(
     "--clone-dir",
@@ -55,7 +56,6 @@ logger = logging.getLogger("release")
 def generate_release_notes(scripts, rnfile, text, version, prev_version,
                            clone_dir, dst_file):
     ctx_obj = click.get_current_context().obj
-    version = try_context(ctx_obj, version, "version", "version")
     clone_dir = try_context(ctx_obj, clone_dir, "clone_dir", "clone_dir")
     os.system("mkdir -p {}".format(os.path.dirname(dst_file)))
     if scripts:

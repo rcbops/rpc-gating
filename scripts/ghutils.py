@@ -3,12 +3,13 @@
 # This script contains github related utilties for Jenkins.
 
 
-import click
-import git
-import github3
 import json
 import logging
 import re
+
+import click
+import git
+import github3
 
 from notifications import try_context
 
@@ -172,6 +173,13 @@ def update_rc_branch(ctx, mainline, rc):
     """
     repo = ctx.obj
     rc = try_context(repo, rc, "rc", "rc_ref")
+
+    if mainline == rc:
+        raise ValueError("Specifying the same branch for mainline and rc"
+                         " will result in dataloss. The mainline branch"
+                         " will be deleted, then the rc branch will be"
+                         " created from the now non-existent mainline branch")
+
     branch_protection_enabled = False
 
     # check if branch exists
