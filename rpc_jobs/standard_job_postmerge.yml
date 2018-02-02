@@ -156,19 +156,11 @@
           }} catch (e) {{
             print(e)
             currentBuild.result="FAILURE"
-            // Try and ascertain the cause of the exception.
-            // If it was caused by a user, its a manual abort and
-            // an issue shouldn't be created. If it was created by
-            // SYSTEM or the exception doesn't contain enough information
-            // then an issue should be created.
-            String user
-            try {{
-              user = e.getCauses()[0].getUser().toString()
-            }} catch (f){{
-              user = 'SYSTEM'
-            }}
-            if(user == 'SYSTEM' && JIRA_PROJECT_KEY != ''){{
+            if (! common.isUserAbortedBuild() && JIRA_PROJECT_KEY != '') {{
+              print("Creating build failure issue.")
               common.build_failure_issue(JIRA_PROJECT_KEY)
+            }} else {{
+              print("Skipping build failure issue creation.")
             }}
             throw e
           }} finally {{
