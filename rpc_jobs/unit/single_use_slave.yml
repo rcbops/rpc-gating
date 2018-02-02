@@ -1,5 +1,5 @@
 - job:
-    name: RE-unit-test-single-use-slave
+    name: RE-unit-test-slave-types
     project-type: workflow
     concurrent: true
     properties:
@@ -15,6 +15,10 @@
           FALLBACK_REGIONS: "IAD"
       - rpc_gating_params
       - string:
+          name: SLAVE_TYPE
+          default: container
+          description: "Type of slave to test, container or instance."
+      - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
           description: |
@@ -28,9 +32,9 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
-        pubcloud.runonpubcloud {
+        common.standard_job_slave(env.SLAVE_TYPE){
           sh """
-            echo "I'm running on a single use slave!"
+            echo "I'm a ${env.SLAVE_TYPE} slave"
           """
         }
       }

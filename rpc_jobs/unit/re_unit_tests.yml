@@ -49,15 +49,38 @@
             ]
           )
         },
-        "Single Use Slave": {
+        "Standard Slave Instance": {
           build(
-            job: "RE-unit-test-single-use-slave",
+            job: "RE-unit-test-slave-types",
             wait: true,
             parameters: [
               [
                 $class: 'StringParameterValue',
                 name: 'RPC_GATING_BRANCH',
                 value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'instance'
+              ]
+            ]
+          )
+        },
+        "Standard Slave Container": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'container'
               ]
             ]
           )
