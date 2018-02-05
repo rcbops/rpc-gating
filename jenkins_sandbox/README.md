@@ -29,9 +29,9 @@ interface port is mapped to port 8080 locally so that we can access it from
 the browser on our local system. The current directory (intended to be the
 root of the rpc-gating checkout) is mounted within the container.
 ```
-docker run -d \
-  -p 127.0.0.1:8080:8080 \
-  --volume "$PWD":/opt/jenkins-job rpc-gating/jenkins_sandbox
+CONTAINER_ID=$(docker run -d \
+  -p 8080:8080 \
+  --volume "$PWD":/opt/jenkins-job rpc-gating/jenkins_sandbox)
 ```
 
 ### Deploy rpc_jobs to Jenkins
@@ -40,6 +40,6 @@ and update them on the Jenkins server.
 ```
 docker exec -it \
   --workdir /opt/jenkins-job \
-  <container-id> \
+  $CONTAINER_ID \
   jenkins-jobs update rpc_jobs
 ```
