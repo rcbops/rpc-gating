@@ -14,10 +14,8 @@
           REGIONS: "DFW ORD"
           FALLBACK_REGIONS: "IAD"
       - rpc_gating_params
-      - string:
-          name: SLAVE_TYPE
-          default: container
-          description: "Type of slave to test, container or instance."
+      - standard_job_params:
+          SLAVE_TYPE: "instance"
       - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
@@ -33,8 +31,22 @@
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
         common.standard_job_slave(env.SLAVE_TYPE){
+          String virt_type = sh(script: """#!/bin/bash
+            systemd-detect-virt
+          """, returnStdout: true).trim()
+
           sh """
-            echo "I'm a ${env.SLAVE_TYPE} slave"
+            echo "I'm a ${env.SLAVE_TYPE} slave, running ${virt_type}"
           """
+
+          // NOTE(mattt): If env.SLAVE_TYPE is set to an unrecognized type, an
+          // exception will be raised in common.standard_job_slave()
+          stage("Ensure virt type matches env.SLAVE_TYPE") {
+            if (env.SLAVE_TYPE == "instance") {
+              assert virt_type == "xen"
+            } else {
+              assert virt_type == "docker"
+            }
+          }
         }
       }
