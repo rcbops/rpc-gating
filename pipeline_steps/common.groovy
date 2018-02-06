@@ -1134,4 +1134,13 @@ void globalWraps(Closure body){
   } // timestamps
 }
 
+Boolean isUserAbortedBuild() {
+  if (currentBuild.rawBuild.getAction(InterruptedBuildAction.class)) {
+    userAborted = true
+  } else {
+    userAborted = false
+  }
+  return userAborted
+}
+
 return this
