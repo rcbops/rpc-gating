@@ -55,7 +55,7 @@ def git(String image) {
       print(e)
       throw e
     } finally {
-      common.rpco_archive_artifacts()
+      common.archive_artifacts()
     }
   } // pubcloud slave
 }
@@ -75,7 +75,7 @@ def python(String image) {
       print(e)
       throw e
     } finally {
-      common.rpco_archive_artifacts()
+      common.archive_artifacts()
     }
   } // pubcloud slave
 }
@@ -95,7 +95,7 @@ def container(String image) {
       print(e)
       throw e
     } finally {
-      common.rpco_archive_artifacts()
+      common.archive_artifacts()
     }
   } // pubcloud slave
 }

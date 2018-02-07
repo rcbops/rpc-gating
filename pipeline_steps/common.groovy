@@ -293,36 +293,6 @@ def String gen_instance_name(String prefix="AUTO"){
   return instance_name
 }
 
-def rpco_archive_artifacts(String build_type = "AIO"){
-  try{
-    if ( build_type == "MNAIO" ){
-      args = [
-        "-i /opt/ansible-static-inventory.ini",
-      ]
-      vars = [
-        target_hosts: "all",
-      ]
-    } else {
-      args = []
-      vars = [
-        target_hosts: "localhost",
-      ]
-    }
-    dir("rpc-gating/playbooks"){
-      venvPlaybook(
-        playbooks: ['archive_artifacts.yml'],
-        args: args,
-        vars: vars,
-      )
-    }
-  } catch (e){
-    print(e)
-    throw(e)
-  } finally{
-    archive_artifacts()
-  }
-}
-
 def archive_artifacts(){
   stage('Compress and Publish Artifacts'){
     if (env.RE_HOOK_RESULT_DIR != null){
