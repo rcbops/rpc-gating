@@ -117,4 +117,4 @@
             When SLAVE_TYPE is set to "container", you can optionally override
             the base image used to build the docker image when running a docker
             build. The default defined in the Dockerfile and on the parameter is
-            "ubuntu".
+            "ubuntu:16.04".

@@ -940,7 +940,7 @@ void standard_job_slave(String slave_type, Closure body){
       String image_name = env.BUILD_TAG.toLowerCase()
       // NOTE(mattt): This is necessary to initially gate this change as we
       // have no parameter for SLAVE_CONTAINER_BASE_IMAGE defined yet
-      String base_image = env.SLAVE_CONTAINER_BASE_IMAGE ? env.SLAVE_CONTAINER_BASE_IMAGE : "ubuntu"
+      String base_image = env.SLAVE_CONTAINER_BASE_IMAGE ? env.SLAVE_CONTAINER_BASE_IMAGE : "ubuntu:16.04"
       dir("rpc-gating"){
         container = docker.build(image_name, "--build-arg BASE_IMAGE=${base_image} -f Dockerfile.standard_job .")
       }
