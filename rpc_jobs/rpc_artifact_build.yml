@@ -123,25 +123,10 @@
             }}
           }}
 
-          // Container artifacts can be built in parallel for all
-          // distributions (images) supported by a series. This
-          // can currently only be done in parallel for PR's due
-          // to a race condition when updating the image index.
-          // ref: RE-115
-          container_parallel = [:]
-          for (x in image_list[env.series]) {{
-            // Need to bind the image variable before the closure - can't do 'for (image in ...)'
-            // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-            def image = x
-            container_parallel[image] = {{
-              artifact_build.container(image)
-            }}
-          }}
-
           // We can run all the artifact build processes in parallel
           // for PR's because they do not upload anything.
           if (env.trigger == "pr") {{
-            Map branches = python_parallel + container_parallel + [
+            Map branches = python_parallel + [
               "apt": {{
                 // We do not need to download existing data from
                 // rpc-repo for PR's as they do not upload their
@@ -192,21 +177,6 @@
               }}
             }}
 
-            // We lock the container job with a static lock value
-            // to ensure that no two container build processes can
-            // run at the same time. We also ensure that the job
-            // does each supported distribution in series. This is
-            // necessary due to a race condition when updating the
-            // image index.
-            // ref: RE-115
-            lock('artifact_container'){{
-              for (x in image_list[env.series]){{
-                def image = x
-                stage("Container ${{image}}"){{
-                  artifact_build.container(image)
-                }} //stage
-              }} //for
-            }} //lock
           }} //if
         }} catch (e) {{
           print e
