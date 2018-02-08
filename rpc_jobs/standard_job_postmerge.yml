@@ -63,6 +63,7 @@
           description: Branch of the repo under test
       - standard_job_params:
           SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_CUSTOM_DOCKERFILE: "{SLAVE_CONTAINER_CUSTOM_DOCKERFILE}"
     triggers:
       - timed: "@daily"
 

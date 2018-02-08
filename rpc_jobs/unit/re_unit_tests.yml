@@ -98,7 +98,12 @@
               [
                 $class: 'StringParameterValue',
                 name: 'SLAVE_TYPE',
-                value: 'dockerfile'
+                value: 'container'
+              ],
+              [
+                $class: 'BooleanParameterValue',
+                name: 'SLAVE_CONTAINER_CUSTOM_DOCKERFILE',
+                value: true
               ]
             ]
           )

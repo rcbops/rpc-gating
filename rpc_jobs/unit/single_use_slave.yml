@@ -16,6 +16,7 @@
       - rpc_gating_params
       - standard_job_params:
           SLAVE_TYPE: "instance"
+          SLAVE_CONTAINER_CUSTOM_DOCKERFILE: false
       - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
@@ -29,7 +30,14 @@
               Destroy Slave
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
+
       common.globalWraps(){
+        // NOTE(mattt): These vars are required in common.standard_job_slave()
+        // when this job is testing a custom dockerfile.
+        env.REPO_URL = "https://github.com/rcbops/rpc-gating"
+        env.BRANCH = "${RPC_GATING_BRANCH}"
+        env.RE_JOB_REPO_NAME = "rpc-gating"
+
         common.standard_job_slave(env.SLAVE_TYPE){
           String virt_type = sh(script: """#!/bin/bash
             systemd-detect-virt
