@@ -175,7 +175,10 @@
             }}
             throw e
           }} finally {{
-            common.archive_artifacts()
+            common.archive_artifacts(
+              artifacts_dir: "${{env.RE_HOOK_ARTIFACT_DIR}}",
+              results_dir: "${{env.RE_HOOK_RESULT_DIR}}"
+            )
           }} // try
         }} // standard_job_slave
       }} // globalWraps
