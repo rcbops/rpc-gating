@@ -41,6 +41,7 @@
     concurrent: true
     FLAVOR: "performance1-1"
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    CRON: "@daily"
     properties:
       - build-discarder:
           num-to-keep: 14
@@ -64,7 +65,7 @@
       - standard_job_params:
           SLAVE_TYPE: "{SLAVE_TYPE}"
     triggers:
-      - timed: "@daily"
+      - timed: "{CRON}"
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
