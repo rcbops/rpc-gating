@@ -80,26 +80,6 @@ def python(String image) {
   } // pubcloud slave
 }
 
-def container(String image) {
-  pubcloud.runonpubcloud(image: image) {
-    try {
-      withCredentials(get_rpc_repo_creds()) {
-        common.prepareRpcGit()
-        dir("/opt/rpc-openstack/") {
-          sh """#!/bin/bash
-          scripts/artifacts-building/containers/build-process.sh
-          """
-        } // dir
-      } // withCredentials
-    } catch (e) {
-      print(e)
-      throw e
-    } finally {
-      common.archive_artifacts()
-    }
-  } // pubcloud slave
-}
-
 def cloudimage(Map args) {
   inventory="inventory.${common.rand_int_str()}"
   inventory_path="${WORKSPACE}/rpc-gating/playbooks/${inventory}"
