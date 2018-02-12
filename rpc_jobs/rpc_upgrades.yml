@@ -55,6 +55,7 @@
       - "swift"
     action:
       - "mitaka_to_newton_major"
+      - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "r12.2.8_to_newton_leap"
       - "r12.2.5_to_newton_leap"
@@ -66,6 +67,10 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     exclude:
+      - image: "xenial_aio"
+        action: "mitaka_to_newton_major"
+      - image: "xenial_aio"
+        action: "mitaka_to_newton_leap"
       - image: "xenial_aio"
         action: "liberty_to_newton_leap"
       - image: "xenial_aio"
@@ -126,6 +131,8 @@
     scenario:
       - "swift"
     action:
+      - "mitaka_to_newton_major"
+      - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "r12.2.8_to_newton_leap"
       - "r12.2.5_to_newton_leap"
