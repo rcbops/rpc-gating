@@ -1,3 +1,19 @@
+- project:
+    name: "ops-fabric-chatbot-pre-merge"
+    repo_name: "ops-fabric-chatbot"
+    repo_url: "https://github.com/rcbops/ops-fabric-chatbot"
+    branches:
+      - "master"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "unit"
+    action:
+      - "test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
 - job:
     name: Ops-Fabric-Chatbot-Gate
     description: "lint and unit tests for ops-fabric-chatbot"

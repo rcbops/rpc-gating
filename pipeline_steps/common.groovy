@@ -296,7 +296,9 @@ def String gen_instance_name(String prefix="AUTO"){
 def archive_artifacts(){
   stage('Compress and Publish Artifacts'){
     if (env.RE_HOOK_RESULT_DIR != null){
-      junit allowEmptyResults: true, testResults: "${env.RE_HOOK_RESULT_DIR}/*.xml"
+      dir(env.RE_HOOK_RESULT_DIR) {
+        junit allowEmptyResults: true, testResults: '*.xml'
+      }
     }
     pubcloud.uploadToSwift(
       container: "jenkins_logs",
