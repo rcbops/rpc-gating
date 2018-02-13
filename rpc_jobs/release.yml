@@ -49,21 +49,25 @@
 
             python rpc-gating/scripts/release.py \
                 --debug \
-                --org "$ORG" \
-                --repo "$REPO" \
+                --org "${ORG}" \
+                --repo "${REPO}" \
                 clone \
-                  --ref $RC_BRANCH \
-                publish_tag \
-                    --version "${VERSION}" \
+                    --ref "${RC_BRANCH}" \
                 generate_release_notes \
+                    --version "${VERSION}" \
+                    --prev-version "${PREVIOUS_VERSION}" \
                     --script "optional:gating/generate_release_notes/pre" \
                     --script "gating/generate_release_notes/run" \
                     --script "optional:gating/generate_release_notes/post" \
-                    --prev-version "${PREVIOUS_VERSION}" \
                     --out-file "${RELEASE_NOTES_FILE}" \
+                publish_tag \
+                    --ref "${RC_BRANCH}" \
+                    --version "${VERSION}" \
                 create_release \
+                    --version "${VERSION}" \
                     --bodyfile "${RELEASE_NOTES_FILE}" \
                 update_rc_branch \
+                    --rc "${RC_BRANCH}" \
                     --mainline "${MAINLINE}" \
                 mailgun \
                     --to "${NOTIFICATION_ADDRESS}"
