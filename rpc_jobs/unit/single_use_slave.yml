@@ -16,6 +16,9 @@
       - rpc_gating_params
       - standard_job_params:
           SLAVE_TYPE: "instance"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "RE"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "./Dockerfile.standard_job"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "BASE_IMAGE=ubuntu:16.04"
       - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
@@ -30,23 +33,48 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
+        // NOTE(mattt): These vars are required in common.standard_job_slave()
+        // when this job is testing a custom dockerfile.
+        env.REPO_URL = "https://github.com/rcbops/rpc-gating"
+        env.BRANCH = "${RPC_GATING_BRANCH}"
+        env.RE_JOB_REPO_NAME = "rpc-gating"
+
         common.standard_job_slave(env.SLAVE_TYPE){
-          String virt_type = sh(script: """#!/bin/bash
-            systemd-detect-virt
+          String inside_container = sh(script: """#!/bin/bash
+            test -f /.dockerenv && echo "yes" || echo "no"
+          """, returnStdout: true).trim()
+
+          String distro = sh(script: """#!/bin/bash
+            source /etc/lsb-release
+            echo \${DISTRIB_RELEASE}
           """, returnStdout: true).trim()
 
           sh """
-            echo "I'm a ${env.SLAVE_TYPE} slave, running ${virt_type}"
+            echo "I'm an Ubuntu ${distro} ${env.SLAVE_TYPE} slave"
           """
 
           // NOTE(mattt): If env.SLAVE_TYPE is set to an unrecognized type, an
           // exception will be raised in common.standard_job_slave()
           stage("Ensure virt type matches env.SLAVE_TYPE") {
             if (env.SLAVE_TYPE == "instance") {
-              assert virt_type == "xen"
+              assert inside_container == "no"
             } else {
-              assert virt_type == "docker"
-            }
-          }
-        }
-      }
+              assert inside_container == "yes"
+            } // if
+          } // stage
+
+          stage("Ensure args are correctly passed into `docker build`") {
+            if (env.SLAVE_TYPE == "container" && env.SLAVE_CONTAINER_DOCKERFILE_REPO == "RE") {
+              if (env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS == "BASE_IMAGE=ubuntu:16.04") {
+                assert distro == "16.04"
+              } else if (env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS == "BASE_IMAGE=ubuntu:17.10") {
+                assert distro == "17.10"
+              } else {
+                throw new Exception("Unexpected env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS passed into test")
+              }
+            } else {
+              print 'Skipped as env.SLAVE_TYPE != "container" or env.SLAVE_CONTAINER_DOCKERFILE_REPO != "RE"'
+            } // if
+          } // stage
+        } // standard_job_slave
+      } // globalWraps

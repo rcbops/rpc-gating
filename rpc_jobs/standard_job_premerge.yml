@@ -55,6 +55,9 @@
               Destroy Slave
       - standard_job_params:
           SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
       - string:
           name: skip_pattern
           default: "{skip_pattern}"
