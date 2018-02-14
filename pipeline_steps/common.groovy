@@ -909,8 +909,25 @@ void standard_job_slave(String slave_type, Closure body){
         body()
       }
     } else if (slave_type == "container"){
-      dir("rpc-gating"){
-        container = docker.build env.BUILD_TAG.toLowerCase()
+      if (env.SLAVE_CONTAINER_CUSTOM_DOCKERFILE) {
+        if ( env.ghprbPullId != null ) {
+          clone_with_pr_refs(
+            "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+          )
+        } else {
+          clone_with_pr_refs(
+            "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+            env.REPO_URL,
+            env.BRANCH,
+          )
+        }
+        dir("${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}"){
+          container = docker.build env.BUILD_TAG.toLowerCase()
+        }
+      } else {
+        dir("rpc-gating"){
+          container = docker.build env.BUILD_TAG.toLowerCase()
+        }
       }
       container.inside {
         configure_git()
