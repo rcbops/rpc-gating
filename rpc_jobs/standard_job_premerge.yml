@@ -55,6 +55,7 @@
               Destroy Slave
       - standard_job_params:
           SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_BASE_IMAGE: "{SLAVE_CONTAINER_BASE_IMAGE}"
       - string:
           name: skip_pattern
           default: "{skip_pattern}"
