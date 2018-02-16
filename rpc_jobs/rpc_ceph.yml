@@ -7,6 +7,10 @@
     branches:
       - "master"
 
+    skip_pattern: |
+      \.md$
+      | \.rst$
+
     image:
       - xenial:
           FLAVOR: "general1-8"
