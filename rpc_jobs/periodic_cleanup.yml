@@ -117,4 +117,23 @@
             throw e
           }
         } // internal_slave
+        stage("Master Log Compression"){
+          node("master"){
+            // Note that already compressed logs will be skipped as they
+            // get renamed .gz .
+            // This only affects the stage logs used for blue ocean,
+            // console logs are compressed using a plugin activated via
+            // common.globalWraps.
+            // Logs newer than 1 day are skipped to prevent compressing
+            // the logs from running builds.
+            sh """#!/bin/bash
+              cd /var/lib/jenkins/jobs
+              find . -regex '.+/builds/[0-9]+/[0-9]+\\.log' -mtime +1 \\
+                |while read stagelog; do
+                  echo $stagelog
+                  gzip $stagelog
+                done
+            """
+          }
+        }
       } // globalWraps
