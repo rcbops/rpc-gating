@@ -1,6 +1,7 @@
 ansible
 appdirs
 click
+croniter
 github3.py
 gitpython
 influxdb

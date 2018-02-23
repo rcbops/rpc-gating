@@ -41,6 +41,7 @@
     concurrent: true
     FLAVOR: "performance1-1"
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    CRON: "@daily"
     properties:
       - build-discarder:
           num-to-keep: 14
@@ -67,7 +68,7 @@
           SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
           SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
     triggers:
-      - timed: "@daily"
+      - timed: "{CRON}"
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
