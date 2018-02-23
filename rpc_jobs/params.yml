@@ -110,3 +110,27 @@
             Standard jobs can be run on different types of slave. The default
             for this parameter is set to "instance" for a compute instances. To
             use a Docker container set this parameter to "container".
+      - choice:
+          name: "SLAVE_CONTAINER_DOCKERFILE_REPO"
+          choices:
+            - "RE"
+            - "PROJECT"
+          description: >
+            This parameter, which defaults to "RE", determines where to look
+            for the Dockerfile specified in SLAVE_CONTAINER_DOCKERFILE_PATH.
+            "RE" searches within rpc-gating, and "PROJECT" searches within the
+            project in test.
+      - string:
+          name: "SLAVE_CONTAINER_DOCKERFILE_PATH"
+          default: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          description: >
+            This is the relative path of the Dockerfile to build from. This
+            defaults to "./Dockerfile.standard_job".
+      - string:
+          name: "SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS"
+          default: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+          description: >
+            This is a list of space-separated build args to pass to docker
+            build. This defaults to "BASE_IMAGE=ubuntu:16.04", which is
+            specifically applicable to the "./Dockerfile.standard_job" in
+            rpc-gating.

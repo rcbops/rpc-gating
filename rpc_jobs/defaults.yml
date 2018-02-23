@@ -8,6 +8,9 @@
     FALLBACK_REGIONS: "IAD"
     # standard_job_params
     SLAVE_TYPE: "instance"
+    SLAVE_CONTAINER_DOCKERFILE_REPO: "RE"
+    SLAVE_CONTAINER_DOCKERFILE_PATH: "./Dockerfile.standard_job"
+    SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "BASE_IMAGE=ubuntu:16.04"
     # Misc
     CRON: "H H(9-21) * * 1-5"
     credentials: ""

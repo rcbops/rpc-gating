@@ -909,8 +909,29 @@ void standard_job_slave(String slave_type, Closure body){
         body()
       }
     } else if (slave_type == "container"){
-      dir("rpc-gating"){
-        container = docker.build env.BUILD_TAG.toLowerCase()
+      String image_name = env.BUILD_TAG.toLowerCase()
+      String dockerfile_repo_dir = "${env.WORKSPACE}/"
+
+      if (env.SLAVE_CONTAINER_DOCKERFILE_REPO == "PROJECT") {
+        if ( env.ghprbPullId != null ) {
+          clone_with_pr_refs(
+            "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+          )
+        } else {
+          clone_with_pr_refs(
+            "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+            env.REPO_URL,
+            env.BRANCH,
+          )
+        }
+
+        dockerfile_repo_dir += env.RE_JOB_REPO_NAME
+      } else {
+        dockerfile_repo_dir += "rpc-gating"
+      }
+
+      dir(dockerfile_repo_dir){
+        container = docker.build(image_name, genDockerBuildArgs())
       }
       container.inside {
         configure_git()
@@ -1113,6 +1134,26 @@ Boolean isUserAbortedBuild() {
     userAborted = false
   }
   return userAborted
+}
+
+String genDockerBuildArgs() {
+  return sh(script: """#!/usr/bin/env python3
+from os import environ
+from shlex import quote
+
+# We don't want to set a default for build_args as these do not always apply
+build_args = environ.get('SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS')
+dockerfile = environ.get('SLAVE_CONTAINER_DOCKERFILE_PATH', './Dockerfile')
+formatted_args = ""
+
+if build_args:
+    for arg in build_args.split():
+        formatted_args += "--build-arg {} ".format(quote(arg))
+
+formatted_args += '-f {} .'.format(quote(dockerfile))
+
+print(formatted_args)
+  """, returnStdout: true).trim()
 }
 
 return this
