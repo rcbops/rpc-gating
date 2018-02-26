@@ -83,6 +83,7 @@
         action: "r12.1.2_to_newton_leap"
       - image: "xenial_aio"
         action: "kilo_to_newton_leap"
+    CRON: "@weekly"
 
 - project:
     name: "rpc-upgrades-aio-newton-release-pm"
@@ -116,6 +117,7 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
 
 - project:
     name: "rpc-upgrades-mnaio-newton-head-pm"
@@ -142,6 +144,7 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
 
 - project:
     name: "rpc-upgrades-mnaio-newton-release-pm"
@@ -166,3 +169,4 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
