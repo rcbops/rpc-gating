@@ -926,8 +926,12 @@ void standard_job_slave(String slave_type, Closure body){
         }
 
         dockerfile_repo_dir += env.RE_JOB_REPO_NAME
-      } else {
+      } else if (env.SLAVE_CONTAINER_DOCKERFILE_REPO == "RE") {
         dockerfile_repo_dir += "rpc-gating"
+      } else {
+        throw new Exception(
+          "SLAVE_CONTAINER_DOCKERFILE_REPO '${env.SLAVE_CONTAINER_DOCKERFILE_REPO}' is not supported."
+        )
       }
 
       dir(dockerfile_repo_dir){
@@ -1141,10 +1145,16 @@ String genDockerBuildArgs() {
 from os import environ
 from shlex import quote
 
-# We don't want to set a default for build_args as these do not always apply
-build_args = environ.get('SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS')
-dockerfile = environ.get('SLAVE_CONTAINER_DOCKERFILE_PATH', './Dockerfile')
+# Throw a KeyError if neither are set.
+build_args = environ['SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS']
+dockerfile = environ['SLAVE_CONTAINER_DOCKERFILE_PATH']
 formatted_args = ""
+
+# We require SLAVE_CONTAINER_DOCKERFILE_PATH to always be set, while
+# SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS can contain an empty string.
+if not dockerfile:
+    raise Exception("No Dockefile path specified in "
+                    "SLAVE_CONTAINER_DOCKERFILE_PATH")
 
 if build_args:
     for arg in build_args.split():
