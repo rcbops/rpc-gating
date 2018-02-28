@@ -32,6 +32,9 @@
       - trigger-builds:
         - project:
             - "{trigger_build}"
+          predefined-parameters: |
+            REGIONS=DFW
+            FALLBACK_REGIONS=
 
 - job-template:
     name: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
