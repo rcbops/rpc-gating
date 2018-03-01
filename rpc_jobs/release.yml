@@ -53,6 +53,9 @@
                 --repo "${REPO}" \
                 clone \
                     --ref "${RC_BRANCH}" \
+                publish_tag \
+                    --ref "${RC_BRANCH}" \
+                    --version "${VERSION}" \
                 generate_release_notes \
                     --version "${VERSION}" \
                     --prev-version "${PREVIOUS_VERSION}" \
@@ -60,9 +63,6 @@
                     --script "gating/generate_release_notes/run" \
                     --script "optional:gating/generate_release_notes/post" \
                     --out-file "${RELEASE_NOTES_FILE}" \
-                publish_tag \
-                    --ref "${RC_BRANCH}" \
-                    --version "${VERSION}" \
                 create_release \
                     --version "${VERSION}" \
                     --bodyfile "${RELEASE_NOTES_FILE}" \
