@@ -179,11 +179,21 @@
       - "ironic"
       - "swift"
     action:
+      - system:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
       - deploy:
           IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
           FLAVOR: "onmetal-io1"
           REGIONS: "IAD"
           FALLBACK_REGIONS: ""
+    exclude:
+      - action: system
+        image: xenial_mnaio_loose_artifacts
+      - action: system
+        scenario: ironic
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
