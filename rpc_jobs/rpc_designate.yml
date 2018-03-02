@@ -17,11 +17,11 @@
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
 
-    # Designate ignores these setting for now
     scenario:
-      - "functional"
+      - "newton"
+      - "pike"
     action:
-      - "test"
+      - "deploy"
 
     jira_project_key: "RI"
 
@@ -42,11 +42,11 @@
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
 
-    # Designate ignores these setting for now
     scenario:
-      - "functional"
+      - "newton"
+      - "pike"
     action:
-      - "test"
+      - "deploy"
 
     jira_project_key: "RI"
 
