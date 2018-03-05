@@ -130,8 +130,8 @@
               cd /var/lib/jenkins/jobs
               find . -regex '.+/builds/[0-9]+/[0-9]+\\.log' -mtime +1 \\
                 |while read stagelog; do
-                  echo $stagelog
-                  gzip $stagelog
+                  echo \$stagelog
+                  gzip \$stagelog
                 done
             """
           }
