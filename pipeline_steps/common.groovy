@@ -1116,8 +1116,6 @@ void setTriggerVars(){
 // add wrappers that should be used for all jobs.
 // max log size is in MB
 void globalWraps(Closure body){
-  // Compress logs at the end of each run.
-  properties([compressBuildLog()])
   // global timeout is long, so individual jobs can set shorter timeouts and
   // still have to cleanup, archive atefacts etc.
   timestamps{
