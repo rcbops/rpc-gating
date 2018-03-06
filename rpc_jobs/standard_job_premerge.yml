@@ -26,6 +26,7 @@
     FLAVOR: "performance1-1"
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     TRIGGER_PR_PHRASE_ONLY: false
+    BOOT_TIMEOUT: 900
     skip_pattern: ""
     properties:
       - build-discarder:
@@ -84,6 +85,10 @@
       }}
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.globalWraps(){{
+
+        // BOOT_TIMEOUT is used inside an ansible playbook when creating cloud
+        // instances. Builds from snapshots need a significantly longer timeout.
+        env.BOOT_TIMEOUT = "{BOOT_TIMEOUT}"
 
         // Pass details about the job parameters through
         // to the target environment so that scripts can

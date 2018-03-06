@@ -9,6 +9,7 @@
     inventory_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks/inventory"
     user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
     cloud_name: "public_cloud"
+    boot_timeout: "{{ lookup('env', 'BOOT_TIMEOUT') | default(900, true) }}"
   tasks:
 
     # Region should be a CSV string.
@@ -48,7 +49,7 @@
         meta:
           build_config: core
         wait: yes
-        timeout: 900
+        timeout: "{{ boot_timeout }}"
       register: result
       with_items: "{{ regions_shuf + fallback_regions_shuff }}"
       when:

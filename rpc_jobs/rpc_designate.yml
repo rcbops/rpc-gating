@@ -50,6 +50,36 @@
 
     jira_project_key: "RI"
 
-    # Link to the standard pre-merge-template
+    # Link to the standard post-merge-template
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+ - project:
+    name: "rpc-designate-post-merge-snapshot"
+
+    repo_name: "rpc-designate"
+    # URL of the rpc-designate repository
+    repo_url: "https://github.com/rcbops/rpc-designate"
+
+    # Use image for RPC-O install
+    image:
+      - xenial_snapshot:
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: ""
+          FLAVOR: "7"
+          BOOT_TIMEOUT: 1500
+
+    scenario:
+      - newton:
+          IMAGE: "rpc-r14.9.0-xenial-swift"
+      - pike:
+          IMAGE: "rpc-r16.2.0-xenial_no_artifacts-swift"
+    action:
+      - "deploy"
+
+    # Sending these failures to RE while we stabilise these images
+    jira_project_key: "RE"
+
+    # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'

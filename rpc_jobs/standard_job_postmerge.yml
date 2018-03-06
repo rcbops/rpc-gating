@@ -45,6 +45,7 @@
     FLAVOR: "performance1-1"
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     CRON: "@daily"
+    BOOT_TIMEOUT: 900
     properties:
       - build-discarder:
           num-to-keep: 14
@@ -78,6 +79,9 @@
       common.globalWraps(){{
 
         env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+        // BOOT_TIMEOUT is used inside an ansible playbook when creating cloud
+        // instances. Builds from snapshots need a significantly longer timeout.
+        env.BOOT_TIMEOUT = "{BOOT_TIMEOUT}"
 
         // Pass details about the job parameters through
         // to the target environment so that scripts can
