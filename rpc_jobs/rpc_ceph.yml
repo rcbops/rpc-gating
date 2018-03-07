@@ -42,11 +42,13 @@
 
     image:
       - xenial:
-          FLAVOR: "general1-8"
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
 
     scenario:
-      - "functional"
+      - functional:
+          FLAVOR: "general1-8"
+      - rpco_newton:
+          FLAVOR: "performance2-15"
 
     # rpc-ceph ignores that setting for now
     action:
