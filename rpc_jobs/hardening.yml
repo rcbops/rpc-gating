@@ -14,7 +14,8 @@
       - "swift"
     action:
       - "deploy_master"
-      - "deploy_master-rc"
+      - "deploy_pike"
+      - "deploy_pike-rc"
       - "deploy_newton"
       - "deploy_newton-rc"
     jobs:
