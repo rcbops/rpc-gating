@@ -9,6 +9,10 @@
           JIRA_PROJECT_KEY: "RO"
       - rpc-openstack:
           URL: "https://github.com/rcbops/rpc-openstack"
+          BRANCH: "pike"
+          JIRA_PROJECT_KEY: "RO"
+      - rpc-openstack:
+          URL: "https://github.com/rcbops/rpc-openstack"
           BRANCH: "newton"
           JIRA_PROJECT_KEY: "RO"
     trigger:
