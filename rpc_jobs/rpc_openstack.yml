@@ -287,6 +287,32 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-newton-rc-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_loose_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - trusty_loose_artifacts:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-openstack-newton-rc-mnaio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
