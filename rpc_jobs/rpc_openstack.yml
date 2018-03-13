@@ -47,6 +47,54 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-pike-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "pike"
+    branches:
+      - "pike.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "pike"
+    branches:
+      - "pike.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "ansible-syntax"
+      - "bashate"
+      - "pep8"
+      - "releasenotes"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-openstack-newton-premerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
@@ -146,10 +194,6 @@
     branch: "master"
     jira_project_key: "RO"
     image:
-      - xenial_strict_artifacts:
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
-      - xenial_loose_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
@@ -169,6 +213,57 @@
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "master"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    scenario:
+      - "ironic"
+      - "swift"
+    action:
+      - system
+      - deploy
+    exclude:
+      - action: system
+        image: xenial_mnaio_loose_artifacts
+      - action: system
+        scenario: ironic
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "pike"
+    jira_project_key: "RO"
+    image:
+      - xenial_strict_artifacts:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_loose_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - "ironic"
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "pike"
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts
@@ -196,10 +291,10 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-master-rc-aio-postmerge"
+    name: "rpc-openstack-pike-rc-aio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "master-rc"
+    branch: "pike-rc"
     jira_project_key: "RO"
     image:
       - xenial_strict_artifacts:
@@ -221,10 +316,10 @@
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-master-rc-mnaio-postmerge"
+    name: "rpc-openstack-pike-rc-mnaio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "master-rc"
+    branch: "pike-rc"
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts

@@ -3,9 +3,9 @@
     # Note: branch is the branch for periodics to build
     #       branches is the branch pattern to match for PR Jobs.
     series:
-      - master:
-          branch: master
-          branches: "master.*"
+      - pike:
+          branch: pike
+          branches: "pike.*"
       - newton:
           branch: newton
           branches: "newton.*"
@@ -25,7 +25,7 @@
       Connect Slave,
       Cleanup,
       Destroy Slave
-    branch: master
+    branch: pike
     PULL_FROM_MIRROR: "YES"
     PUSH_TO_MIRROR: "NO"
 
@@ -91,7 +91,7 @@
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.globalWraps(){{
         image_list = [
-          master: [
+          pike: [
               "Ubuntu 16.04.2 LTS prepared for RPC deployment"
           ],
           newton: [
