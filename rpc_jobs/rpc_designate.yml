@@ -5,9 +5,6 @@
     # URL of the rpc-designate repository
     repo_url: "https://github.com/rcbops/rpc-designate"
 
-    # currently we only do master. Once RPC-O switches
-    # to Pike we may retire rpc-designate and use the
-    # upstream installer
     branches:
       - "master"
 
@@ -35,6 +32,10 @@
     repo_name: "rpc-designate"
     # URL of the rpc-designate repository
     repo_url: "https://github.com/rcbops/rpc-designate"
+
+    branches:
+      - "master"
+      - "master-rc"
 
     # Use image for RPC-O install
     image:
