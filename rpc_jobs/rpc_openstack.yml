@@ -66,8 +66,6 @@
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     scenario:
-      - ironic:
-          TRIGGER_PR_PHRASE_ONLY: true
       - "swift"
     action:
       - deploy:
@@ -259,16 +257,10 @@
       - trusty_loose_artifacts:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     scenario:
-      - "ironic"
       - "swift"
     action:
       - deploy:
           FLAVOR: "7"
-    exclude:
-      - scenario: ironic
-        image: trusty
-      - scenario: ironic
-        image: trusty_loose_artifacts
     # This is the build that will be triggered by the push trigger job
     trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     jobs:
@@ -284,7 +276,6 @@
     image:
       - xenial_mnaio_loose_artifacts
     scenario:
-      - "ironic"
       - "swift"
     action:
       - deploy:
