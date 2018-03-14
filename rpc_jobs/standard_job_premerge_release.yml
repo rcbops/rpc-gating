@@ -6,6 +6,9 @@
           BRANCH: "master"
       - rpc-openstack:
           URL: "https://github.com/rcbops/rpc-openstack"
+          BRANCH: "pike"
+      - rpc-openstack:
+          URL: "https://github.com/rcbops/rpc-openstack"
           BRANCH: "newton"
     jobs:
       - 'RE-Release-PR_{repo}-{BRANCH}'
