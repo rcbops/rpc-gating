@@ -223,6 +223,16 @@
       notify:
         - Restart nodepool-builder
 
+    - name: Copy the diskimage-builder elements
+      synchronize:
+        src: "{{ diskimage_builder_elements_src }}"
+        dest: "/opt/nodepool/"
+        delete: yes
+        rsync_opts:
+          - "--chown=nodepool:nodepool"
+      notify:
+        - Restart nodepool-builder
+
     - name: Setup nodepool services
       include_role:
         name: openstack.nodepool

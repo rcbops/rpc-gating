@@ -14,6 +14,9 @@ diskimage_builder_git_dest: "{{ ansible_user_dir }}/src/git.openstack.org/openst
 # which version of diskimage-builder to clone
 diskimage_builder_git_version: bc6c928bb960729e8df60562adafe2d50a1f55ec # HEAD of 'master' as of 7 Nov 2017
 
+# where to source the diskimage-builder elements from
+diskimage_builder_elements_src: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/nodepool/elements"
+
 # enable installation of zookeeper from apt packages
 zookeeper_debian_apt_install: yes
 

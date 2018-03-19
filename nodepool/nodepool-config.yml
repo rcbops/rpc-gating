@@ -2,6 +2,7 @@
 # Documentation reference:
 # https://docs.openstack.org/infra/nodepool/feature/zuulv3/configuration.html
 
+elements-dir: /opt/nodepool/elements
 images-dir: /opt/nodepool/images
 
 zookeeper-servers:
@@ -79,6 +80,7 @@ diskimages:
       - openssh-server
       - simple-init
       - vm
+      - jenkins-slave
     release: xenial
     env-vars:
       TMPDIR: /opt/nodepool/dib_tmp

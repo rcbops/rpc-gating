@@ -1,0 +1,61 @@
+#!/bin/bash
+
+if [ ${DIB_DEBUG_TRACE:-0} -gt 0 ]; then
+    set -x
+fi
+set -eu
+set -o pipefail
+
+##
+## Add jenkins user, group.
+##
+JENKINS_HOME="/var/lib/jenkins"
+groupadd jenkins
+useradd --gid jenkins \
+        --shell /bin/bash \
+        --home-dir ${JENKINS_HOME} \
+        --create-home jenkins
+
+##
+## Configure SSH
+##
+# this was copied from outside the chroot by extras.d
+_pub_key=/tmp/in_target.d/ssh-public-keys
+if [ ! -f $_pub_key ]; then
+    die "Can not find public keys!"
+fi
+
+mkdir -p ${JENKINS_HOME}/.ssh
+chmod 700 ${JENKINS_HOME}/.ssh
+
+cp ${_pub_key} ${JENKINS_HOME}/.ssh/authorized_keys
+chmod 644 ${JENKINS_HOME}/.ssh/authorized_keys
+
+##
+## Configure git
+##
+cat > ${JENKINS_HOME}/.gitconfig <<EOF
+[user]
+    name = rpc.jenkins.cit.rackspace.net
+    email = rpc-jenkins-svc@github.com
+[gitreview]
+    rebase = false
+    username = jenkins
+EOF
+
+##
+## Setup sudoers
+##
+cat > /etc/sudoers.d/jenkins << EOF
+jenkins ALL=(ALL) NOPASSWD:ALL
+EOF
+chmod 0440 /etc/sudoers.d/jenkins
+
+visudo -c || die "Error setting jenkins sudo!"
+
+##
+## Finalise
+##
+
+# ensure everything has the right owner
+chown -R jenkins:jenkins ${JENKINS_HOME}
