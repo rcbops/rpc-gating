@@ -20,11 +20,7 @@
 
         stage("Upload"){
           pubcloud.uploadToSwift(
-            archive_name: "artifacts_${BUILD_TAG}.tar.bz2",
-            artifacts_dir: "${WORKSPACE}/artifacts",
             container: "jenkins_logs",
-            path: "${WORKSPACE}/artifacts",
-            report_dir: "${WORKSPACE}/artifacts_report"
           )
         }
 
