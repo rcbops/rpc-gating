@@ -241,10 +241,6 @@
     branch: "pike"
     jira_project_key: "RO"
     image:
-      - xenial_strict_artifacts:
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
-      - xenial_loose_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
@@ -266,7 +262,6 @@
     branch: "pike"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio_loose_artifacts
       - xenial_mnaio_no_artifacts
     scenario:
       - "ironic"
@@ -284,8 +279,6 @@
           FALLBACK_REGIONS: ""
     exclude:
       - action: system
-        image: xenial_mnaio_loose_artifacts
-      - action: system
         scenario: ironic
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
@@ -297,10 +290,6 @@
     branch: "pike-rc"
     jira_project_key: "RO"
     image:
-      - xenial_strict_artifacts:
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
-      - xenial_loose_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
@@ -322,7 +311,6 @@
     branch: "pike-rc"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio_loose_artifacts
       - xenial_mnaio_no_artifacts
     scenario:
       - "ironic"
