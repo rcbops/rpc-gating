@@ -293,33 +293,25 @@ def String gen_instance_name(String prefix="AUTO"){
   return instance_name
 }
 
-def archive_artifacts(Map args = [:]){
+def archive_artifacts(){
   stage('Compress and Publish Artifacts'){
-
-    archive_name = args.get("archive_name", "artifacts_${env.BUILD_TAG}.tar.bz2")
-    artifacts_dir = args.get("artifacts_dir", "${env.WORKSPACE}/artifacts")
-    report_dir = args.get("report_dir", "${env.WORKSPACE}/artifacts_report")
-    results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
-
-    dir(results_dir) {
-      junit allowEmptyResults: true, testResults: "*.xml"
+    if (env.RE_HOOK_RESULT_DIR != null){
+      dir(env.RE_HOOK_RESULT_DIR) {
+        junit allowEmptyResults: true, testResults: '*.xml'
+      }
     }
-
     pubcloud.uploadToSwift(
-      archive_name: archive_name,
       container: "jenkins_logs",
-      path: artifacts_dir,
-      report_dir: report_dir
     )
     publishHTML(
       allowMissing: true,
       alwaysLinkToLastBuild: true,
       keepAll: true,
-      reportDir: report_dir,
+      reportDir: 'artifacts_report',
       reportFiles: 'index.html',
       reportName: 'Build Artifact Links'
     )
-  } // stage
+  }
 }
 
 List get_cloud_creds(){
