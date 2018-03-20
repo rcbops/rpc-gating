@@ -4,9 +4,9 @@
   gather_facts: False
   tasks:
     - name: Create archive
-      command: "tar -cjf {{ archive_name }} {{ artifacts_dir }}"
+      command: "tar -cjf {{ archive_name }} {{ artifacts_dir | basename }}"
       args:
-        chdir: "{{ artifacts_parent_dir }}"
+        chdir: "{{ artifacts_dir | dirname }}"
       tags:
         - skip_ansible_lint
 
@@ -37,7 +37,7 @@
     - name: Upload file to Cloud Files
       command: "swift upload {{ container }} {{ archive_name }} --header 'X-Delete-After:2592000'"
       args:
-        chdir: "{{ artifacts_parent_dir }}"
+        chdir: "{{ artifacts_dir | dirname }}"
       no_log: true
       environment:
         OS_AUTH_TOKEN: "{{ auth_token }}"
@@ -82,9 +82,3 @@
   vars:
     region: "DFW"
     cloud_name: "public_cloud"
-    build_tag: "{{ lookup('env','BUILD_TAG') }}"
-    archive_name: "artifacts_{{ build_tag }}.tar.bz2"
-    workspace: "{{ lookup('env', 'WORKSPACE') }}"
-    artifacts_parent_dir: "{{ workspace }}"
-    artifacts_dir: "artifacts"
-    report_dir: "{{ artifacts_parent_dir }}/artifacts_report"
