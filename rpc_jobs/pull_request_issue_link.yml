@@ -32,10 +32,10 @@
           days-to-keep: 7
     parameters:
       - rpc_gating_params
-      - string:
-          name: REPO
-          default: "{repo}"
     dsl: |
+      if ("{repo}" == "rpc_gating"){{
+        env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
+      }}
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.globalWraps(){{
         github.add_issue_url_to_pr()
