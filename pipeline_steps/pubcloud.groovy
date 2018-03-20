@@ -237,8 +237,8 @@ def runonpubcloud(Map args=[:], Closure body){
 }
 
 def uploadToSwift(Map args){
-  if(fileExists("${WORKSPACE}/artifacts")){
-    print("WORKSPACE/artifacts directory found, Preparing to upload artifacts.")
+  if (fileExists(args.path)) {
+    print("Directory ${args.path} found. Uploading contents.")
     withCredentials(common.get_cloud_creds()) {
       clouds_cfg = common.writeCloudsCfg(
         username: env.PUBCLOUD_USERNAME,
@@ -248,14 +248,17 @@ def uploadToSwift(Map args){
         common.venvPlaybook(
           playbooks: ["rpc-gating/playbooks/upload_to_swift.yml"],
           vars: [
+            archive_name: args.archive_name,
+            artifacts_dir: args.path,
             container: args.container,
-            description_file: args.description_file
+            description_file: args.description_file,
+            report_dir: args.report_dir
           ]
         ) // venvPlaybook
       } // withEnv
     } // withCredentials
   } else {
-    print("WORKSPACE/artifacts not found, skipping artifact upload")
+    print("Directory ${args.path} not found. Skipping upload.")
   }
 }
 
