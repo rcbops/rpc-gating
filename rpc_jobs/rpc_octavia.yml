@@ -5,11 +5,13 @@
     # URL of the rpc-octavia repository
     repo_url: "https://github.com/rcbops/rpc-octavia"
 
-    # currently we only do master. Once RPC-O switches
-    # to Pike we will retire os-octavia and use the
+    # currently we only do master and pike. Once RPC-O switches
+    # to Queens we will retire rpc-octavia and use the
     # upstream installer
     branches:
-      - "master"
+      - "master.*"
+      - "pike.*"
+
 
     # Use image for RPC-O install
     image:
@@ -38,11 +40,12 @@
     # URL of the rpc-octavia repository
     repo_url: "https://github.com/rcbops/rpc-octavia"
 
-    # currently we only do master. Once RPC-O switches
-    # to Pike we will retire os-octavia and use the
+    # currently we only do master and pike. Once RPC-O switches
+    # to Queens we will retire rpc-octavia and use the
     # upstream installer
     branches:
       - "master"
+      - "pike"
 
     # Use image for RPC-O install
     image:
