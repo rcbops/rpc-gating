@@ -2,6 +2,7 @@
 # Documentation reference:
 # https://docs.openstack.org/infra/nodepool/feature/zuulv3/configuration.html
 
+elements-dir: /opt/nodepool/elements
 images-dir: /opt/nodepool/images
 
 zookeeper-servers:
@@ -10,6 +11,18 @@ zookeeper-servers:
 
 labels:
   - name: ubuntu-xenial
+    # TODO(odyssey4me):
+    # This is a temporarily low setting as the nodes will
+    # not be used until the jenkins integration is complete.
+    # It is here purely to validate that everything is
+    # working as it should be.
+    min-ready: 3
+    # TODO(odyssey4me):
+    # This is purely here for test purposes to make sure any
+    # existing nodes that haven't been used will get recreated
+    # every hour.
+    max-ready-age: 3600
+  - name: ubuntu-trusty
     # TODO(odyssey4me):
     # This is a temporarily low setting as the nodes will
     # not be used until the jenkins integration is complete.
@@ -33,6 +46,8 @@ providers:
     diskimages: &provider_diskimage_block
       - name: ubuntu-xenial
         config-drive: true
+      - name: ubuntu-trusty
+        config-drive: true
     pools: &provider_pools_block
       - name: main
         max-servers: 2
@@ -40,6 +55,11 @@ providers:
         labels:
           - name: ubuntu-xenial
             diskimage: ubuntu-xenial
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
+          - name: ubuntu-trusty
+            diskimage: ubuntu-trusty
             flavor-name: general1-8
             key-name: jenkins
             console-log: true
@@ -79,7 +99,31 @@ diskimages:
       - openssh-server
       - simple-init
       - vm
+      - jenkins-slave
     release: xenial
+    env-vars:
+      TMPDIR: /opt/nodepool/dib_tmp
+      DIB_CHECKSUM: '1'
+      DIB_IMAGE_CACHE: /opt/nodepool/dib_cache
+      DIB_GRUB_TIMEOUT: '0'
+      DIB_DISTRIBUTION_MIRROR: 'https://mirror.rackspace.com/ubuntu'
+      DIB_DEBIAN_COMPONENTS: 'main,universe'
+  - name: ubuntu-trusty
+    # Build fresh images every 24 hrs.
+    # This ensures that any merged config changes
+    # to the diskimage-build scripts or diskimage
+    # config take effect within a reasonable time.
+    rebuild-age: 86400
+    formats:
+      - vhd
+    elements:
+      - ubuntu-minimal
+      - growroot
+      - openssh-server
+      - simple-init
+      - vm
+      - jenkins-slave
+    release: trusty
     env-vars:
       TMPDIR: /opt/nodepool/dib_tmp
       DIB_CHECKSUM: '1'

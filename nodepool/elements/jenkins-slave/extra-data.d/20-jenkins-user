@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ ${DIB_DEBUG_TRACE:-0} -gt 0 ]; then
+    set -x
+fi
+set -eu
+set -o pipefail
+
+# the location to fetch the public keys from
+SSH_PUBLIC_KEYS_URL="https://raw.githubusercontent.com/rcbops/rpc-gating/master/keys/rcb.keys"
+
+# fetch the public keys and put them inside the chroot
+curl --connect-timeout 5 \
+     --retry 3 \
+     ${SSH_PUBLIC_KEYS_URL} > ${TMP_HOOKS_PATH}/ssh-public-keys
