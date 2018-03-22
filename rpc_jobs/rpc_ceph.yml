@@ -19,6 +19,7 @@
     # rpc-ceph ignores that setting for now
     scenario:
       - "functional"
+      - "bluestore"
       - "keystone_rgw"
 
     # rpc-ceph ignores that setting for now
