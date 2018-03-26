@@ -231,6 +231,8 @@
         image: xenial_mnaio_loose_artifacts
       - action: system
         scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -280,6 +282,8 @@
     exclude:
       - action: system
         scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -331,6 +335,8 @@
         image: xenial_mnaio_loose_artifacts
       - action: system
         scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 

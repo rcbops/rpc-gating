@@ -998,6 +998,7 @@ List build_creds_array(String list_of_cred_ids){
       "cloud_creds": ['dev_pubcloud_username',
                       'dev_pubcloud_api_key',
                       'dev_pubcloud_tenant_id'],
+      "rpc_asc_creds": ['RPC_ASC_QTEST_API_TOKEN'],
       "rpc_repo": ['RPC_REPO_IP',
                    'RPC_REPO_SSH_USERNAME_TEXT',
                    'RPC_REPO_SSH_USER_PRIVATE_KEY_FILE',
@@ -1020,6 +1021,10 @@ List build_creds_array(String list_of_cred_ids){
       "dev_pubcloud_tenant_id": string(
         credentialsId: "dev_pubcloud_tenant_id",
         variable: "PUBCLOUD_TENANT_ID"
+      ),
+      "RPC_ASC_QTEST_API_TOKEN": string(
+        credentialsId: "RPC_ASC_QTEST_API_TOKEN",
+        variable: "RPC_ASC_QTEST_API_TOKEN"
       ),
       "id_rsa_cloud10_jenkins_file": file(
         credentialsId: 'id_rsa_cloud10_jenkins_file',
