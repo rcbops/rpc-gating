@@ -139,6 +139,14 @@
       notify:
         - Restart zookeeper
 
+    - name: Configure firewall to allow access to zookeeper from additional hosts
+      ufw:
+        rule: allow
+        from_ip: "{{ item }}"
+      with_items: "{{ zookeeper_access_list }}"
+      notify:
+        - Restart zookeeper
+
     - name: Configure firewall to allow cluster traffic (ipv6)
       ufw:
         rule: allow
@@ -240,4 +248,3 @@
     - name: Setup log rotation
       include_role:
         name: openstack.logrotate
-
