@@ -20,6 +20,10 @@ zookeeper_debian_apt_install: yes
 # set the host group for zookeeper's cluster
 zookeeper_hosts: "{{ groups['nodepool_server'] }}"
 
+# Additional Hosts which can access the zookeeper cluster
+zookeeper_access_list:
+  - 74.205.74.100 # CIT Jenkins master (NAT)
+
 # log rotation
 logrotate_configs:
   - name: nodepool-builder
