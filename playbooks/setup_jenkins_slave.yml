@@ -38,6 +38,15 @@
         timeout: "{{ jenkins_wait_params.timeout }}"
         sleep: "{{ jenkins_wait_params.sleep }}"
 
+    - name: Add OpenJDK PPA
+      apt_repository:
+        repo: ppa:openjdk-r/ppa
+      register: install_ppa
+      until: install_ppa | success
+      retries: 5
+      delay: 2
+      when: ansible_distribution_release | lower == 'trusty'
+
     - name: Install apt packages
       apt:
         pkg: "{{ item }}"
@@ -49,7 +58,7 @@
       delay: 2
       with_items:
         - git-core
-        - default-jre-headless
+        - openjdk-8-jre-headless
 
     - name: Create Jenkins user
       user:
