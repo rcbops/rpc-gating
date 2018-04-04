@@ -344,7 +344,10 @@ List get_cloud_creds(){
 }
 
 def writeCloudsCfg(Map args){
-  String cfg = """clouds:
+  String cfg = """
+client:
+  force_ipv4: true
+clouds:
   public_cloud:
     profile: rackspace
     auth_type: rackspace_apikey
