@@ -472,7 +472,8 @@ void clone_repo(String directory, String ssh_key, String repo, String ref, Strin
       git remote rm origin || true
       git remote add origin "${repo}"
       # Don't quote refspec as it should be separate args to git.
-      git fetch --tags origin ${refspec}
+      # only log errors
+      git fetch --tags origin ${refspec} > /dev/null
       git checkout ${ref}
       git submodule update --init
     """
