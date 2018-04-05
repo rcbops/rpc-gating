@@ -5,6 +5,9 @@ nodepool_file_nodepool_yaml_src: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/no
 # which version of nodepool to clone
 nodepool_git_version: 3de0b20faa6f90437eb62c56ec23c59c6e15b5fa # HEAD of 'master' as of 20 Mar 2018
 
+# Ensure nodepool is installed under python3
+nodepool_pip_executable: pip3
+
 # which version of diskimage-builder to clone
 diskimage_builder_git_version: "2.12.1" # Current release as of 22 Mar 2018
 

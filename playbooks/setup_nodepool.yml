@@ -71,8 +71,10 @@
           # Remove aptitude when we shift to using
           # ansible 2.4
           - aptitude
-          - python-apt
+          - python3-apt
           - python-minimal
+          - python3-minimal
+          - python3-pip
         update_cache: yes
       notify:
         - Restart all services
@@ -81,6 +83,7 @@
       pip:
         name:
           - rackspaceauth
+        executable: pip3
       notify:
         - Restart nodepool-launcher
         - Restart nodepool-builder
@@ -240,4 +243,3 @@
     - name: Setup log rotation
       include_role:
         name: openstack.logrotate
-
