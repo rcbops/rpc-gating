@@ -920,6 +920,10 @@ void standard_job_slave(String slave_type, Closure body){
       pubcloud.runonpubcloud(){
         body()
       }
+    } else if (slave_type.startsWith("nodepool-")){
+      use_node(slave_type){
+        body();
+      }
     } else if (slave_type == "container"){
       String image_name = env.BUILD_TAG.toLowerCase()
       String dockerfile_repo_dir = "${env.WORKSPACE}/"
