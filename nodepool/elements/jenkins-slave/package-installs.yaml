@@ -1,2 +1,3 @@
 git-core:
 default-jre-headless:
+curl:
