@@ -88,6 +88,15 @@
         - Restart nodepool-launcher
         - Restart nodepool-builder
 
+    - name: Ensure nodepool is not installed under python2.x
+      pip:
+        name: nodepool
+        state: absent
+        executable: pip2
+      notify:
+        - Restart nodepool-launcher
+        - Restart nodepool-builder
+
     # install extra packages for diskimage-builder
     # The native xenial package which provides vhd-utils (blktap-utils) does not support
     # the 'convert' command which is required in order to properly prepare VHD images for
