@@ -50,7 +50,7 @@ providers:
         config-drive: true
     pools: &provider_pools_block
       - name: main
-        max-servers: 2
+        max-servers: 10
         availability-zones: []
         labels:
           - name: ubuntu-xenial
@@ -58,11 +58,13 @@ providers:
             flavor-name: general1-8
             key-name: jenkins
             console-log: true
+            min-ready: 2
           - name: ubuntu-trusty
             diskimage: ubuntu-trusty
             flavor-name: general1-8
             key-name: jenkins
             console-log: true
+            min-ready: 1
 
   - name: pubcloud-dfw
     region-name: 'DFW'
