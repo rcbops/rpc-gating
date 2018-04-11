@@ -9,10 +9,10 @@ common.globalWraps(){
     // of the environment variables automatically as
     // they will not be provided by a human.
     if ( env.ghprbPullId != null ) {
-      List source_repo = env.ghprbAuthorRepoGitUrl.split("/")
-      env.ORG = source_repo[-2]
-      env.REPO = source_repo[-1].tokenize(".")[0]
-      env.RC_BRANCH = env.ghprbSourceBranch
+      List source_repo = env.ghprbGhRepository.split("/")
+      env.ORG = source_repo[0]
+      env.REPO = source_repo[1]
+      env.RC_BRANCH = "origin/pr/${env.ghprbPullId}/merge"
     }
     withCredentials([
       string(
