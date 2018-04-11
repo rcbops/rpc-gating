@@ -56,7 +56,7 @@
           // NOTE(mattt): If env.SLAVE_TYPE is set to an unrecognized type, an
           // exception will be raised in common.standard_job_slave()
           stage("Ensure virt type matches env.SLAVE_TYPE") {
-            if (env.SLAVE_TYPE == "instance") {
+            if ((env.SLAVE_TYPE == "instance") || (env.SLAVE_TYPE.startsWith("nodepool"))){
               assert inside_container == "no"
             } else {
               assert inside_container == "yes"
