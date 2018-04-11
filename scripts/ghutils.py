@@ -337,7 +337,7 @@ def clone(url, ref, refspec):
         origin = repo.create_remote('origin', url)
     repo.git.fetch(["-u", "-v", "-f", url] + refspec.split())
     try:
-        getattr(origin.refs, ref).checkout()
+        getattr(origin.refs, re.sub('^origin/', '', ref)).checkout()
     except AttributeError as e:
         logger.error("Ref {ref} not found in {url}".format(
             ref=ref,
