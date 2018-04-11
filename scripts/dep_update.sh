@@ -33,11 +33,11 @@ then
 else
   echo "Repo is dirty, preparing to propose changes."
   # split URL into array separated by '/'s
-  IFS='/ ' read -r -a url_split <<< "$URL"
+  IFS='/ ' read -r -a url_split <<< "${REPO_URL}"
   # owner/org is whatever is between the second and third / in the url
   owner="${url_split[3]}"
   # repo is anything after owner/
-  repo=${URL#https://github.com/${owner}/}
+  repo=${REPO_URL#https://github.com/${owner}/}
   ssh_url="git@github.com:${owner}/${repo}"
   message="This change is the result of running gating/update_dependencies/*
   See update_dependencies in https://rpc-openstack.atlassian.net/wiki/spaces/RE/pages/19005457/RE+for+Projects for more details."

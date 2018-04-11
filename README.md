@@ -34,6 +34,7 @@
   - `RPC-AIO_{series}-{image}-{action}-{scenario}-{ztrigger}`
   - `RPC-AIO_master-xenial-deploy-swift-periodic`
   - `Merge-Trigger-JJB`
+  - `{trigger}-Dep-Update_{repo_name}-{branch}`
 
 
 ## Required Properties
