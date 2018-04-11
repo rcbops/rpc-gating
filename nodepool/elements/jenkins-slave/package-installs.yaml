@@ -1,3 +1,4 @@
-git-core:
-default-jre-headless:
+bzip2:
 curl:
+default-jre-headless:
+git-core:
