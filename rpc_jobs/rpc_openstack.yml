@@ -193,11 +193,13 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "master"
     jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
     image:
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
-      - "ironic"
       - "swift"
     action:
       - deploy:
@@ -242,11 +244,13 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "pike"
     jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
     image:
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
-      - "ironic"
       - "swift"
     action:
       - deploy:
@@ -293,11 +297,13 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "pike-rc"
     jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
     image:
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
-      - "ironic"
       - "swift"
     action:
       - deploy:
@@ -351,6 +357,9 @@
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
       - xenial_loose_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          # We have an MNAIO equivalent of this PM job, but we need to keep
+          # this for the push triggering for snapshot building.
+          CRON: "@monthly"
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
       - trusty_loose_artifacts:
@@ -396,6 +405,9 @@
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
       - xenial_loose_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          # We have an MNAIO equivalent of this PM job, but we need to keep
+          # this for the push triggering for snapshot building.
+          CRON: "@monthly"
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
       - trusty_loose_artifacts:
