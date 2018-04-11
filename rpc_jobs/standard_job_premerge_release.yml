@@ -79,6 +79,7 @@
                 --repo "${{REPO}}" \
                 clone \
                   --ref "${{RC_BRANCH}}" \
+                  --refspec '+refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +refs/heads/*:refs/heads/* +refs/pull/*:refs/remotes/origin/pr/*' \
                 generate_release_notes \
                     --script "optional:gating/generate_release_notes/pre" \
                     --script "gating/generate_release_notes/run" \
