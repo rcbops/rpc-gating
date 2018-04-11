@@ -51,6 +51,21 @@
         state: restarted
       listen: Restart all services
 
+    - name: Trigger new diskimage build
+      shell: |
+        nodepool dib-image-list |awk '/+|Image/{next}; {a[$4]=$4} END{for (i in a){ print i}}'|while read i; do
+          nodepool image-build $i
+        done
+      become: yes
+      become_user: nodepool
+      # We only need to run this once, and need the nodepool
+      # services running where it runs. Given that, we run it
+      # when it's the last node, but delegate it to the first
+      # node.
+      when:
+        - inventory_hostname == groups['nodepool_server'][-1]
+      delegate_to: "{{ groups['nodepool_server'][0] }}"
+
   tasks:
     - name: Install prerequisite distro packages
       apt:
@@ -252,6 +267,7 @@
           - "--chown=nodepool:nodepool"
       notify:
         - Restart nodepool-builder
+        - Trigger new diskimage build
 
     - name: Setup nodepool services
       include_role:
