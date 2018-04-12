@@ -12,7 +12,7 @@ common.globalWraps(){
       List source_repo = env.ghprbGhRepository.split("/")
       env.ORG = source_repo[0]
       env.REPO = source_repo[1]
-      env.RC_BRANCH = "origin/pr/${env.ghprbPullId}/merge"
+      env.RC_BRANCH = "pr/${env.ghprbPullId}/merge"
     }
     withCredentials([
       string(
