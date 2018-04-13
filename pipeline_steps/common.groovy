@@ -473,7 +473,7 @@ void clone_repo(String directory, String ssh_key, String repo, String ref, Strin
       git remote add origin "${repo}"
       # Don't quote refspec as it should be separate args to git.
       # only log errors
-      git fetch --tags origin ${refspec} > /dev/null
+      git fetch --quiet --tags origin ${refspec}
       git checkout ${ref}
       git submodule update --init
     """
@@ -618,7 +618,7 @@ def get_jira_issue_key(String repo_path="rpc-openstack"){
     returnStdout: true,
     script: """#!/bin/bash -e
       cd ${repo_path}
-      git log --pretty=%B origin/${ghprbTargetBranch}..origin/${ghprbSourceBranch}""")
+      git log --pretty=%B origin/${ghprbTargetBranch}..origin/pr/${ghprbPullId}/merge""")
   print("Looking for Jira issue keys in the following commits: ${commits}")
   try{
     String key = (commits =~ key_regex)[0]
