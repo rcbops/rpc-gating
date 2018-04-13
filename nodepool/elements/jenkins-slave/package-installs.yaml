@@ -1,4 +1,4 @@
 bzip2:
 curl:
-default-jre-headless:
+openjdk-8-jre-headless:
 git-core:
