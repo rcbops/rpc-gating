@@ -3,7 +3,9 @@
     repo_name:  "rpc-gating"
     repo_url:   "https://github.com/rcbops/rpc-gating"
     branch:     "master"
-    image:      "xenial"
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
     scenario:   "functional"
     action:     "test"
     jira_project_key: "RE"

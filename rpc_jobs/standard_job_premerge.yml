@@ -9,9 +9,9 @@
     branches:
       - "master"
     image:
-      - "xenial"
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
     scenario:
-      - "functional"
       - "lint"
     action:
       - "test"
