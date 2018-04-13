@@ -49,7 +49,7 @@
             ]
           )
         },
-        "Nodepool Instance": {
+        "nodepool-ubuntu-xenial Instance": {
           build(
             job: "RE-unit-test-slave-types",
             wait: true,
@@ -63,6 +63,24 @@
                 $class: 'StringParameterValue',
                 name: 'SLAVE_TYPE',
                 value: 'nodepool-ubuntu-xenial'
+              ]
+            ]
+          )
+        },
+        "nodepool-ubuntu-trusty Instance": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'nodepool-ubuntu-trusty'
               ]
             ]
           )
