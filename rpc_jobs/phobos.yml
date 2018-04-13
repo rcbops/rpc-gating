@@ -53,10 +53,7 @@
       void slack_notify(message, color){
         if(env.SLACK_NOTIFICATIONS == "true"){
           msg_plus_link="${message} (${env.BUILD_URL})"
-          slackSend(channel: "#rpc-releng", message: msg_plus_link, color: color)
           slackSend(channel: "#rpc-eng-ops", message: msg_plus_link, color: color)
-          slackSend(channel: "#rpc-ceph", message: msg_plus_link, color: color)
-          slackSend(channel: "#rpc-engineering", message: msg_plus_link, color: color)
         }
       }
       void verify(){
@@ -191,7 +188,7 @@
           } catch (e) {
             if(env.DEPLOY == "true"){
               slack_notify("Phobos Deploy Failed", "danger")
-              common.build_failure_issue("RE")
+              common.build_failure_issue("REO")
             } else {
               slack_notify("Phobos Verification Failed", "warning")
             }

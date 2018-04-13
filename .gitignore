@@ -7,3 +7,7 @@ playbooks/roles/jnv.unattended-upgrades/
 playbooks/roles/willshersystems.sshd/
 playbooks/roles/mongrelion.docker/
 runjenkins.yml
+
+# Ignore IDE project files
+*.iml
+.idea/
