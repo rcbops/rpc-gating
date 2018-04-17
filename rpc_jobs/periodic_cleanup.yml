@@ -48,7 +48,7 @@
         def nodes = getLongRunningNodes()
         def parallel_steps = [:]
         for (int i=0; i<nodes.size(); i++){
-          nodeName = nodes[i]
+          def nodeName = nodes[i]
           parallel_steps['node_'+nodeName] = {
             common.use_node(nodeName){
               try {
