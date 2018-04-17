@@ -462,3 +462,23 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-dependency-update"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch:
+      - "master"
+      - "pike"
+      - "newton"
+    jira_project_key: "RO"
+    trigger:
+      - PR:
+          CRON: ""
+          branches: "{branch}"
+          NUM_TO_KEEP: 10
+      - PM:
+          branches: "do_not_build_on_pr"
+          READ_ONLY_TEST: false
+    jobs:
+      - '{trigger}-Dep-Update_{repo_name}-{branch}'
