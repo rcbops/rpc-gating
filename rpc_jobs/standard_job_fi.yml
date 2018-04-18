@@ -1,3 +1,105 @@
+- job:
+    name: 'Component-FI-Test-Trigger'
+    project-type: pipeline
+    concurrent: true
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_cit_fi_test'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/re_fi_test'
+          cancel-builds-on-update: true
+    properties:
+      - github:
+          url: "https://github.com/mattt416/rpc-metadata"
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        dir("${env.WORKSPACE}/rpc-metadata") {
+          common.clone_with_pr_refs()
+          String release = sh (
+            returnStdout: true,
+            script: """#!/usr/bin/env python3
+      import os
+      import re
+      import subprocess
+
+      import yaml
+
+
+      def flatten(data):
+          releases = []
+          for series in data['releases']:
+              for version in series['versions']:
+                  releases.append([series['series'], version['sha']])
+          return releases
+
+
+      def print_change(component, series, sha):
+          print(
+            'Component => %s, Series => %s, SHA => %s' % (component, series, sha)
+          )
+
+
+      git_diff = 'git log --pretty=format: --name-only --no-merges -1'
+      changed_files = subprocess.check_output(git_diff.split(), universal_newlines=True).strip()
+
+      for file in changed_files.splitlines():
+          subprocess.check_call(['git', 'checkout', 'master'])
+
+          m = re.match('components/(.*).yml', file)
+          if m:
+              component_file = m.group(0)
+              component_name = m.group(1)
+
+              data1 = yaml.load(open(component_file, 'r'))
+              releases1 = flatten(data1)
+
+              # Checkout PR
+              subprocess.check_call(['git', 'checkout', '-'])
+
+              if os.path.exists(component_file):
+                  data2 = yaml.load(open(component_file, 'r'))
+
+                  releases2 = flatten(data2)
+
+                  diff = [item for item in releases2 if item not in releases1]
+
+                  if len(diff) == 1:
+                      print_change(component_name, diff[0][0], diff[0][1])
+              else:
+                  if len(releases1) == 1:
+                      print_change(component_name, releases1[0][0], releases1[0][1])
+
+      subprocess.check_call(['git', 'checkout', '-'])"""
+          )
+          def m = release =~ /Component => (.*), Series => (.*), SHA => (.*)/
+          if (m) {
+            String component = m[0][1]
+            String series = m[0][2]
+            String sha = m[0][3]
+            build(
+              job: "FI_${component}-${series}",
+              wait: true,
+              parameters: [
+                [
+                  $class: 'StringParameterValue',
+                  name: 'BRANCH',
+                  value: sha
+                ]
+              ]
+            )
+          }
+        }
+      } // globalWraps
+
 - job-template:
     name: 'FI_{repo_name}-{branch}'
     branch: "master"
