@@ -8,7 +8,7 @@
     series: "master"
 
     # currently we only do master and pike. Once RPC-O switches
-    # to Queens we will retire rpc-octavia and use the
+    # to Rocky we will retire rpc-octavia and use the
     # upstream installer
     branches:
       - "master.*"
@@ -76,11 +76,12 @@
     repo_url: "https://github.com/rcbops/rpc-octavia"
 
     # currently we only do master and pike. Once RPC-O switches
-    # to Queens we will retire rpc-octavia and use the
+    # to Rocky we will retire rpc-octavia and use the
     # upstream installer
     branch:
       - "master"
       - "pike"
+      - "pike-rc"
 
     # Use image for RPC-O install
     image:
@@ -101,6 +102,6 @@
     # Add repo creds to post merge jobs so artefacts can be uploaded
     credentials: "rpc_repo"
 
-    # Link to the standard pre-merge-template
+    # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
