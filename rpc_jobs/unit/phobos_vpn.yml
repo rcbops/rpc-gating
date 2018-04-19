@@ -14,6 +14,7 @@
           REGIONS: "DFW ORD"
           FALLBACK_REGIONS: "IAD"
       - rpc_gating_params
+      - phobos_params
       - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
@@ -25,19 +26,6 @@
               Pause (use to hold instance for investigation before cleanup)
               Cleanup
               Destroy Slave
-      - string:
-          name: GATEWAY
-          default: from_creds
-          help: |
-            IP of Phobos VPN Gateway, if set to "from_creds", the gateway
-            IP will be pulled from the Jenkins Creds Store
-      - string:
-          name: PING_HOST
-          default: 172.20.4.10
-          help: |
-            Host that is only accessible via Phobos vpn, used to verify
-            connectivity
-
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       if (env.GATEWAY == "from_creds"){
