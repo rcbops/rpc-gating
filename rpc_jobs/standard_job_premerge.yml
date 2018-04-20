@@ -33,6 +33,16 @@
           num-to-keep: "30"
       - github:
           url: "{repo_url}"
+      - inject:
+          properties-content: |
+            STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+            BOOT_TIMEOUT={BOOT_TIMEOUT}
+            RE_JOB_NAME={name}
+            RE_JOB_IMAGE={image}
+            RE_JOB_SCENARIO={scenario}
+            RE_JOB_ACTION={action}
+            RE_JOB_FLAVOR={FLAVOR}
+            RE_JOB_REPO_NAME={repo_name}
     parameters:
       - rpc_gating_params
       - instance_params:
@@ -40,20 +50,6 @@
           FLAVOR: "{FLAVOR}"
           REGIONS: "{REGIONS}"
           FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
-      - string:
-          name: STAGES
-          default: >-
-            Allocate Resources,
-            Connect Slave,
-            Cleanup,
-            Destroy Slave
-          description: |
-            Pipeline stages to run CSV. Note that this list does not influence execution order.
-            Options:
-              Allocate Resources
-              Connect Slave
-              Cleanup
-              Destroy Slave
       - standard_job_params:
           SLAVE_TYPE: "{SLAVE_TYPE}"
           SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
@@ -84,120 +80,6 @@
         env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
       }}
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.globalWraps(){{
-
-        // BOOT_TIMEOUT is used inside an ansible playbook when creating cloud
-        // instances. Builds from snapshots need a significantly longer timeout.
-        env.BOOT_TIMEOUT = "{BOOT_TIMEOUT}"
-
-        // Pass details about the job parameters through
-        // to the target environment so that scripts can
-        // use them to adapt behaviour.
-        env.RE_JOB_NAME = "{name}"
-        env.RE_JOB_IMAGE = "{image}"
-        env.RE_JOB_SCENARIO = "{scenario}"
-        env.RE_JOB_ACTION = "{action}"
-        env.RE_JOB_FLAVOR = "{FLAVOR}"
-        env.RE_JOB_REPO_NAME = "{repo_name}"
-
-        // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
-        common.setTriggerVars()
-
-        String credentials = "{credentials}"
-
-        Boolean run_test = true
-        // We need to checkout the repo on the CIT Slave so that
-        // we can check whether the patch only includes changes
-        // in files matching the skip pattern. If that is the case,
-        // we can skip the rest of the job execution and return success.
-        common.withRequestedCredentials(credentials) {{
-          stage('Check PR against skip-list') {{
-            print("Triggered by PR: ${{env.ghprbPullLink}}")
-            common.clone_with_pr_refs(
-              "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
-            )
-            run_test = ! common.skip_build_check(skip_pattern)
-          }} // stage
-        }} // withRequestedCredentials
-
-        if (run_test) {{
-          common.standard_job_slave(env.SLAVE_TYPE) {{
-            // Set the default environment variables used
-            // by the artifact and test result collection.
-            env.RE_HOOK_ARTIFACT_DIR="${{env.WORKSPACE}}/artifacts"
-            env.RE_HOOK_RESULT_DIR="${{env.WORKSPACE}}/results"
-
-            // Set the job result default
-            currentBuild.result="SUCCESS"
-
-            try {{
-              common.withRequestedCredentials(credentials) {{
-                stage('Checkout') {{
-                  print("Triggered by PR: ${{env.ghprbPullLink}}")
-                  common.clone_with_pr_refs(
-                    "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
-                  )
-                }} // stage
-
-                stage('Execute Pre Script') {{
-                  // Retry the 'pre' stage 3 times. The 'pre' stage is considered
-                  // to be preparation for the test, so let's try and make sure
-                  // it has the best chance of success possible.
-                  retry(3) {{
-                    sh """#!/bin/bash -xeu
-                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                    if [[ -e gating/pre_merge_test/pre ]]; then
-                      gating/pre_merge_test/pre
-                    fi
-                    """
-                  }}
-                }} // stage
-
-                try{{
-                  stage('Execute Run Script') {{
-                    sh """#!/bin/bash -xeu
-                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                    gating/pre_merge_test/run
-                    """
-                  }} // stage
-                }} finally {{
-
-                  // We implement the post script execution in a finally
-                  // block to ensure that it always executes as it is
-                  // typically used to collect logs and this needs to
-                  // happen whether the run script succeeds or fails.
-
-                  stage('Execute Post Script') {{
-                    // We do not want the 'post' execution to fail the test,
-                    // but we do want to know if it fails so we make it only
-                    // return status.
-                    post_result = sh(
-                      returnStatus: true,
-                      script: """#!/bin/bash -xeu
-                                 cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
-                                 if [[ -e gating/pre_merge_test/post ]]; then
-                                   gating/pre_merge_test/post
-                                 fi"""
-                    )
-                    if (post_result != 0) {{
-                      print("Pre-Merge Test (post) failed with return code ${{post_result}}")
-                    }} // if
-                  }} // stage
-
-                }} // inner try
-              }} // withCredentials
-            }} catch (e) {{
-              print(e)
-              currentBuild.result="FAILURE"
-              throw e
-            }} finally {{
-              common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]",
-                                       env.RE_JOB_REPO_NAME)
-              common.archive_artifacts(
-                artifacts_dir: "${{env.RE_HOOK_ARTIFACT_DIR}}",
-                results_dir: "${{env.RE_HOOK_RESULT_DIR}}"
-              )
-            }} // try
-          }} // standard job slave
-        }} // if run test
-      }} // globalWraps
+      if (! common.isSkippable(skip_pattern, "{credentials}")) {{
+        common.stdJob("pre_merge_test", "{credentials}", "")
+      }}
