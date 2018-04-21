@@ -17,6 +17,7 @@
     scenario:
       - "newton"
       - "pike"
+      - "queens"
     action:
       - "deploy"
 
@@ -46,6 +47,7 @@
     scenario:
       - "newton"
       - "pike"
+      - "queens"
     action:
       - "deploy"
 
@@ -75,6 +77,8 @@
           IMAGE: "rpc-r14.9.0-xenial-swift"
       - pike:
           IMAGE: "rpc-r16.1.0-xenial_no_artifacts-swift"
+      - queens:
+          IMAGE: "rpc-r18.0.0-xenial_no_artifacts-swift"
     action:
       - "deploy"
 
