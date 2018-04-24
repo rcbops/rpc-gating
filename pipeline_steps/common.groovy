@@ -1188,3 +1188,115 @@ print(formatted_args)
 }
 
 return this
+
+void stdJob(String hook_dir, String credentials, String jira_project_key) {
+  globalWraps(){
+    // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
+    setTriggerVars()
+
+    standard_job_slave(env.SLAVE_TYPE) {
+      env.RE_HOOK_ARTIFACT_DIR="${env.WORKSPACE}/artifacts"
+      env.RE_HOOK_RESULT_DIR="${env.WORKSPACE}/results"
+
+      currentBuild.result="SUCCESS"
+
+      try {
+        withRequestedCredentials(credentials) {
+
+          stage('Checkout') {
+            if (env.ghprbPullId == null) {
+              clone_with_pr_refs(
+                "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+                env.REPO_URL,
+                env.BRANCH,
+              )
+            } else {
+              print("Triggered by PR: ${env.ghprbPullLink}")
+              clone_with_pr_refs(
+                "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+              )
+            }
+          }
+
+          stage('Execute Pre Script') {
+            // The 'pre' stage is used to prepare the environment for
+            // testing but is not the test itself. Retry on failure
+            // to reduce the likelihood of non-test errors.
+            retry(3) {
+              sh """#!/bin/bash -xeu
+                cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+                if [[ -e gating/${hook_dir}/pre ]]; then
+                  gating/${hook_dir}/pre
+                fi
+              """
+            }
+          }
+
+          try{
+            stage('Execute Run Script') {
+              sh """#!/bin/bash -xeu
+                cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+                gating/${hook_dir}/run
+              """
+            }
+          } finally {
+            stage('Execute Post Script') {
+              // We do not want the 'post' execution to fail the test,
+              // but we do want to know if it fails so we make it only
+              // return status.
+              post_result = sh(
+                returnStatus: true,
+                script: """#!/bin/bash -xeu
+                           cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+                           if [[ -e gating/${hook_dir}/post ]]; then
+                             gating/${hook_dir}/post
+                           fi"""
+              )
+              if (post_result != 0) {
+                print("Build failed with return code ${post_result}")
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print(e)
+        currentBuild.result="FAILURE"
+        if (env.ghprbPullId == null && ! isUserAbortedBuild() && jira_project_key != '') {
+          print("Creating build failure issue.")
+          build_failure_issue(jira_project_key)
+        } else {
+          print("Skipping build failure issue creation.")
+        }
+        throw e
+      } finally {
+        archive_artifacts(
+          artifacts_dir: "${env.RE_HOOK_ARTIFACT_DIR}",
+          results_dir: "${env.RE_HOOK_RESULT_DIR}"
+        )
+      }
+    }
+  }
+}
+
+/** Check if the build is a pull request that only modifies files that
+ *  do not require testing by matching against skip pattern.
+ */
+Boolean isSkippable(String skip_pattern, String credentials) {
+  Boolean skipIt
+  globalWraps(){
+    if (env.ghprbPullId == null) {
+      skipIt = false
+    } else {
+      withRequestedCredentials(credentials) {
+        stage('Check PR against skip-list') {
+          print("Triggered by PR: ${env.ghprbPullLink}")
+          clone_with_pr_refs(
+            "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+          )
+          skipIt = skip_build_check(skip_pattern)
+        }
+      }
+    }
+  }
+  return skipIt
+}
