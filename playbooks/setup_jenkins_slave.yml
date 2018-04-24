@@ -60,11 +60,6 @@
         - git-core
         - openjdk-8-jre-headless
 
-    - name: Set default JAVA_HOME environment variable
-      lineinfile:
-        path: /etc/environment
-        line: 'export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"'
-
     - name: Create Jenkins user
       user:
         name: jenkins
