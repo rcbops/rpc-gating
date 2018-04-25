@@ -1,7 +1,7 @@
 - project:
     name: "l2_gate_tests"
     repo_name: "rpc-product-1"
-    repo_url: "https://github.com/mattt416"
+    repo_url: "https://github.com/mattt416/rpc-product-1"
     branches:
       - "master"
     image:
