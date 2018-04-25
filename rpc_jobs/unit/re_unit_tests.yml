@@ -22,7 +22,7 @@
       if(env.ghprbPullId != null){
         env.RPC_GATING_BRANCH="origin/pr/${env.ghprbPullId}/merge"
       }
-      parallel ([
+      branches = [
         "With Requested Credentials": {
           build(
             job: "RE-unit-test-withRequestedCredentials",
@@ -219,6 +219,24 @@
             ]
           )
         },
-      ])
+        "Pull Request Check": {
+          build(
+            job: "RE-unit-test-pull-request",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+      ]
+      if (env.ghprbPullTitle =~ /^REUTPR-/ ){
+        print "Skipping unit test build, because this pr was created by a unit test"
+      } else {
+        parallel branches
+      }
 
 #TODO: Validation of Published Artefacts.
