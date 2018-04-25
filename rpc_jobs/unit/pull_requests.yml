@@ -1,0 +1,178 @@
+# This job is triggered by the PR created within RE-unit-test-pull-request
+- job:
+    name: RE-unit-test-pull-request-pr-triggered
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_(cit_)?(re_unit_test_)?(pull_request_)?pr_triggered.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/pr_unit_test'
+          cancel-builds-on-update: true
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+      - github:
+          url: "https://github.com/rcbops/rpc-gating"
+
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      if ("{repo_name}" == "rpc-gating" && env.ghprbPullId != null){
+        env.RPC_GATING_BRANCH = "origin/pr/${env.ghprbPullId}/merge"
+      }
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+
+      common.globalWraps(){
+        common.clone_with_pr_refs()
+        sh """
+          git status
+          git show
+          env
+          date
+        """
+      }
+
+
+# This job is triggered by the unit tests parent job
+- job:
+    name: RE-unit-test-pull-request
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+
+      void prTest(String test_type){
+        if (test_type == 'same'){
+          owner = "rcbops"
+          owner_prefix=""
+        } else {
+          owner = "wherenoworg"
+          owner_prefix="${owner}:"
+        }
+        repo_name="rpc-gating"
+        check_name="CIT/pr_unit_test"
+        repo="git@github.com:${owner}/${repo_name}"
+        src_branch="REUTPR-${BUILD_NUMBER}"
+        target_branch="testpushto"
+        pull_id=""
+
+        try {
+          sh """#!/bin/bash -xe
+            # rpc-gating clone done by gloablwraps/use_node
+            cd rpc-gating
+
+            # make sure origin refers to wherenoworg/rpc-gating for the
+            # fork test
+            git remote set-url origin ${repo}
+
+            # create branch
+            git checkout -B ${src_branch}
+
+            # create dirty file
+            date > file
+
+            # add file to index
+            git add file
+
+            # commit
+            git commit -m "${src_branch}"
+
+            # push - always to origin, but sometimes origin is a fork.
+            git push origin ${src_branch}:${src_branch}
+
+            # create pr
+            . ${WORKSPACE}/.venv/bin/activate
+
+            # note org is always rcbops because the target repo is used
+            # to open PRs
+
+            python ${WORKSPACE}/rpc-gating/scripts/ghutils.py \
+              --org "rcbops" \
+              --repo "${repo_name}" \
+              create_pr \
+                --close-existing \
+                --source-branch "${owner_prefix}${src_branch}"\
+                --target-branch "${target_branch}" \
+                --title "${src_branch}" \
+                --body "Auto created PR to test Jenkins' PR handling" \
+              > ${WORKSPACE}/pr_descriptor
+
+          """
+          pull_id = sh (returnStdout: true, script: """#!/bin/bash -xe
+            # get pull id from {org}/{repo}#{num}"
+            # useless use of grep, but previous version using shell
+            # substring extraction caused ssh agent plugin to
+            # loop indefinitely.
+            grep -o '[^#]*\$' <${WORKSPACE}/pr_descriptor
+          """)
+          echo "pull_id: ${pull_id}"
+          if (pull_id == ""){
+            throw new Exception("Failed to determine pull request ID")
+          }
+
+          sh """#!/bin/bash -xe
+            #check job status
+            . ${WORKSPACE}/.venv/bin/activate
+            result=\$(python ${WORKSPACE}/rpc-gating/scripts/ghutils.py \
+              --org "rcbops" \
+              --repo "${repo_name}" \
+              get_check_result \
+                --pull-id "${pull_id}" \
+                --check-name "${check_name}" \
+                --block
+            )
+
+            if [[ \$result != success ]]; then
+              echo "Fail. ${check_name} result: \${result}"
+              exit 1
+            else
+              echo "${check_name} succeeded."
+            fi
+
+          """
+        } finally {
+          sh """#!/bin/bash -xe
+            # Delete branch
+            cd rpc-gating
+            git push origin :${src_branch}
+
+            # Close PR
+            if [[ -n "${pull_id}" ]]; then
+              . ${WORKSPACE}/.venv/bin/activate
+              python ${WORKSPACE}/rpc-gating/scripts/ghutils.py \
+                --org "rcbops" \
+                --repo "${repo_name}" \
+                close_pr \
+                  --pull-id ${pull_id}
+            fi
+          """
+        } // try
+      } // prTest
+
+      common.globalWraps{
+        withCredentials([
+          string(
+            credentialsId: 'rpc-jenkins-svc-github-pat',
+            variable: 'PAT'
+          )
+        ]){
+          sshagent(credentials:['rpc-jenkins-svc-github-ssh-key']){
+            stage("Test Same Repo PR"){
+              prTest("same")
+            }
+            stage("Test Fork PR"){
+              prTest("fork")
+            }
+          } // sshagent
+        } // credentials
+      } // globalWraps
