@@ -44,11 +44,11 @@ def cli(ctxt, org, repo, pat, debug):
     logging.basicConfig(level=level)
     gh = github3.login(token=pat)
     repo_ = gh.repository(org, repo)
-    repo_.org = gh.organization(org)
     if not repo_:
         raise ValueError("Failed to connect to repo {o}/{r}".format(
             o=org, r=repo
         ))
+    repo_.org = gh.organization(org)
     ctxt.obj = repo_
 
 
@@ -371,14 +371,23 @@ def clone(url, ref, refspec):
     help="Body of the pull request",
     required=True
 )
-def create_pr(repo, source_branch, target_branch, title, body):
+@click.option(
+    '--close-existing/--no-close-existing',
+    help="If an existing PR is found for this combination of branches"
+         " close it and create a new one.",
+    default=False
+)
+def create_pr(repo, source_branch, target_branch, title, body, close_existing):
 
     # Check if PR already exists as github won't allow multiple PRs
     # with the same head/source and base/target branches.
     for p in repo.iter_pulls():
         if p.base.ref == target_branch and p.head.ref == source_branch:
             pr = p
-            break
+            if close_existing:
+                pr.close()
+            else:
+                break
     else:
         pr = repo.create_pull(title=title,
                               base=target_branch,
@@ -387,6 +396,46 @@ def create_pr(repo, source_branch, target_branch, title, body):
     print "{org}/{repo}#{num}".format(org=repo.owner,
                                       repo=repo.name,
                                       num=pr.number)
+
+
+@cli.command()
+@click.pass_obj
+@click.option(
+    '--check-name',
+    help="Name/context of the check to get the result for",
+    required=True
+)
+@click.option(
+    '--pull-id',
+    help="ID of pull request to get check result for",
+    required=True
+)
+def get_check_result(repo, check_name, pull_id):
+    pr = repo.pull_request(pull_id)
+    url = ("https://api.github.com/repos/{owner}/{repo}/commits/{ref}/statuses"
+           .format(owner=repo.owner,
+                   repo=repo.name,
+                   ref=pr.head.sha))
+    response = repo._session.request("GET", url)
+    for status in response.json():
+        if status['context'] == check_name:
+            print status['state']
+            break
+    else:
+        raise Exception("failed to find status {cn} for {repo}/pr-{pull_id}"
+                        .format(cn=check_name, repo=repo, pull_id=pull_id))
+
+
+@cli.command()
+@click.pass_obj
+@click.option(
+    '--pull-id',
+    help="ID of pull request to close",
+    required=True
+)
+def close_pr(repo, pull_id):
+    pr = repo.pull_request(pull_id)
+    pr.close()
 
 
 if __name__ == "__main__":
