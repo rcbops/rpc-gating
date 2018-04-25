@@ -1,7 +1,7 @@
 - project:
     name: "l2_gate_tests"
-    repo_name: "rpc-gating"
-    repo_url: "https://github.com/rcbops/rpc-gating"
+    repo_name: "rpc-product-1"
+    repo_url: "https://github.com/mattt416"
     branches:
       - "master"
     image:
@@ -12,10 +12,10 @@
     action:
       - "test"
     jobs:
-      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+      - 'L2_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - job-template:
-    name: 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+    name: 'L2_{repo_name}-{series}-{image}-{scenario}-{action}'
     series: "master"
     project-type: pipeline
     concurrent: true
