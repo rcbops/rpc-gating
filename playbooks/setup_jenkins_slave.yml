@@ -59,6 +59,7 @@
       with_items:
         - git-core
         - openjdk-8-jre-headless
+        - libxml2-utils
 
     - name: Create Jenkins user
       user:
