@@ -65,7 +65,7 @@ if [[ -n "$(git status -s)" ]] || [[ ${start_sha} != $(git rev-parse --verify HE
           --description "${issue_message}" \
           --label RE_DEP_UPDATE \
           --label jenkins \
-          --label "${repo}_${branch}"
+          --label "${repo}_${BRANCH}"
   )
   echo "Issue: ${issue}"
 fi
