@@ -302,7 +302,25 @@ def archive_artifacts(Map args = [:]){
     results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
 
     dir(results_dir) {
-      junit allowEmptyResults: true, testResults: "*.xml"
+      // The junit step doesn't like parsing non-XML (resulting in builds being
+      // marked as UNSTABLE). If xmllint is installed we verify that all XML
+      // input is valid and if not we skip the junit step.
+      Integer xmlStatus = sh(
+        returnStatus: true,
+        script: """#!/bin/bash -xe
+          if ls *.xml && [[ -f /usr/bin/xmllint ]]; then
+            /usr/bin/xmllint *.xml
+          else
+            exit 0
+          fi
+        """
+      )
+
+      if (xmlStatus == 0) {
+        junit allowEmptyResults: true, testResults: "*.xml"
+      } else {
+        println "junit step skipped, malformed XML found in ${results_dir}"
+      }
     }
 
     pubcloud.uploadToSwift(
