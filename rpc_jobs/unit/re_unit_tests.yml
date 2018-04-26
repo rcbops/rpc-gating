@@ -219,6 +219,19 @@
             ]
           )
         },
+        "Runtime Wrappers Check": {
+          build(
+            job: "RE-unit-test-wrappers",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
       ])
 
 #TODO: Validation of Published Artefacts.

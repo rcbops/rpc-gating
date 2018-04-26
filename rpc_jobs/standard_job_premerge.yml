@@ -81,5 +81,5 @@
       }}
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       if (! common.isSkippable(skip_pattern, "{credentials}")) {{
-        common.stdJob("pre_merge_test", "{credentials}", "")
+        common.stdJob("pre_merge_test", "{credentials}", "", "{wrappers}")
       }}

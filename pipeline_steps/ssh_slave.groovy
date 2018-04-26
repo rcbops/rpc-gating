@@ -16,43 +16,73 @@
  * Files:
  *  - playbooks/inventory/hosts
  */
-def connect(Map args){
+def _connect(Map args){
   common.conditionalStep(
     step_name: "Connect Slave",
     step: {
-      common.internal_slave(){
-        if (!("inventory" in args)){
-          args.inventory = "inventory"
-        }
-        if (!("port" in args)){
-          args.port = 22
-        }
-        withCredentials([
-          file(
-            credentialsId: 'id_rsa_cloud10_jenkins_file',
-            variable: 'JENKINS_SSH_PRIVKEY'
-          ),
-          usernamePassword(
-            credentialsId: "service_account_jenkins_api_creds",
-            usernameVariable: "JENKINS_USERNAME",
-            passwordVariable: "JENKINS_API_KEY"
+      if ("ip" in args){
+        writeFile(
+          file: "ssh_slave_inventory",
+          text: """
+[job_nodes]
+${ip}
+"""
           )
-        ]){
-          dir("rpc-gating/playbooks"){
-            unstash args.inventory
-            common.venvPlaybook(
-              playbooks: ["setup_jenkins_slave.yml"],
-              args: [
-                "-i ${args.inventory}",
-                "--limit job_nodes",
-                "--extra-vars='ansible_port=${args.port}'",
-                "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
-              ]
-            )
-          }
+        args.inventory="ssh_slave_inventory"
+      }
+      if (!("inventory" in args)){
+        args.inventory = "inventory"
+      }
+      if (!("port" in args)){
+        args.port = 22
+      }
+      withCredentials([
+        file(
+          credentialsId: 'id_rsa_cloud10_jenkins_file',
+          variable: 'JENKINS_SSH_PRIVKEY'
+        ),
+        usernamePassword(
+          credentialsId: "service_account_jenkins_api_creds",
+          usernameVariable: "JENKINS_USERNAME",
+          passwordVariable: "JENKINS_API_KEY"
+        )
+      ]){
+        dir("rpc-gating/playbooks"){
+          unstash args.inventory
+          common.venvPlaybook(
+            playbooks: ["setup_jenkins_slave.yml"],
+            args: [
+              "-i ${args.inventory}",
+              "--limit job_nodes",
+              "--extra-vars='ansible_port=${args.port}'",
+              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
+            ]
+          )
         }
       }
   })
+}
+
+def connect(Map args){
+  if (env.STAGES == null){
+    env.STAGES="Connect Slave"
+  }
+  // scl is only available on centos slaves
+  // all centos slaves are internal
+  // :. scl avilable -> slave is internal
+  scl = sh(returnStatus: true,
+           script:"which scl")
+  if (scl == 0){
+    echo "Connect SSH Slave, already running on internal node, not allocating another."
+    // on internal / centos slave already
+    _connect(args)
+  } else {
+    // not on internal slave, so allocate node
+    echo "Connect SSH Slave, not running on internal node, allocating one before proceeding."
+    common.internal_slave(){
+      _connect(args)
+    }
+  }
 }
 
 /* Disconnect slave

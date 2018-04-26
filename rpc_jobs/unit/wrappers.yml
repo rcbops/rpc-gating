@@ -1,0 +1,36 @@
+- job:
+    name: "RE-unit-test-wrappers"
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+      - standard_job_params:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+      - phobos_params:
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      // can specify this in a job-template, but not in a job
+      // as there is a jjb key called wrappers
+      wrappers = "phobos_vpn"
+      if ("{repo_name}" == "rpc-gating"){
+        env.RPC_GATING_BRANCH = "origin/pr/${env.ghprbPullId}/merge"
+      }
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.standard_job_slave(env.SLAVE_TYPE){
+        common.wrapList(common.stdJobWrappers(wrappers)){
+          stage("Ensure phobos reachable after connecting"){
+            // will throw exception on failure
+            sh """#!/bin/bash -x
+              # ping not installed(!)
+              # ping -w 5 ${env.PING_HOST}
+              curl --fail http://${env.PING_HOST}
+            """
+          }
+        }
+      }

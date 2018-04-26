@@ -988,7 +988,7 @@ void standard_job_slave(String slave_type, Closure body){
 }
 
 
-void connect_phobos_vpn(String gateway){
+void connect_phobos_vpn(String gateway=null){
   withCredentials([
     usernamePassword(
       credentialsId: "phobos_vpn_ipsec",
@@ -999,9 +999,16 @@ void connect_phobos_vpn(String gateway){
       credentialsId: "phobos_vpn_xauth",
       usernameVariable: "xauth_user",
       passwordVariable: "xauth_pass"
-    )
+    ),
+    string(
+      credentialsId: 'phobos_vpn_gateway',
+      variable: 'gw_from_creds'
+    ),
   ]){
     dir('rpc-gating/playbooks'){
+      if (gateway == null){
+        gateway = env.gw_from_creds
+      }
       venvPlaybook(
         playbooks: [
           "phobos_vpn.yml"
@@ -1038,7 +1045,10 @@ List build_creds_array(String list_of_cred_ids){
                    'RPC_REPO_SSH_HOST_PUBLIC_KEY_FILE',
                    'RPC_REPO_GPG_SECRET_KEY_FILE',
                    'RPC_REPO_GPG_PUBLIC_KEY_FILE'
-                  ]
+                  ],
+      "phobos_embedded": ['phobos_clouds_rpc_jenkins_user',
+                         'id_rsa_cloud10_jenkins_file',
+                         'rackspace_ca_crt']
     ]
     // only needs to contain creds that should be exposed.
     // every cred added should also be documented in RE for Projects
@@ -1107,6 +1117,14 @@ List build_creds_array(String list_of_cred_ids){
       "RPC_REPO_GPG_PUBLIC_KEY_FILE": file(
         credentialsId: "RPC_REPO_GPG_PUBLIC_KEY_FILE",
         variable: "GPG_PUBLIC"
+      ),
+      "phobos_clouds_rpc_jenkins_user": file(
+        credentialsId: "phobos_clouds_rpc_jenkins_user",
+        variable: "phobos_clouds_rpc_jenkins_user"
+      ),
+      "rackspace_ca_crt": file(
+        credentialsId: "rackspace_ca_crt",
+        variable: "rackspace_ca_crt"
       )
     ]
 
@@ -1180,6 +1198,78 @@ void setTriggerVars(){
   print ("Trigger: ${env.RE_JOB_TRIGGER} (${env.RE_JOB_TRIGGER_DETAIL})")
 }
 
+// convert a comma separated list of wrapper names
+// into a list of functions for use with wrapList
+List stdJobWrappers(String wrappers){
+  Map availableWrappers = [
+    "phobos_vpn": {body -> connect_phobos_vpn(); body()}
+  ]
+  // Convert csv list of strings to list of wrapper functions
+  // via the above map
+  List wrapperFuncs = []
+  for (String wrapperName in wrappers.tokenize(", ")){
+    Closure c = availableWrappers[wrapperName]
+    if (c == null){
+      throw new Exception("Invalid Standard Job Wrapper: ${wrapperName}")
+    } else {
+      wrapperFuncs << c
+    }
+  }
+  return wrapperFuncs
+}
+
+// nest a load of functions from a list
+// wraplist([a,b,c]){ print "body" } is equivalent to:
+// a {
+//   b {
+//     c {
+//       print "body"
+//     }
+//   }
+// }
+void wrapList(List wrappers, Closure body){
+  // if the list of wrappers is empty, just
+  // execute the passed in closure (nothing to wrap)
+  if (wrappers.empty){
+    body()
+  } else {
+    // wrappers is not empty, lets get wrapping
+
+    // count down from through the wrappers list
+    for (i in wrappers.size()..1){
+        // define an alias for the loop counter
+        // within the scope of the loop, so this
+        // value will be captured by closures
+        // created within the loop
+        def _i = i
+
+        // b is the closure that will be
+        // passed to the next closure to be created
+        Closure b
+
+        // On the first iteration use, the actual
+        // body closure that was passed into this function.
+        // On subsequent iterations use the previously
+        // created closure.
+        if (_i == wrappers.size()){
+            b = body
+        } else {
+            b = c
+        }
+        // create a closure
+        // this closure calls one of the functions from the
+        // passed in function list, either with the passed
+        // in body closure as the argument, or with the
+        // previously created closure as the argument.
+        c = {wrappers[_i-1](b)}
+    }
+    // execute the nest of closures
+    // this will look something like:
+    // {wrappers[0]({wrappers[1]({wrappers[2]({print "body"})})})}
+    c()
+  }
+}
+
 // add wrappers that should be used for all jobs.
 // max log size is in MB
 void globalWraps(Closure body){
@@ -1235,94 +1325,96 @@ print(formatted_args)
 
 return this
 
-void stdJob(String hook_dir, String credentials, String jira_project_key) {
+void stdJob(String hook_dir, String credentials, String jira_project_key, String wrappers) {
   globalWraps(){
     // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
     setTriggerVars()
 
     standard_job_slave(env.SLAVE_TYPE) {
-      env.RE_HOOK_ARTIFACT_DIR="${env.WORKSPACE}/artifacts"
-      env.RE_HOOK_RESULT_DIR="${env.WORKSPACE}/results"
+      wrapList(stdJobWrappers(wrappers)){
+        env.RE_HOOK_ARTIFACT_DIR="${env.WORKSPACE}/artifacts"
+        env.RE_HOOK_RESULT_DIR="${env.WORKSPACE}/results"
 
-      currentBuild.result="SUCCESS"
+        currentBuild.result="SUCCESS"
 
-      try {
-        withRequestedCredentials(credentials) {
+        try {
+          withRequestedCredentials(credentials) {
 
-          stage('Checkout') {
-            if (env.ghprbPullId == null) {
-              clone_with_pr_refs(
-                "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
-                env.REPO_URL,
-                env.BRANCH,
-              )
-            } else {
-              print("Triggered by PR: ${env.ghprbPullLink}")
-              clone_with_pr_refs(
-                "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
-              )
+            stage('Checkout') {
+              if (env.ghprbPullId == null) {
+                clone_with_pr_refs(
+                  "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+                  env.REPO_URL,
+                  env.BRANCH,
+                )
+              } else {
+                print("Triggered by PR: ${env.ghprbPullLink}")
+                clone_with_pr_refs(
+                  "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+                )
+              }
             }
-          }
 
-          stage('Execute Pre Script') {
-            // The 'pre' stage is used to prepare the environment for
-            // testing but is not the test itself. Retry on failure
-            // to reduce the likelihood of non-test errors.
-            retry(3) {
-              sh """#!/bin/bash -xeu
-                cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-                if [[ -e gating/${hook_dir}/pre ]]; then
-                  gating/${hook_dir}/pre
-                fi
-              """
+            stage('Execute Pre Script') {
+              // The 'pre' stage is used to prepare the environment for
+              // testing but is not the test itself. Retry on failure
+              // to reduce the likelihood of non-test errors.
+              retry(3) {
+                sh """#!/bin/bash -xeu
+                  cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+                  if [[ -e gating/${hook_dir}/pre ]]; then
+                    gating/${hook_dir}/pre
+                  fi
+                """
+              }
             }
-          }
 
-          try{
-            stage('Execute Run Script') {
-              sh """#!/bin/bash -xeu
-                cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-                gating/${hook_dir}/run
-              """
-            }
-          } finally {
-            stage('Execute Post Script') {
-              // We do not want the 'post' execution to fail the test,
-              // but we do want to know if it fails so we make it only
-              // return status.
-              post_result = sh(
-                returnStatus: true,
-                script: """#!/bin/bash -xeu
-                           cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-                           if [[ -e gating/${hook_dir}/post ]]; then
-                             gating/${hook_dir}/post
-                           fi"""
-              )
-              if (post_result != 0) {
-                print("Build failed with return code ${post_result}")
+            try{
+              stage('Execute Run Script') {
+                sh """#!/bin/bash -xeu
+                  cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+                  gating/${hook_dir}/run
+                """
+              }
+            } finally {
+              stage('Execute Post Script') {
+                // We do not want the 'post' execution to fail the test,
+                // but we do want to know if it fails so we make it only
+                // return status.
+                post_result = sh(
+                  returnStatus: true,
+                  script: """#!/bin/bash -xeu
+                             cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+                             if [[ -e gating/${hook_dir}/post ]]; then
+                               gating/${hook_dir}/post
+                             fi"""
+                )
+                if (post_result != 0) {
+                  print("Build failed with return code ${post_result}")
+                }
               }
             }
           }
-        }
-      } catch (e) {
-        print(e)
-        currentBuild.result="FAILURE"
-        if (env.ghprbPullId == null && ! isUserAbortedBuild() && jira_project_key != '') {
-          print("Creating build failure issue.")
-          build_failure_issue(jira_project_key)
-        } else {
-          print("Skipping build failure issue creation.")
-        }
-        throw e
-      } finally {
-        archive_artifacts(
-          artifacts_dir: "${env.RE_HOOK_ARTIFACT_DIR}",
-          results_dir: "${env.RE_HOOK_RESULT_DIR}"
-        )
-      }
-    }
-  }
-}
+        } catch (e) {
+          print(e)
+          currentBuild.result="FAILURE"
+          if (env.ghprbPullId == null && ! isUserAbortedBuild() && jira_project_key != '') {
+            print("Creating build failure issue.")
+            build_failure_issue(jira_project_key)
+          } else {
+            print("Skipping build failure issue creation.")
+          }
+          throw e
+        } finally {
+          archive_artifacts(
+            artifacts_dir: "${env.RE_HOOK_ARTIFACT_DIR}",
+            results_dir: "${env.RE_HOOK_RESULT_DIR}"
+          )
+        } // try
+      } // stdJobWrappers
+    } // standard_job_slave
+  } // globalwraps
+} //stdJob func
 
 /** Check if the build is a pull request that only modifies files that
  *  do not require testing by matching against skip pattern.

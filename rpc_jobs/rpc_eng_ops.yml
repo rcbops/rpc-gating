@@ -1,0 +1,20 @@
+- project:
+    name: "rpc-eng-ops-jobs"
+    repo_name:  "rpc-eng-ops"
+    repo_url:   "git@github.com:rcbops/rpc-eng-ops"
+    branch: "master"
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+    scenario: "embedded"
+    action:
+      - "deploy"
+      - "deploynoclean"
+    jira_project_key: "REO"
+    # includes id_rsa_cloud10_jenkins_file
+    # which is the private key that corresponds to the 'jenkins'
+    # key for the rpc-jenkins-domain/rpc-jenkins-user account
+    credentials: phobos_embedded
+    wrappers: phobos_vpn
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
