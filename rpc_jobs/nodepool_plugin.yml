@@ -1,0 +1,21 @@
+- project:
+    name: "nodepool-plugin-pre-merge"
+    repo_name: "nodepool-plugin"
+    repo_url: "https://github.com/rcbops/nodepool-plugin"
+    # `series` defaults to `master` and can be omitted.  Note that `series` is
+    # only used in the job name and does not necessarily need to map to a
+    # branch name (thought in most cases it will).
+    #series: "master"
+    branches:
+      - "master"
+    image:
+      - "maven"
+    scenario:
+      - "lint"
+    action:
+      - "test"
+    SLAVE_TYPE: container
+    SLAVE_CONTAINER_DOCKERFILE_REPO: PROJECT
+    SLAVE_CONTAINER_DOCKERFILE_PATH: gating/pre_merge_test/DockerfileRun
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'

@@ -1,0 +1,484 @@
+- project:
+    name: "rpc-openstack-master-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "master"
+    branches:
+      - "master.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-master-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "master"
+    branches:
+      - "master.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "ansible-syntax"
+      - "bashate"
+      - "pep8"
+      - "releasenotes"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "pike"
+    branches:
+      - "pike.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "pike"
+    branches:
+      - "pike.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "ansible-syntax"
+      - "bashate"
+      - "pep8"
+      - "releasenotes"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "newton"
+    branches:
+      - "newton.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "newton"
+    branches:
+      - "newton.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "bashate"
+      - "flake8"
+      - "releasenotes"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-mitaka-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "mitaka"
+    branches:
+      - "mitaka.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
+      | ^gating/update_dependencies/
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "ceph"
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "performance2-15"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-mitaka-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "mitaka"
+    branches:
+      - "mitaka.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "bashate"
+      - "flake8"
+      - "releasenotes"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-master-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "master"
+    jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-master-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "master"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    scenario:
+      - "ironic"
+      - "swift"
+    action:
+      - system
+      - deploy
+    exclude:
+      - action: system
+        image: xenial_mnaio_loose_artifacts
+      - action: system
+        scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "pike"
+    jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "pike"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts
+    scenario:
+      - "ironic"
+      - "swift"
+    action:
+      - system:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+      - deploy:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    exclude:
+      - action: system
+        scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-rc-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "pike-rc"
+    jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-pike-rc-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "pike-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts
+    scenario:
+      - "ironic"
+      - "swift"
+    action:
+      - system:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+      - deploy:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    exclude:
+      - action: system
+        image: xenial_mnaio_loose_artifacts
+      - action: system
+        scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton"
+    jira_project_key: "RO"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_loose_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          # We have an MNAIO equivalent of this PM job, but we need to keep
+          # this for the push triggering for snapshot building.
+          CRON: "@monthly"
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - trusty_loose_artifacts:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_loose_artifacts
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-rc-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial:
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_loose_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          # We have an MNAIO equivalent of this PM job, but we need to keep
+          # this for the push triggering for snapshot building.
+          CRON: "@monthly"
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - trusty_loose_artifacts:
+          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-rc-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_loose_artifacts
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-mitaka-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "mitaka"
+    jira_project_key: "RO"
+    image:
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "ceph"
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-dependency-update"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch:
+      - "master"
+      - "pike"
+      - "newton"
+    jira_project_key: "RO"
+    trigger:
+      - PR:
+          CRON: ""
+          branches: "{branch}"
+          NUM_TO_KEEP: 10
+      - PM:
+          branches: "do_not_build_on_pr"
+          READ_ONLY_TEST: false
+    jobs:
+      - '{trigger}-Dep-Update_{repo_name}-{branch}'

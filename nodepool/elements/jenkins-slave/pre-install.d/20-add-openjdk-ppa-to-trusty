@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ ${DIB_DEBUG_TRACE:-0} -gt 0 ]; then
+    set -x
+fi
+set -eu
+set -o pipefail
+
+source /etc/lsb-release
+if [[ "${DISTRIB_CODENAME}" == "trusty" ]]; then
+  add-apt-repository -y ppa:openjdk-r/ppa
+fi

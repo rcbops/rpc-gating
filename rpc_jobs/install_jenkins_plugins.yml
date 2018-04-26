@@ -2,11 +2,15 @@
     name: 'Install-Jenkins-Plugins'
     project-type: workflow
     concurrent: false
+    properties:
+      - build-discarder:
+          days-to-keep: 7
     parameters:
       # See params.yml
       - rpc_gating_params
     dsl: |
-      node(){ // CIT slave node
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
         withCredentials([
           usernamePassword(
             credentialsId: "service_account_jenkins_api_creds",
@@ -15,18 +19,10 @@
           )
         ]){
           dir("rpc-gating"){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-            common = load 'pipeline_steps/common.groovy'
-            common.install_ansible()
-            sh """#!/bin/bash
-              . .venv/bin/activate
-              pip install urllib3==1.18.1
-            """
             common.venvPlaybook(
               playbooks: ["playbooks/install_jenkins_plugins.yml"],
-              venv: ".venv",
               args: [ "-i inventory" ]
             )
           } //dir
         } // withCredentials
-      } // CIT slave node
+      } // globalWraps

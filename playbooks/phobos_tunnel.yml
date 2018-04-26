@@ -1,0 +1,59 @@
+# How to use this playbook..
+# 1. Make sure you can ssh to the phobos deployment host manually.
+#   Bastion config steps can be found in https://rpc-openstack.atlassian.net/browse/RE-643?focusedCommentId=170362&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-170362
+# 2. Get the private key from passwordsafe and store it in id_rsa_webhookproxy (or store it somewhere else and override deploy_host_private_key_file with -e)
+# 3. Run the playbook ansible-playbook phobostunnel.yml -i deploy_phobos.inv
+
+- name: Configure Phobos Deploy node tunnel
+  hosts: deploy-phobos
+  user: jenkins
+  vars:
+    tunnel_host: "webhookproxy.re.rpc.rackspace.com"
+    tunnel_user: phobos
+    # Remote port will be opened on tunnel host, and connections to it
+    # will be forwarded via the ssh tunnel to port 22 on the phobos deploy host
+    remote_port: 2223
+
+    # location on phobos host that the private key will be written to
+    private_key_file: "/home/jenkins/.ssh/id_rsa_webhookproxy"
+
+    # locaiton on localhost that ansible will use to read key file
+    # before writing it on the phobos host
+    deploy_host_private_key_file: id_rsa_webhookproxy
+  pre_tasks:
+    - name: Install apt packages
+      apt:
+        pkg: "{{ item }}"
+        state: installed
+        update_cache: yes
+      register: install_packages
+      until: install_packages | success
+      retries: 5
+      delay: 2
+      with_items:
+        - git-core
+        - default-jre-headless
+      become: true
+
+    - name: Read local key file
+      delegate_to: localhost
+      set_fact:
+        private_key: "{{lookup('file', deploy_host_private_key_file)}}"
+    - name: Write key file to phobos host
+      copy:
+        dest: "{{private_key_file}}"
+        content: "{{private_key}}"
+        mode: 0600
+        owner: jenkins
+    - name: Template phobostunnel service definition
+      template:
+        src: phobostunnel_service.j2
+        dest: /lib/systemd/system/phobostunnel.service
+      become: true
+    - name: Load and Enable phobostunnel systemd service
+      systemd:
+        enabled: yes
+        service: phobostunnel.service
+        daemon_reload: yes
+        state: restarted
+      become: true

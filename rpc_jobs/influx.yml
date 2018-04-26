@@ -1,0 +1,60 @@
+- job:
+    name: Influx-Setup
+    project-type: workflow
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      # See params.yml
+      - rpc_gating_params
+      - rpc_maas_params:
+          RPC_MAAS_BRANCH: master
+      - instance_params:
+          REGIONS: IAD
+          FALLBACK_REGIONS: ""
+          FLAVOR: "general1-8"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - string:
+          name: FIREWALL_OPEN_PORTS
+          default: "8086, 8088, 8083, 8089"
+          description: |
+            Open Ports on the firewall
+      - string:
+          name: STAGES
+          default: "Allocate Resources, Connect Slave, Influx"
+          description: |
+            Pipeline stages to run CSV. Note that this list does not influence execution order.
+            Options:
+              Override Inventory
+              Allocate Resources
+              Connect Slave
+              Influx
+              Cleanup
+              Destroy Slave
+      - text:
+          name: "INVENTORY"
+          description: |
+            Override inventory. This is useful for reconfiguring the current
+            proxy node instead of building a new one. Should be used with the
+            "Override Inventory" stage insated of Allocate Resources and
+            Connect Slave
+          default: |
+            [job_nodes:children]
+            hosts
+            [log_hosts]
+            node ansible_host=YOUR_IP_HERE
+      - bool:
+          name: "USE_SSH_WHITELIST"
+          description: |
+            Enable src restriction on SSH connections. Disabling allows
+            connections from anywhere. When enabled SSH connections will
+            only be allowed from RAX bastions and internal Jenkins nodes.
+
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        common.internal_slave(){
+          influx.setup()
+        } // cit node
+      } // globalWraps

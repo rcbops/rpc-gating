@@ -1,0 +1,11 @@
+[Unit]
+Description=Webhook Translator Listen Socket
+
+[Socket]
+SocketUser=www-data
+SocketGroup=www-data
+SocketMode=0600
+ListenStream={{ WHT_SOCK }}
+
+[Install]
+WantedBy=sockets.target

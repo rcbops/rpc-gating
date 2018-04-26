@@ -1,0 +1,170 @@
+### tests rpc-upgrades to <scenario> leaped from <action>
+- project:
+    name: "rpc-upgrades-aio-newton-head-pr"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    image:
+      - trusty_aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "liberty_to_newton_leap"
+      - "kilo_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-tox-pr"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "ansible-syntax"
+      - "bashate"
+      - "pep8"
+      - "releasenotes"
+      - "docs"
+    action:
+      - "tox-test"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-pm"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - trusty_aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+      - xenial_aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "mitaka_to_newton_major"
+      - "liberty_to_newton_leap"
+      - "r12.2.8_to_newton_leap"
+      - "r12.2.5_to_newton_leap"
+      - "r12.2.2_to_newton_leap"
+      - "r12.1.2_to_newton_leap"
+      - "kilo_to_newton_leap" 
+      - "r14.7.0_to_newton_minor"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    exclude:
+      - image: "xenial_aio"
+        action: "mitaka_to_newton_major"
+      - image: "xenial_aio"
+        action: "mitaka_to_newton_leap"
+      - image: "xenial_aio"
+        action: "liberty_to_newton_leap"
+      - image: "xenial_aio"
+        action: "r12.2.8_to_newton_leap"
+      - image: "xenial_aio"
+        action: "r12.2.5_to_newton_leap"
+      - image: "xenial_aio"
+        action: "r12.2.2_to_newton_leap"
+      - image: "xenial_aio"
+        action: "r12.1.2_to_newton_leap"
+      - image: "xenial_aio"
+        action: "kilo_to_newton_leap"
+    CRON: "@weekly"
+
+- project:
+    name: "rpc-upgrades-aio-newton-release-pm"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - trusty_aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "liberty_to_r14.current_leap"
+      - "r12.2.8_to_r14.current_leap"
+      - "r12.2.5_to_r14.current_leap"
+      - "r12.2.2_to_r14.current_leap"
+      - "r12.1.2_to_r14.current_leap"
+      - "kilo_to_r14.current_leap"
+      - "kilo_to_r14.2.0_leap"
+      - "r11.0.0_to_r14.current_leap"
+      - "r11.0.1_to_r14.current_leap"
+      - "r11.0.4_to_r14.current_leap"
+      - "r11.1.3_to_r14.current_leap"
+      - "r11.1.4_to_r14.current_leap"
+      - "r11.1.5_to_r14.current_leap"
+      - "r11.1.6_to_r14.current_leap"
+      - "r11.1.9_to_r14.current_leap"
+      - "r11.1.10_to_r14.current_leap"
+      - "r11.1.15_to_r14.current_leap"
+      - "r11.1.18_to_r14.current_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
+
+- project:
+    name: "rpc-upgrades-mnaio-newton-head-pm"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      # in mnaio builds, the OS equals the VMs OS
+      - trusty_mnaio:
+          FLAVOR: "onmetal-io1"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    scenario:
+      - "swift"
+    action:
+      - "mitaka_to_newton_major"
+      - "liberty_to_newton_leap"
+      - "r12.2.8_to_newton_leap"
+      - "r12.2.5_to_newton_leap"
+      - "r12.2.2_to_newton_leap"
+      - "r12.1.2_to_newton_leap"
+      - "kilo_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
+
+- project:
+    name: "rpc-upgrades-mnaio-newton-release-pm"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      # in mnaio builds, the OS equals the VMs OS
+      - trusty_mnaio:
+          FLAVOR: "onmetal-io1"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    scenario:
+      - "swift"
+    action:
+      - "liberty_to_r14.current_leap"
+      - "r12.2.8_to_r14.current_leap"
+      - "r12.2.5_to_r14.current_leap"
+      - "r12.2.2_to_r14.current_leap"
+      - "r12.1.2_to_r14.current_leap"
+      - "kilo_to_r14.current_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"

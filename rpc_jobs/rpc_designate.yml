@@ -1,0 +1,90 @@
+ - project:
+    name: "rpc-designate-pre-merge"
+
+    repo_name: "rpc-designate"
+    # URL of the rpc-designate repository
+    repo_url: "https://github.com/rcbops/rpc-designate"
+
+    branches:
+      - "master"
+
+    # Use image for RPC-O install
+    image:
+      - xenial:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+
+    scenario:
+      - "newton"
+      - "pike"
+      - "queens"
+    action:
+      - "deploy"
+
+    jira_project_key: "RI"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+ - project:
+    name: "rpc-designate-post-merge"
+
+    repo_name: "rpc-designate"
+    # URL of the rpc-designate repository
+    repo_url: "https://github.com/rcbops/rpc-designate"
+
+    branches:
+      - "master"
+      - "master-rc"
+
+    # Use image for RPC-O install
+    image:
+      - xenial:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+
+    scenario:
+      - "newton"
+      - "pike"
+      - "queens"
+    action:
+      - "deploy"
+
+    jira_project_key: "RI"
+
+    # Link to the standard post-merge-template
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+ - project:
+    name: "rpc-designate-post-merge-snapshot"
+
+    repo_name: "rpc-designate"
+    # URL of the rpc-designate repository
+    repo_url: "https://github.com/rcbops/rpc-designate"
+
+    # Use image for RPC-O install
+    image:
+      - xenial_snapshot:
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: ""
+          FLAVOR: "7"
+          BOOT_TIMEOUT: 1500
+
+    scenario:
+      - newton:
+          IMAGE: "rpc-r14.9.0-xenial-swift"
+      - pike:
+          IMAGE: "rpc-r16.1.0-xenial_no_artifacts-swift"
+      - queens:
+          IMAGE: "rpc-r18.0.0-xenial_no_artifacts-swift"
+    action:
+      - "deploy"
+
+    # Sending these failures to RE while we stabilise these images
+    jira_project_key: "RE"
+
+    # Link to the standard post-merge-template
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'

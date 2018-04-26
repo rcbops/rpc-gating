@@ -1,10 +1,18 @@
 ---
 - parameter:
-    name: single_use_slave_params
+    name: instance_params
     parameters:
       - string:
-          name: REGION
-          default: "{REGION}"
+          name: REGIONS
+          default: "{REGIONS}"
+          description: |
+            CSV list of preferred regions, will be tried in a random order
+      - string:
+          name: FALLBACK_REGIONS
+          default: "{FALLBACK_REGIONS}"
+          description: |
+            CSV list of regions that this job can run in. Any regions
+            not contined in REGIONS will be used as fallbacks.
       - string:
           name: FLAVOR
           default: "{FLAVOR}"
@@ -18,6 +26,38 @@
             Set instance name or "AUTO" to have it generated based on job
             name and build number. Beware the 63 char container name limit
             as container names includes the host name.
+- parameter:
+    name: jenkins_node_params
+    parameters:
+      - string:
+          name: JENKINS_NODE_LABELS
+          default: "{JENKINS_NODE_LABELS}"
+          description: |
+            Number of executors to start on each slave
+      - string:
+          name: JENKINS_NODE_EXECUTORS
+          default: "{JENKINS_NODE_EXECUTORS}"
+          description: |
+            Number of executors to start on each slave
+        # Bool param defaults are converted to lower case :(
+        # https://review.openstack.org/#/c/473828/
+      - bool:
+          name: jenkins_node_exclusive
+          default: "{jenkins_node_exclusive}"
+          description: |
+            Create slave in exclusive mode?
+            An exclusive slave will only be used for jobs that specify its
+            name or labels. A non exclusive node will run jobs that don't
+            specify a name or label. eg common.shared_slave(){{}} blocks. Single use slaves
+            should be exclusive, multi use slaves should not.
+      - bool:
+          name: allow_jenkins_sudo
+          default: "{allow_jenkins_sudo}"
+          description: |
+            Grant the jenkins slave passwordless sudo. This is useful for
+            single use slaves, but must not be set for long running
+            slaves as it will allow jobs to pollute the build environment.
+
 
 - parameter:
     name: rpc_repo_params
@@ -30,95 +70,68 @@
           default: "{RPC_BRANCH}"
 
 - parameter:
-    name: osa_ops_params
+    name: rpc_eng_ops_params
     parameters:
       - string:
-          name: OSA_OPS_REPO
-          default: https://github.com/openstack/openstack-ansible-ops
+          name: "RPC_ENG_OPS_REPO"
+          default: "git@github.com:rcbops/rpc-eng-ops"
       - string:
-          name: OSA_OPS_BRANCH
-          default: master
-      - string:
-          name: OPENSTACK_ANSIBLE_BRANCH
-          default: "{OPENSTACK_ANSIBLE_BRANCH}"
-          description: Openstack Ansible branch to use in setup
-      - string:
-          name: DEFAULT_IMAGE
-          default: "{DEFAULT_IMAGE}"
-          description: Version of Ubuntu image to use for VMs (14.04.5 or 16.04.2)
-      - string:
-          name: DEFAULT_KERNEL
-          default: "4.4.0-66"
-          description: Ubuntu Kernal Version to use for VMs (4.4.0-66, 3.13.0-34, etc.)
-      - bool:
-          name: PARTITION_HOST
-          default: true
-          description: Enable partitioning of host data disk device
-      - string:
-          name: DATA_DISK_DEVICE
-          default: "{DATA_DISK_DEVICE}"
-          description: The data disk to use for VMs (if unset the largest unpartitioned device will be used)
-      - string:
-          name: MULTI_NODE_AIO_DIR
-          default: "multi-node-aio"
-          description: |
-            The directory to trigger build.sh from
-            Options:
-              multi-node-aio
-              multi-node-aio-xenial-ansible
-
-- parameter:
-    name: rpc_deploy_params
-    parameters:
-      - string:
-          name: "DEPLOY_SWIFT"
-          default: "{DEPLOY_SWIFT}"
-          description: "Deploy Swift? yes/no"
-      - string:
-          name: "DEPLOY_CEPH"
-          default: "{DEPLOY_CEPH}"
-          description: "Deploy Ceph? yes/no"
-      - string:
-          name: "DEPLOY_ELK"
-          default: "{DEPLOY_ELK}"
-          description: "Deploy ELK? yes/no"
-      - text:
-          name: "USER_VARS"
-          default: "{USER_VARS}"
-          description: "OSA/RPC USER_VARS to inject for this build"
-      - string:
-          name: "UPGRADE_FROM_REF"
-          default: "{UPGRADE_FROM_REF}"
-          description: "An tag/sha/ref to upgrade from"
+          name: "RPC_ENG_OPS_BRANCH"
+          default: "{RPC_ENG_OPS_BRANCH}"
 
 - parameter:
     name: rpc_gating_params
     parameters:
       - string:
-          name: RPC_GATING_REPO
-          default: "https://github.com/rcbops/rpc-gating"
-      - string:
           name: RPC_GATING_BRANCH
           default: "master"
+          description: |
+            Version of rpc-gating. This is used when loading the rpc-gating
+            groovy library, and when cloning RPC_GATING_REPO into each
+            workspace. The clone source is always rcbops/rpc-gating.
 
 - parameter:
-    name: tempest_params
+    name: rpc_maas_params
     parameters:
       - string:
-          name: "TEMPEST_TEST_SETS"
-          default: "{TEMPEST_TEST_SETS}"
-          description: |
-            Test sets (space seperated). Test sets are defined in
-            https://github.com/openstack/openstack-ansible-os_tempest/blob/master/templates/openstack_tempest_gate.sh.j2
+          name: "RPC_MAAS_REPO"
+          default: "https://github.com/rcbops/rpc-maas"
       - string:
-          name: "RUN_TEMPEST_OPTS"
-          default: "{RUN_TEMPEST_OPTS}"
-          description: |
-            Options to pass to run_tempest.sh via openstack_tempest_gate.sh. Note that both are deprecated and will be replaced in future.
-            Serial test runner format: --serial
+          name: "RPC_MAAS_BRANCH"
+          default: "{RPC_MAAS_BRANCH}"
+
+- parameter:
+    name: standard_job_params
+    parameters:
       - string:
-          name: "TESTR_OPTS"
-          default: "{TESTR_OPTS}"
-          description: |
-            Options to pass to run_tempest.sh via openstack_tempest_gate.sh. Note that both are deprecated and will be replaced in future.
-            Concurrent worker format: --concurrency 3
+          name: "SLAVE_TYPE"
+          default: "{SLAVE_TYPE}"
+          description: >
+            Standard jobs can be run on different types of slave. The default
+            for this parameter is set to "instance" for a compute instances. To
+            use a Docker container set this parameter to "container".
+        # we used to use choice for this, but choice doesn't take a default
+        # parameter, so doesn't work with the way we pass in JJB variables.
+      - string:
+          name: "SLAVE_CONTAINER_DOCKERFILE_REPO"
+          default: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          description: >
+            Choices: RE, PROJECT.
+            This parameter, which defaults to "RE", determines where to look
+            for the Dockerfile specified in SLAVE_CONTAINER_DOCKERFILE_PATH.
+            "RE" searches within rpc-gating, and "PROJECT" searches within the
+            project in test.
+      - string:
+          name: "SLAVE_CONTAINER_DOCKERFILE_PATH"
+          default: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          description: >
+            This is the relative path of the Dockerfile to build from. This
+            defaults to "./Dockerfile.standard_job".
+      - string:
+          name: "SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS"
+          default: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+          description: >
+            This is a list of space-separated build args to pass to docker
+            build. This defaults to "BASE_IMAGE=ubuntu:16.04", which is
+            specifically applicable to the "./Dockerfile.standard_job" in
+            rpc-gating.

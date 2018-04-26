@@ -1,7 +1,5 @@
-FROM ubuntu
-RUN apt-get update && apt-get install -y groovy2 python-pip build-essential python-dev libssl-dev
-RUN apt-get install -y libffi-dev
-RUN apt-get install -y sudo
+FROM ubuntu:16.04
+RUN apt-get update && apt-get install -y groovy2 python-pip build-essential python-dev libssl-dev curl libffi-dev sudo git-core
 COPY requirements.txt /requirements.txt
 COPY test-requirements.txt /test-requirements.txt
 COPY constraints.txt /constraints.txt

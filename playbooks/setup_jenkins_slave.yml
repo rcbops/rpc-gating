@@ -1,19 +1,69 @@
 ---
 - hosts: job_nodes
   user: root
+  vars:
+    # Env lookup returns an empty string when an env var doesn't exist. |default
+    # will normally only replace on unset, not "". If |default(var,true) is
+    # used, then default will replace whenever var evaluates to false, which
+    # isn't helpful for booleans as the user may have specified false. ""|bool
+    # returns false, but these bools should default to true.
+    # A jinja if is used to set a bool default if env lookup returned "".
+    allow_jenkins_sudo: "{% set v=lookup('env', 'allow_jenkins_sudo') %}{% if v=='' %}True{% else %}{{v|bool}}{% endif %}"
+    jenkins_node_exclusive: "{% set v=lookup('env', 'jenkins_node_exclusive') %}{% if v=='' %}True{% else %}{{v|bool}}{% endif %}"
+    # These variables are not booleans so can use the standard default filter
+    jenkins_node_labels: "{{ lookup('env', 'JENKINS_NODE_LABELS')|default('single_use_slave', true) }}"
+    jenkins_node_executors: "{{ lookup('env', 'JENKINS_NODE_EXECUTORS')|default('2', true) }}"
+    jenkins_ssh_port: "{{ ansible_port | default(22, true) }}"
+    jenkins_wait_params:
+      # Wait 5 seconds before attempting the first connection
+      delay: 5
+      # Wait 180 seconds for the container to respond
+      timeout: 180
+      # Sleep 5 seonds between checks
+      sleep: 5
+  roles:
+    - role: willshersystems.sshd
+      sshd:
+        PasswordAuthentication: "no"
+        X11Forwarding: "no"
+        PrintLastLog: "no"
+        GatewayPorts: "yes"
+        Compression: "yes"
   tasks:
+    - meta: flush_handlers
+
+    - name: Wait for ssh connectivity
+      wait_for_connection:
+        delay: "{{ jenkins_wait_params.delay }}"
+        timeout: "{{ jenkins_wait_params.timeout }}"
+        sleep: "{{ jenkins_wait_params.sleep }}"
+
+    - name: Add OpenJDK PPA
+      apt_repository:
+        repo: ppa:openjdk-r/ppa
+      register: install_ppa
+      until: install_ppa | success
+      retries: 5
+      delay: 2
+      when: ansible_distribution_release | lower == 'trusty'
+
     - name: Install apt packages
       apt:
         pkg: "{{ item }}"
         state: installed
         update_cache: yes
+      register: install_packages
+      until: install_packages | success
+      retries: 5
+      delay: 2
       with_items:
-        - git
-        - default-jre-headless
-        - python-dev
-        - python-pip
-        - build-essential
-        - libssl-dev
+        - git-core
+        - openjdk-8-jre-headless
+
+    - name: Set default JAVA_HOME environment variable
+      lineinfile:
+        path: /etc/environment
+        line: 'export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"'
 
     - name: Create Jenkins user
       user:
@@ -40,18 +90,75 @@
         state: present
         regexp: 'jenkins'
         line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
+      when: allow_jenkins_sudo | bool
+
+    - name: Copy constraints file over to cloud server
+      copy:
+        src: "{{ lookup('env', 'WORKSPACE') ~ '/rpc-gating/constraints.txt' }}"
+        dest: "/opt/rpc_gating_constraints.txt"
+
+    - block:
+        - name: Get Modern PIP
+          get_url:
+            url: "https://bootstrap.pypa.io/get-pip.py"
+            dest: "/opt/get-pip.py"
+            force: "yes"
+          register: get_pip
+          until: get_pip | success
+          retries: 5
+          delay: 2
+          tags:
+            - pip-install-script
+
+      rescue:
+        - name: Get Modern PIP using fallback URL
+          get_url:
+            url: "https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py"
+            dest: "/opt/get-pip.py"
+            force: "yes"
+          when: get_pip | failed
+          register: get_pip_fallback
+          until: get_pip_fallback | success
+          retries: 5
+          delay: 2
+          tags:
+            - pip-install-script
+
+    - block:
+        - name: Install PIP
+          shell: |
+            python /opt/get-pip.py -c /opt/rpc_gating_constraints.txt
+          register: pip_install
+          until: pip_install | success
+          retries: 3
+          delay: 2
+
+      rescue:
+        - name: Install PIP (fall back mode)
+          shell: |
+            python /opt/get-pip.py --isolated -c /opt/rpc_gating_constraints.txt
+          register: pip_install_fall_back
+          until: pip_install_fall_back | success
+          retries: 3
+          delay: 2
+
 
       # pip module didn't work here as it couldn't locate the virtualenv binary
     - name: Start slave
       delegate_to: localhost
       shell: |
-        cd  {{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks
-        . .venv/bin/activate
-        pip install 'pip==9.0.1'
-        pip install -c {{ lookup('env', 'WORKSPACE') }}/rpc-gating/constraints.txt jenkinsapi
-        python ../scripts/jenkins_node.py \
+        cd  {{ lookup('env', 'WORKSPACE') }}
+        set +x; . .venv/bin/activate; set -x
+        python rpc-gating/scripts/jenkins_node.py \
           create \
           --name {{inventory_hostname}} \
           --ip {{ansible_host}} \
           --creds "SSH Creds for Jenkins instances in public cloud." \
-          --labels single_use_slave
+          --labels "{{ jenkins_node_labels }}" \
+          --executors "{{ jenkins_node_executors }}" \
+          --port "{{ jenkins_ssh_port }}" \
+          {% if jenkins_node_exclusive %}--exclusive{% endif %}
+      register: jenkins_response
+      until: jenkins_response|success
+      retries: 5
+      delay: 10

@@ -8,34 +8,47 @@
     parameters:
       # See params.yml
       - rpc_gating_params
+      - instance_params:
+          REGIONS: IAD
+          FALLBACK_REGIONS: ""
+          FLAVOR: "2"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          INSTANCE_NAME: "WEBHOOK-PROXY"
       - string:
-          name: REGION
-          default: "IAD"
-      - string:
-          name: FLAVOR
-          default: "2"
-      - string:
-          name: IMAGE
-          default: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          name: JIRA_PROJECT
+          default: RE
+          description: |
+            Jira project code. Issues will be created in this project
+            for MaaS alerts
       - string:
           name: STAGES
           default: "Allocate Resources, Connect Slave, Webhooks"
           description: |
             Pipeline stages to run CSV. Note that this list does not influence execution order.
             Options:
+              Override Inventory
               Allocate Resources
               Connect Slave
               Webhooks
               Cleanup
               Destroy Slave
+      - text:
+          name: "INVENTORY"
+          description: |
+            Override inventory. This is useful for reconfiguring the current
+            proxy node instead of building a new one. Should be used with the
+            "Override Inventory" stage insated of Allocate Resources and
+            Connect Slave
+          default: |
+            [job_nodes:children]
+            hosts
+            [hosts]
+            node ansible_host=YOUR_IP_HERE
 
     dsl: |
-      node(){
-          dir("rpc-gating"){
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
-              pubCloudSlave = load 'pipeline_steps/pubcloud.groovy'
-              webhooks = load 'pipeline_steps/webhooks.groovy'
-          }
-          webhooks.webhooks()
-      } // cit node
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        common.internal_slave(){
+            webhooks.webhooks()
+        } // cit node
+      } // globalWraps

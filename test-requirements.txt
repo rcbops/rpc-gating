@@ -1,3 +1,6 @@
 ansible
+click
 jenkins-job-builder
 flake8
+tox
+nose

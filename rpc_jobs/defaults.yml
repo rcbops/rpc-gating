@@ -1,16 +1,24 @@
 - defaults:
-    # single_use_slave_params
+    # instance_params
     name: global
     IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     FLAVOR: "performance2-15"
-    REGION: "DFW"
-    # rpc_params
-    DEPLOY_SWIFT: "yes"
-    DEPLOY_CEPH: "no"
-    DEPLOY_ELK: "yes"
+    # Available Regions: IAD DFW ORD HKG SYD
+    REGIONS: "DFW ORD"
+    FALLBACK_REGIONS: "IAD"
+    # standard_job_params
+    SLAVE_TYPE: "instance"
+    SLAVE_CONTAINER_DOCKERFILE_REPO: "RE"
+    SLAVE_CONTAINER_DOCKERFILE_PATH: "./Dockerfile.standard_job"
+    SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "BASE_IMAGE=ubuntu:16.04"
     # Misc
     CRON: "H H(9-21) * * 1-5"
-    CONTEXT_USER_VARS: ""
-    TRIGGER_USER_VARS: ""
-    SERIES_USER_VARS: ""
-    UPGRADE_FROM_REF: "liberty-12.2"
+    credentials: ""
+    skip_pattern: ""
+    # jenkins_node_params
+    # See also playbooks/setup_jenkins_slave.yml where these values are
+    # defaulted for jobs that don't include the relevant params.
+    JENKINS_NODE_LABELS: "single_use_slave"
+    JENKINS_NODE_EXECUTORS: "2"
+    jenkins_node_exclusive: true
+    allow_jenkins_sudo: true

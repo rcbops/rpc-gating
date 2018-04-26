@@ -1,0 +1,3 @@
+#!/bin/bash -xeu
+
+gating/common/run_${RE_JOB_SCENARIO}.sh

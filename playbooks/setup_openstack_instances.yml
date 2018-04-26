@@ -1,0 +1,153 @@
+---
+# This playbook requires a data structure like this
+# in order to execute:
+#
+# instance_list:
+#   - name: instance1
+#     flavor: general1-1
+#     region: DFW
+#     state: present
+#     metadata:
+#       group: mygroup
+#
+# Additionally, you can optionally specify volumes
+# to be created and attached:
+#
+# instance_list:
+#   - name: instance1
+#     flavor: general1-1
+#     region: DFW
+#     state: present
+#     volumes:
+#       - name: vol1
+#         device: /dev/xvde
+#         type: SATA
+#         size: 1024
+#         state: present
+#     metadata:
+#       group: mygroup
+#
+
+- name: Create/delete OpenStack Instances
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars:
+    default_metadata:
+      # NOTE(odyssey4me):
+      # There is a build_config option to have MaaS setup
+      # by the public cloud automation when the instance
+      # is being built, but that option will not be available
+      # in Phobos, so we'll rather do it using our MaaS
+      # deployment tooling.
+      build_config: core
+  tasks:
+    - name: Unlock instances scheduled to be deleted or where volumes may need to be added
+      os_server_actions:
+        action: unlock
+        server: "{{ instance['name'] | lower }}"
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ instance['region'] | default('IAD') }}"
+        wait: yes
+        timeout: 900
+      when:
+        - instance['name'] in groups['all']
+        - (instance['state'] | default('present') == 'absent' or (instance['state'] | default('present') == 'present' and 'volumes' in instance))
+      with_items: "{{ instance_list | default([]) }}"
+      loop_control:
+        loop_var: instance
+
+    - name: Create/delete OpenStack Instances
+      os_server:
+        # We use lower case for the instance name
+        # so that the server name matches the DNS
+        # name when the server comes up.
+        name: "{{ instance['name'] | lower }}"
+        flavor: "{{ instance['flavor'] | default('general1-8') }}"
+        state: "{{ instance['state'] | default('present') }}"
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ instance['region'] | default('IAD') }}"
+        image: "{{ instance['image'] | default('Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)') }}"
+        key_name: "{{ keyname | default('jenkins') }}"
+        userdata: "{{ instance['userdata'] | default(omit) }}"
+        config_drive: yes
+        meta: "{{ default_metadata | combine(instance['metadata'] | default({})) }}"
+        wait: yes
+        timeout: 900
+      with_items: "{{ instance_list | default([]) }}"
+      loop_control:
+        loop_var: instance
+
+    - name: Create data volumes
+      os_volume:
+        display_name: "{{ item[1]['name'] }}"
+        volume_type: "{{ item[1]['type'] }}"
+        size: "{{ item[1]['size'] }}"
+        state: present
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ item[0]['region'] }}"
+        wait: yes
+        timeout: 900
+      when:
+        - item[0]['state'] | default('present') != 'absent'
+      with_subelements:
+        - "{{ instance_list | default([]) }}"
+        - volumes
+        - skip_missing: True
+
+    - name: Delete data volumes on deleted instances
+      os_volume:
+        display_name: "{{ item[1]['name'] }}"
+        volume_type: "{{ item[1]['type'] }}"
+        size: "{{ item[1]['size'] }}"
+        state: absent
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ item[0]['region'] }}"
+        wait: yes
+        timeout: 900
+      when:
+        - item[0]['state'] | default('present') == 'absent'
+        - item[1]['state'] | default('present') == 'absent'
+      with_subelements:
+        - "{{ instance_list | default([]) }}"
+        - volumes
+        - skip_missing: True
+
+    # NOTE(mattt):
+    # At present we do not support detaching / deleting volumes attached to a
+    # running instance. We'd need to do some poking around inside the instance
+    # to check if the disk is in use before we know it's safe to detach /
+    # delete, and this will require a bunch more testing.
+    - name: Attach the data volumes
+      os_server_volume:
+        server: "{{ item[0]['name'] }}"
+        volume: "{{ item[1]['name'] }}"
+        device: "{{ item[1]['device'] }}"
+        state: present
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ item[0]['region'] }}"
+        wait: yes
+        timeout: 900
+      when:
+        - item[0]['state'] | default('present') != 'absent' and item[1]['state'] | default('present') != 'absent'
+      with_subelements:
+        - "{{ instance_list | default([]) }}"
+        - volumes
+        - skip_missing: True
+
+    - name: Refresh dynamic inventory for any changes made
+      meta: refresh_inventory
+
+    - name: Lock instances to prevent accidental deletion
+      os_server_actions:
+        action: lock
+        server: "{{ instance['name'] | lower }}"
+        cloud: "{{ cloud_name | default('public_cloud') }}"
+        region_name: "{{ instance['region'] | default('IAD') }}"
+        wait: yes
+        timeout: 900
+      when:
+        - instance['name'] in groups['all']
+      with_items: "{{ instance_list | default([]) }}"
+      loop_control:
+        loop_var: instance

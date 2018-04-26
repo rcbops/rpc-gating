@@ -28,102 +28,88 @@ def get_rpc_repo_creds(){
 }
 
 def apt() {
-  common.conditionalStage(
-    stage_name: "Build Apt Artifacts",
-    stage: {
+  common.use_node('ArtifactBuilder2') {
+    withCredentials(get_rpc_repo_creds()) {
+      common.prepareRpcGit("auto", env.WORKSPACE)
+      dir("${env.WORKSPACE}/rpc-openstack") {
+        sh """#!/bin/bash
+        scripts/artifacts-building/apt/build-apt-artifacts.sh
+        """
+      } // dir
+    } // withCredentials
+  } // use_node
+}
+
+def git(String image) {
+  pubcloud.runonpubcloud(image: image) {
+    try {
       withCredentials(get_rpc_repo_creds()) {
-        common.prepareRpcGit(branch: env.RPC_BRANCH)
-        ansiColor('xterm') {
-          dir("/opt/rpc-openstack/") {
-            sh """#!/bin/bash
-            scripts/artifacts-building/apt/build-apt-artifacts.sh
-            """
-          } // dir
-        } // ansiColor
+        common.prepareRpcGit()
+        dir("/opt/rpc-openstack/") {
+          sh """#!/bin/bash
+          scripts/artifacts-building/git/build-git-artifacts.sh
+          """
+        } // dir
       } // withCredentials
-    } // stage
-  ) // conditionalStage
+    } catch (e) {
+      print(e)
+      throw e
+    } finally {
+      common.archive_artifacts()
+    }
+  } // pubcloud slave
 }
 
-def git() {
-  common.conditionalStage(
-    stage_name: "Build Git Artifacts",
-    stage: {
-      pubcloud.runonpubcloud {
-        try {
-          withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit(branch: env.RPC_BRANCH)
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/git/build-git-artifacts.sh
-                """
-              } // dir
-            } // ansiColor
-          } // withCredentials
-        } catch (e) {
-          print(e)
-          throw e
-        } finally {
-          common.archive_artifacts()
-        }
-      } // pubcloud slave
-    } // stage
-  ) // conditionalStage
+def python(String image) {
+  pubcloud.runonpubcloud(image: image) {
+    try {
+      withCredentials(get_rpc_repo_creds()) {
+        common.prepareRpcGit()
+        dir("/opt/rpc-openstack/") {
+          sh """#!/bin/bash
+          scripts/artifacts-building/python/build-python-artifacts.sh
+          """
+        } // dir
+      } // withCredentials
+    } catch (e) {
+      print(e)
+      throw e
+    } finally {
+      common.archive_artifacts()
+    }
+  } // pubcloud slave
 }
 
-def python() {
-  common.conditionalStage(
-    stage_name: "Build Python Artifacts",
-    stage: {
-      pubcloud.runonpubcloud {
-        try {
-          withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit(branch: env.RPC_BRANCH)
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/python/build-python-artifacts.sh
-                """
-              } // dir
-            } // ansiColor
-          } // withCredentials
-        } catch (e) {
-          print(e)
-          throw e
-        } finally {
-          common.archive_artifacts()
-        }
-      } // pubcloud slave
-    } // stage
-  ) // conditionalStage
-}
-
-def container() {
-  common.conditionalStage(
-    stage_name: "Build Container Artifacts",
-    stage: {
-      pubcloud.runonpubcloud {
-        try {
-          withCredentials(get_rpc_repo_creds()) {
-            common.prepareRpcGit(branch: env.RPC_BRANCH)
-            ansiColor('xterm') {
-              dir("/opt/rpc-openstack/") {
-                sh """#!/bin/bash
-                scripts/artifacts-building/containers/build-process.sh
-                """
-              } // dir
-            } // ansiColor
-          } // withCredentials
-        } catch (e) {
-          print(e)
-          throw e
-        } finally {
-          common.archive_artifacts()
-        }
-      } // pubcloud slave
-    } // stage
-  ) // conditionalStage
+def cloudimage(Map args) {
+  inventory="inventory.${common.rand_int_str()}"
+  inventory_path="${WORKSPACE}/rpc-gating/playbooks/${inventory}"
+  String instance_name = common.gen_instance_name()
+  try {
+    pubcloud.getPubCloudSlave(
+      image: args.src_image,
+      instance_name: instance_name,
+      inventory: inventory,
+      inventory_path: inventory_path,
+      region: args.region
+    )
+    pubcloud.savePubCloudSlave(
+      image: args.dest_image,
+      instance_name: instance_name,
+      inventory: inventory,
+      inventory_path: inventory_path,
+      region: args.region
+    )
+  } catch (e) {
+    print(e)
+    throw e
+  } finally {
+    pubcloud.delPubCloudSlave(
+      instance_name: instance_name,
+      inventory: inventory,
+      inventory_path: inventory_path,
+      region: args.region
+    )
+  }
 }
 
 return this

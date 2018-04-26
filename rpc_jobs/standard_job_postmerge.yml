@@ -1,0 +1,92 @@
+- project:
+    name:       "gating-post-merge"
+    repo_name:  "rpc-gating"
+    repo_url:   "https://github.com/rcbops/rpc-gating"
+    branch:     "master"
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+    scenario:   "functional"
+    action:     "test"
+    jira_project_key: "RE"
+    trigger_build: "PM_{repo_name}-{branch}-{image}-{scenario}-{action}"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+# This job is specified as `freestyle` as using a pipeline job with github
+# trigger causes the job to be triggered irrespective of which branch was
+# pushed to.
+- job-template:
+    name: "PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}"
+    project-type: freestyle
+    scm:
+      - git:
+          url: "{repo_url}"
+          branches:
+           - "{branch}"
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    triggers:
+        - github
+    builders:
+      - trigger-builds:
+        - project:
+            - "{trigger_build}"
+          predefined-parameters: |
+            REGIONS=DFW
+            FALLBACK_REGIONS=
+
+- job-template:
+    name: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    branch: "master"
+    jira_project_key: ""
+    project-type: pipeline
+    concurrent: true
+    FLAVOR: "performance1-1"
+    IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    CRON: "@daily"
+    BOOT_TIMEOUT: 900
+    properties:
+      - build-discarder:
+          num-to-keep: 14
+      - github:
+          url: "{repo_url}"
+      - inject:
+          properties-content: |
+            STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+            BOOT_TIMEOUT={BOOT_TIMEOUT}
+            RE_JOB_NAME={name}
+            RE_JOB_IMAGE={image}
+            RE_JOB_SCENARIO={scenario}
+            RE_JOB_ACTION={action}
+            RE_JOB_FLAVOR={FLAVOR}
+            RE_JOB_REPO_NAME={repo_name}
+            RE_JOB_BRANCH={branch}
+    parameters:
+      - rpc_gating_params
+      - instance_params:
+          IMAGE: "{IMAGE}"
+          FLAVOR: "{FLAVOR}"
+          REGIONS: "{REGIONS}"
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
+      - string:
+          name: REPO_URL
+          default: "{repo_url}"
+          description: Url of the repo under test
+      - string:
+          name: BRANCH
+          default: "{branch}"
+          description: Branch of the repo under test
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+    triggers:
+      - timed: "{CRON}"
+
+    dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      common.stdJob("post_merge_test", "{credentials}", "{jira_project_key}")
