@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+html, body{
+    height:100%;
+    width:100%;
+    padding:0;
+    margin:0;
+    white-space: normal;
+}
+div.container-fluid {
+  width:100%;
+}
+div.result-table {
+  margin: auto;
+  width: 95%;
+}
+div.spark_group {
+  width: 126px;
+}
+</style>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+
+<title>RE Build Summary</title>
+
+<!-- jquery -->
+<script src="https://code.jquery.com/jquery-2.2.0.min.js" crossorigin="anonymous"></script>
+
+<!-- Jquery Data tables -->
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.10/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
+
+<!-- Jquery Sparklines -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.js"></script>
+
+<!-- Bootstrap css -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Boostrap theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script></head><body>
+
+
+<script>
+function draw_spark(){
+    $('.spark').sparkline('html', {
+        type: 'line',
+        minSpotColor: false,
+        maxSpotColor: 'red',
+        spotColor: false,
+        width: '125px',
+        height: '25px'
+    });
+}
+
+function bar_spark(selector, colour){
+    $(selector).each(function(){
+      $(this).sparkline('html', {
+          type: 'bar',
+          barColor: colour,
+          width: '125px',
+          height: '30px',
+          chartRangeMax: $(this).data('max'),
+          chartRangeMin: $(this).data('min'),
+      });
+    })
+}
+function draw_spark_bar(){
+  bar_spark('.spark_shist', 'green');
+  bar_spark('.spark_fhist', 'red');
+}
+$(document).ready( function () {
+
+    // Summary (percent fail) table
+    $('#summary').DataTable({
+      "ordering": false,
+      "paging": false,
+      "searching": false,
+      "info": false,
+      "drawCallback": draw_spark_bar
+      });
+
+    // Most recent failures
+    $('#failures').DataTable({
+      "order": [[ 6, "desc" ]],
+      "columnDefs": [
+        {
+          "targets": [4, 6],
+          "visible": false
+        },
+        {
+          "targets": [2],
+          "width": "100px",
+        }
+      ],
+      "drawCallback": draw_spark
+      });
+
+
+    // Most recent jobs
+    $('#jobs').DataTable({
+      "order": [[ 0, "desc" ]],
+      "pageLength": 50,
+      "columnDefs": [
+        {
+          "targets": [0],
+          "visible": false
+        }
+      ]
+    });
+
+});
+</script>
+</head>
+<body>
+<div class="container-fluid">
+  <nav class="navbar navbar-inverse">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">RE Build Summary</a>
+    </div>
+    <div id="navbar" class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="https://rpc.jenkins.cit.rackspace.net">Jenkins</a></li>
+        <li><a href="https://github.com/pulls?q=is%3Aopen+is%3Apr+archived%3Afalse+user%3Arcbops+sort%3Aupdated-desc">PRs</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  {% macro mcell(idstring) %}
+    {% set p = buildcount.get(idstring, {'s_percent':0}).s_percent %}
+    {% set s_hist = periodichistogram.get(idstring+'_SUCCESS', [0]*30) %}
+    {% set f_hist = periodichistogram.get(idstring+'_FAILURE', [0]*30) %}
+    {% set max = periodichistogram.get(idstring+'_stats', {'max': 0 })['max'] %}
+    <td class="{% if p > 95 %}success{% elif p < 60 %}danger{% elif p <= 95 %}warning{% endif %}">
+      <div class="spark_group">
+        <span class="spark_shist" values="{{s_hist|join(',')}}" data-min="0" data-max="{{max}}"></span>
+        <span class="spark_fhist" values="{{f_hist|join(',')}}" data-min="{{max|abs * -1 }}" data-max="0"></span>
+      </div>
+    </td>
+  {% endmacro %}
+
+  <div class="result-table" id="periodic">
+  <h3> Periodic Build Trends </h3>
+  <p> Note: 30 days, one column per day, green/positive are successfull jobs
+  red/negative are failed (or aborted) jobs. Most recent on the right.</p>
+  <table id="summary" class="table">
+    <thead>
+      <tr>
+        <th></th>
+        {% for col in build_trend_cols %}
+        <th>{{col}}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in build_trend_rows|sort %}
+      <tr>
+        <th>{{row}}</th>
+        {% for col in build_trend_cols %}
+        {{ mcell(row+'_'+col) }}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <div class="result-table" id="failcount">
+  <h3>Failure Count</h3>
+  <table id="failures" class="table">
+    <thead>
+      <tr>
+        <th>Count</th>
+        <th>Failure</th>
+        <th>Trend</th>
+        <th>Oldest</th>
+        <th>Oldest Job ID</th>
+        <th>Newest</th>
+        <th>Newest Job Timestamp For Sorting</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for description, fail in failcount.items() %}
+    <tr class="{% if fail.count > 20 %}danger{% elif fail.count > 10 %}warning{% endif %}">
+      <td>{{fail.count}}</td>
+      <td>{{description}}</td>
+      <td><span class="spark" values="{{fail.histogram|join(',')}}"></span></td>
+      <td><a href="https://rpc.jenkins.cit.rackspace.net/job/{{fail.oldest_bobj.job_name}}/{{fail.oldest_job}}/">{{fail.oldest|hdate}}</a></td>
+      <td>{{fail.oldest_job}}</td>
+      <td><a href="https://rpc.jenkins.cit.rackspace.net/job/{{fail.newest_bobj.job_name}}/{{fail.newest_job}}/">{{fail.newest|hdate}}</a></td>
+      <td>{{fail.newest_bobj.timestamp}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+ <div id="builds" class="result-table">
+ <h3>Recent Results</h3>
+  <table id="jobs" class="table">
+    <thead>
+      <tr>
+        <th>Date for Sorting</th>
+        <th>Date / Result</th>
+        <th>Branch</th>
+        <th>Job Tree</th>
+        <th>Failures</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for buildobj in buildobjs %}
+    <tr class="{{ "success" if buildobj.result == "SUCCESS" else 'danger' }}">
+      <td>{{buildobj.timestamp}}</td>
+      <td>{{buildobj.timestamp|hdate}} {{buildobj.result}}</td>
+      <td>{{buildobj.branch}}</td>
+      <td><ul>{% for build in buildobj.build_hierachy %}<li><a href="{{build.url}}">{{build.name}} {{build.build_num}}</a></li>{% endfor %}</td>
+        <td>
+            <ul>
+              {% for fail in buildobj.failures %}
+              <li class="failure"><a href="https://rpc.jenkins.cit.rackspace.net/job/{{buildobj.job_name}}/{{buildobj.build_num}}/consoleFull">{{fail|replace(".",".<wbr>")|replace("_","_<wbr>")}}</a></li>
+              {% endfor %}
+            </ul>
+        </a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+  <div>
+    <h4> Generated: {{timestamp.isoformat() }} </h4>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<flow-build plugin="workflow-job@2.19">
+  <actions>
+    <hudson.model.CauseAction>
+      <causeBag class="linked-hash-map">
+        <entry>
+          <org.jenkinsci.plugins.ghprb.GhprbCause plugin="ghprb@1.40.0">
+            <commit>e3b5c36629270c64972ce8660304499615c11ed1</commit>
+            <pullID>2953</pullID>
+            <merged>true</merged>
+            <targetBranch>master</targetBranch>
+            <sourceBranch>Increase_SSH_Timeouts</sourceBranch>
+            <authorEmail>david.wilde@rackspace.com</authorEmail>
+            <title>RO-4125 Increase SSH Timeout</title>
+            <url>https://github.com/rcbops/rpc-openstack/pull/2953</url>
+            <description>Tempest tests often take longer than 10 minutes to run and fail due to&#xd;
+ssh timeouts.  This increases the timeout to 20 minutes.</description>
+            <authorRepoGitUrl>https://github.com/d34dh0r53/rpc-openstack.git</authorRepoGitUrl>
+            <repoName>rcbops/rpc-openstack</repoName>
+            <credentialsId>github_account_rpc_jenkins_svc</credentialsId>
+          </org.jenkinsci.plugins.ghprb.GhprbCause>
+          <int>1</int>
+        </entry>
+      </causeBag>
+    </hudson.model.CauseAction>
+    <org.jenkinsci.plugins.ghprb.GhprbParametersAction plugin="ghprb@1.40.0">
+      <safeParameters class="sorted-set"/>
+      <parameterDefinitionNames class="hudson.model.ParametersDefinitionProperty$1">
+        <outer-class>
+          <parameterDefinitions>
+            <hudson.model.StringParameterDefinition>
+              <name>RPC_GATING_BRANCH</name>
+              <description>Version of rpc-gating. This is used when loading the rpc-gating
+groovy library, and when cloning RPC_GATING_REPO into each
+workspace. The clone source is always rcbops/rpc-gating.
+</description>
+              <defaultValue>master</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>REGIONS</name>
+              <description>CSV list of preferred regions, will be tried in a random order
+</description>
+              <defaultValue>DFW ORD</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>FALLBACK_REGIONS</name>
+              <description>CSV list of regions that this job can run in. Any regions
+not contined in REGIONS will be used as fallbacks.
+</description>
+              <defaultValue>IAD</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>FLAVOR</name>
+              <description></description>
+              <defaultValue>performance2-15</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>IMAGE</name>
+              <description></description>
+              <defaultValue>Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>INSTANCE_NAME</name>
+              <description>Set instance name or &quot;AUTO&quot; to have it generated based on job
+name and build number. Beware the 63 char container name limit
+as container names includes the host name.
+</description>
+              <defaultValue>AUTO</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>SLAVE_TYPE</name>
+              <description>Standard jobs can be run on different types of slave. The default for this parameter is set to &quot;instance&quot; for a compute instances. To use a Docker container set this parameter to &quot;container&quot;.
+</description>
+              <defaultValue>instance</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>SLAVE_CONTAINER_DOCKERFILE_REPO</name>
+              <description>Choices: RE, PROJECT. This parameter, which defaults to &quot;RE&quot;, determines where to look for the Dockerfile specified in SLAVE_CONTAINER_DOCKERFILE_PATH. &quot;RE&quot; searches within rpc-gating, and &quot;PROJECT&quot; searches within the project in test.
+</description>
+              <defaultValue>RE</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>SLAVE_CONTAINER_DOCKERFILE_PATH</name>
+              <description>This is the relative path of the Dockerfile to build from. This defaults to &quot;./Dockerfile.standard_job&quot;.
+</description>
+              <defaultValue>./Dockerfile.standard_job</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS</name>
+              <description>This is a list of space-separated build args to pass to docker build. This defaults to &quot;BASE_IMAGE=ubuntu:16.04&quot;, which is specifically applicable to the &quot;./Dockerfile.standard_job&quot; in rpc-gating.
+</description>
+              <defaultValue>BASE_IMAGE=ubuntu:16.04</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>skip_pattern</name>
+              <description>Python re compatible regex, with verbose flag enabled. If all files changed by the
+pull request match the regex the build will exit without running the test scripts.
+This is used to skip tests that are not relevant to a change, for example testing a
+deployment when only changing documentation. By default no builds are skipped.
+</description>
+              <defaultValue>\.md$
+| \.rst$
+| ^releasenotes/
+| ^gating/generate_release_notes/
+| ^gating/post_merge_test/
+| ^gating/update_dependencies/
+</defaultValue>
+              <trim>false</trim>
+            </hudson.model.StringParameterDefinition>
+          </parameterDefinitions>
+        </outer-class>
+      </parameterDefinitionNames>
+      <parameters>
+        <hudson.model.StringParameterValue>
+          <name>RPC_GATING_BRANCH</name>
+          <description>Version of rpc-gating. This is used when loading the rpc-gating
+groovy library, and when cloning RPC_GATING_REPO into each
+workspace. The clone source is always rcbops/rpc-gating.
+</description>
+          <value>master</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>REGIONS</name>
+          <description>CSV list of preferred regions, will be tried in a random order
+</description>
+          <value>DFW ORD</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>FALLBACK_REGIONS</name>
+          <description>CSV list of regions that this job can run in. Any regions
+not contined in REGIONS will be used as fallbacks.
+</description>
+          <value>IAD</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>FLAVOR</name>
+          <description></description>
+          <value>performance2-15</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>IMAGE</name>
+          <description></description>
+          <value>Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>INSTANCE_NAME</name>
+          <description>Set instance name or &quot;AUTO&quot; to have it generated based on job
+name and build number. Beware the 63 char container name limit
+as container names includes the host name.
+</description>
+          <value>AUTO</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>SLAVE_TYPE</name>
+          <description>Standard jobs can be run on different types of slave. The default for this parameter is set to &quot;instance&quot; for a compute instances. To use a Docker container set this parameter to &quot;container&quot;.
+</description>
+          <value>instance</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>SLAVE_CONTAINER_DOCKERFILE_REPO</name>
+          <description>Choices: RE, PROJECT. This parameter, which defaults to &quot;RE&quot;, determines where to look for the Dockerfile specified in SLAVE_CONTAINER_DOCKERFILE_PATH. &quot;RE&quot; searches within rpc-gating, and &quot;PROJECT&quot; searches within the project in test.
+</description>
+          <value>RE</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>SLAVE_CONTAINER_DOCKERFILE_PATH</name>
+          <description>This is the relative path of the Dockerfile to build from. This defaults to &quot;./Dockerfile.standard_job&quot;.
+</description>
+          <value>./Dockerfile.standard_job</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS</name>
+          <description>This is a list of space-separated build args to pass to docker build. This defaults to &quot;BASE_IMAGE=ubuntu:16.04&quot;, which is specifically applicable to the &quot;./Dockerfile.standard_job&quot; in rpc-gating.
+</description>
+          <value>BASE_IMAGE=ubuntu:16.04</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>skip_pattern</name>
+          <description>Python re compatible regex, with verbose flag enabled. If all files changed by the
+pull request match the regex the build will exit without running the test scripts.
+This is used to skip tests that are not relevant to a change, for example testing a
+deployment when only changing documentation. By default no builds are skipped.
+</description>
+          <value>\.md$
+| \.rst$
+| ^releasenotes/
+| ^gating/generate_release_notes/
+| ^gating/post_merge_test/
+| ^gating/update_dependencies/
+</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>sha1</name>
+          <value>origin/pr/2953/merge</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbActualCommit</name>
+          <value>e3b5c36629270c64972ce8660304499615c11ed1</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbActualCommitAuthor</name>
+          <value>d34dh0r53</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbActualCommitAuthorEmail</name>
+          <value>david.wilde@rackspace.com</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbAuthorRepoGitUrl</name>
+          <value>https://github.com/d34dh0r53/rpc-openstack.git</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbTriggerAuthor</name>
+          <value></value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbTriggerAuthorEmail</name>
+          <value></value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbTriggerAuthorLogin</name>
+          <value></value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbTriggerAuthorLoginMention</name>
+          <value></value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullId</name>
+          <value>2953</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbTargetBranch</name>
+          <value>master</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbSourceBranch</name>
+          <value>Increase_SSH_Timeouts</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>GIT_BRANCH</name>
+          <value>Increase_SSH_Timeouts</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullAuthorEmail</name>
+          <value>david.wilde@rackspace.com</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullAuthorLogin</name>
+          <value>d34dh0r53</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullAuthorLoginMention</name>
+          <value>@d34dh0r53</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullDescription</name>
+          <value>GitHub pull request #2953 of commit e3b5c36629270c64972ce8660304499615c11ed1, no merge conflicts.</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullTitle</name>
+          <value>RO-4125 Increase SSH Timeout</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullLink</name>
+          <value>https://github.com/rcbops/rpc-openstack/pull/2953</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbPullLongDescription</name>
+          <value>Tempest tests often take longer than 10 minutes to run and fail due to\r\nssh timeouts.  This increases the timeout to 20 minutes.</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbCommentBody</name>
+          <value>null</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbGhRepository</name>
+          <value>rcbops/rpc-openstack</value>
+        </hudson.model.StringParameterValue>
+        <hudson.model.StringParameterValue>
+          <name>ghprbCredentialsId</name>
+          <value>github_account_rpc_jenkins_svc</value>
+        </hudson.model.StringParameterValue>
+      </parameters>
+    </org.jenkinsci.plugins.ghprb.GhprbParametersAction>
+    <jenkins.metrics.impl.TimeInQueueAction plugin="metrics@3.1.2.10">
+      <queuingDurationMillis>5218</queuingDurationMillis>
+    </jenkins.metrics.impl.TimeInQueueAction>
+    <org.jenkinsci.plugins.workflow.libs.LibrariesAction plugin="workflow-cps-global-lib@2.9">
+      <libraries>
+        <org.jenkinsci.plugins.workflow.libs.LibraryRecord>
+          <name>rpc-gating</name>
+          <version>master</version>
+          <variables class="sorted-set">
+            <string>artifact_build</string>
+            <string>common</string>
+            <string>deploy</string>
+            <string>github</string>
+            <string>influx</string>
+            <string>pubcloud</string>
+            <string>ssh_slave</string>
+            <string>webhooks</string>
+          </variables>
+          <trusted>true</trusted>
+          <changelog>true</changelog>
+        </org.jenkinsci.plugins.workflow.libs.LibraryRecord>
+      </libraries>
+    </org.jenkinsci.plugins.workflow.libs.LibrariesAction>
+    <org.jenkinsci.plugins.workflow.cps.EnvActionImpl plugin="workflow-cps@2.48">
+      <env class="tree-map">
+        <entry>
+          <string>OS_CLIENT_CONFIG_FILE</string>
+          <string>/var/lib/jenkins/workspace/PR_rpc-openstack-master-xenial_no_artifacts-swift-deploy/rpc-gating/playbooks@tmp/clouds.yaml</string>
+        </entry>
+        <entry>
+          <string>RE_HOOK_ARTIFACT_DIR</string>
+          <string>/var/lib/jenkins/workspace/PR_rpc-openstack-master-xenial_no_artifacts-swift-deploy/artifacts</string>
+        </entry>
+        <entry>
+          <string>RE_HOOK_RESULT_DIR</string>
+          <string>/var/lib/jenkins/workspace/PR_rpc-openstack-master-xenial_no_artifacts-swift-deploy/results</string>
+        </entry>
+        <entry>
+          <string>RE_JOB_TRIGGER</string>
+          <string>PULL</string>
+        </entry>
+        <entry>
+          <string>RE_JOB_TRIGGER_DETAIL</string>
+          <string>RO-4125 Increase SSH Timeout/2953</string>
+        </entry>
+      </env>
+    </org.jenkinsci.plugins.workflow.cps.EnvActionImpl>
+    <hudson.plugins.git.GitTagAction plugin="git@3.8.1-SNAPSHOT">
+      <tags class="hudson.util.CopyOnWriteMap$Tree">
+        <entry>
+          <string>master</string>
+          <list/>
+        </entry>
+      </tags>
+      <ws>/var/lib/jenkins/jobs/PR_rpc-openstack-master-xenial_no_artifacts-swift-deploy/workspace@libs/rpc-gating</ws>
+    </hudson.plugins.git.GitTagAction>
+    <org.jenkinsci.plugins.workflow.steps.scm.MultiSCMRevisionState plugin="workflow-scm-step@2.6">
+      <revisionStates>
+        <entry>
+          <string>git https://github.com/rcbops/rpc-gating.git</string>
+          <hudson.scm.SCMRevisionState_-None/>
+        </entry>
+      </revisionStates>
+    </org.jenkinsci.plugins.workflow.steps.scm.MultiSCMRevisionState>
+    <htmlpublisher.HtmlPublisherTarget_-HTMLBuildAction plugin="htmlpublisher@1.16">
+      <actualHtmlPublisherTarget>
+        <reportName>Build Artifact Links</reportName>
+        <reportDir>/var/lib/jenkins/workspace/PR_rpc-openstack-master-xenial_no_artifacts-swift-deploy/artifacts_report</reportDir>
+        <reportFiles>index.html</reportFiles>
+        <alwaysLinkToLastBuild>true</alwaysLinkToLastBuild>
+        <keepAll>true</keepAll>
+        <allowMissing>true</allowMissing>
+      </actualHtmlPublisherTarget>
+      <outer-class reference="../actualHtmlPublisherTarget"/>
+      <wrapperChecksum>b63f80af79903f96256f9c097945591f747bfa93</wrapperChecksum>
+      <outer-class defined-in="htmlpublisher.HtmlPublisherTarget$HTMLBuildAction" reference="../actualHtmlPublisherTarget"/>
+    </htmlpublisher.HtmlPublisherTarget_-HTMLBuildAction>
+    <com.sonyericsson.rebuild.RebuildAction plugin="rebuild@1.27"/>
+  </actions>
+  <queueId>10</queueId>
+  <timestamp>1524746881912</timestamp>
+  <startTime>1524746881964</startTime>
+  <result>SUCCESS</result>
+  <description>&lt;a title=&quot;RO-4125 Increase SSH Timeout&quot; href=&quot;https://github.com/rcbops/rpc-openstack/pull/2953&quot;&gt;PR #2953&lt;/a&gt;: RO-4125 Increase SSH Timeout</description>
+  <duration>9285828</duration>
+  <keepLog>false</keepLog>
+  <execution class="org.jenkinsci.plugins.workflow.cps.CpsFlowExecution">
+    <result>SUCCESS</result>
+    <script>if (&quot;rpc-openstack&quot; == &quot;rpc-gating&quot;){
+  env.RPC_GATING_BRANCH = &quot;origin/pr/${env.ghprbPullId}/merge&quot;
+}
+library &quot;rpc-gating@${RPC_GATING_BRANCH}&quot;
+if (! common.isSkippable(skip_pattern, &quot;&quot;)) {
+  common.stdJob(&quot;pre_merge_test&quot;, &quot;&quot;, &quot;&quot;)
+}
+</script>
+    <loadedScripts class="map"/>
+    <durabilityHint>PERFORMANCE_OPTIMIZED</durabilityHint>
+    <timings class="map">
+      <entry>
+        <string>flowNode</string>
+        <long>474298485</long>
+      </entry>
+      <entry>
+        <string>classLoad</string>
+        <long>76501817936</long>
+      </entry>
+      <entry>
+        <string>run</string>
+        <long>17653618243</long>
+      </entry>
+      <entry>
+        <string>parse</string>
+        <long>746713992</long>
+      </entry>
+      <entry>
+        <string>saveProgram</string>
+        <long>48206161</long>
+      </entry>
+    </timings>
+    <sandbox>false</sandbox>
+    <iota>327</iota>
+    <head>1:327</head>
+    <done>true</done>
+    <resumeBlocked>false</resumeBlocked>
+  </execution>
+  <completed>true</completed>
+  <checkouts class="hudson.util.PersistedList">
+    <org.jenkinsci.plugins.workflow.job.WorkflowRun_-SCMCheckout>
+      <scm class="hudson.plugins.git.GitSCM" plugin="git@3.8.1-SNAPSHOT">
+        <configVersion>2</configVersion>
+        <userRemoteConfigs>
+          <hudson.plugins.git.UserRemoteConfig>
+            <name>origin</name>
+            <refspec>+refs/heads/*:refs/remotes/origin/* +refs/pull/*:refs/heads/origin/pr/*</refspec>
+            <url>https://github.com/rcbops/rpc-gating.git</url>
+            <credentialsId>github_account_rpc_jenkins_svc</credentialsId>
+          </hudson.plugins.git.UserRemoteConfig>
+        </userRemoteConfigs>
+        <branches class="singleton-list">
+          <hudson.plugins.git.BranchSpec>
+            <name>master</name>
+          </hudson.plugins.git.BranchSpec>
+        </branches>
+        <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+        <submoduleCfg class="empty-list"/>
+        <extensions>
+          <jenkins.plugins.git.GitSCMSourceDefaults>
+            <includeTags>false</includeTags>
+          </jenkins.plugins.git.GitSCMSourceDefaults>
+          <hudson.plugins.git.extensions.impl.BuildChooserSetting>
+            <buildChooser class="jenkins.plugins.git.AbstractGitSCMSource$SpecificRevisionBuildChooser">
+              <revision plugin="git-client@2.7.1">
+                <sha1>f8cfa5698f70bd42b8125e2b13b785a2fa54b5cb</sha1>
+                <branches class="singleton-set">
+                  <hudson.plugins.git.Branch>
+                    <sha1 reference="../../../sha1"/>
+                    <name>master</name>
+                  </hudson.plugins.git.Branch>
+                </branches>
+              </revision>
+            </buildChooser>
+          </hudson.plugins.git.extensions.impl.BuildChooserSetting>
+        </extensions>
+      </scm>
+      <node></node>
+      <workspace>/var/lib/jenkins/jobs/PR_rpc-openstack-master-xenial_no_artifacts-swift-deploy/workspace@libs/rpc-gating</workspace>
+      <changelogFile>/var/lib/jenkins/jobs/PR_rpc-openstack-master-xenial_no_artifacts-swift-deploy/builds/175/changelog0.xml</changelogFile>
+      <pollingBaseline class="hudson.scm.SCMRevisionState$None" reference="../../../actions/org.jenkinsci.plugins.workflow.steps.scm.MultiSCMRevisionState/revisionStates/entry/hudson.scm.SCMRevisionState_-None"/>
+    </org.jenkinsci.plugins.workflow.job.WorkflowRun_-SCMCheckout>
+  </checkouts>
+</flow-build>

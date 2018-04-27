@@ -1,0 +1,4 @@
+click
+humanize
+Jinja2
+lxml

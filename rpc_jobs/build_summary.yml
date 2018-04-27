@@ -1,0 +1,115 @@
+# Trigger a build summary docker image build when a change
+# is merged to rpc-gating master
+- job:
+    name: "Merge-Trigger-Docker-Build"
+    project-type: freestyle
+    scm:
+      - git:
+          url: https://github.com/rcbops/rpc-gating
+          branches:
+           - master
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    triggers:
+        - github
+    builders:
+      - trigger-builds:
+        - project:
+            - "Build-Summary-Docker-Build"
+
+# Build and publish the build summary docker image
+- job:
+    name: 'Build-Summary-Docker-Build'
+    project-type: workflow
+    parameters:
+      - string:
+          name: "DOCKER_IMAGE"
+          default: "rcbops/buildsummary"
+          description: |
+            Name of docker image to publish
+      - rpc_gating_params
+    properties:
+      - build-discarder:
+          days-to-keep: 30
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        dir("rpc-gating/scripts/build_summary"){
+          withCredentials([
+            usernamePassword(
+              credentialsId: "dockerhubrpcjirasvc",
+              usernameVariable: "DOCKERHUB_USER",
+              passwordVariable: "DOCKERHUB_PASSWORD"
+            )
+          ]){
+            sh """#!/bin/bash -xeu
+              # add docker registry creds.
+              # using creds in jenkins global config along with image.push()
+              # doesn't seem to work :(
+              # ok to use single quotes as the \$ is interpreted by groovy not bash
+              docker login --password '${env.DOCKERHUB_PASSWORD}' --username '${env.DOCKERHUB_USER}'
+              docker build . -t "${DOCKER_IMAGE}"
+              docker push "${DOCKER_IMAGE}"
+            """
+          }
+        }
+      }
+
+# Run the build summary docker image to produce a static html
+# report page, publish that to rpc repo.
+- job:
+    name: 'Build-Summary'
+    project-type: workflow
+    parameters:
+      - string:
+          name: "DOCKER_IMAGE"
+          default: "rcbops/buildsummary"
+          description: |
+            Hours. Instances older than this will be removed.
+      - rpc_gating_params
+    triggers:
+      - timed: "H * * * *"
+    properties:
+      - build-discarder:
+          days-to-keep: 3
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.use_node("master"){
+        stage("Generate Summary Page"){
+          // jenkins docker plugin stuff does not work
+          // with jenkins only having access to the docker
+          // socket via sudo (as is the case on CIT nodes)
+          sh """
+            mkdir -p \${HOME}/buildsummary/out
+            mkdir -p \${HOME}/buildsummary/cache
+            # pull because run may not update if the image is already cached
+            sudo docker pull "\${DOCKER_IMAGE}"
+            sudo docker run -v \${HOME}/buildsummary/cache:/cache -v \${HOME}/jobs:/in:ro -v \${HOME}/buildsummary/out:/out "\${DOCKER_IMAGE}"
+          """
+        } // stage
+        stage("Upload Page to Repo"){
+          withCredentials(artifact_build.get_rpc_repo_creds()){
+            sh """#!/bin/bash -xeu
+              # Add ssh host key from secrets
+              grep "\${REPO_HOST}" ~/.ssh/known_hosts \
+                || echo "\${REPO_HOST} \$(cat \$REPO_HOST_PUBKEY)" \
+                >> ~/.ssh/known_hosts
+
+              # add ssh host key from keyscan
+              hk="\$(ssh-keyscan '${env.REPO_HOST}')"
+              grep "\${hk}" ~/.ssh/known_hosts || echo "\${hk}" >> ~/.ssh/known_hosts
+
+              # This directory was created manually on the repo servers
+              REPO_PATH="/var/www/repo/rpcgating/buildsummary"
+
+              # Upload generated version
+              archive="${HOME}/buildsummary/out/index.html"
+              scp -i \$REPO_USER_KEY \$archive \$REPO_USER@\$REPO_HOST:\$REPO_PATH
+            """
+          } // creds
+        } // stage
+        stage("Display Link"){
+          print "http://rpc-repo.rackspace.com/rpcgating/buildsummary/index.html"
+        }
+      } // master
