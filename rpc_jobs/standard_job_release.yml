@@ -1,3 +1,87 @@
+- job:
+    name: 'Component-Release-Trigger'
+    project-type: pipeline
+    concurrent: true
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: 'trigger-component-release'
+          only-trigger-phrase: true
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/release'
+          cancel-builds-on-update: true
+    properties:
+      - github:
+          url: "https://github.com/mattt416/rpc-metadata"
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        dir("${env.WORKSPACE}/rpc-metadata") {
+          common.clone_with_pr_refs()
+
+          sh """#!/bin/bash -xe
+              virtualenv --python python3 .venv3
+              set +x; . .venv3/bin/activate; set -x
+              pip install -c constraints.txt -r requirements.txt
+              pushd rpc_component
+                  pip install .
+              popd
+          """
+          String component_text = sh (script: """#!/bin/bash -xe
+              set +x; . .venv3/bin/activate; set -x
+              src_branch="origin/master"
+              pr_branch="HEAD"
+              component --releases-dir . compare --from \${src_branch} --to \${pr_branch} --verify version || true
+          """,
+          returnStdout: true)
+
+          if (component_text) {
+            println "=== component CLI standard out ==="
+            println component_text
+
+            def component_yaml = readYaml text: component_text
+
+            String component = component_yaml['name']
+            String series = component_yaml['release']['series']
+            String sha = component_yaml['release']['version']['sha']
+
+            List jobNames = Hudson.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob)*.fullName
+
+            def parallelBuilds = [:]
+
+            // Cannot do for (job in jobNames), see:
+            // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
+            for (j in jobNames) {
+              def job = j
+              def m = job =~ /RELEASE_${component}-${series}/
+              if (m) {
+                parallelBuilds[job] = {
+                  build(
+                    job: job,
+                    wait: true,
+                    parameters: [
+                      [
+                        $class: 'StringParameterValue',
+                        name: 'BRANCH',
+                        value: sha
+                      ]
+                    ]
+                  )
+                } // parallelBuilds
+              } // if
+            } // for
+
+            parallel parallelBuilds
+          } // if
+        } // dir
+      } // globalWraps
+
 - job-template:
     name: 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
     branch: "master"
