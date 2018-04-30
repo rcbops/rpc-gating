@@ -190,7 +190,7 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: 'rpc-product-1-final-integration'
+    name: 'rpc-product-1-release'
 
     repo_name: 'rpc-product-1'
     repo_url: 'https://github.com/mattt416/rpc-product-1'
@@ -202,13 +202,19 @@
           FLAVOR: 'performance1-1'
           IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
 
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
     jira_project_key: 'RE'
 
     jobs:
-      - 'RELEASE_{repo_name}-{branch}'
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: 'rpc-component-1-final-integration'
+    name: 'rpc-component-1-release'
 
     repo_name: 'rpc-component-1'
     repo_url: 'https://github.com/mattt416/rpc-component-1'
@@ -220,13 +226,19 @@
           FLAVOR: 'performance1-1'
           IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
 
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
     jira_project_key: 'RE'
 
     jobs:
-      - 'RELEASE_{repo_name}-{branch}'
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: 'rpc-component-2-final-integration'
+    name: 'rpc-component-2-release'
 
     repo_name: 'rpc-component-2'
     repo_url: 'https://github.com/mattt416/rpc-component-2'
@@ -238,7 +250,13 @@
           FLAVOR: 'performance1-1'
           IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
 
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
     jira_project_key: 'RE'
 
     jobs:
-      - 'RELEASE_{repo_name}-{branch}'
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'

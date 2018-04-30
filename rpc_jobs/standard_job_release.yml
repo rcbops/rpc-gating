@@ -1,5 +1,5 @@
 - job-template:
-    name: 'RELEASE_{repo_name}-{branch}'
+    name: 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
     branch: "master"
     jira_project_key: ""
     project-type: pipeline
@@ -12,6 +12,17 @@
           num-to-keep: 14
       - github:
           url: "{repo_url}"
+      - inject:
+          properties-content: |
+            STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+            BOOT_TIMEOUT={BOOT_TIMEOUT}
+            RE_JOB_NAME={name}
+            RE_JOB_IMAGE={image}
+            RE_JOB_SCENARIO={scenario}
+            RE_JOB_ACTION={action}
+            RE_JOB_FLAVOR={FLAVOR}
+            RE_JOB_REPO_NAME={repo_name}
+            RE_JOB_BRANCH={branch}
     parameters:
       - rpc_gating_params
       - instance_params:
