@@ -1,5 +1,5 @@
 - project:
-    name: "l2_gate_tests"
+    name: "rpc-product-1-gate"
     repo_name: "rpc-product-1"
     repo_url: "https://github.com/mattt416/rpc-product-1"
     branches:
@@ -12,11 +12,11 @@
     action:
       - "test"
     jobs:
-      - 'L2_{repo_name}-{series}-{image}-{scenario}-{action}'
+      - 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
     jira_project_key: 'RE'
 
 - job-template:
-    name: 'L2_{repo_name}-{series}-{image}-{scenario}-{action}'
+    name: 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
     series: "master"
     project-type: pipeline
     concurrent: true
@@ -60,18 +60,7 @@
             pull request match the regex the build will exit without running the test scripts.
             This is used to skip tests that are not relevant to a change, for example testing a
             deployment when only changing documentation. By default no builds are skipped.
-    triggers:
-      - github-pull-request:
-          org-list:
-            - rcbops
-          github-hooks: true
-          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_(cit_)?{image}_{scenario}_{action}.*'
-          only-trigger-phrase: "{obj:TRIGGER_PR_PHRASE_ONLY}"
-          white-list-target-branches: "{branches}"
-          auth-id: "github_account_rpc_jenkins_svc"
-          status-context: 'CIT/{image}_{scenario}_{action}'
-          cancel-builds-on-update: true
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.stdJob("l2_gate_tests", "{credentials}", "{jira_project_key}")
+      common.stdJob("gate", "{credentials}", "{jira_project_key}")
