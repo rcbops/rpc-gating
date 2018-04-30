@@ -111,6 +111,9 @@
                 lock('build_gating_venv'){
                   sshagent(credentials:['rpc_repo_ssh_user_private_key']){
 
+                    # Set some SSH options
+                    SSH_OPTS="-o StrictHostKeyChecking=no"
+
                     REPO_PATH="/var/www/repo/rpcgating/venvs"
                     ssh \${SSH_OPTS} \$REPO_USER@\$REPO_HOST "mkdir -p \$REPO_PATH"
 
