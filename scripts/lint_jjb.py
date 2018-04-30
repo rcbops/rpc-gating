@@ -100,7 +100,7 @@ def parse_job_name(job_name, file_name):
 
 
 def parse_file_name(in_dir, in_file):
-    regex = '^([a-z0-9]+_?)+(\.{1}[a-z]+)?$'
+    regex = '^((Dockerfile)|(([a-z0-9]+_?)+(\.{1}[a-z0-9]+)?))$'
     filename = os.path.join(in_dir, in_file)
     match = re.match(regex, in_file)
     if not match:
