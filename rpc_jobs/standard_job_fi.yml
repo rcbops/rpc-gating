@@ -1,0 +1,206 @@
+- job:
+    name: 'Component-FI-Test-Trigger'
+    project-type: pipeline
+    concurrent: true
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_cit_fi_test'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/re_fi_test'
+          cancel-builds-on-update: true
+    properties:
+      - github:
+          url: "https://github.com/mattt416/rpc-metadata"
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        dir("${env.WORKSPACE}/rpc-metadata") {
+          common.clone_with_pr_refs()
+
+          sh """#!/bin/bash -xe
+              virtualenv --python python3 .venv3
+              set +x; . .venv3/bin/activate; set -x
+              pip install -c constraints.txt -r requirements.txt
+              pushd rpc_component
+                  pip install .
+              popd
+          """
+          String component_text = sh (script: """#!/bin/bash -xe
+              set +x; . .venv3/bin/activate; set -x
+              from=\$(git log --pretty=format:%H  --no-merges -n 1 --skip 1)
+              to=\$(git log --pretty=format:%H --no-merges -1)
+              component --releases-dir . compare --from \${from} --to \${to} || true
+          """,
+          returnStdout: true)
+
+          if (component_text) {
+            def component_yaml = readYaml text: component_text
+
+            if (component_yaml['name'] && component_yaml['added']) {
+              String component = component_yaml['name']
+              String series = component_yaml['added']['releases'][0]['series']
+              String sha = component_yaml['added']['releases'][0]['versions'][0]['sha']
+
+              build(
+                job: "FI_${component}-${series}",
+                wait: true,
+                parameters: [
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'BRANCH',
+                    value: sha
+                  ]
+                ]
+              )
+            }
+          }
+        }
+      } // globalWraps
+
+- job-template:
+    name: 'FI_{repo_name}-{branch}'
+    branch: "master"
+    jira_project_key: ""
+    project-type: pipeline
+    concurrent: false
+    FLAVOR: "performance1-1"
+    IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    BOOT_TIMEOUT: 900
+    properties:
+      - build-discarder:
+          num-to-keep: 14
+      - github:
+          url: "{repo_url}"
+    parameters:
+      - rpc_gating_params
+      - instance_params:
+          IMAGE: "{IMAGE}"
+          FLAVOR: "{FLAVOR}"
+          REGIONS: "{REGIONS}"
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
+      - string:
+          name: REPO_URL
+          default: "{repo_url}"
+          description: Url of the repo under test
+      - string:
+          name: BRANCH
+          default: "{branch}"
+          description: Branch of the repo under test
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+    dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      common.globalWraps(){{
+
+        env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+        // BOOT_TIMEOUT is used inside an ansible playbook when creating cloud
+        // instances. Builds from snapshots need a significantly longer timeout.
+        env.BOOT_TIMEOUT = "{BOOT_TIMEOUT}"
+
+        // Pass details about the job parameters through
+        // to the target environment so that scripts can
+        // use them to adapt behaviour.
+        env.RE_JOB_NAME = "{name}"
+        env.RE_JOB_FLAVOR = "{FLAVOR}"
+        env.RE_JOB_REPO_NAME = "{repo_name}"
+        env.RE_JOB_BRANCH = "{branch}"
+
+        // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
+        common.setTriggerVars()
+
+
+        String credentials = "{credentials}"
+
+        // Not part of the published interface, used by this job later on
+        // to create failure tickets in the correct project.
+        JIRA_PROJECT_KEY = "{jira_project_key}"
+
+        common.standard_job_slave(env.SLAVE_TYPE) {{
+          // Set the default environment variables used
+          // by the artifact and test result collection.
+          env.RE_HOOK_ARTIFACT_DIR="${{env.WORKSPACE}}/artifacts"
+          env.RE_HOOK_RESULT_DIR="${{env.WORKSPACE}}/results"
+
+          // Set the job result default
+          currentBuild.result="SUCCESS"
+
+          try {{
+            common.withRequestedCredentials(credentials) {{
+
+              stage('Checkout') {{
+                common.clone_with_pr_refs(
+                  "${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}",
+                  env.REPO_URL,
+                  env.BRANCH,
+                )
+              }} // stage
+
+              stage('Execute Pre Script') {{
+                // Retry the 'pre' stage 3 times. The 'pre' stage is considered
+                // to be preparation for the test, so let's try and make sure
+                // it has the best chance of success possible.
+                retry(3) {{
+                  sh """#!/bin/bash -xeu
+                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                    if [[ -e gating/fi_test/pre ]]; then
+                      gating/fi_test/pre
+                    fi
+                  """
+                }}
+              }} // stage
+
+              try{{
+                stage('Execute Run Script') {{
+                  sh """#!/bin/bash -xeu
+                    cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                    gating/fi_test/run
+                  """
+                }} // stage
+              }} finally {{
+                stage('Execute Post Script') {{
+                  // We do not want the 'post' execution to fail the test,
+                  // but we do want to know if it fails so we make it only
+                  // return status.
+                  post_result = sh(
+                    returnStatus: true,
+                    script: """#!/bin/bash -xeu
+                               cd ${{env.WORKSPACE}}/${{env.RE_JOB_REPO_NAME}}
+                               if [[ -e gating/fi_test/post ]]; then
+                                 gating/fi_test/post
+                               fi"""
+                  )
+                  if (post_result != 0) {{
+                    print("Final Integration Test (post) failed with return code ${{post_result}}")
+                  }} // if
+                }} // inner try
+              }} // stage
+            }} // withCredentials
+          }} catch (e) {{
+            print(e)
+            currentBuild.result="FAILURE"
+            if (! common.isUserAbortedBuild() && JIRA_PROJECT_KEY != '') {{
+              print("Creating build failure issue.")
+              common.build_failure_issue(JIRA_PROJECT_KEY)
+            }} else {{
+              print("Skipping build failure issue creation.")
+            }}
+            throw e
+          }} finally {{
+            common.archive_artifacts(
+              artifacts_dir: "${{env.RE_HOOK_ARTIFACT_DIR}}",
+              results_dir: "${{env.RE_HOOK_RESULT_DIR}}"
+            )
+          }} // try
+        }} // standard_job_slave
+      }} // globalWraps

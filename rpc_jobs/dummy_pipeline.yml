@@ -17,3 +17,204 @@
           READ_ONLY_TEST: false
     jobs:
       - '{trigger}-Dep-Update_{repo_name}-{branch}'
+
+- project:
+    name: 'rpc-product-1-pre-merge'
+
+    repo_name: 'rpc-product-1'
+    repo_url: 'https://github.com/mattt416/rpc-product-1'
+
+    branches:
+      - 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-product-1-post-merge'
+
+    repo_name: 'rpc-product-1'
+    repo_url: 'https://github.com/mattt416/rpc-product-1'
+
+    branch: 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-component-1-pre-merge'
+
+    repo_name: 'rpc-component-1'
+    repo_url: 'https://github.com/mattt416/rpc-component-1'
+
+    branches:
+      - 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-component-1-post-merge'
+
+    repo_name: 'rpc-component-1'
+    repo_url: 'https://github.com/mattt416/rpc-component-1'
+
+    branch: 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-component-2-pre-merge'
+
+    repo_name: 'rpc-component-2'
+    repo_url: 'https://github.com/mattt416/rpc-component-2'
+
+    branches:
+      - 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-component-2-post-merge'
+
+    repo_name: 'rpc-component-2'
+    repo_url: 'https://github.com/mattt416/rpc-component-2'
+
+    branch: 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    scenario:
+      - 'functional'
+
+    action:
+      - 'test'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-product-1-final-integration'
+
+    repo_name: 'rpc-product-1'
+    repo_url: 'https://github.com/mattt416/rpc-product-1'
+
+    branch: 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'FI_{repo_name}-{branch}'
+
+- project:
+    name: 'rpc-component-1-final-integration'
+
+    repo_name: 'rpc-component-1'
+    repo_url: 'https://github.com/mattt416/rpc-component-1'
+
+    branch: 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'FI_{repo_name}-{branch}'
+
+- project:
+    name: 'rpc-component-2-final-integration'
+
+    repo_name: 'rpc-component-2'
+    repo_url: 'https://github.com/mattt416/rpc-component-2'
+
+    branch: 'master'
+
+    image:
+      - xenial:
+          FLAVOR: 'performance1-1'
+          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'FI_{repo_name}-{branch}'
