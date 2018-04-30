@@ -36,6 +36,20 @@
                   sshagent(credentials:['rpc_repo_ssh_user_private_key']){
                     sh """#!/bin/bash -xeu
 
+                    # Determine the SHA and archive name that we'll use
+                    pushd rpc-gating; SHA=\$(git rev-parse HEAD); popd
+                    archive="rpcgatingvenv_\${SHA}.tbz"
+
+                    # Set some SSH options
+                    SSH_OPTS="-o StrictHostKeyChecking=no"
+
+                    # Check to see if the virtual env archive already exists...
+                    ssh \$SSH_OPTS \$REPO_USER@\$REPO_HOST "test -e \$REPO_PATH/\$archive"
+                    if [[ $? -eq 0 ]]; then
+                      echo "Archive \$archive already exists.  Skipping virtual env build."
+                      return 0
+                    fi
+
                     # Install virtualenv if required
                     if [[ ! -d ".venv" ]]; then
                       requirements="virtualenv==15.1.0"
@@ -87,15 +101,12 @@
                     ansible-galaxy install -r rpc-gating/role_requirements.yml -p rpc-gating/playbooks/roles
 
                     # Tar venv and roles
-                    pushd rpc-gating; SHA=\$(git rev-parse HEAD); popd
-                    archive="rpcgatingvenv_\${SHA}.tbz"
                     find .venv -name \\*.pyc -delete
                     echo "\${PWD}/.venv" > .venv/original_venv_path
                     echo \$SHA > .venv/venv_sha
                     tar cjfp \$archive .venv rpc-gating/playbooks/roles
 
                     REPO_PATH="/var/www/repo/rpcgating/venvs"
-                    SSH_OPTS="-o StrictHostKeyChecking=no"
                     ssh \${SSH_OPTS} \$REPO_USER@\$REPO_HOST "mkdir -p \$REPO_PATH"
 
                     # Upload generated version
