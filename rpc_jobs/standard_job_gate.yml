@@ -22,7 +22,6 @@
     concurrent: true
     FLAVOR: "performance1-1"
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    TRIGGER_PR_PHRASE_ONLY: false
     BOOT_TIMEOUT: 900
     skip_pattern: ""
     properties:
