@@ -2,40 +2,119 @@
 - hosts: localhost
   connection: local
   gather_facts: False
+  vars:
+    keyname: "jenkins"
+    # Each region in the primary regions list will be tried this number of times.
+    primary_region_attempts: 3
+    inventory_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks/inventory"
+    user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
+    cloud_name: "public_cloud"
+    boot_timeout: "{{ lookup('env', 'BOOT_TIMEOUT') | default(900, true) }}"
   tasks:
-    - name: Provision a set of public cloud instances
-      local_action:
-          module: rax
-          name: "{{ name }}"
-          flavor: "{{ flavor }}"
-          image: "{{ image }}"
-          count: "{{ count }}"
-          key_name: "{{ keyname }}"
-          region: "{{ region }}"
-          wait: yes
-          wait_timeout: 900
-          auto_increment: no
-      register: rax
-      until: rax|success
-      retries: 120
-      delay: 60
 
-    - name: Fail if the required number of instances aren't available
-      fail:
-        msg: "At least one public cloud instance failed to start :("
-      when: rax.success|length < count
+    # Region should be a CSV string.
+    # Primary regions are those specified in the region var,
+    # they are tried first in a random order. After that,
+    # fallback regions are tried in a random order.
+
+    - name: Create primary region list
+      set_fact:
+        # replace: replace commas with spaces. Double spaces will be removed by trim or select.
+        # split on spaces to produce a list
+        # trim: remove spaces from beginning and end of each item
+        # upper: convert to upper case
+        # select: remove empty strings from the list
+        # shuffle: randomise order
+        regions_shuf: "{{ (regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|shuffle }}"
+
+    - name: Create fallback region list
+      set_fact:
+        fallback_regions_shuff: "{{ (fallback_regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|difference(regions)|shuffle }}"
+
+      # As this is a with_items loop not, do-until, we have to use
+      # failed_when: false. Otherwise the loop would exit after
+      # the first failure.
+      # When is used to skip further attempts once instances have booted.
+    - name: Provision a cloud instance
+      os_server:
+        name: "{{ instance_name }}"
+        flavor: "{{ flavor }}"
+        state: present
+        cloud: "{{ cloud_name }}"
+        region_name: "{{ item }}"
+        image: "{{ image }}"
+        key_name: "{{ keyname }}"
+        userdata: "{{ lookup('file', user_data_path) }}"
+        config_drive: yes
+        meta:
+          build_config: core
+        wait: yes
+        timeout: "{{ boot_timeout }}"
+      register: result
+      with_items: "{{ regions_shuf + fallback_regions_shuff }}"
+      when:
+        - result is undefined or 'server' not in result or result.server.status != 'ACTIVE'
+      failed_when: false
+
+    - name: Show results of instance provision task
+      debug:
+        var: result
+
+    - name: Extract instance boot result from loop results array
+      set_fact:
+        instance: "{{ (result |json_query('results[?changed]'))[0] }}"
+
+    - name: Add Host
+      add_host:
+        hostname: "singleuseslave"
+        ansible_ssh_host: "{{instance.server.accessIPv4}}"
+
+    - name: Create inventory directory
+      file:
+        path: "{{ inventory_path }}"
+        state: directory
 
     - name: Write inventory
       copy:
         content: |
-          [job_nodes]
-          {% for instance in rax.success %} {{instance.name}} ansible_host={{instance.accessIPv4}}{% endfor %}
-        dest: '{{lookup("env", "WORKSPACE")}}/rpc-gating/playbooks/inventory/hosts'
+          [job_nodes:children]
+          hosts
+
+          [hosts]
+          {{instance.server.name}} ansible_host={{instance.server.accessIPv4}} ansible_user=root rax_region={{instance.server.region}}
+        dest: '{{ inventory_path }}/hosts'
+
+    - name: Show generated inventory
+      debug:
+        msg: "Generated inventory: {{ lookup('file', inventory_path+'/hosts')}}"
 
     - name: Wait for SSH to be available on all hosts
-      wait_for: port=22 host="{{ item.accessIPv4 }}"
-      with_items: "{{ rax.success }}"
+      wait_for:
+        port: 22
+        host: "{{ instance.server.accessIPv4 }}"
 
-    - name: Wait an additional amount of time for any remaning startup tasks to finish
+    - name: Wait for startup tasks to finish
       pause:
         minutes: 5
+
+- hosts: singleuseslave
+  remote_user: root
+  gather_facts: False
+  tasks:
+    - name: RLM-275 Adds python packages if python is not present
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal python-yaml)
+
+- hosts: singleuseslave
+  tasks:
+    - name: Check for thaw hook
+      stat:
+        path: /gating/thaw/run
+      register: thaw
+
+    - name: Execute thaw hook
+      shell: |
+        set -xeu
+        /gating/thaw/run
+      args:
+        executable: /bin/bash
+      when: thaw.stat.exists|bool

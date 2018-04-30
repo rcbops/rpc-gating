@@ -1,0 +1,85 @@
+- project:
+    name: "gating-pre-merge"
+    repo_name: "rpc-gating"
+    repo_url: "https://github.com/rcbops/rpc-gating"
+    # `series` defaults to `master` and can be omitted.  Note that `series` is
+    # only used in the job name and does not necessarily need to map to a
+    # branch name (thought in most cases it will).
+    #series: "master"
+    branches:
+      - "master"
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+    scenario:
+      - "lint"
+    action:
+      - "test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- job-template:
+    name: 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+    series: "master"
+    project-type: pipeline
+    concurrent: true
+    FLAVOR: "performance1-1"
+    IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    TRIGGER_PR_PHRASE_ONLY: false
+    BOOT_TIMEOUT: 900
+    skip_pattern: ""
+    properties:
+      - build-discarder:
+          num-to-keep: "30"
+      - github:
+          url: "{repo_url}"
+      - inject:
+          properties-content: |
+            STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+            BOOT_TIMEOUT={BOOT_TIMEOUT}
+            RE_JOB_NAME={name}
+            RE_JOB_IMAGE={image}
+            RE_JOB_SCENARIO={scenario}
+            RE_JOB_ACTION={action}
+            RE_JOB_FLAVOR={FLAVOR}
+            RE_JOB_REPO_NAME={repo_name}
+    parameters:
+      - rpc_gating_params
+      - instance_params:
+          IMAGE: "{IMAGE}"
+          FLAVOR: "{FLAVOR}"
+          REGIONS: "{REGIONS}"
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+      - string:
+          name: skip_pattern
+          default: "{skip_pattern}"
+          description: |
+            Python re compatible regex, with verbose flag enabled. If all files changed by the
+            pull request match the regex the build will exit without running the test scripts.
+            This is used to skip tests that are not relevant to a change, for example testing a
+            deployment when only changing documentation. By default no builds are skipped.
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_(cit_)?{image}_{scenario}_{action}.*'
+          only-trigger-phrase: "{obj:TRIGGER_PR_PHRASE_ONLY}"
+          white-list-target-branches: "{branches}"
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/{image}_{scenario}_{action}'
+          cancel-builds-on-update: true
+
+    dsl: |
+      if ("{repo_name}" == "rpc-gating"){{
+        env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
+      }}
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      if (! common.isSkippable(skip_pattern, "{credentials}")) {{
+        common.stdJob("pre_merge_test", "{credentials}", "")
+      }}

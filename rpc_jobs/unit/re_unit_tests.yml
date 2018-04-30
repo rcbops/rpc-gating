@@ -1,0 +1,242 @@
+- job:
+    name: 'RPC-Gating-Unit-Tests'
+    project-type: pipeline
+    concurrent: true
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_(cit_)?all.*|.*recheck_(cit_)?unit_?tests.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/re_unit_tests'
+          cancel-builds-on-update: true
+    properties:
+      - rpc-gating-github
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      if(env.ghprbPullId != null){
+        env.RPC_GATING_BRANCH="origin/pr/${env.ghprbPullId}/merge"
+      }
+      branches = [
+        "With Requested Credentials": {
+          build(
+            job: "RE-unit-test-withRequestedCredentials",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Artefact Publication": {
+          build(
+            job: "RE-unit-test-artefact-publication",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "nodepool-ubuntu-xenial Instance": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'nodepool-ubuntu-xenial'
+              ]
+            ]
+          )
+        },
+        "nodepool-ubuntu-trusty Instance": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'nodepool-ubuntu-trusty'
+              ]
+            ]
+          )
+        },
+        "Standard Slave Instance": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'instance'
+              ]
+            ]
+          )
+        },
+        "Standard 'RE' Container (No Build Args)": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'container'
+              ]
+            ]
+          )
+        },
+        "Standard 'RE' Container (Custom Build Args)": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'container'
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS',
+                value: 'BASE_IMAGE=ubuntu:17.10'
+              ]
+            ]
+          )
+        },
+        "Standard 'PROJECT' Container (No Build Args)": {
+          build(
+            job: "RE-unit-test-slave-types",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_TYPE',
+                value: 'container'
+              ],
+              [
+                $class: 'StringParameterValue',
+                name: 'SLAVE_CONTAINER_DOCKERFILE_REPO',
+                value: 'PROJECT'
+              ],
+            ]
+          )
+        },
+        "Skip Build Check": {
+          build(
+            job: "RE-unit-test-skip-build-check",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Phobos VPN Check": {
+          build(
+            job: "RE-unit-test-phobos-vpn",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Global Wraps Check": {
+          build(
+            job: "RE-unit-test-globalwraps",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Jira Issue check": {
+          build(
+            job: "RE-unit-test-jira",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+        "Pull Request Check": {
+          build(
+            job: "RE-unit-test-pull-request",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
+      ]
+      if (env.ghprbPullTitle =~ /^REUTPR-/ ){
+        print "Skipping unit test build, because this pr was created by a unit test"
+      } else {
+        parallel branches
+      }
+
+#TODO: Validation of Published Artefacts.

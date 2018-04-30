@@ -1,0 +1,57 @@
+- project:
+    name: "rpc-appformix-pre-merge"
+
+    repo_name: "rpc-appformix"
+    # URL of the rpc-appformix repository
+    repo_url: "https://github.com/rcbops/rpc-appformix"
+
+    branches:
+      - "master"
+
+    # Use image for RPC-O install
+    image:
+      - xenial_snapshot:
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: ""
+          FLAVOR: "7"
+          BOOT_TIMEOUT: 1500
+
+    scenario:
+      - newton:
+          IMAGE: "rpc-r14.9.0-xenial-swift"
+      - pike:
+          IMAGE: "rpc-r16.1.0-xenial_no_artifacts-swift"
+    action:
+      - "functional"
+
+    jira_project_key: "RI"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-appformix-lint-pre-merge"
+
+    repo_name: "rpc-appformix"
+    # URL of the rpc-appformix repository
+    repo_url: "https://github.com/rcbops/rpc-appformix"
+
+    branches:
+      - "master"
+
+    # Use image for RPC-O install
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+
+    scenario:
+      - "linting"
+    action:
+      - "linting"
+
+    jira_project_key: "RI"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'

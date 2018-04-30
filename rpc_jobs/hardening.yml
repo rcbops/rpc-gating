@@ -1,0 +1,22 @@
+- project:
+    name: "hardening-repo-rpc-openstack-mnaio-postmerge"
+    repo_name: "hardening"
+    repo_url: "internal:hardening_repo_url"
+    branch: "master"
+    jira_project_key: "RQE"
+    image:
+      - xenial_mnaio_loose_artifacts:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
+    scenario:
+      - "swift"
+    action:
+      - "deploy_master"
+      - "deploy_pike"
+      - "deploy_pike-rc"
+      - "deploy_newton"
+      - "deploy_newton-rc"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'

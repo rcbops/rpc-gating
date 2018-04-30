@@ -1,0 +1,12 @@
+[Unit]
+Description=Webhook translator service (MaaS to Jira)
+After=network.target
+
+[Service]
+Environment="RACKSPACE_WEBHOOK_TOKEN={{RACKSPACE_WEBHOOK_TOKEN}}" "JIRA_USER={{JIRA_USER}}" "JIRA_PASSWORD={{JIRA_PASSWORD}}" "JIRA_PROJECT={{JIRA_PROJECT}}"
+StandardOutput=null
+StandardError=syslog
+ExecStart={{ WHT_DIR }}/scripts/systemd-spawn-fcgi.sh {{ WHT_VENV_DIR }}/bin/webhooktranslator_wsgi
+
+[Install]
+WantedBy=multi-user.target

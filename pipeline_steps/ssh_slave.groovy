@@ -1,3 +1,14 @@
+/*
+  Anything that requires a connection to the jenkins api must run on an internal
+  slave. These are all currently CentOS. We can't add a sensible label like
+  internal as puppet removes them.
+
+  To ensure that Jenkins API operations are always executed on an internal slave
+  these functions allocate their own node block and run venv creation if
+  necessary.
+*/
+
+
 /* Connect a slave to the jenkins master
  * Params: None
  * Environment:
@@ -5,62 +16,73 @@
  * Files:
  *  - playbooks/inventory/hosts
  */
-def connect(){
-  common.conditionalStage(
-    stage_name: "Connect Slave",
-    stage: {
-      withCredentials([
-        file(
-          credentialsId: 'id_rsa_cloud10_jenkins_file',
-          variable: 'JENKINS_SSH_PRIVKEY'
-        ),
-        usernamePassword(
-          credentialsId: "service_account_jenkins_api_creds",
-          usernameVariable: "JENKINS_USERNAME",
-          passwordVariable: "JENKINS_API_KEY"
-        )
-      ]){
-        dir("rpc-gating/playbooks"){
-          common.venvPlaybook(
-            playbooks: ["setup_jenkins_slave.yml"],
-            venv: ".venv",
-            args: [
-              "-i inventory",
-              "--limit job_nodes",
-              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
-            ]
+def connect(Map args){
+  common.conditionalStep(
+    step_name: "Connect Slave",
+    step: {
+      common.internal_slave(){
+        if (!("inventory" in args)){
+          args.inventory = "inventory"
+        }
+        if (!("port" in args)){
+          args.port = 22
+        }
+        withCredentials([
+          file(
+            credentialsId: 'id_rsa_cloud10_jenkins_file',
+            variable: 'JENKINS_SSH_PRIVKEY'
+          ),
+          usernamePassword(
+            credentialsId: "service_account_jenkins_api_creds",
+            usernameVariable: "JENKINS_USERNAME",
+            passwordVariable: "JENKINS_API_KEY"
           )
-        } //dir
-      } //withCredentials
-  }) //conditionalStage
-} //call
+        ]){
+          dir("rpc-gating/playbooks"){
+            unstash args.inventory
+            common.venvPlaybook(
+              playbooks: ["setup_jenkins_slave.yml"],
+              args: [
+                "-i ${args.inventory}",
+                "--limit job_nodes",
+                "--extra-vars='ansible_port=${args.port}'",
+                "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
+              ]
+            )
+          }
+        }
+      }
+  })
+}
 
 /* Disconnect slave
  * Reads global var: instance_name
  */
-def destroy(){
+def destroy(slave_name){
   common.conditionalStep(
     step_name: 'Destroy Slave',
     step: {
-      withCredentials([
-        usernamePassword(
-          credentialsId: "service_account_jenkins_api_creds",
-          usernameVariable: "JENKINS_USERNAME",
-          passwordVariable: "JENKINS_API_KEY"
-        )
-      ]){
-        dir("rpc-gating/scripts"){
-          sh """
-            . ../playbooks/.venv/bin/activate
-            pip install 'pip==9.0.1'
-            pip install -c ../constraints.txt jenkinsapi
-            python jenkins_node.py \
-              delete --name "${instance_name}"
-          """
-        } //dir
-      } //withCredentials
-    } //stage
-  ) //conditionalStage
-} //call
+      common.internal_slave(){
+        withCredentials([
+          usernamePassword(
+            credentialsId: "service_account_jenkins_api_creds",
+            usernameVariable: "JENKINS_USERNAME",
+            passwordVariable: "JENKINS_API_KEY"
+          )
+        ]){
+          dir("rpc-gating/scripts"){
+            retry(5) {
+              sh """
+                set +x; . ${env.WORKSPACE}/.venv/bin/activate; set +x
+                python jenkins_node.py \
+                  delete --name "${slave_name}"
+              """
+            }
+          }
+        }
+      }
+    }
+  )
+}
 
 return this

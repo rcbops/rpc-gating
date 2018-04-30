@@ -1,0 +1,35 @@
+- name: Configure Phobos VPN Tunnel (should only be run on single use slaves)
+  hosts: localhost
+  tasks:
+    # Use shell because python-apt isn't available so the apt module fails.
+    # I don't want to add python-apt to one of the more general slave setup
+    # scripts as it depends on python. We want to reduce the number of deps
+    # installed on general slaves to the bare minimum.
+    - name: Install apt packages
+      shell: |
+        apt-get update
+        apt-get install -y vpnc
+      register: install_packages
+      until: install_packages | success
+      retries: 5
+      delay: 2
+      tags:
+        - skip_ansible_lint
+
+
+    - name: Template vpnc config
+      template:
+        src: vpnc.conf.j2
+        dest: /etc/vpnc/phobos.conf
+
+    - name: Template vpnc systemd service
+      template:
+        src: vpnc.service.j2
+        dest: /lib/systemd/system/vpnc.service
+
+    - name: Start vpnc service
+      systemd:
+        enabled: yes
+        service: vpnc.service
+        daemon_reload: yes
+        state: restarted

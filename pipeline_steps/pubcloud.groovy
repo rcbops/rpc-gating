@@ -1,92 +1,125 @@
+/* Remove public cloud instances
+ */
+def cleanup(Map args){
+  withCredentials(common.get_cloud_creds()){
+    dir("rpc-gating/playbooks"){
+      if (!("inventory" in args)){
+        args.inventory = "inventory"
+      }
+      unstash(args.inventory)
+      clouds_cfg = common.writeCloudsCfg(
+        username: env.PUBCLOUD_USERNAME,
+        api_key: env.PUBCLOUD_API_KEY
+      )
+      withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+        common.venvPlaybook(
+          playbooks: ['cleanup_pubcloud.yml'],
+          args: [
+            "-i ${args.inventory}",
+            "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+          ],
+          vars: args
+        )
+      } // withEnv
+    } // directory
+  } //withCredentials
+} //call
+
+
+/* Save image of public cloud instance
+ * Params:
+ *  - region: Rax region to build in
+ *  - instance_name: Name of instance to save
+ *  - image: Name to use for the saved image
+ * Environment Variables:
+ *  - WORKSPACE
+ * The args required can be supplied uppercase in the env dictionary, or lower
+ * case as direct arguments.
+ *
+ *  NOT Parallel safe unless inventory_path is supplied and unique per branch.
+ *
+ */
+def savePubCloudSlave(Map args){
+  add_instance_env_params_to_args(args)
+  if (!("inventory" in args)){
+    args.inventory = "inventory"
+  }
+  withCredentials(common.get_cloud_creds()){
+
+    dir("rpc-gating/playbooks"){
+      clouds_cfg = common.writeCloudsCfg(
+        username: env.PUBCLOUD_USERNAME,
+        api_key: env.PUBCLOUD_API_KEY
+      )
+      env.OS_CLIENT_CONFIG_FILE = clouds_cfg
+      env.SAVE_IMAGE_NAME = args.image
+      common.venvPlaybook(
+        playbooks: ['save_pubcloud.yml'],
+        args: [
+          "-i ${args.inventory}",
+          "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
+        ],
+        vars: args
+      )
+      stash (
+        name: args.inventory,
+        includes: "${args.inventory}/hosts"
+      )
+    } // dir
+  } //withCredentials
+} //save
+
+
 /* Create public cloud node
  * Params:
  *  - region: Rax region to build in
- *  - name: Name of instance to build
- *  - count: Number of instances to build
+ *  - instance_name: Name of instance to build
  *  - flavor: Flavor to build
  *  - image: Image to build from
- *  - keyname: Name of existing nova keypair
  * Environment Variables:
  *  - WORKSPACE
+ * The args required can be supplied uppercase in the env dictionary, or lower
+ * case as direct arguments.
+ *
+ *  NOT Parallel safe unless inventory_path is supplied and unique per branch.
+ *
  */
-def create(Map args){
-  withEnv(["RAX_REGION=${args.region}"]){
-    withCredentials(common.get_cloud_creds()){
-      dir("rpc-gating/playbooks"){
-        common.install_ansible()
-        pyrax_cfg = common.writePyraxCfg(
-          username: env.PUBCLOUD_USERNAME,
-          api_key: env.PUBCLOUD_API_KEY
-        )
-        withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
+String getPubCloudSlave(Map args){
+  common.conditionalStep(
+    step_name: 'Allocate Resources',
+    step: {
+      add_instance_env_params_to_args(args)
+      if (!("inventory" in args)){
+        args.inventory = "inventory"
+      }
+      withCredentials(common.get_cloud_creds()){
+        dir("rpc-gating/playbooks"){
+          clouds_cfg = common.writeCloudsCfg(
+            username: env.PUBCLOUD_USERNAME,
+            api_key: env.PUBCLOUD_API_KEY
+          )
+          env.OS_CLIENT_CONFIG_FILE = clouds_cfg
           common.venvPlaybook(
             playbooks: ["allocate_pubcloud.yml",
                         "drop_ssh_auth_keys.yml"],
-            venv: ".venv",
             args: [
-              "-i inventory",
+              "-i ${args.inventory}",
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
             ],
             vars: args
           )
-        } // withEnv
-      } // directory
-    } //withCredentials
-  } // withEnv
-} //call
-
-
-/* Remove public cloud instances
- */
-def cleanup(Map args){
-  withEnv(['ANSIBLE_FORCE_COLOR=true']){
-    withCredentials(common.get_cloud_creds()){
-      dir("rpc-gating/playbooks"){
-        common.install_ansible()
-        pyrax_cfg = common.writePyraxCfg(
-          username: env.PUBCLOUD_USERNAME,
-          api_key: env.PUBCLOUD_API_KEY
-        )
-        withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]){
-          common.venvPlaybook(
-            playbooks: ['aio_maas_cleanup.yml',
-                        'cleanup_pubcloud.yml'],
-            venv: ".venv",
-            args: [
-              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\"",
-            ],
-            vars: [
-              "instance_name": instance_name,
-              "server_name": args.server_name,
-              "region": args.region
-            ]
+          stash (
+            name: args.inventory,
+            includes: "${args.inventory}/hosts"
           )
-        } // withEnv
-      } // directory
-    } //withCredentials
-  } // withEnv
-} //call
-
-
-def getPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline_steps/ssh_slave.groovy'
-  common.conditionalStage(
-    stage_name: 'Allocate Resources',
-    stage: {
-      create (
-        name: args.instance_name,
-        count: 1,
-        region: env.REGION,
-        flavor: env.FLAVOR,
-        image: env.IMAGE,
-        keyname: "jenkins",
-      )
-    } //stage
-  ) //conditionalStages
-  ssh_slave.connect()
+        }
+      }
+    }
+  )
+  ssh_slave.connect(args)
 }
+
 def delPubCloudSlave(Map args){
-  ssh_slave = load 'rpc-gating/pipeline_steps/ssh_slave.groovy'
   common.conditionalStep(
     step_name: "Pause",
     step: {
@@ -96,57 +129,137 @@ def delPubCloudSlave(Map args){
   common.conditionalStep(
     step_name: 'Cleanup',
     step: {
-      cleanup (
-        instance_name: instance_name,
-        server_name: instance_name,
-        region: env.REGION,
-      )
-    } //stage
-  ) //conditionalStage
-  ssh_slave.destroy()
+      args.server_name = args.instance_name
+      add_instance_env_params_to_args(args)
+      cleanup (args)
+    }
+  )
+  ssh_slave.destroy(args.instance_name)
 }
 
-/* One func entrypoint to run a script on a single use slave */
-def runonpubcloud(body){
-  instance_name = common.gen_instance_name()
-  getPubCloudSlave(instance_name: instance_name)
+// if the instance params are set in the environment
+// but not passed as args, add them to the args.
+// nothing is returned as "args" is passed by ref.
+// env vars are upper case while args are lower case
+void add_instance_env_params_to_args(Map args){
+  List instance_params=[
+    'flavor',
+    'image',
+    'regions',
+    'fallback_regions',
+    'instance_name'
+  ]
+  for (String p in instance_params){
+    if (!(p in args)){
+      String P = p.toUpperCase()
+      if (env[P] != null){
+        args[p] = env[P]
+        print ("${p} not supplied to runonpubcloud or getPubCloudSlave"
+               + " using env var ${P}=${env[P]} instead.")
+      } else {
+        throw new Exception(
+          "Missing required param for building an instance."
+          + " Couldn't find value for ${p} in args or environment.")
+      }
+    }
+  }
+}
+
+/* One func entrypoint to run a script on a single use slave.
+The args required are shown in allocate_pubcloud.yml, they can
+be supplied uppercase in the env dictionary, or lower case as
+direct arguments. */
+def runonpubcloud(Map args=[:], Closure body){
+  add_instance_env_params_to_args(args)
+  if (env.WORKSPACE == null){
+    throw new Exception("runonpubcloud must be run from within a node")
+  }
+  // randomised inventory_path to avoid parallel conflicts
+  args.inventory="inventory.${common.rand_int_str()}"
+  args.inventory_path="${WORKSPACE}/rpc-gating/playbooks/${args.inventory}"
+  String instance_name = common.gen_instance_name()
+  args.instance_name = instance_name
   try{
-    node(instance_name){
+    getPubCloudSlave(args)
+    common.use_node(instance_name){
       body()
+      // Read the image_name file from the single use slave.
+        try {
+          sh """#!/bin/bash -xeu
+            cp /gating/thaw/image_name $WORKSPACE/image_name
+          """
+          args.image = readFile("${WORKSPACE}/image_name").trim()
+          print ("Read image name from /gating/thaw/image_name: ${args.image}.")
+          print ("Snapshot Enabled")
+        } catch (e){
+          args.image = null
+          print ("/gating/thaw/image_name not found, not taking snapshot")
+        }
+    } // single use slave
+    // When the above use_node block ends, the workspace on the slave is wiped.
+    // This means that any repos in the workspace will not be in the snapshot.
+    // Execute the save from outside the instance.
+    if(args.image != null){
+      savePubCloudSlave(args)
     }
   }catch (e){
     print(e)
     throw e
   }finally {
-    delPubCloudSlave(instance_name: instance_name)
-  }
+    // Cleanup relies on the inventory file, if its not there don't try.
+    // Periodic cleanup will remove the instance.
+    // The inventory file may be missing if the job is aborted before or
+    // during instance allocation, either manualy or via a PR update.
+    if (fileExists("${args.inventory_path}/hosts")){
+      try {
+        delPubCloudSlave(args)
+      // catch timeouts
+      } catch (hudson.AbortException | org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e){
+          // Ideally timeouts would be within the node block so that cleanup
+          // cannot fail due to timeout. However that is more complicated
+          // when the node block is reused in different situations (eg
+          // runonpubcloud).
+          // As we are planning to move to node pool, its not worth investing
+          // the time to refactor that, so drop timeout exceptions instead
+          // of creating useless jira issues.
+          print "Caught timeout exception, dropping (${e})"
+      // catch all other exceptions
+      } catch (e){
+        print "Error while cleaning up, swallowing this exception to prevent "\
+              +"cleanup errors from failing the build: ${e}"
+        common.create_jira_issue("RE",
+                                 "Cleanup Failure: ${env.BUILD_TAG}",
+                                 "[${env.BUILD_TAG}|${env.BUILD_URL}]",
+                                 ["jenkins", "cleanup_fail"])
+      } // inner try
+    } // if
+  } //outer try
 }
 
-def uploadToCloudFiles(Map args){
-  withCredentials(common.get_cloud_creds()) {
-    dir("rpc-gating"){
-      git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-    }
-    dir("rpc-gating/playbooks") {
-      common.install_ansible()
-      pyrax_cfg = common.writePyraxCfg(
+def uploadToSwift(Map args){
+  if (fileExists(args.path)) {
+    print("Directory ${args.path} found. Uploading contents.")
+    withCredentials(common.get_cloud_creds()) {
+      clouds_cfg = common.writeCloudsCfg(
         username: env.PUBCLOUD_USERNAME,
         api_key: env.PUBCLOUD_API_KEY
       )
-      withEnv(["RAX_CREDS_FILE=${pyrax_cfg}"]) {
+      withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
         common.venvPlaybook(
-          playbooks: ["upload_to_cloud_files.yml"],
-          venv: ".venv",
+          playbooks: ["rpc-gating/playbooks/upload_to_swift.yml"],
           vars: [
+            archive_name: args.archive_name,
+            artifacts_dir: args.path,
             container: args.container,
-            src: args.src,
-            html_report_dest: args.html_report_dest,
-            description_file: args.description_file
+            description_file: args.description_file,
+            report_dir: args.report_dir
           ]
         ) // venvPlaybook
       } // withEnv
-    } // dir
-  } // withCredentials
+    } // withCredentials
+  } else {
+    print("Directory ${args.path} not found. Skipping upload.")
+  }
 }
 
 return this

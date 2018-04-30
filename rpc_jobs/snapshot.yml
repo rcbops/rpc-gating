@@ -1,0 +1,103 @@
+- job:
+    name: RE35-Snapshot-Test
+    project-type: workflow
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      # Default params are provided by macro, add any extra params, or
+      # params you want to override the defaults for.
+      - bool:
+          name: CREATE_RPCO_SNAPSHOT
+          default: true
+          description: |
+            Run RPCO Build and save as snapshot. Note that the name of
+            the image that is created depends on the version of RPCO being
+            built. The build used is
+            PM_rpc-openstack-newton-xenial-swift-deploy
+            The image will be rpc_${rpc_release}_xenial.
+            rpc_release can be found in:
+            rpc-openstack/rpc-openstack/etc/openstack_deploy/group_vars/all/release.yml
+
+      - bool:
+          name: BUILD_FROM_SNAPSHOT
+          description: |
+            Build instance from RPCO snapshot and run tempest.
+            Note that the IMAGE parameter should contain the
+            name of the snapshot to build from. The IMAGE
+            paramter is not passed through to the RPC AIO job,
+            which will use its own default image.
+          default: true
+      - instance_params:
+          IMAGE: "CHANGEME:rpc_rx.y.x_distro"
+          FLAVOR: "general1-8"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: ""
+      - string:
+          name: RPC_GATING_BRANCH
+          default: "RE-35"
+          description: Version of rpc-gating to use.
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        env.STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+        stage('Build Image'){
+          if(env.CREATE_RPCO_SNAPSHOT == 'true'){
+            // kick off rpco job
+            retry(5){
+              build(
+                job: "PM_rpc-openstack-newton-xenial-swift-deploy",
+                wait: true,
+                parameters: [
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'FLAVOR',
+                    value: "general1-8"
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'REGIONS',
+                    value: "DFW"
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'FALLBACK_REGIONS',
+                    value: ""
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'RPC_GATING_BRANCH',
+                    value: "RE-35"
+                  ],
+                  [
+                    $class: 'StringParameterValue',
+                    name: 'BRANCH',
+                    value: "RE-35"
+                  ],
+                  [
+                    $class: 'BooleanParameterValue',
+                    name: 'SNAPSHOT',
+                    value: true
+                  ]
+                ]
+              )
+            } // retry
+          } // if
+        } // stage
+        if (env.BUILD_FROM_SNAPSHOT == 'true'){
+          pubcloud.runonpubcloud(){
+            stage('Run Tempest on Instance created from Image'){
+              sh """#!/bin/bash -xeu
+                # Not using the rpco tempest run playbook as we don't
+                # need to run the whole defcore test set as a post thaw
+                # verify
+                ansible 'utility_all[0]' \
+                  -i /opt/openstack-ansible/playbooks/inventory/ \
+                  -m shell \
+                  -a 'cd /openstack/venvs/*/workspace; . /openstack/venvs/*/bin/activate; tempest run --regex tempest.scenario.test_minimum_basic'
+              """
+            } // stage
+          } // Run on pub cloud
+        } // if
+      } // globalWraps

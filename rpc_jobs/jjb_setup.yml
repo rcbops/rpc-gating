@@ -1,84 +1,95 @@
+# This job is specified as `freestyle` as using a pipeline job with github
+# trigger causes the job to be triggered irrespective of which branch was
+# pushed to.  Additionally, the environment variables we were trying to use to
+# determine the branch to pushed to were not being passed into the job by the
+# plugins in question.
+# Also, having a separate merge trigger job ensures that JJB still runs on
+# pushes to master, even if the JJB job is used to test an alternative branch.
 - job:
-    name: 'Merge-Trigger-JJB'
-    project-type: workflow
-    logrotate:
-      daysToKeep: 14
+    name: "Merge-Trigger-JJB"
+    project-type: freestyle
+    scm:
+      - git:
+          url: https://github.com/rcbops/rpc-gating
+          branches:
+           - master
     properties:
-      - rpc-gating-github
+      - build-discarder:
+          num-to-keep: 30
     triggers:
-      - github # triggered post merge, not on PR
-    dsl: |
-      node(){
-        stage('Run Jenkins Job Builder') {
-          git branch: "master", url: "https://github.com/rcbops/rpc-gating"
-          build job: "Jenkins-Job-Builder"
-        } // stage
-      } // node
+        - github
+    builders:
+      - trigger-builds:
+        - project:
+            - "Jenkins-Job-Builder"
 
+# Node CentOS to ensure the CIT slave is used. If a pub cloud ubuntu slave is used,
+# the Jenkins API won't be reachable.
 - job:
     name: 'Jenkins-Job-Builder'
+    project-type: workflow
     description: Creates and updates jobs with Jenkins Job Builder.
-    logrotate:
-        daysToKeep: 20
+    properties:
+      - build-discarder:
+          days-to-keep: 20
     parameters:
         - string:
             name: JOBS
             description: "Which jobs to update and with what options."
             default: -r rpc_jobs
-        - bool:
-            name: IGNORE_CACHE
-            description: "Ignore cache when updating jobs."
-        - bool:
-            name: DELETE_OLD
-            description: "Remove jobs that are no longer defined."
-            default: false
         - rpc_gating_params
-    # Variables used in the scm plugin are expanded when the job is triggered
-    # by user or pr, but not on branch merge.
-    scm:
-        - git:
-            url: $RPC_GATING_REPO
-            branches:
-                - $RPC_GATING_BRANCH
-            wipe-workspace: false
-    wrappers:
-      - credentials-binding:
-          - username-password-separated:
-             credential-id: service_account_jenkins_api_creds
-             username: JENKINS_USER
-             password: JENKINS_API_PASSWORD
-    builders:
-        - shell: |
-            scl enable python27 bash
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        common.internal_slave(){
+          try {
+            dir("rpc-gating"){
+              stage('Run JJB'){
+                withCredentials([
+                  usernamePassword(
+                    credentialsId: "service_account_jenkins_api_creds",
+                    usernameVariable: "JENKINS_USER",
+                    passwordVariable: "JENKINS_API_PASSWORD"
+                  )
+                ]){
+                  sh """#!/bin/bash -xe
+                    source ../.venv/bin/activate
 
-            if [[ ! -d ".venv" ]]; then
-                virtualenv -p /opt/rh/python27/root/usr/bin/python .venv
-            fi
-            source .venv/bin/activate
-            pip install 'pip==9.0.1'
-            pip install -c constraints.txt jenkins-job-builder
+                    cat > jenkins_jobs.ini << EOF
+      [job-builder]
+      ignore_cache=False
+      keep_descriptions=False
+      include_path=.:scripts:~/git/
+      recursive=True
+      exclude=.*manual:./development
+      allow_deplicates=False
 
-            cat > jenkins_jobs.ini << EOF
-            [job-builder]
-            ignore_cache=False
-            keep_descriptions=False
-            include_path=.:scripts:~/git/
-            recursive=True
-            exclude=.*manual:./development
-            allow_deplicates=False
+      [jenkins]
+      url=${JENKINS_URL}
+      EOF
 
-            [jenkins]
-            url=${JENKINS_URL}
-            EOF
+                    if [[ "$RPC_GATING_BRANCH" == "master" ]] && [[ "$JOBS" == "-r rpc_jobs" ]]; then
+                        echo "Setting --delete-old as RPC_GATING_BRANCH=master and JOBS='-r rpc_jobs'"
+                        UPDATE_ARGS="--delete-old"
+                    fi
 
-            if [ "$IGNORE_CACHE" = "true" ]; then
-                JJB_ARGS="--ignore-cache"
-            fi
-            if [ "$DELETE_OLD" = "true" ]; then
-                UPDATE_ARGS="--delete-old"
-            fi
-
-            jenkins-jobs --conf jenkins_jobs.ini \
-                         --user $JENKINS_USER \
-                         --password $JENKINS_API_PASSWORD \
-                         $JJB_ARGS update $UPDATE_ARGS $JOBS
+                    jenkins-jobs --conf jenkins_jobs.ini \
+                                 --user $JENKINS_USER \
+                                 --password $JENKINS_API_PASSWORD \
+                                 --ignore-cache \
+                                 \$JJB_ARGS update \$UPDATE_ARGS $JOBS
+                  """
+                }
+              }
+            }
+          } catch(e) {
+            print(e)
+            // Here we only create a JIRA issue when we are not running the job
+            // against a testing branch or against a specific job
+            if (env.RPC_GATING_BRANCH == "master" && env.JOBS == "-r rpc_jobs") {
+              common.build_failure_issue("RE")
+            }
+            throw e
+          } // catch
+        } // internal_slave
+      } // globalWraps

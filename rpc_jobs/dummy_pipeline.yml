@@ -1,0 +1,19 @@
+- project:
+    name: "rpc-product-1-dependency-update"
+    repo_name: "rpc-product-1"
+    repo_url: "https://github.com/mattt416/rpc-product-1"
+    branch:
+      - "master"
+    jira_project_key: "RE"
+    component_dependencies_update: "true"
+    third_party_dependencies_update: "false"
+    trigger:
+      - PR:
+          CRON: ""
+          branches: "{branch}"
+          NUM_TO_KEEP: 10
+      - PM:
+          branches: "do_not_build_on_pr"
+          READ_ONLY_TEST: false
+    jobs:
+      - '{trigger}-Dep-Update_{repo_name}-{branch}'

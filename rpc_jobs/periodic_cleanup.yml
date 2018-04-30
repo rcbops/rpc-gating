@@ -8,14 +8,13 @@
           description: |
             Hours. Instances older than this will be removed.
       - string:
-          name: "INSTANCE_PREFIX"
-          default: "ra"
+          name: "PROTECTED_PREFIX"
+          default: "long-running-slave|influx-|WEBHOOK-PROXY|webhook-proxy|nodepool|repo-server-|ArtifactBuilder"
           description: |
-            Only instances whose names match the supplied prefix will be cleaned
-            up.
+            Instances that match this prefix regex will not be cleaned up.
       - string:
-          name: "REGION"
-          default: "DFW"
+          name: "REGIONS"
+          default: "DFW IAD ORD HKG SYD"
           description: |
             Only instances in the specified region will be cleaned up.
       - rpc_gating_params
@@ -25,33 +24,113 @@
       - build-discarder:
           days-to-keep: 3
     dsl: |
-      node(){
-        deleteDir()
-        stage("Prepare"){
-          dir("rpc-gating") {
-              git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-              common = load 'pipeline_steps/common.groovy'
-              common.docker_cache_workaround()
-              container = docker.build env.BUILD_TAG.toLowerCase()
-          }
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+
+      // Get list of jenkins slaves
+      @NonCPS
+      def getLongRunningNodes() {
+        return jenkins.model.Jenkins.instance.nodes.grep {
+          // Only return nodes whose name starts with one
+          // of these expressions. Single use slaves won't match
+          // so are filtered out.
+          node -> node.name =~ /^(long-|master|rpc-jenkins-n)/
+        }.collect {
+          // node objects are not serializable so return a list
+          // of names instead :(
+          node -> node.name
         }
-        container.inside {
-          stage("Checkout"){
-            git branch: env.RPC_GATING_BRANCH, url: env.RPC_GATING_REPO
-          }
-          stage("Public Cloud Cleanup"){
-            withCredentials([
-              string(
-                credentialsId: "dev_pubcloud_username",
-                variable: "PUBCLOUD_USERNAME"
-              ),
-              string(
-                credentialsId: "dev_pubcloud_api_key",
-                variable: "PUBCLOUD_API_KEY"
-              ),
-            ]){
-              sh "python scripts/periodic_cleanup.py"
+      }
+
+      // end of functions
+
+      common.globalWraps(){
+        // run node cleanups on all nodes
+        def nodes = getLongRunningNodes()
+        def parallel_steps = [:]
+        for (int i=0; i<nodes.size(); i++){
+          def nodeName = nodes[i]
+          parallel_steps['node_'+nodeName] = {
+            common.use_node(nodeName){
+              try {
+                stage("Cleanup "+nodeName){
+                  dir("rpc-gating") {
+                    sh "scripts/workspace_cleanup.sh"
+                    sh "scripts/tmp_cleanup.sh"
+                    sh "scripts/docker_cleanup.sh"
+                  }
+                }
+              } catch(e) {
+                print(e)
+                common.build_failure_issue("RE")
+                throw e
+              }
             }
           }
         }
-      }
+        parallel parallel_steps
+
+        // run the pubcloud and jenkins node cleanup only on an internal slave
+        common.internal_slave(){
+          try {
+            dir("rpc-gating") {
+              stage("Docker Build"){
+                  common.docker_cache_workaround()
+                  container = docker.build env.BUILD_TAG.toLowerCase()
+              }
+              // container.inside is a docker function that does
+              // not run the same initialisaiton steps as
+              // common.use_node/shared_slave/internal_slave.
+              container.inside {
+                stage("Docker Checkout"){
+                  git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
+                }
+                stage("Public Cloud Cleanup"){
+                  withCredentials([
+                    string(
+                      credentialsId: "dev_pubcloud_username",
+                      variable: "PUBCLOUD_USERNAME"
+                    ),
+                    string(
+                      credentialsId: "dev_pubcloud_api_key",
+                      variable: "PUBCLOUD_API_KEY"
+                    ),
+                    usernamePassword(
+                      credentialsId: "service_account_jenkins_api_creds",
+                      usernameVariable: "JENKINS_USERNAME",
+                      passwordVariable: "JENKINS_API_KEY"
+                    ),
+                  ]){
+                    clouds_cfg = common.writeCloudsCfg(
+                      username: env.PUBCLOUD_USERNAME,
+                      api_key: env.PUBCLOUD_API_KEY,
+                    )
+                    withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+                      sh "python scripts/periodic_cleanup.py"
+                    }
+                  }
+                }
+              }
+            }
+          } catch(e) {
+            print(e)
+            common.build_failure_issue("RE")
+            throw e
+          }
+        } // internal_slave
+        stage("Master Log Compression"){
+          node("master"){
+            // Note that already compressed logs will be skipped as they
+            // get renamed .gz .
+            // Logs newer than 1 day are skipped to prevent compressing
+            // the logs from running builds.
+            sh """#!/bin/bash
+              cd /var/lib/jenkins/jobs
+              find . -regex '.+/builds/[0-9]+/\\([0-9]+\\.\\)?log' -mtime +1 \\
+                |while read stagelog; do
+                  echo \$stagelog
+                  gzip \$stagelog
+                done
+            """
+          }
+        }
+      } // globalWraps
