@@ -6,6 +6,7 @@
 import json
 import logging
 import re
+from time import sleep
 
 import click
 import git
@@ -110,6 +111,39 @@ def add_issue_url_to_pr(repo, pull_request_number, issue_key):
         success = pull_request.update(body=updated_body)
         if success:
             click.echo("Pull request updated with issue reference.")
+        else:
+            raise Exception("There was a failure updating the pull request.")
+
+
+@cli.command()
+@click.pass_obj
+@click.option(
+    '--pull-request-number',
+    help="Pull request to update",
+    required=True,
+)
+@click.option(
+    '--message',
+    help='Merge commit message',
+    default="",
+)
+@click.option(
+    '--retries',
+    help='Retry the merge on failure.',
+    default=0,
+)
+def merge_pr(repo, pull_request_number, message, retries):
+    pull_request = repo.pull_request(pull_request_number)
+    attempts = retries + 1
+    while attempts:
+        attempts -= 1
+        success = pull_request.merge(commit_message=message)
+        if success:
+            click.echo("Pull request merged.")
+            break
+        elif attempts:
+            click.echo("Merge failed, retrying.")
+            sleep(30)
         else:
             raise Exception("There was a failure updating the pull request.")
 

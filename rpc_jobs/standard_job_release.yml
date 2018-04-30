@@ -78,9 +78,202 @@
             } // for
 
             parallel parallelBuilds
+
+            build(
+              job: "Component-Release",
+              wait: true,
+              parameters: [
+                [
+                  $class: "StringParameterValue",
+                  name: "RPC_GATING_BRANCH",
+                  value: RPC_GATING_BRANCH,
+                ],
+                [
+                  $class: "StringParameterValue",
+                  name: "component_text",
+                  value: component_text,
+                ],
+                [
+                  $class: "StringParameterValue",
+                  name: "pr_repo",
+                  value: ghprbGhRepository,
+                ],
+                [
+                  $class: "StringParameterValue",
+                  name: "pr_number",
+                  value: ghprbPullId,
+                ],
+              ]
+            )
+            build(
+              job: "Merge-Pull-Request",
+              wait: false,
+              parameters: [
+                [
+                  $class: "StringParameterValue",
+                  name: "RPC_GATING_BRANCH",
+                  value: RPC_GATING_BRANCH,
+                ],
+                [
+                  $class: "StringParameterValue",
+                  name: "pr_repo",
+                  value: ghprbGhRepository,
+                ],
+                [
+                  $class: "StringParameterValue",
+                  name: "pr_number",
+                  value: ghprbPullId,
+                ],
+              ]
+            )
           } // if
         } // dir
       } // globalWraps
+
+- job:
+    name: 'Component-Release'
+    project-type: pipeline
+    concurrent: false
+    properties:
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+      - text:
+          name: component_text
+      - validating-string:
+          name: pr_repo
+          regex: "[a-zA-Z0-9-]+/[a-zA-Z0-9._-]+"
+          msg: "The release repository must be supplied."
+      - validating-string:
+          name: pr_number
+          regex: "[0-9]+"
+          msg: "The number of the pull request to merge is required."
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        dir("${env.WORKSPACE}/rpc-metadata"){
+          common.clone_with_pr_refs(
+            ".", "git@github.com:${pr_repo}.git", "origin/pr/${pr_number}/merge",
+          )
+          sh """\
+            #!/bin/bash -xe
+            virtualenv --python python3 .venv3
+            set +x; . .venv3/bin/activate; set -x
+            pip install -c constraints.txt -r requirements.txt
+            pushd rpc_component
+                pip install .
+            popd
+          """
+          component = readYaml text: component_text
+          println "=== component CLI standard out ==="
+          println component_text
+
+          String pred_component_text = sh(
+            script: """\
+              #!/bin/bash -xe
+              set +x; . .venv3/bin/activate; set -x
+              src_branch="origin/master"
+              pr_branch="HEAD"
+              component --releases-dir .\
+                 component --component-name ${component["name"]}\
+                 get --version ${component["release"]["version"]["version"]} --pred || true
+            """,
+            returnStdout: true
+          )
+
+          println "=== predecessor component CLI standard out ==="
+          println pred_component_text
+
+          pred_component = readYaml text: pred_component_text
+        }
+
+        ORG="rcbops"
+        REPO=component["name"]
+        VERSION=component["release"]["version"]["version"]
+        PREVIOUS_VERSION=pred_component["release"]["version"]["version"]
+        RELEASE_NOTES_FILE="${WORKSPACE}/artifacts/release_notes"
+        MAINLINE=component["release"]["series"]
+        RC_BRANCH="${MAINLINE}-rc"
+        dir(REPO){
+          common.clone_with_pr_refs(
+            "./",
+            component["repo_url"],
+            "master",
+          )
+          no_rc = sh(
+            script: """\
+              #!/bin/bash -xe
+              git rev-parse --verify ${RC_BRANCH}
+            """,
+            returnStatus: true,
+          )
+        }
+        if (no_rc){
+          release_command = """\
+            python -c 'import sys; print("python rpc-gating/scripts/release.py " + " ".join(sys.argv[1:]))' \
+                --debug \
+                --org "${ORG}" \
+                --repo "${REPO}" \
+                clone \
+                    --ref "${MAINLINE}" \
+                publish_tag \
+                    --ref "${MAINLINE}" \
+                    --version "${VERSION}" \
+                generate_release_notes \
+                    --version "${VERSION}" \
+                    --prev-version "${PREVIOUS_VERSION}" \
+                    --script "optional:gating/generate_release_notes/pre" \
+                    --script "optional:gating/generate_release_notes/run" \
+                    --script "optional:gating/generate_release_notes/post" \
+                    --out-file "${RELEASE_NOTES_FILE}" \
+                create_release \
+                    --version "${VERSION}" \
+                    --bodyfile "${RELEASE_NOTES_FILE}" \
+          """
+        } else{
+          release_command = """\
+            python -c 'import sys; print("python rpc-gating/scripts/release.py " + " ".join(sys.argv[1:]))' \
+                --debug \
+                --org "${ORG}" \
+                --repo "${REPO}" \
+                clone \
+                    --ref "${RC_BRANCH}" \
+                publish_tag \
+                    --ref "${RC_BRANCH}" \
+                    --version "${VERSION}" \
+                generate_release_notes \
+                    --version "${VERSION}" \
+                    --prev-version "${PREVIOUS_VERSION}" \
+                    --script "optional:gating/generate_release_notes/pre" \
+                    --script "optional:gating/generate_release_notes/run" \
+                    --script "optional:gating/generate_release_notes/post" \
+                    --out-file "${RELEASE_NOTES_FILE}" \
+                create_release \
+                    --version "${VERSION}" \
+                    --bodyfile "${RELEASE_NOTES_FILE}" \
+                update_rc_branch \
+                    --rc "${RC_BRANCH}" \
+                    --mainline "${MAINLINE}" \
+          """
+        }
+        build(
+          job: "RE-Release",
+          wait: true,
+          parameters: [
+            [
+              $class: "StringParameterValue",
+              name: "RPC_GATING_BRANCH",
+              value: RPC_GATING_BRANCH,
+            ],
+            [
+              $class: "StringParameterValue",
+              name: "COMMAND",
+              value: release_command,
+            ],
+          ]
+        )
+      }
 
 - job-template:
     name: 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'

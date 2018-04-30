@@ -1,0 +1,29 @@
+- job:
+    name: 'Merge-Pull-Request'
+    project-type: pipeline
+    concurrent: false
+    properties:
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+      - validating-string:
+          name: pr_repo
+          regex: "[a-zA-Z0-9-]+/[a-zA-Z0-9._-]+"
+          msg: "The release repository must be supplied."
+      - validating-string:
+          name: pr_number
+          regex: "[0-9]+"
+          msg: "The number of the pull request to merge is required."
+      - validating-string:
+          name: retries
+          regex: "[0-9]+"
+          default: "1"
+          msg: "The number or merge retries."
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+          (pr_repo_org, pr_repo_name) = pr_repo.split("/")
+          github.merge_pr(pr_repo_org, pr_repo_name, pr_number, retries)
+      }
+

@@ -71,4 +71,31 @@ void add_issue_url_to_pr(){
 }
 
 
+def merge_pr(
+    String org,
+    String repo,
+    String pr_number,
+    String retries=0
+    ){
+  withCredentials([
+    string(
+      credentialsId: 'rpc-jenkins-svc-github-pat',
+      variable: 'pat'
+    )
+  ]){
+    sh """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/ghutils.py\
+        --org '$org'\
+        --repo '$repo'\
+        --pat '$pat'\
+        merge_pr\
+        --pull-request-number '$pr_number'\
+        --retries '$retries'
+    """
+  }
+}
+
+
 return this;
