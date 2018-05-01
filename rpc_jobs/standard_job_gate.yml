@@ -1,0 +1,65 @@
+- project:
+    name: "rpc-product-1-gate"
+    repo_name: "rpc-product-1"
+    repo_url: "https://github.com/mattt416/rpc-product-1"
+    branches:
+      - "master"
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+    scenario:
+      - "lint"
+    action:
+      - "test"
+    jobs:
+      - 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
+    jira_project_key: 'RE'
+
+- job-template:
+    name: 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
+    series: "master"
+    project-type: pipeline
+    concurrent: true
+    FLAVOR: "performance1-1"
+    IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    BOOT_TIMEOUT: 900
+    skip_pattern: ""
+    properties:
+      - build-discarder:
+          num-to-keep: "30"
+      - github:
+          url: "{repo_url}"
+      - inject:
+          properties-content: |
+            STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+            BOOT_TIMEOUT={BOOT_TIMEOUT}
+            RE_JOB_NAME={name}
+            RE_JOB_IMAGE={image}
+            RE_JOB_SCENARIO={scenario}
+            RE_JOB_ACTION={action}
+            RE_JOB_FLAVOR={FLAVOR}
+            RE_JOB_REPO_NAME={repo_name}
+    parameters:
+      - rpc_gating_params
+      - instance_params:
+          IMAGE: "{IMAGE}"
+          FLAVOR: "{FLAVOR}"
+          REGIONS: "{REGIONS}"
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+      - string:
+          name: skip_pattern
+          default: "{skip_pattern}"
+          description: |
+            Python re compatible regex, with verbose flag enabled. If all files changed by the
+            pull request match the regex the build will exit without running the test scripts.
+            This is used to skip tests that are not relevant to a change, for example testing a
+            deployment when only changing documentation. By default no builds are skipped.
+
+    dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      common.stdJob("gate", "{credentials}", "{jira_project_key}")
