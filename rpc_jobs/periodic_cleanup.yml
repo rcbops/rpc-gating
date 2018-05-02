@@ -44,8 +44,9 @@
       // end of functions
 
       common.globalWraps(){
-        // run node cleanups on all nodes
-        def nodes = getLongRunningNodes()
+        // run node cleanups on all long running nodes
+        // include master as buildSummary runs in docker on master, so it now has docker containers to cleanup
+        def nodes = getLongRunningNodes() + "master"
         def parallel_steps = [:]
         for (int i=0; i<nodes.size(); i++){
           def nodeName = nodes[i]
