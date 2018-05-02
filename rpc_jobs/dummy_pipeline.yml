@@ -67,6 +67,38 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
+# NOTE(mattt): We only need this project defined once for any gate
+#              jobs that exist on this component repo.
+- project:
+    name: "rpc-product-1"
+
+    repo_name: "rpc-product-1"
+    repo_url: "https://github.com/mattt416/rpc-product-1"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: "rpc-product-1-gate"
+
+    repo_name: "rpc-product-1"
+    repo_url: "https://github.com/mattt416/rpc-product-1"
+
+    branch: "master"
+
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+
+    scenario:
+      - "lint"
+
+    action:
+      - "test"
+
+    jobs:
+      - 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
+
 - project:
     name: 'rpc-product-1-post-merge'
 
