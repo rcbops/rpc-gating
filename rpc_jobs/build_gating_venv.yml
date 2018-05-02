@@ -44,7 +44,7 @@
 
                   # Check to see if the virtual env archive already exists...if so, no need to rebuild it
                   ssh \$SSH_OPTS \$REPO_USER@\$REPO_HOST "test -e \$REPO_PATH/\$archive"
-                  if [[ $? -eq 0 ]]; then
+                  if [[ \$? -eq 0 ]]; then
                     echo "Archive \$archive already exists.  Skipping virtual env build."
                     return 0
                   fi
