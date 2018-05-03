@@ -1,0 +1,136 @@
+---
+# We need to target all hosts in the group first to gather facts,
+# otherwise any tasks using the group host_vars will fail.
+- name: Gather facts from required server groups
+  hosts: "grafana_server"
+  gather_facts: no
+  user: root
+  tasks:
+    - name: Wait for a successful connection
+      wait_for_connection:
+        connect_timeout: 2
+        delay: 5
+        sleep: 5
+        timeout: 60
+
+    - name: Gather facts
+      setup:
+        gather_subset: "!facter,!ohai"
+
+- name: Setup grafana servers
+  hosts: "grafana_server"
+  gather_facts: no
+  user: root
+  vars:
+    grafana_address: "127.0.0.1"
+    grafana_security:
+      admin_user: admin
+      admin_password: "{{ lookup('env', 'RE_GRAFANA_ADMIN_PASSWORD') }}"
+    grafana_auth:
+      anonymous:
+        enabled: "true"
+        org_name: "Main Org."
+        org_role: "Viewer"
+
+    grafyaml_install_method: pip
+    grafyaml_pip_executable: pip3
+
+    logrotate_configs:
+      - name: grafana
+        log: /var/log/grafana/grafana.log
+        options:
+          - compress
+          - missingok
+          - rotate 7
+          - daily
+          - notifempty
+  tasks:
+    - name: Install prerequisite distro packages
+      apt:
+        name:
+          # requirement for cloning the repos
+          # we install from
+          - git
+          # requirements for pip installs
+          - gcc
+          - libffi-dev
+          - libssl-dev
+          - python3-pip
+          # requirements for ansible
+          # TODO(odyssey4me):
+          # Remove aptitude when we shift to using
+          # ansible 2.4
+          - aptitude
+          - python3-apt
+          - python3-minimal
+        update_cache: yes
+      register: install_packages
+      until: install_packages | success
+      retries: 5
+      delay: 2
+
+    - name: Configure firewall to allow dashboard access (ipv4)
+      ufw:
+        rule: allow
+        port: 80
+
+    - name: Setup grafana
+      include_role:
+        name: cloudalchemy.grafana
+
+    - name: Implement log rotation
+      include_role:
+        name: openstack.logrotate
+
+    - name: Setup grafyaml
+      include_role:
+        name: openstack.grafyaml
+
+    - name: Synchronize grafana datasource/dashboard configuration
+      synchronize:
+        src: "{{ playbook_dir }}/grafyaml/"
+        dest: "/opt/grafyaml"
+        recursive: yes
+        delete: yes
+
+    - name: Import grafana datasources/dashboards with grafyaml
+      command: >-
+        grafana-dashboard --grafana-url 'http://localhost:3000'
+        --grafana-apikey '{{ grafyaml_api_key }}'
+        update /opt/grafyaml
+      no_log: True
+      when:
+        - grafyaml_api_key is defined
+
+    - name: Install nginx web server
+      package:
+        name: nginx
+        update_cache: yes
+      register: install_packages
+      until: install_packages | success
+      retries: 5
+      delay: 2
+
+    - name: Configure grafana virtual host
+      copy:
+        content: |
+          server {
+            listen 80 default_server;
+            listen [::]:80 default_server;
+            root /var/www/html;
+            index index.html index.htm;
+            server_name _;
+            location / {
+              proxy_pass http://localhost:3000/;
+            }
+          }
+        dest: /etc/nginx/sites-available/default
+      register: _nginx_config
+
+    - name: Restart nginx
+      service:
+        name: nginx
+        enabled: yes
+        daemon_reload: yes
+        state: restarted
+      when: _nginx_config | changed

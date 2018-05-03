@@ -1,0 +1,7 @@
+---
+instance_list:
+  - name: grafana-server-iad-1
+    flavor: general1-4
+    region: IAD
+    metadata:
+      group: "grafana_server"

@@ -1,0 +1,271 @@
+datasource:
+  name: "RPC-RE-Graphite"
+  type: "graphite"
+  isDefault: True
+  access: "proxy"
+  url: "http://graphite.re.rpc.rackspace.com"
+
+dashboard:
+  title: 'Nodepool'
+  rows:
+    - title: Description
+      height: 100px
+      panels:
+        - title: Description
+          content: |
+            **This dashboard is managed by [Grafyaml](http://docs.openstack.org/infra/system-config/grafyaml.html).**
+
+            If you would like to make changes to this dashboard, please see the grafyaml directory in [rpc-gating](https://github.com/rcbops/rpc-gating/blob/master/grafana/grafyaml/nodepool.yml).
+          type: text
+    - title: Nodes
+      showTitle: true
+      height: 150px
+      panels:
+        - title: Initializing
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+            - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.init)
+          type: singlestat
+          valueName: current
+        - title: Building
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+            - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.building)
+          type: singlestat
+          valueName: current
+        - title: Ready
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+            - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.ready)
+          type: singlestat
+          valueName: current
+        - title: In Use
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+            - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.in-use)
+          type: singlestat
+          valueName: current
+        - title: Used
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+            - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.used)
+          type: singlestat
+          valueName: current
+        - title: Testing
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+            - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.testing)
+          type: singlestat
+          valueName: current
+        - title: Deleting
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+              - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.deleting)
+          type: singlestat
+          valueName: current
+        - title: Hold
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+              - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.hold)
+          type: singlestat
+          valueName: current
+        - title: Failed
+          span: 1
+          sparkline:
+            full: true
+            show: true
+          targets:
+              - target: sumSeries(stats.gauges.nodepool.provider.*.nodes.failed)
+          type: singlestat
+          valueName: current
+    - title: Nodepool Images
+      showTitle: true
+      height: 320px
+      panels:
+        - title: Building Nodes
+          span: 3
+          targets:
+            - target: aliasByNode(stats.gauges.nodepool.label.*.nodes.building, 4)
+          type: graph
+        - title: Ready Nodes
+          span: 3
+          targets:
+            - target: aliasByNode(stats.gauges.nodepool.label.*.nodes.ready, 4)
+          type: graph
+        - title: In-use Nodes
+          span: 3
+          targets:
+            - target: aliasByNode(stats.gauges.nodepool.label.*.nodes.in-use, 4)
+          type: graph
+        - title: Deleting Nodes
+          span: 3
+          targets:
+            - target: aliasByNode(stats.gauges.nodepool.label.*.nodes.deleting, 4)
+          type: graph
+    - title: API Operations
+      showTitle: true
+      height: 250px
+      panels:
+        - title: Create Server
+          type: graph
+          span: 4
+          leftYAxisLabel: "time"
+          y_formats:
+            - s
+            - none
+          targets:
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputePostServers.mean, '0.001'), 'DFW')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputePostServers.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputePostServers.mean, '0.001'), 'ORD')
+        - title: Get Server
+          type: graph
+          span: 4
+          leftYAxisLabel: "time"
+          y_formats:
+            - s
+            - none
+          targets:
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetServersDetail.mean, '0.001'), 'DFW')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServersDetail.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServersDetail.mean, '0.001'), 'ORD')
+        - title: Delete Server
+          type: graph
+          span: 4
+          leftYAxisLabel: "time"
+          y_formats:
+            - s
+            - none
+          targets:
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeDeleteServers.mean, '0.001'), 'DFW')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeDeleteServers.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeDeleteServers.mean, '0.001'), 'ORD')
+        - title: List Servers
+          type: graph
+          span: 4
+          leftYAxisLabel: "time"
+          y_formats:
+            - s
+            - none
+          targets:
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetServers.mean, '0.001'), 'DFW')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServers.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServers.mean, '0.001'), 'ORD')
+        - title: Get Limits
+          type: graph
+          span: 4
+          leftYAxisLabel: "time"
+          y_formats:
+            - s
+            - none
+          targets:
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetLimits.mean, '0.001'), 'DFW')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetLimits.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetLimits.mean, '0.001'), 'ORD')
+    - title: Node Launches
+      showTitle: true
+      height: 250px
+      panels:
+        - title: Ready Node Launch Attempts
+          type: graph
+          span: 4
+          nullPointMode: null as zero
+          leftYAxisLabel: "events / min"
+          targets:
+            - target: alias(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-dfw.ready, '1m'), 'DFW')
+            - target: alias(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-iad.ready, '1m'), 'IAD')
+            - target: alias(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-ord.ready, '1m'), 'ORD')
+        - title: Error Node Launch Attempts
+          type: graph
+          span: 4
+          nullPointMode: null as zero
+          leftYAxisLabel: "events / min"
+          targets:
+            - target: alias(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-dfw.error.*), '1m'), 'DFW')
+            - target: alias(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-iad.error.*), '1m'), 'IAD')
+            - target: alias(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-ord.error.*), '1m'), 'ORD')
+        - title: Time to Ready
+          type: graph
+          span: 4
+          leftYAxisLabel: "time"
+          y_formats:
+            - s
+            - none
+          targets:
+            - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-dfw.ready.mean, '0.001'), 'DFW')
+            - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-iad.ready.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-ord.ready.mean, '0.001'), 'ORD')
+        - title: Test Nodes (DFW)
+          type: graph
+          span: 4
+          stack: true
+          tooltip:
+            value_type: individual
+          leftYAxisLabel: "nodes"
+          targets:
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-dfw.nodes.building, 'Building')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-dfw.nodes.ready, 'Available')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-dfw.nodes.in-use, 'In Use')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-dfw.nodes.used, 'Used')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-dfw.nodes.deleting, 'Deleting')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-dfw.max_servers, 'Max')
+          seriesOverrides:
+            - alias: Max
+              stack: False
+        - title: Test Nodes (IAD)
+          type: graph
+          span: 4
+          stack: true
+          tooltip:
+            value_type: individual
+          leftYAxisLabel: "nodes"
+          targets:
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-iad.nodes.building, 'Building')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-iad.nodes.ready, 'Available')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-iad.nodes.in-use, 'In Use')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-iad.nodes.used, 'Used')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-iad.nodes.deleting, 'Deleting')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-iad.max_servers, 'Max')
+          seriesOverrides:
+            - alias: Max
+              stack: False
+        - title: Test Nodes (ORD)
+          type: graph
+          span: 4
+          stack: true
+          tooltip:
+            value_type: individual
+          leftYAxisLabel: "nodes"
+          targets:
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.nodes.building, 'Building')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.nodes.ready, 'Available')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.nodes.in-use, 'In Use')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.nodes.used, 'Used')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.nodes.deleting, 'Deleting')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.max_servers, 'Max')
+          seriesOverrides:
+            - alias: Max
+              stack: False
