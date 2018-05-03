@@ -190,7 +190,7 @@
           ff02::2 ip6-allrouters
           ff02::3 ip6-allhosts
           # zookeeper hosts
-          {% for host in zookeeper_hosts %}
+          {% for host in zookeeper_hosts | sort %}
           {{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
           {{ hostvars[host].ansible_default_ipv6.address }} {{ host }}
           {% endfor %}
