@@ -83,7 +83,7 @@
                   ],
                   args: [
                     "-v",
-                    "-e '@${env.WORKSPACE}/rpc-gating/nodepool/nodepool-instances.yml'"
+                    "-e '@${env.WORKSPACE}/rpc-gating/nodepool/instance_list.yml'"
                   ]
                 ) //venvPlaybook
 
@@ -108,7 +108,7 @@
             } // stage
 
             stage("Setup Nodepool"){
-              dir('rpc-gating/playbooks'){
+              dir('rpc-gating/nodepool'){
 
                 // Run the setup playbook
                 common.venvPlaybook(

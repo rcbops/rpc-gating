@@ -27,8 +27,46 @@
   # this is not an issue for us we execute the playbook in
   # serial so that the cluster always retains its quorum.
   serial: 1
-  vars_files:
-    - vars/nodepool.yml
+  vars:
+    nodepool_file_nodepool_yaml_src: "nodepool.yml"
+    nodepool_git_version: 3de0b20faa6f90437eb62c56ec23c59c6e15b5fa # HEAD of 'master' as of 20 Mar 2018
+    nodepool_pip_executable: pip3
+
+    diskimage_builder_git_version: "2.12.1" # Current release as of 22 Mar 2018
+    diskimage_builder_elements_src: "elements"
+
+    zookeeper_debian_apt_install: yes
+    zookeeper_hosts: "{{ groups['nodepool_server'] }}"
+
+    zookeeper_access_list:
+      - 74.205.74.100 # CIT Jenkins master (NAT)
+
+    logrotate_configs:
+      - name: nodepool-builder
+        log: /var/log/nodepool/builder-debug.log /var/log/nodepool/nodepool-builder.log
+        options:
+          - compress
+          - missingok
+          - rotate 7
+          - daily
+          - notifempty
+      - name: nodepool-launcher
+        log: /var/log/nodepool/launcher-debug.log /var/log/nodepool/nodepool-launcher.log
+        options:
+          - compress
+          - missingok
+          - rotate 7
+          - daily
+          - notifempty
+      - name: zookeeper
+        log: /var/log/zookeeper/zookeeper.log
+        options:
+          - compress
+          - missingok
+          - rotate 7
+          - daily
+          - notifempty
+
   handlers:
     - name: Restart zookeeper
       service:
