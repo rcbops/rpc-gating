@@ -123,6 +123,11 @@ def add_issue_url_to_pr(repo, pull_request_number, issue_key):
     required=True,
 )
 @click.option(
+    '--commit',
+    help="The commit matching the HEAD of the pull request",
+    required=True,
+)
+@click.option(
     '--message',
     help='Merge commit message',
     default="",
@@ -132,12 +137,12 @@ def add_issue_url_to_pr(repo, pull_request_number, issue_key):
     help='Retry the merge on failure.',
     default=0,
 )
-def merge_pr(repo, pull_request_number, message, retries):
+def merge_pr(repo, pull_request_number, commit, message, retries):
     pull_request = repo.pull_request(pull_request_number)
     attempts = retries + 1
     while attempts:
         attempts -= 1
-        success = pull_request.merge(commit_message=message)
+        success = pull_request.merge(commit_message=message, sha=commit)
         if success:
             click.echo("Pull request merged.")
             break

@@ -75,6 +75,7 @@ def merge_pr(
     String org,
     String repo,
     String pr_number,
+    String commit,
     String retries=0
     ){
   withCredentials([
@@ -92,6 +93,7 @@ def merge_pr(
         --pat '$pat'\
         merge_pr\
         --pull-request-number '$pr_number'\
+        --commit '$commit'\
         --retries '$retries'
     """
   }
