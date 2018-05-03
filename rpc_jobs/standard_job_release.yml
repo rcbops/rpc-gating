@@ -161,8 +161,7 @@
           common.clone_with_pr_refs(
             ".", "git@github.com:${pr_repo}.git", "origin/pr/${pr_number}/merge",
           )
-          sh """\
-            #!/bin/bash -xe
+          sh """#!/bin/bash -xe
             virtualenv --python python3 .venv3
             set +x; . .venv3/bin/activate; set -x
             pip install -c constraints.txt -r requirements.txt
@@ -175,8 +174,7 @@
           println component_text
 
           String pred_component_text = sh(
-            script: """\
-              #!/bin/bash -xe
+            script: """#!/bin/bash -xe
               set +x; . .venv3/bin/activate; set -x
               src_branch="origin/master"
               pr_branch="HEAD"
@@ -207,8 +205,7 @@
             "master",
           )
           no_rc = sh(
-            script: """\
-              #!/bin/bash -xe
+            script: """#!/bin/bash -xe
               git rev-parse --verify ${RC_BRANCH}
             """,
             returnStatus: true,
