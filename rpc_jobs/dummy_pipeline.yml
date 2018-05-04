@@ -52,12 +52,11 @@
       - 'master'
 
     image:
-      - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+      - container:
+          SLAVE_TYPE: "container"
 
     scenario:
-      - 'functional'
+      - 'lint'
 
     action:
       - 'test'
@@ -91,7 +90,7 @@
           SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
-      - "lint"
+      - "functional"
 
     action:
       - "test"
@@ -109,8 +108,7 @@
 
     image:
       - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -133,12 +131,11 @@
       - 'master'
 
     image:
-      - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+      - container:
+          SLAVE_TYPE: "container"
 
     scenario:
-      - 'functional'
+      - 'lint'
 
     action:
       - 'test'
@@ -147,6 +144,38 @@
 
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+# NOTE(mattt): We only need this project defined once for any gate
+#              jobs that exist on this component repo.
+- project:
+    name: "rpc-component-1"
+
+    repo_name: "rpc-component-1"
+    repo_url: "https://github.com/mattt416/rpc-component-1"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: "rpc-component-1-gate"
+
+    repo_name: "rpc-component-1"
+    repo_url: "https://github.com/mattt416/rpc-component-1"
+
+    branch: "master"
+
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+
+    scenario:
+      - "functional"
+
+    action:
+      - "test"
+
+    jobs:
+      - 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
     name: 'rpc-component-1-post-merge'
@@ -158,8 +187,7 @@
 
     image:
       - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -182,12 +210,11 @@
       - 'master'
 
     image:
-      - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+      - container:
+          SLAVE_TYPE: "container"
 
     scenario:
-      - 'functional'
+      - 'lint'
 
     action:
       - 'test'
@@ -196,6 +223,38 @@
 
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+# NOTE(mattt): We only need this project defined once for any gate
+#              jobs that exist on this component repo.
+- project:
+    name: "rpc-component-2"
+
+    repo_name: "rpc-component-2"
+    repo_url: "https://github.com/mattt416/rpc-component-2"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: "rpc-component-2-gate"
+
+    repo_name: "rpc-component-2"
+    repo_url: "https://github.com/mattt416/rpc-component-2"
+
+    branch: "master"
+
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+
+    scenario:
+      - "functional"
+
+    action:
+      - "test"
+
+    jobs:
+      - 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
     name: 'rpc-component-2-post-merge'
@@ -207,8 +266,7 @@
 
     image:
       - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -231,8 +289,7 @@
 
     image:
       - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -255,8 +312,7 @@
 
     image:
       - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -279,8 +335,7 @@
 
     image:
       - xenial:
-          FLAVOR: 'performance1-1'
-          IMAGE: 'Ubuntu 16.04.2 LTS prepared for RPC deployment'
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
