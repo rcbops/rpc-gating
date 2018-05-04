@@ -26,6 +26,8 @@
 
     jira_project_key: "RI"
 
+    credentials: "rpc_ri_creds"
+
     # Link to the standard pre-merge-template
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
