@@ -11,7 +11,6 @@ VOLUME /out
 VOLUME /cache
 RUN mkdir -p /opt/buildsummary
 COPY *.py /opt/buildsummary/
-COPY *.j2 /opt/buildsummary/
 COPY *.sh /opt/buildsummary/
 WORKDIR /opt/buildsummary
 CMD bash -xeu /opt/buildsummary/run.sh

@@ -4,6 +4,9 @@
 import collections
 import copy
 import datetime
+import functools
+import gc
+import json
 import os
 import pickle
 import re
@@ -14,9 +17,11 @@ import traceback
 import click
 import humanize
 import jinja2
+import lxml
 
 # Project imports
 from build import Build
+from failure import Failure
 
 # # Jenkins Build Summary Script
 # This script reads all the build.xml files specified and prints a summary of
@@ -26,177 +31,75 @@ from build import Build
 # Builds older than this will not be cached. This is to prevent the cache
 # from growing indefinitely even though jenkins is only retaining 30 days of
 # builds. This value should be the same as the jenkins retain days value.
-RETENTION_DAYS = 30
+RETENTION_DAYS = 60
 
 
-class TSF(object):
-    """Total, Success, Failure """
-    def __init__(self, t=0, s=0):
-        self.t = int(t)
-        self.s = int(s)
-
-    @property
-    def f(self):
-        return self.t - self.s
-
-    @property
-    def s_percent(self):
-        try:
-            return (float(self.s)/float(self.t))*100.0
-        except ZeroDivisionError:
-            return 0
-
-    def success(self):
-        self.t += 1
-        self.s += 1
-
-    def failure(self):
-        self.t += 1
-
-    def b(self, build):
-        if build.result == "SUCCESS":
-            self.success()
-        else:
-            self.failure()
+# The following methods are for serialising various types of objects that
+# the default JSONEncoder can't handle. Single dispatch is used to add
+# multiple implmentations to the same method name. At runtime an implementation
+# will be looked up based on the type of the first argument
+@functools.singledispatch
+def to_serializable(obj):
+    return json.JSONEncoder.default([], obj)
 
 
-def print_html(buildobjs):
-    buildobjs = buildobjs.values()
-    failcount = collections.defaultdict(dict)
+@to_serializable.register(Build)
+@to_serializable.register(Failure)
+def to_s_projectobjs(obj):
+    return obj.get_serialisation_dict()
 
-    # remove 'task failed' if 'too many retries' also exists for same task
-    task_failed_re = re.compile('Task Failed: (?P<task>.*)')
-    for build in buildobjs:
-        for failure in copy.copy(build.failures):
-            match = task_failed_re.search(failure)
-            if match and 'Too many retries. PrevTask: {task}'.format(
-                    task=match.groupdict()['task']) in build.failures:
-                build.failures.remove(failure)
 
-    for build in buildobjs:
-        for failure in build.failures:
-            d = failcount[failure]
-            if 'count' not in d:
-                d['count'] = 0
-            d['count'] += 1
-            if 'builds' not in d:
-                d['builds'] = []
-            d['builds'].append(build)
-            if 'oldest' not in d or d['oldest'] > build.timestamp:
-                d['oldest'] = build.timestamp
-                d['oldest_job'] = build.build_num
-                d['oldest_bobj'] = build
-            if 'newest' not in d or d['newest'] < build.timestamp:
-                d['newest'] = build.timestamp
-                d['newest_job'] = build.build_num
-                d['newest_bobj'] = build
+# how do I get a reference to dict_values?
+@to_serializable.register(type({}.values()))
+def to_s_dictv(obj):
+    return list(obj)
 
-    # Organise the builds for each failure into 24hr bins for sparklines
-    histogram_length = RETENTION_DAYS
-    now = datetime.datetime.now()
-    for failure, fdict in failcount.items():
-        fdict['histogram'] = [0] * histogram_length
-        for build in fdict['builds']:
-            age_days = (now - build.timestamp).days
-            if age_days < histogram_length:
-                fdict['histogram'][histogram_length - age_days - 1] += 1
 
-    if 'Unknown Failure' in failcount:
-        del failcount['Unknown Failure']
+@to_serializable.register(datetime.datetime)
+def _datetime(dt):
+    return str(dt)
 
-    # data for build trend cell background colour
-    # based on last two days of builds
-    build_trend_rows = set()
-    build_trend_cols = ["master", "pike", "newton"]
-    buildcount = collections.defaultdict(TSF)
-    twodaysago = datetime.datetime.now() - datetime.timedelta(days=2)
-    for build in [b for b in buildobjs if b.timestamp > twodaysago]:
-        # buildcount['all'].b(build)
-        # buildcount[build.repo].b(build)
-        # buildcount[build.branch].b(build)
-        # buildcount[build.os].b(build)
-        # buildcount[build.stage].b(build)
-        # only coun't periodics for colouring
-        # the background of trend graphs
-        if build.trigger != 'periodic':
-            continue
-        build_trend_rows.add(build.repo)
-        buildcount['{repo}_{branch}'.format(
-                   repo=build.repo,
-                   branch=build.branch)].b(build)
-    periodichistogram = {}
-    for build in buildobjs:
-        # count aborts as failure for the sake of graphs
-        result = build.result
-        if result == 'ABORTED':
-            result = 'FAILURE'
-        if build.trigger != 'periodic':
-            continue
-        key_base = '{repo}_{branch}'.format(
-                   repo=build.repo,
-                   branch=build.branch)
-        key = '{base}_{result}'.format(
-            base=key_base,
-            result=result)
-        stats_key = '{base}_stats'.format(base=key_base)
-        if key not in periodichistogram:
-            periodichistogram[key] = [0] * histogram_length
-            periodichistogram[stats_key] = dict(max=0)
-        age_days = (now - build.timestamp).days
-        if age_days < histogram_length:
-            if result == "SUCCESS":
-                inc = 1
-            else:
-                inc = -1
-            periodichistogram[key][histogram_length - age_days - 1] += inc
-            value = abs(
-                periodichistogram[key][histogram_length - age_days - 1])
-            stats = periodichistogram[stats_key]
-            if value > stats['max']:
-                stats['max'] = value
 
-    def dt_filter(date):
-        """Date time filter.
-
-        Returns a human readable string for a datetime object.
-        """
-        return '{time} {date}'.format(
-            time=date.strftime('%H:%M'),
-            date=humanize.naturalday(date)
-        )
-
-    jenv = jinja2.Environment()
-    jenv.filters['hdate'] = dt_filter
-    template = jenv.from_string(open("buildsummary.j2", "r").read())
-    print(template.render(
-        buildcount=buildcount,
-        build_trend_cols=build_trend_cols,
-        build_trend_rows=build_trend_rows,
-        buildobjs=buildobjs,
-        timestamp=datetime.datetime.now(),
-        failcount=failcount,
-        periodichistogram=periodichistogram))
+def serialise(obj):
+    return json.dumps(obj, default=to_serializable).replace("'", "\'")
 
 
 @click.command(help='args are paths to jenkins build.xml files')
-@click.argument('builds', nargs=-1)
+@click.argument('jobsdir')
 @click.option('--newerthan', default=0,
               help='Build IDs older than this will not be shown')
-@click.option('--cache', default='/opt/jenkins/www/.cache')
-def summary(builds, newerthan, cache):
+@click.option('--jsonfile', default='/opt/jenkins/www/.cache')
+def summary(jobsdir, newerthan, jsonfile):
 
-    buildobjs = {}
-    if os.path.exists(cache):
+    # calculate age limit based on retention days,
+    # builds older than this will be ignored weather
+    # they are found in json or jobdir.
+    age_limit = (datetime.datetime.now()
+                 - datetime.timedelta(days=RETENTION_DAYS))
+
+    data = dict(builds=[])
+    # read data from json input file
+    if os.path.exists(jsonfile):
         try:
-            with open(cache, 'rb') as f:
-                buildobjs = pickle.load(f)
+            with open(jsonfile, 'r') as f:
+                data = json.load(f)
         except Exception as e:
-            buildobjs = {}
             sys.stderr.write(
-                "Failed to read cache file: {cache}".format(cache=cache))
+                "Failed to read json file: {jsonfile}"
+                .format(jsonfile=jsonfile))
             traceback.print_exc(file=sys.stderr)
 
-    for build in builds:
+    # create set of build ids so we don't scan builds
+    # we already have summary information about
+    build_dict = {"{jn}_{bn}".format(jn=b['job_name'], bn=b['build_num']):
+                  b for b in data['builds']}
+
+    # walk the supplied dir, scan new builds
+    for count, build in enumerate(["{}/build.xml".format(root)
+                                  for root, dirs, files
+                                  in os.walk(jobsdir)
+                                  if "build.xml" in files
+                                  and ("PM_" in root or "PR_" in root)]):
         path_groups_match = re.search(
             ('^(?P<build_folder>.*/(?P<job_name>[^/]+)/'
              'builds/(?P<build_num>[0-9]+))/'), build)
@@ -208,30 +111,57 @@ def summary(builds, newerthan, cache):
                 job_name=job_name,
                 build_num=build_num
             )
-            if key in buildobjs:
+            if key in build_dict:
                 continue
             try:
-                buildobjs[key] = Build(
+                build = Build(
                     build_folder=path_groups['build_folder'],
                     job_name=path_groups['job_name'],
                     build_num=path_groups['build_num'])
-                sys.stderr.write("OK: {key}\n".format(key=key))
+                if build.timestamp > age_limit:
+                    if build.failed:
+                        # store the log in memory only as long as necessary
+                        build.log_lines = build.read_logs()
+                        Failure.scan_build(build)
+                        build.log_lines = []
+                        if (count % 25 == 0):
+                            gc.collect()
+                    build_dict[key] = build
+                    sys.stderr.write(".")
+                    # sys.stderr.write("OK: {key}\n".format(key=key))
+                else:
+                    sys.stderr.write("_")
+                    # sys.stderr.write("Old Build: {key}\n" .format(key=key))
+            except lxml.etree.XMLSyntaxError as e:
+                sys.stderr.write("\nFAIL: {key} {e}\n".format(key=key, e=e))
             except Exception as e:
-                sys.stderr.write("FAIL: {key} {e}\n".format(key=key, e=e))
-                traceback.print_exc(file=sys.stderr)
+                sys.stderr.write("\nFAIL: {key} {e}\n".format(key=key, e=e))
+                if ("can't parse internal" not in str(e)):
+                    traceback.print_exc(file=sys.stderr)
 
-    print_html(buildobjs)
+    # dump data out to json file
+    # remove builds older than RETENTION_DAYS
+    # ensure we only dump data newer than RETENTION_DAYS
 
+    with open(jsonfile, "w") as f:
+        f.write(serialise(dict(
+            builds=build_dict.values(),
+            timestamp=datetime.datetime.now(),
+            retention_days=RETENTION_DAYS
+        )))
+
+    #
     # Pickle build objs newer than RETENTION_DAYS to the cache file, so those
     # logs don't need to be reprocessed on the next run.
-    age_limit = (datetime.datetime.now()
-                 - datetime.timedelta(days=RETENTION_DAYS))
-    cache_dict = {}
-    for key, build in buildobjs.items():
-        if build.timestamp > age_limit:
-            cache_dict[key] = build
-    with open(cache, 'wb') as f:
-        pickle.dump(cache_dict, f, pickle.HIGHEST_PROTOCOL)
+    # cache_dict = {}
+    # for key, build in buildobjs.items():
+    #     if build.timestamp > age_limit:
+    #         cache_dict[key] = build
+    #         # don't cache log_lines as the cache size would get unmanagably
+    #         # large
+    #         build.log_lines = []
+    # with open(cache, 'wb') as f:
+    #     pickle.dump(cache_dict, f, pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':
