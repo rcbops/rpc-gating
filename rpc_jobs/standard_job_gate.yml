@@ -1,23 +1,87 @@
-- project:
-    name: "rpc-product-1-gate"
-    repo_name: "rpc-product-1"
-    repo_url: "https://github.com/mattt416/rpc-product-1"
-    branches:
-      - "master"
-    image:
-      - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial"
-    scenario:
-      - "lint"
-    action:
-      - "test"
-    jobs:
-      - 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
-    jira_project_key: 'RE'
+- job-template:
+    name: 'Component-Gate-Trigger_{repo_name}'
+    project-type: pipeline
+    concurrent: true
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: 'trigger-component-gate'
+          only-trigger-phrase: true
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/gate'
+          cancel-builds-on-update: true
+    properties:
+      - github:
+          url: "{repo_url}"
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      common.globalWraps(){{
+        List jobNames = Hudson.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob)*.fullName
+
+        def parallelBuilds = [:]
+
+        // Cannot do for (job in jobNames), see:
+        // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
+        for (j in jobNames) {{
+          def job = j
+          def m = job =~ /GATE_{repo_name}/
+          if (m) {{
+            parallelBuilds[job] = {{
+              build(
+                job: job,
+                wait: true,
+                parameters: [
+                  [
+                    $class: "StringParameterValue",
+                    name: "RPC_GATING_BRANCH",
+                    value: RPC_GATING_BRANCH,
+                  ],
+                  [
+                    $class: "StringParameterValue",
+                    name: "BRANCH",
+                    value: sha1,
+                  ]
+                ]
+              )
+            }} // parallelBuilds
+          }} // if
+        }} // for
+
+        parallel parallelBuilds
+
+        build(
+          job: "Merge-Pull-Request",
+          wait: false,
+          parameters: [
+            [
+              $class: "StringParameterValue",
+              name: "RPC_GATING_BRANCH",
+              value: RPC_GATING_BRANCH,
+            ],
+            [
+              $class: "StringParameterValue",
+              name: "pr_repo",
+              value: ghprbGhRepository,
+            ],
+            [
+              $class: "StringParameterValue",
+              name: "pr_number",
+              value: ghprbPullId,
+            ]
+          ]
+        )
+      }} // globalWraps
 
 - job-template:
     name: 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
     series: "master"
+    branch: "master"
     project-type: pipeline
     concurrent: true
     FLAVOR: "performance1-1"
@@ -46,6 +110,14 @@
           FLAVOR: "{FLAVOR}"
           REGIONS: "{REGIONS}"
           FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
+      - string:
+          name: REPO_URL
+          default: "{repo_url}"
+          description: Url of the repo under test
+      - string:
+          name: BRANCH
+          default: "{branch}"
+          description: Branch of the repo under test
       - standard_job_params:
           SLAVE_TYPE: "{SLAVE_TYPE}"
           SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
@@ -62,4 +134,4 @@
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.stdJob("gate", "{credentials}", "{jira_project_key}")
+      common.stdJob("gate", "{credentials}", "")
