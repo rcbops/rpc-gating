@@ -191,7 +191,7 @@
           pred_component = readYaml text: pred_component_text
         }
 
-        ORG="rcbops"
+        ORG=component["repo_url"].split("/")[3]
         REPO=component["name"]
         VERSION=component["release"]["version"]["version"]
         PREVIOUS_VERSION=pred_component["release"]["version"]["version"]
@@ -213,7 +213,7 @@
         }
         if (no_rc){
           release_command = """\
-            python -c 'import sys; print("python rpc-gating/scripts/release.py " + " ".join(sys.argv[1:]))' \
+            python rpc-gating/scripts/release.py \
                 --debug \
                 --org "${ORG}" \
                 --repo "${REPO}" \
@@ -226,7 +226,7 @@
                     --version "${VERSION}" \
                     --prev-version "${PREVIOUS_VERSION}" \
                     --script "optional:gating/generate_release_notes/pre" \
-                    --script "optional:gating/generate_release_notes/run" \
+                    --script "gating/generate_release_notes/run" \
                     --script "optional:gating/generate_release_notes/post" \
                     --out-file "${RELEASE_NOTES_FILE}" \
                 create_release \
@@ -235,7 +235,7 @@
           """
         } else{
           release_command = """\
-            python -c 'import sys; print("python rpc-gating/scripts/release.py " + " ".join(sys.argv[1:]))' \
+            python rpc-gating/scripts/release.py \
                 --debug \
                 --org "${ORG}" \
                 --repo "${REPO}" \
@@ -248,7 +248,7 @@
                     --version "${VERSION}" \
                     --prev-version "${PREVIOUS_VERSION}" \
                     --script "optional:gating/generate_release_notes/pre" \
-                    --script "optional:gating/generate_release_notes/run" \
+                    --script "gating/generate_release_notes/run" \
                     --script "optional:gating/generate_release_notes/post" \
                     --out-file "${RELEASE_NOTES_FILE}" \
                 create_release \
