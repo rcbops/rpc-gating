@@ -73,7 +73,12 @@
               $class: "StringParameterValue",
               name: "pr_number",
               value: ghprbPullId,
-            ]
+            ],
+            [
+              $class: "StringParameterValue",
+              name: "commit",
+              value: ghprbActualCommit,
+            ],
           ]
         )
       }} // globalWraps
