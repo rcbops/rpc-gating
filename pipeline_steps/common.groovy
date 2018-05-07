@@ -302,25 +302,31 @@ def archive_artifacts(Map args = [:]){
     results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
 
     dir(results_dir) {
-      // The junit step doesn't like parsing non-XML (resulting in builds being
-      // marked as UNSTABLE). If xmllint is installed we verify that all XML
-      // input is valid and if not we skip the junit step.
-      Integer xmlStatus = sh(
+      Integer testXmlLintRc = sh(
         returnStatus: true,
         script: """#!/bin/bash -xe
-          if ls *.xml && [[ -f /usr/bin/xmllint ]]; then
-            /usr/bin/xmllint *.xml
-          else
-            exit 0
-          fi
+          test -f /usr/bin/xmllint
         """
       )
 
-      if (xmlStatus == 0) {
-        junit allowEmptyResults: true, testResults: "*.xml"
-      } else {
-        println "junit step skipped, malformed XML found in ${results_dir}"
+      // The junit step doesn't like parsing non-XML files (resulting in builds
+      // being // marked as UNSTABLE). If xmllint is installed we verify that
+      // all XML input is valid, and if not we move the affected files aside so
+      // the junit pipeline step won't parse them.
+      if (testXmlLintRc == 0) {
+        List xmlFiles = findFiles(glob: '*.xml')
+
+        for (file in xmlFiles) {
+          Integer xmlStatus = sh(
+            returnStatus: true,
+            script: """#!/bin/bash -xe
+              /usr/bin/xmllint ${file} || mv ${file} ${file}-broken
+            """
+          )
+        }
       }
+
+      junit allowEmptyResults: true, testResults: "*.xml"
     }
 
     pubcloud.uploadToSwift(
