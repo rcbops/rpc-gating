@@ -33,6 +33,7 @@
         org_role: "Viewer"
 
     grafyaml_install_method: pip
+    grafyaml_api_key: "{{ lookup('env', 'RE_GRAFANA_GRAFYAML_API_KEY') }}"
 
     logrotate_configs:
       - name: grafana

@@ -1035,6 +1035,10 @@ List build_creds_array(String list_of_cred_ids){
         credentialsId: "RE_GRAFANA_ADMIN_PASSWORD",
         variable: "RE_GRAFANA_ADMIN_PASSWORD"
       ),
+      "GRAFANA_GRAFYAML_API_KEY": string(
+        credentialsId: "GRAFANA_GRAFYAML_API_KEY",
+        variable: "GRAFANA_GRAFYAML_API_KEY"
+      ),
       "RE_GRAPHITE_ADMIN_PASSWORD": string(
         credentialsId: "RE_GRAPHITE_ADMIN_PASSWORD",
         variable: "RE_GRAPHITE_ADMIN_PASSWORD"
