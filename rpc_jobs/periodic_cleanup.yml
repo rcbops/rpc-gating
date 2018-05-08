@@ -33,12 +33,14 @@
           // Only return nodes whose name starts with one
           // of these expressions. Single use slaves won't match
           // so are filtered out.
-          node -> node.name =~ /^(long-|master|rpc-jenkins-n)/
+          node -> node.name =~ /^(long-|rpc-jenkins-n)/
         }.collect {
           // node objects are not serializable so return a list
           // of names instead :(
           node -> node.name
-        }
+        // master isn't in jenkins.model.Jenkins.instance.nodes so
+        // add it to the filtered list.
+        } + "master"
       }
 
       // end of functions
