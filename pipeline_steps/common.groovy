@@ -1031,6 +1031,18 @@ List build_creds_array(String list_of_cred_ids){
         credentialsId: "dev_pubcloud_tenant_id",
         variable: "PUBCLOUD_TENANT_ID"
       ),
+      "RE_GRAFANA_ADMIN_PASSWORD": string(
+        credentialsId: "RE_GRAFANA_ADMIN_PASSWORD",
+        variable: "RE_GRAFANA_ADMIN_PASSWORD"
+      ),
+      "RE_GRAPHITE_ADMIN_PASSWORD": string(
+        credentialsId: "RE_GRAPHITE_ADMIN_PASSWORD",
+        variable: "RE_GRAPHITE_ADMIN_PASSWORD"
+      ),
+      "RE_GRAPHITE_SECRET_KEY": string(
+        credentialsId: "RE_GRAPHITE_SECRET_KEY",
+        variable: "RE_GRAPHITE_SECRET_KEY"
+      ),
       "RPC_ASC_QTEST_API_TOKEN": string(
         credentialsId: "RPC_ASC_QTEST_API_TOKEN",
         variable: "RPC_ASC_QTEST_API_TOKEN"
