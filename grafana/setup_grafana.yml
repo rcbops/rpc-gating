@@ -33,7 +33,6 @@
         org_role: "Viewer"
 
     grafyaml_install_method: pip
-    grafyaml_pip_executable: pip3
 
     logrotate_configs:
       - name: grafana
@@ -55,14 +54,14 @@
           - gcc
           - libffi-dev
           - libssl-dev
-          - python3-pip
+          - python-pip
           # requirements for ansible
           # TODO(odyssey4me):
           # Remove aptitude when we shift to using
           # ansible 2.4
           - aptitude
-          - python3-apt
-          - python3-minimal
+          - python-apt
+          - python-minimal
         update_cache: yes
       register: install_packages
       until: install_packages | success
