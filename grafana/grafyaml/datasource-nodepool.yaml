@@ -1,0 +1,6 @@
+datasource:
+  name: "RPC-RE-Graphite"
+  type: "graphite"
+  isDefault: True
+  access: "proxy"
+  url: "http://graphite.re.rpc.rackspace.com"
