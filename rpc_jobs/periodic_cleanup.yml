@@ -9,7 +9,7 @@
             Hours. Instances older than this will be removed.
       - string:
           name: "PROTECTED_PREFIX"
-          default: "long-running-slave|influx-|WEBHOOK-PROXY|webhook-proxy|nodepool|repo-server-|ArtifactBuilder"
+          default: "long-running-slave|influx-|WEBHOOK-PROXY|webhook-proxy|nodepool|repo-server-|ArtifactBuilder|statsd-server-|graphite-server|grafana-server"
           description: |
             Instances that match this prefix regex will not be cleaned up.
       - string:
