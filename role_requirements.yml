@@ -15,3 +15,7 @@
   scm: "git"
   src: "https://github.com/mongrelion/ansible-role-docker"
   version: "13fcd5a7cb7c05a38bada3e4916014bdac89b5e7"
+- name: "openstack.logrotate"
+  scm: "git"
+  src: "https://github.com/openstack/ansible-role-logrotate"
+  version: "519057ecdf43945c2a91259805a5fb7a7f53335a"

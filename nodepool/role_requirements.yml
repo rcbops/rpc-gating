@@ -10,7 +10,3 @@
   scm: git
   src: https://github.com/openstack/ansible-role-diskimage-builder
   version: c88354aeff0437beebde0009223b700c64347c3f
-- name: openstack.logrotate
-  scm: git
-  src: https://github.com/openstack/ansible-role-logrotate
-  version: 519057ecdf43945c2a91259805a5fb7a7f53335a
