@@ -1,10 +1,7 @@
-# Merge Trigger job for setup nodepool.
+# Merge Trigger job for setup statsd.
 # This used to redeploy whenever there are merges to rpc-gating.
-# This ensures that the nodepool/zk cluster is kept updated and that
-# new images are built when there are changes to dib elements or
-# nodepool config.
 - job:
-    name: "Merge-Trigger-Nodepool"
+    name: "Merge-Trigger-StatsD"
     project-type: freestyle
     scm:
       - git:
@@ -19,10 +16,10 @@
     builders:
       - trigger-builds:
         - project:
-            - "Setup-Nodepool"
+            - "Setup-StatsD"
 
 - job:
-    name: Setup-Nodepool
+    name: Setup-StatsD
     project-type: pipeline
     concurrent: false
     properties:
@@ -48,7 +45,7 @@
                 )
                 common.venvGalaxy(
                   "install",
-                  "-r ${env.WORKSPACE}/rpc-gating/nodepool/role_requirements.yml",
+                  "-r ${env.WORKSPACE}/rpc-gating/statsd/role_requirements.yml",
                   "-p ${env.WORKSPACE}/roles"
                 )
               }
@@ -83,7 +80,7 @@
                   ],
                   args: [
                     "-v",
-                    "-e '@${env.WORKSPACE}/rpc-gating/nodepool/instance_list.yml'"
+                    "-e '@${env.WORKSPACE}/rpc-gating/statsd/instance_list.yml'"
                   ]
                 ) //venvPlaybook
 
@@ -100,20 +97,20 @@
                   ],
                   args: [
                     "-v",
-                    "-e target_hosts=nodepool_server"
+                    "-e target_hosts=statsd_server"
                   ]
                 ) //venvPlaybook
 
               } //dir
             } // stage
 
-            stage("Setup Nodepool"){
-              dir('rpc-gating/nodepool'){
+            stage("Setup StatsD"){
+              dir('rpc-gating/statsd'){
 
                 // Run the setup playbook
                 common.venvPlaybook(
                   playbooks: [
-                    "setup_nodepool.yml"
+                    "setup_statsd.yml"
                   ],
                   args: [
                     "-v"

@@ -1,10 +1,7 @@
-# Merge Trigger job for setup nodepool.
+# Merge Trigger job for setup graphite.
 # This used to redeploy whenever there are merges to rpc-gating.
-# This ensures that the nodepool/zk cluster is kept updated and that
-# new images are built when there are changes to dib elements or
-# nodepool config.
 - job:
-    name: "Merge-Trigger-Nodepool"
+    name: "Merge-Trigger-Graphite"
     project-type: freestyle
     scm:
       - git:
@@ -19,10 +16,10 @@
     builders:
       - trigger-builds:
         - project:
-            - "Setup-Nodepool"
+            - "Setup-Graphite"
 
 - job:
-    name: Setup-Nodepool
+    name: Setup-Graphite
     project-type: pipeline
     concurrent: false
     properties:
@@ -36,7 +33,11 @@
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
         try{
-          common.withRequestedCredentials("cloud_creds, id_rsa_cloud10_jenkins_file"){
+          common.withRequestedCredentials(
+            "cloud_creds, id_rsa_cloud10_jenkins_file,"
+            + "RE_GRAPHITE_ADMIN_PASSWORD, "
+            + "RE_GRAPHITE_SECRET_KEY"
+          ){
             stage("Prepare Ansible Roles"){
               // Getting the roles is a bit flaky sometimes, so we
               // implement a retry to improve the chances of success.
@@ -48,7 +49,7 @@
                 )
                 common.venvGalaxy(
                   "install",
-                  "-r ${env.WORKSPACE}/rpc-gating/nodepool/role_requirements.yml",
+                  "-r ${env.WORKSPACE}/rpc-gating/graphite/role_requirements.yml",
                   "-p ${env.WORKSPACE}/roles"
                 )
               }
@@ -83,7 +84,7 @@
                   ],
                   args: [
                     "-v",
-                    "-e '@${env.WORKSPACE}/rpc-gating/nodepool/instance_list.yml'"
+                    "-e '@${env.WORKSPACE}/rpc-gating/graphite/instance_list.yml'"
                   ]
                 ) //venvPlaybook
 
@@ -100,20 +101,20 @@
                   ],
                   args: [
                     "-v",
-                    "-e target_hosts=nodepool_server"
+                    "-e target_hosts=graphite_server"
                   ]
                 ) //venvPlaybook
 
               } //dir
             } // stage
 
-            stage("Setup Nodepool"){
-              dir('rpc-gating/nodepool'){
+            stage("Setup Graphite"){
+              dir('rpc-gating/graphite'){
 
                 // Run the setup playbook
                 common.venvPlaybook(
                   playbooks: [
-                    "setup_nodepool.yml"
+                    "setup_graphite.yml"
                   ],
                   args: [
                     "-v"

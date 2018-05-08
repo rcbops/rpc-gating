@@ -1,10 +1,7 @@
-# Merge Trigger job for setup nodepool.
+# Merge Trigger job for setup grafana.
 # This used to redeploy whenever there are merges to rpc-gating.
-# This ensures that the nodepool/zk cluster is kept updated and that
-# new images are built when there are changes to dib elements or
-# nodepool config.
 - job:
-    name: "Merge-Trigger-Nodepool"
+    name: "Merge-Trigger-Grafana"
     project-type: freestyle
     scm:
       - git:
@@ -19,10 +16,10 @@
     builders:
       - trigger-builds:
         - project:
-            - "Setup-Nodepool"
+            - "Setup-Grafana"
 
 - job:
-    name: Setup-Nodepool
+    name: Setup-Grafana
     project-type: pipeline
     concurrent: false
     properties:
@@ -36,7 +33,10 @@
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
         try{
-          common.withRequestedCredentials("cloud_creds, id_rsa_cloud10_jenkins_file"){
+          common.withRequestedCredentials(
+            "cloud_creds, id_rsa_cloud10_jenkins_file,"
+            + "RE_GRAFANA_ADMIN_PASSWORD"
+          ){
             stage("Prepare Ansible Roles"){
               // Getting the roles is a bit flaky sometimes, so we
               // implement a retry to improve the chances of success.
@@ -48,7 +48,7 @@
                 )
                 common.venvGalaxy(
                   "install",
-                  "-r ${env.WORKSPACE}/rpc-gating/nodepool/role_requirements.yml",
+                  "-r ${env.WORKSPACE}/rpc-gating/grafana/role_requirements.yml",
                   "-p ${env.WORKSPACE}/roles"
                 )
               }
@@ -83,7 +83,7 @@
                   ],
                   args: [
                     "-v",
-                    "-e '@${env.WORKSPACE}/rpc-gating/nodepool/instance_list.yml'"
+                    "-e '@${env.WORKSPACE}/rpc-gating/grafana/instance_list.yml'"
                   ]
                 ) //venvPlaybook
 
@@ -100,20 +100,20 @@
                   ],
                   args: [
                     "-v",
-                    "-e target_hosts=nodepool_server"
+                    "-e target_hosts=grafana_server"
                   ]
                 ) //venvPlaybook
 
               } //dir
             } // stage
 
-            stage("Setup Nodepool"){
-              dir('rpc-gating/nodepool'){
+            stage("Setup Grafana"){
+              dir('rpc-gating/grafana'){
 
                 // Run the setup playbook
                 common.venvPlaybook(
                   playbooks: [
-                    "setup_nodepool.yml"
+                    "setup_grafana.yml"
                   ],
                   args: [
                     "-v"
