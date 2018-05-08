@@ -95,8 +95,8 @@
 
     - name: Import grafana datasources/dashboards with grafyaml
       command: >-
-        grafana-dashboard --grafana-url 'http://localhost:3000'
-        --grafana-apikey '{{ grafyaml_api_key }}'
+        grafana-dashboard --grafana-url http://localhost:3000
+        --grafana-apikey {{ grafyaml_api_key }}
         update /opt/grafyaml
       no_log: True
       when:
