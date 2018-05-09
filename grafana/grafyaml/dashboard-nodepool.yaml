@@ -8,7 +8,7 @@ dashboard:
           content: |
             **This dashboard is managed by [Grafyaml](http://docs.openstack.org/infra/system-config/grafyaml.html).**
 
-            If you would like to make changes to this dashboard, please see the grafyaml directory in [rpc-gating](https://github.com/rcbops/rpc-gating/blob/master/grafana/grafyaml/nodepool.yml).
+            If you would like to make changes to this dashboard, please see the grafyaml directory in [rpc-gating](https://github.com/rcbops/rpc-gating/tree/master/grafana/grafyaml).
           type: text
     - title: Nodes
       showTitle: true
