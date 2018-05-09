@@ -101,6 +101,7 @@
       no_log: True
       when:
         - grafyaml_api_key is defined
+        - grafyaml_api_key != ""
 
     - name: Install nginx web server
       package:

@@ -34,8 +34,9 @@
       common.globalWraps(){
         try{
           common.withRequestedCredentials(
-            "cloud_creds, id_rsa_cloud10_jenkins_file,"
-            + "RE_GRAFANA_ADMIN_PASSWORD"
+            "cloud_creds, id_rsa_cloud10_jenkins_file, "
+            + "RE_GRAFANA_ADMIN_PASSWORD, "
+            + "RE_GRAFANA_GRAFYAML_API_KEY"
           ){
             stage("Prepare Ansible Roles"){
               // Getting the roles is a bit flaky sometimes, so we
