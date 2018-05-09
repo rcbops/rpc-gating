@@ -320,7 +320,7 @@ def archive_artifacts(Map args = [:]){
           Integer xmlStatus = sh(
             returnStatus: true,
             script: """#!/bin/bash -xe
-              /usr/bin/xmllint ${file} || mv ${file} ${file}-broken
+              /usr/bin/xmllint ${file} > /dev/null || mv ${file} ${file}-broken
             """
           )
         }
