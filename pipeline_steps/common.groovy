@@ -302,6 +302,30 @@ def archive_artifacts(Map args = [:]){
     results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
 
     dir(results_dir) {
+      Integer testXmlLintRc = sh(
+        returnStatus: true,
+        script: """#!/bin/bash -xe
+          test -f /usr/bin/xmllint
+        """
+      )
+
+      // The junit step doesn't like parsing non-XML files (resulting in builds
+      // being // marked as UNSTABLE). If xmllint is installed we verify that
+      // all XML input is valid, and if not we move the affected files aside so
+      // the junit pipeline step won't parse them.
+      if (testXmlLintRc == 0) {
+        List xmlFiles = findFiles(glob: '*.xml')
+
+        for (file in xmlFiles) {
+          Integer xmlStatus = sh(
+            returnStatus: true,
+            script: """#!/bin/bash -xe
+              /usr/bin/xmllint ${file} > /dev/null || mv ${file} ${file}-broken
+            """
+          )
+        }
+      }
+
       junit allowEmptyResults: true, testResults: "*.xml"
     }
 
