@@ -40,7 +40,7 @@
 
                     # Determine the SHA and archive name that we'll use
                     pushd rpc-gating; SHA=\$(git rev-parse HEAD); popd
-                    archive="rpcgatingvenv_\${SHA}_test2.tbz"
+                    archive="rpcgatingvenv_\${SHA}.tbz"
 
                     # Set some SSH options
                     SSH_OPTS="-o StrictHostKeyChecking=no"
@@ -124,7 +124,7 @@
 
                       # Determine the SHA and archive name that we'll use
                       pushd rpc-gating; SHA=\$(git rev-parse HEAD); popd
-                      archive="rpcgatingvenv_\${SHA}_test2.tbz"
+                      archive="rpcgatingvenv_\${SHA}.tbz"
 
                       # Should we skip the upload? This file will exist from the previous step if we didn't generate a new archive.
                       if [[ -e \$archive.skip.upload ]]; then
@@ -134,6 +134,19 @@
 
                       # Set some SSH options
                       SSH_OPTS="-o StrictHostKeyChecking=no"
+
+                      # Let's check to see if the virtual env archive already exists one more time...if so, no need to re-upload it again.
+                      # If we got to this point and the archive file does indeed exist in the REPO_PATH, then another process was probably already
+                      # running and beat us to the archive/upload.  That's fine - since this is based on the SHA, the
+                      # resulting archive _should_ be exactly the same.  No need to upload our copy and over write the
+                      # original with the same file contents again. We'll skip out and just exit.
+                      set +e    # Don't exit on error since we want to evalute the error code and exit cleanly
+                      ssh \$SSH_OPTS \$REPO_USER@\$REPO_HOST "test -e \$REPO_PATH/\$archive"
+                      if [[ \$? -eq 0 ]]; then
+                        echo "Archive \$REPO_PATH/\$archive already exists after building it.  Another concurrent job beat us to the build/upload! Skipping virtual env upload."
+                        exit 0
+                      fi
+                      set -e    # Re-enable exit on error
 
                       # Make sure the path exists...
                       ssh \${SSH_OPTS} \$REPO_USER@\$REPO_HOST "mkdir -p \$REPO_PATH"
