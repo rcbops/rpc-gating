@@ -112,6 +112,7 @@ rm -f /root/.nano_history
 rm -f /root/.lesshst
 rm -f /root/.ssh/authorized_keys.bak*
 rm -f /root/.ssh/known_hosts
+rm -rf /var/lib/jenkins/workspace/*@tmp
 for k in $(find /var/log -type f); do
     echo > $k
 done
