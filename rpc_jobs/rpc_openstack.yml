@@ -386,6 +386,11 @@
     scenario:
       - "swift"
     action:
+      - system:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
       - deploy:
           IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
           FLAVOR: "onmetal-io1"
@@ -436,6 +441,11 @@
     scenario:
       - "swift"
     action:
+      - system:
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          FLAVOR: "onmetal-io1"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: ""
       - deploy:
           IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
           FLAVOR: "onmetal-io1"
