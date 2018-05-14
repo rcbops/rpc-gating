@@ -14,6 +14,8 @@
     # Misc
     CRON: "H H(9-21) * * 1-5"
     credentials: ""
+    # wrappers to apply to standard Jobs (see common.stdJobWrappers)
+    wrappers: ""
     skip_pattern: ""
     # jenkins_node_params
     # See also playbooks/setup_jenkins_slave.yml where these values are
