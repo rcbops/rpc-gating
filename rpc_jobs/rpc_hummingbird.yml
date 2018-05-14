@@ -9,8 +9,7 @@
 
     image:
       - xenial:
-          FLAVOR: "general1-8"
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
 
     # rpc-hummingbird ignores that setting for now
     scenario:
@@ -37,8 +36,7 @@
 
     image:
       - xenial:
-          FLAVOR: "general1-8"
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
 
     scenario:
       - "functional"
