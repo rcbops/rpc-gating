@@ -103,9 +103,10 @@
               # This directory was created manually on the repo servers
               REPO_PATH="/var/www/repo/rpcgating/buildsummary"
 
-              # Upload generated version
-              archive="${HOME}/buildsummary/out/index.html"
-              scp -i \$REPO_USER_KEY \$archive \$REPO_USER@\$REPO_HOST:\$REPO_PATH
+              # Upload HTML ui and JSON data.
+              page="${WORKSPACE}/rpc-gating/scripts/build_summary/index.html"
+              data="${HOME}/buildsummary/out/data.json"
+              scp -i \$REPO_USER_KEY \$page \$data \$REPO_USER@\$REPO_HOST:\$REPO_PATH
             """
           } // creds
         } // stage

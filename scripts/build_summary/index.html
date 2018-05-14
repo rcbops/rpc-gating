@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      white-space: normal;
+    }
+
+    div.container-fluid {
+      width: 100%;
+    }
+
+    div.result-table {
+      margin: auto;
+      width: 95%;
+    }
+
+    div.spark_group {
+      width: 126px;
+    }
+  </style>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+
+  <title>RE Build Summary</title>
+
+  <!-- jquery -->
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+
+  <!-- Jquery Data tables -->
+  <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="http://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
+
+  <!-- Jquery Sparklines -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.js"></script>
+
+  <!-- popper, required by bootstrap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+
+  <!-- bootstrap -->
+  <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"> -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.1/cerulean/bootstrap.min.css" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+  <!-- Vue JS -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.0"></script>
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+  <!--<link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">-->
+  <!--<script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>-->
+  <!--<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script> -->
+</head>
+
+<body>
+  <div id="app">
+    <div class="container-fluid">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+        <a class="navbar-brand" href="#">[[title]]</a>
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item mx-2"><a class="text-secondary" href="https://rpc.jenkins.cit.rackspace.net">Jenkins</a></li>
+            <li class="nav-item mx-2"><a class="text-secondary" href="https://github.com/pulls?q=is%3Aopen+is%3Apr+archived%3Afalse+user%3Arcbops+sort%3Aupdated-desc">PRs</a></li>
+          </ul>
+        </div>
+      </nav>
+      <buildtrends v-bind:builds="builds" v-bind:branches="branches"></buildtrends>
+      <failurelist v-bind:failures="failures" type="category"></failurelist>
+      <recentresults v-bind:builds="builds"></recentresults>
+    </div>
+    <h4> Generated: [[page_timestamp]]</h4>
+  </div>
+  <script>
+    function draw_spark() {
+      $('.spark').sparkline('html', {
+        type: 'line',
+        minSpotColor: false,
+        maxSpotColor: 'red',
+        spotColor: false,
+        width: '125px',
+        height: '25px'
+      });
+    }
+
+    function bar_spark(selector, colour) {
+      $(selector).each(function() {
+        $(this).sparkline('html', {
+          type: 'bar',
+          barColor: colour,
+          width: '125px',
+          height: '30px',
+          chartRangeMax: $(this).data('max'),
+          chartRangeMin: $(this).data('min'),
+        });
+      })
+    }
+
+    function draw_spark_bar() {
+      bar_spark('.spark_shist', 'green');
+      bar_spark('.spark_fhist', 'red');
+    }
+
+    Vue.component("buildhistorygraph", {
+      props: ["builds", "repo", "branch"],
+      delimiters: ['[[', ']]'],
+      computed: {
+        fbuilds: function() {
+          _fbuilds = this.builds.filter(build => build.repo == this.repo && build.branch == this.branch);
+          return _fbuilds;
+        },
+        spark_success: function() {
+          return this.$root.histogram(
+            this.fbuilds.filter(build => build.result == "SUCCESS"),
+            this.$root.retention_days,
+            1)
+        },
+        spark_failure: function() {
+          return this.$root.histogram(
+            this.fbuilds.filter(build => build.result != "SUCCESS"),
+            this.$root.retention_days, -1)
+        },
+        absmax: function() {
+          values = this.spark_success.concat(this.spark_failure)
+          absvalues = (values).map(v => Math.abs(v))
+          // ... is equivalent to * in python
+          return Math.max(...absvalues);
+        }
+      },
+      methods: {},
+      template: `
+    <td>
+      <div class="spark_group">
+        <span class="spark_shist" v-bind:values="spark_success.join(',')" data-min="0" data-max="absmax"></span>
+        <span class="spark_fhist" v-bind:values="spark_failure.join(',')" data-min="absmax * -1" data-max="0"></span>
+      </div>
+    </td>
+  `
+    })
+
+    Vue.component('buildtrends', {
+      props: ["builds", "branches"],
+      delimiters: ['[[', ']]'],
+      computed: {
+        fbuilds: function() {
+          return this.$root.builds.filter(b => b.stage == "PM")
+        },
+        repos: function() {
+          repos = new Set();
+          this.fbuilds.forEach(function(build) {
+            repos.add(build.repo)
+          });
+          return Array.from(repos);
+        }
+      },
+      updated: function() {
+        $('#summary').DataTable({
+          "ordering": false,
+          "paging": false,
+          "searching": false,
+          "info": false,
+          "drawCallback": draw_spark_bar
+        })
+      },
+      template: `
+    <div class="buildtrends">
+      <div class="result-table" id="periodic">
+      <h3> Periodic Build Trends </h3>
+      <p> Note: [[this.$root.retention_days]] days, one column per day, green/positive are successfull jobs
+      red/negative are failed (or aborted) jobs. Most recent on the right.</p>
+        <table id="summary" class="table">
+          <thead>
+            <tr>
+              <th></th><!-- repo headings col !-->
+              <th v-for="branch in branches" :key="branch">
+                [[branch]]
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="repo in repos" :key="repo">
+              <th>[[repo]]</th>
+              <buildhistorygraph v-for="branch in branches" :key="branch" v-bind:branch="branch" v-bind:repo="repo" v-bind:builds="builds"> </buildhistorygraph>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+`
+    })
+
+    Vue.component("failurelist", {
+      data: function() {
+        return {
+          category_failures: {}
+        }
+      },
+      props: ["failures", "type"],
+      delimiters: ['[[', ']]'],
+      updated: function() {
+        $('#failures').DataTable({
+          "order": [
+            [6, "desc"]
+          ],
+          "columnDefs": [{
+              "targets": [4, 6],
+              "visible": false
+            },
+            {
+              "targets": [2],
+              "width": "100px",
+            }
+          ],
+          "drawCallback": draw_spark
+        });
+      },
+      computed: {
+        categories: function() {
+          categories = new Set();
+          this.failures.forEach(function(fail) {
+            categories.add(fail.category);
+          })
+          return Array.from(categories)
+        }
+      },
+      methods: {
+        for_category: function(category) {
+          if (!(category in this.category_failures)) {
+            ff = this.failures.filter(f => f.category == category)
+            this.category_failures.category = ff
+          }
+          return this.category_failures.category
+        },
+        rowclass: function(failures, warning, danger) {
+          num = failures.length
+          if (num > danger) {
+            return "table-danger";
+          } else if (num > warning) {
+            return "table-warning"
+          } else {
+            return ""
+          }
+        }
+      },
+      template: `
+    <div class="result-table" id="failcount">
+    <h3 v-if="type=='category'">Failures by Category</h3>
+    <h3 v-else>Failures</h3>
+    <table id="failures" class="table">
+      <thead>
+        <tr>
+          <th>Count</th>
+          <th>Failure <span v-if="type=='category'">Category</span></th>
+          <th>Trend</th>
+          <th>Oldest</th>
+          <th>Oldest Job ID</th>
+          <th>Newest</th>
+          <th>Newest Job Timestamp For Sorting</th>
+        </tr>
+      </thead>
+      <tbody v-if="type=='category'">
+        <failurerow v-for="category in categories" :key="category" :category="category" :failures="for_category(category)" :rowclass="rowclass(for_category(category), 30, 50)" :name="category"></failurerow>
+      </tbody>
+    </table>
+    </div>
+  `
+    })
+
+    Vue.component("failurerow", {
+      props: ["failures", "rowclass", "name"],
+      delimiters: ["[[", "]]"],
+      computed: {
+        filtered_builds: function() {
+          var c_builds = this.failures.map(f => f.build)
+          return c_builds
+        },
+        filtered_date_sorted_builds: function() {
+          return this.$root.date_sorted_builds(this.filtered_builds)
+        },
+        newest_build: function() {
+          return this.filtered_date_sorted_builds[this.filtered_date_sorted_builds.length - 1]
+        },
+        oldest_build: function() {
+          return this.filtered_date_sorted_builds[0]
+        },
+      },
+      template: `
+  <tr v-bind:class="rowclass">
+    <td>[[failures.length]]</td>
+    <td>[[name]]</td>
+    <td><span class="spark" v-bind:values="this.$root.histogram(filtered_builds, this.$root.retention_days, 1)"></span></td>
+    <td><buildlink v-bind:build="oldest_build"/></td> <!--oldest-->
+    <td>[[oldest_build.build_num]]</td>
+    <td><buildlink v-bind:build="newest_build"/></td> <!--newest-->
+    <td>[[newest_build.timestamp]]</td>
+  </tr>
+  `
+
+    })
+
+    Vue.component("buildlink", {
+      props: ["build"],
+      delimiters: ["[[", "]]"],
+      template: `
+    <a v-bind:href="this.$root.jenkins_url+'/job/'+buildid(build)">[[this.$root.dfmt(build.timestamp)]]</a>
+  `
+    })
+
+    Vue.component("recentresults", {
+      delimiters: ["[[", "]]"],
+      props: ["builds"],
+      updated: function() {
+        $('#jobs').DataTable({
+          "order": [
+            [0, "desc"]
+          ],
+          "pageLength": 50,
+          "columnDefs": [{
+            "targets": [0],
+            "visible": false
+          }]
+        });
+      },
+      template: `
+    <div id="recent-builds" class="result-table">
+      <h3>Recent Results</h3>
+       <table id="jobs" class="table">
+         <thead>
+           <tr>
+             <th>Date for Sorting</th>
+             <th>Date / Result</th>
+             <th>Branch</th>
+             <th>Job Tree</th>
+             <th>Failures</th>
+           </tr>
+         </thead>
+         <tbody>
+          <buildrow v-for="build in builds" :key="buildid(build)" v-bind:build="build"></buildrow>
+         </tbody>
+       </table>
+    </div>
+  `
+    })
+
+    Vue.component("buildrow", {
+      props: ["build"],
+      delimiters: ["[[", "]]"],
+      methods: {
+        wrappable: function(s) {
+          var mid = s.replace(/\./g, ". ")
+          return mid.replace(/_/g, "_ ")
+        }
+      },
+      computed: {
+        rowclass: function() {
+          if (this.build.result == "SUCCESS") {
+            return "table-success"
+          } else {
+            return "table-danger"
+          }
+        },
+        jurl: function() {
+          return this.$root.jenkins_url
+        }
+      },
+      template: `
+    <tr v-bind:class="rowclass">
+      <td>[[build.timestamp]]</td>
+      <td>[[this.$root.dfmt(build.timestamp)]] [[build.result]]</td>
+      <td>[[build.branch]]</td>
+      <td>
+        <ul>
+          <li v-for="item in build.build_hierachy">
+            <a v-bind:href="item.url">[[item.name]] [[item.build_num]]</a>
+          </li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li v-for="fail in build.failures" class="failure">
+            <a v-bind:href="jurl+'/job/'+buildid(build)">[[wrappable(fail.category + " " + fail.type + " " + " " + fail.detail)]]</a>
+          </li>
+        </ul>
+      </td>
+    </tr>
+  `
+    })
+
+    // mixin properties are added to all components
+    Vue.mixin({
+      methods: {
+        buildid: function(build) {
+          return `${build.job_name}/${build.build_num}`
+        }
+      }
+    })
+
+    var vm = new Vue({
+      el: '#app',
+      data: {
+        builds: [],
+        page_timestamp: "loading...",
+        retention_days: 0,
+        jenkins_url: "https://rpc.jenkins.cit.rackspace.net",
+        branches: ["master", "pike", "newton"],
+        title: "Loading..."
+      },
+      beforeCreate: function() {
+        this.$http.get("data.json").then(function(response) {
+          this.builds = response.body.builds
+          this.page_timestamp = response.body.timestamp
+          this.retention_days = response.body.retention_days
+          this.title = "RE Build Summary"
+        })
+      },
+      // computed properties are cached
+      computed: {
+        failures: function() {
+          var f = this.builds
+                    .map(b => b.failures)
+                    .reduce((a, c) => a.concat(c), [])
+          return f
+        }
+      },
+      methods: {
+        histogram: function(builds, length, inc) {
+          histogram = new Array(length).fill(0);
+          now = new Date()
+          vueobj = this
+          builds.forEach(function(build) {
+            build_age = new Date(build.timestamp)
+            age_millis = (now - build_age)
+            age_days = Math.round(age_millis * 1.0 / (1000 * 60 * 60 * 24))
+            if (age_days < length) {
+              histogram[length - age_days - 1] += inc
+            }
+          })
+          return histogram
+        },
+        date_sorted_builds: function(builds) {
+          var sorted = builds.sort(function(a, b) {
+            return new Date(a.timestamp) - new Date(b.timestamp)
+          })
+          return sorted;
+        },
+        dfmt: function(date_string) {
+          d = new Date(date_string)
+          return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
+        }
+      },
+      delimiters: ['[[', ']]']
+    })
+  </script>
+</body>
+
+</html>
