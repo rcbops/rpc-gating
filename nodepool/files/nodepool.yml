@@ -10,6 +10,12 @@ zookeeper-servers:
     port: 2181
 
 labels:
+  - name: ubuntu-xenial
+    min-ready: 0
+    max-ready-age: 3600
+  - name: ubuntu-trusty
+    min-ready: 0
+    max-ready-age: 3600
   - name: ubuntu-xenial-g1-8
     min-ready: 3
     max-ready-age: 3600
@@ -32,19 +38,25 @@ providers:
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: &provider_diskimage_block
-      - name: ubuntu-xenial-g1-8
+      - name: ubuntu-xenial
         config-drive: true
-      - name: ubuntu-trusty-g1-8
-        config-drive: true
-      - name: ubuntu-xenial-p2-15
-        config-drive: true
-      - name: ubuntu-trusty-p2-15
+      - name: ubuntu-trusty
         config-drive: true
     pools: &provider_pools_block
       - name: main
         max-servers: 10
         availability-zones: []
         labels:
+          - name: ubuntu-xenial
+            diskimage: ubuntu-xenial
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
+          - name: ubuntu-trusty
+            diskimage: ubuntu-trusty
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
           - name: ubuntu-xenial-g1-8
             diskimage: ubuntu-xenial
             flavor-name: general1-8
