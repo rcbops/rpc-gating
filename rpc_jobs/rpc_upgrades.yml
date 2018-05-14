@@ -5,6 +5,11 @@
     repo_url: "https://github.com/rcbops/rpc-upgrades"
     branches:
      - "master"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -24,6 +29,11 @@
     repo_url: "https://github.com/rcbops/rpc-upgrades"
     branches:
      - "master"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
     image:
       - container:
           SLAVE_TYPE: "container"
