@@ -87,7 +87,7 @@
 
     image:
       - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - "functional"
@@ -108,7 +108,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -166,7 +166,7 @@
 
     image:
       - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - "functional"
@@ -187,7 +187,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -245,7 +245,7 @@
 
     image:
       - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - "functional"
@@ -266,7 +266,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -289,7 +289,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -312,7 +312,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'
@@ -335,7 +335,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     scenario:
       - 'functional'

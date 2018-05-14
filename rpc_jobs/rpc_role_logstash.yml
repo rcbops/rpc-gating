@@ -9,7 +9,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     # rpc-role-logstash ignores that setting for now
     scenario:

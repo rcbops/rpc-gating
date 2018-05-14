@@ -9,17 +9,18 @@
       - "xenial"
     scenario:
       - master:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          FLAVOR: "performance2-15"
           TRIGGER_PR_PHRASE_ONLY: true
       - pike:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
       - ocata:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
           TRIGGER_PR_PHRASE_ONLY: true
       - newton:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
       - ceph:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -35,7 +36,7 @@
       - "master.*"
     image:
       - trusty:
-          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-trusty"
     scenario:
       - newton
       - mitaka
