@@ -5,7 +5,7 @@
     branch:     "master"
     image:
       - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
     scenario:   "functional"
     action:     "test"
     jira_project_key: "RE"

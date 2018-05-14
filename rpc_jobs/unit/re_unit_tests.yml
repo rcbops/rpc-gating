@@ -49,7 +49,7 @@
             ]
           )
         },
-        "nodepool-ubuntu-xenial-g1-8 Instance": {
+        "nodepool-ubuntu-xenial Instance": {
           build(
             job: "RE-unit-test-slave-types",
             wait: true,
@@ -62,12 +62,12 @@
               [
                 $class: 'StringParameterValue',
                 name: 'SLAVE_TYPE',
-                value: 'nodepool-ubuntu-xenial-g1-8'
+                value: 'nodepool-ubuntu-xenial'
               ]
             ]
           )
         },
-        "nodepool-ubuntu-trusty-g1-8 Instance": {
+        "nodepool-ubuntu-trusty Instance": {
           build(
             job: "RE-unit-test-slave-types",
             wait: true,
@@ -80,7 +80,7 @@
               [
                 $class: 'StringParameterValue',
                 name: 'SLAVE_TYPE',
-                value: 'nodepool-ubuntu-trusty-g1-8'
+                value: 'nodepool-ubuntu-trusty'
               ]
             ]
           )

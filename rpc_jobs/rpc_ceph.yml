@@ -13,7 +13,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
 
     # rpc-ceph ignores that setting for now
     scenario:
@@ -45,9 +45,10 @@
 
     scenario:
       - functional:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
       - rpco_newton:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          FLAVOR: "performance2-15"
 
     # rpc-ceph ignores that setting for now
     action:

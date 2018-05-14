@@ -8,7 +8,7 @@
     parameters:
       - rpc_gating_params
       - standard_job_params:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial"
           SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
           SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
           SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
