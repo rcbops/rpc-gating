@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import collections
 import datetime
 import re
 import sys
@@ -67,7 +66,7 @@ class Failure(ABC):
                 skipped = case.find('skipped')
                 if skipped.text == "true":
                     continue
-            except Exception as e:
+            except Exception:
                 pass
 
             # extract information from the xml element
@@ -77,15 +76,15 @@ class Failure(ABC):
             test_name = case.find('testName').text
             if test_name is None:
                 test_name = ""
-            try:
-                errorDetails = case.find('errorDetails').text
-            except Exception as e:
-                errorDetails = ""
-            errorStackTrace = case.find('errorStackTrace').text
-            try:
-                stdout = case.find('stdout').text
-            except Exception as e:
-                stdout = ""
+            # try:
+            #     errorDetails = case.find('errorDetails').text
+            # except Exception as e:
+            #     errorDetails = ""
+            # errorStackTrace = case.find('errorStackTrace').text
+            # try:
+            #     stdout = case.find('stdout').text
+            # except Exception as e:
+            #     stdout = ""
 
             # create a failure object
             f = JunitFailure(build)
@@ -207,8 +206,8 @@ class AptMirrorFailure(Failure):
         try:
             i = self.build.log_lines.index(match_str)
             previous_task = self.get_previous_task(i)
-            matches = True
-            detail = "Apt Mirror Fail: {line} {task}".format(
+            self.matches = True
+            self.detail = "Apt Mirror Fail: {line} {task}".format(
                 line=match_str.strip(),
                 task=previous_task)
         except ValueError:

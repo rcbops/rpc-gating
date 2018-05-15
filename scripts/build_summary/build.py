@@ -1,11 +1,7 @@
 # Stdlib import
-import collections
 import datetime
 import gzip
 import re
-import sys
-
-from failure import Failure
 
 # 3rd Party imports
 # Imports with C deps
@@ -18,7 +14,7 @@ class FilterException(Exception):
 
 
 class Build(object):
-    """Build Object
+    """Build Object.
 
     Represents one RPC-AIO build. Contains functionality for intepreting
     the build.xml, injected_vars and log files.
@@ -54,7 +50,8 @@ class Build(object):
         if "internal" in self.repo_url:
             raise Exception("can't parse internal: repo urls")
         repo_dict = re.match(
-            '(https?://github.(rackspace.)?com/)?(?P<org>[^/]*)/(?P<repo>[^/]*)$',
+            '(https?://github.(rackspace.)?com/)?(?P<org>[^/]*)/'
+            '(?P<repo>[^/]*)$',
             self.repo_url).groupdict()
         self.org = repo_dict['org']
         self.repo = repo_dict['repo']
@@ -63,7 +60,8 @@ class Build(object):
         if self.result != 'SUCCESS':
             self.failed = True
         try:
-            self.junit = etree.parse('{bf}/junitResult.xml'.format(bf=build_folder))
+            self.junit = etree.parse('{bf}/junitResult.xml'.format(
+                bf=build_folder))
         except IOError:
             # junitResult.xml won't exist in lots of cases
             self.junit = None
@@ -110,16 +108,12 @@ class Build(object):
         elif self.get_stage() == "PR":
             return self.tree.xpath(prpath)[0].text
 
-    def get_branch(self):
-        '//hudson.model.StringParameterValue[name/text()="BRANCH"]/value'
-
     def normalise_failure(self, failure_string):
-        """Remove identifiers from failures
+        """Remove identifiers from failures.
 
         This prevents multiple incidents of the same failure being counted as
         multiple failures
         """
-
         normalisers = [
             (self.uuid_re, '**UUID**'),
             (self.ip_re, '**IPv4**'),
@@ -259,7 +253,6 @@ class Build(object):
         lines += open_log('archive/artifacts/runcmd-bash.log')
         lines += open_log('archive/artifacts/deploy.sh.log')
         return lines
-
 
     def __str__(self):
         return ("{timestamp} {result} {job_name}/{build_num}"
