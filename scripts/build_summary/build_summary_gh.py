@@ -1,22 +1,17 @@
 #!/usr/bin/env python
 
 # Stdlib import
-import collections
-import copy
 import datetime
 import functools
 import gc
 import json
 import os
-import pickle
 import re
 import sys
 import traceback
 
 # 3rd Party imports
 import click
-import humanize
-import jinja2
 import lxml
 
 # Project imports
