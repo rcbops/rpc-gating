@@ -55,6 +55,7 @@
       - "swift"
     action:
       - "mitaka_to_newton_major"
+      - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "r12.2.8_to_newton_leap"
       - "r12.2.5_to_newton_leap"
@@ -133,6 +134,7 @@
       - "swift"
     action:
       - "mitaka_to_newton_major"
+      - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "r12.2.8_to_newton_leap"
       - "r12.2.5_to_newton_leap"
