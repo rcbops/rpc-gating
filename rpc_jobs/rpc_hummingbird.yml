@@ -9,7 +9,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
 
     # rpc-hummingbird ignores that setting for now
     scenario:
@@ -36,7 +36,7 @@
 
     image:
       - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
 
     scenario:
       - "functional"
