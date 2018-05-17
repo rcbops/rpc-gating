@@ -120,7 +120,7 @@ diskimages:
       DIB_CHECKSUM: '1'
       DIB_IMAGE_CACHE: /opt/nodepool/dib_cache
       DIB_GRUB_TIMEOUT: '0'
-      DIB_DISTRIBUTION_MIRROR: 'https://mirror.rackspace.com/ubuntu'
+      DIB_DISTRIBUTION_MIRROR: 'http://mirror.rackspace.com/ubuntu'
       DIB_DEBIAN_COMPONENTS: 'main,universe'
   - name: ubuntu-trusty
     # Build fresh images every 24 hrs.
@@ -143,5 +143,5 @@ diskimages:
       DIB_CHECKSUM: '1'
       DIB_IMAGE_CACHE: /opt/nodepool/dib_cache
       DIB_GRUB_TIMEOUT: '0'
-      DIB_DISTRIBUTION_MIRROR: 'https://mirror.rackspace.com/ubuntu'
+      DIB_DISTRIBUTION_MIRROR: 'http://mirror.rackspace.com/ubuntu'
       DIB_DEBIAN_COMPONENTS: 'main,universe'
