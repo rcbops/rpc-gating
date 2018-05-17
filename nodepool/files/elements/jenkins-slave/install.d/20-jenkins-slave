@@ -54,11 +54,6 @@ chmod 0440 /etc/sudoers.d/jenkins
 visudo -c || die "Error setting jenkins sudo!"
 
 ##
-## Set the JAVA_HOME env var
-##
-echo "JAVA_HOME=\"$(find /usr/lib/jvm -mindepth 1 -maxdepth 1 -type d)\"" >> /etc/environment
-
-##
 ## Finalise
 ##
 
