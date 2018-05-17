@@ -14,8 +14,7 @@
       | ^gating/update_dependencies/
     image:
       - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-          FLAVOR: "performance2-15"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
       - ironic:
           TRIGGER_PR_PHRASE_ONLY: true
@@ -62,8 +61,7 @@
       | ^gating/update_dependencies/
     image:
       - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-          FLAVOR: "performance2-15"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
       - ironic:
           TRIGGER_PR_PHRASE_ONLY: true

@@ -10,7 +10,7 @@
       - "master"
     image:
       - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
     scenario:
       - "lint"
     action:
