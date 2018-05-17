@@ -69,3 +69,24 @@
       - "tox-test"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "@weekly"
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+      - "trusty":
+          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+    scenario:
+      - pike
+      - newton
+      - ceph
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
