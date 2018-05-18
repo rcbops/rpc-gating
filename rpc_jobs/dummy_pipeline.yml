@@ -19,30 +19,6 @@
       - '{trigger}-Dep-Update_{repo_name}-{branch}'
 
 - project:
-    name: 'rpc-metadata-pre-merge'
-
-    repo_name: 'rpc-metadata'
-    repo_url: 'https://github.com/mattt416/rpc-metadata'
-
-    branches:
-      - 'master'
-
-    image:
-      - container:
-          SLAVE_TYPE: "container"
-
-    scenario:
-      - 'lint'
-
-    action:
-      - 'test'
-
-    jira_project_key: 'RE'
-
-    jobs:
-      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
-
-- project:
     name: 'rpc-product-1-pre-merge'
 
     repo_name: 'rpc-product-1'

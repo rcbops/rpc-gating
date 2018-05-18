@@ -1,0 +1,23 @@
+- project:
+    name: 'releases-pre-merge'
+
+    repo_name: 'releases'
+    repo_url: 'https://github.com/rcbops/releases'
+
+    branches:
+      - 'master'
+
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+
+    scenario:
+      - 'lint'
+
+    action:
+      - 'test'
+
+    jira_project_key: 'RE'
+
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
