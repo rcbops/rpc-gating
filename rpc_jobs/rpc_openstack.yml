@@ -216,19 +216,14 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
-      - "ironic"
-      - "swift"
+      - ironic
+      - swift
     action:
       - system
       - deploy
     exclude:
-      - action: system
-        image: xenial_mnaio_loose_artifacts
       - action: system
         scenario: ironic
     # Required by RPC-ASC team to upload test results qTest
@@ -266,21 +261,14 @@
     branch: "pike"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio_no_artifacts
+      - xenial_mnaio_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
-      - "ironic"
-      - "swift"
+      - ironic
+      - swift
     action:
-      - system:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
-      - deploy:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+      - system
+      - deploy
     exclude:
       - action: system
         scenario: ironic
@@ -319,24 +307,15 @@
     branch: "pike-rc"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio_no_artifacts
+      - xenial_mnaio_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
-      - "ironic"
-      - "swift"
+      - ironic
+      - swift
     action:
-      - system:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
-      - deploy:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+      - system
+      - deploy
     exclude:
-      - action: system
-        image: xenial_mnaio_loose_artifacts
       - action: system
         scenario: ironic
     # Required by RPC-ASC team to upload test results qTest
@@ -380,20 +359,13 @@
     branch: "newton"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio_loose_artifacts
+      - xenial_mnaio_loose_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
-      - "swift"
+      - swift
     action:
-      - system:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
-      - deploy:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+      - system
+      - deploy
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
@@ -435,20 +407,13 @@
     branch: "newton-rc"
     jira_project_key: "RO"
     image:
-      - xenial_mnaio_loose_artifacts
+      - xenial_mnaio_loose_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
-      - "swift"
+      - swift
     action:
-      - system:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
-      - deploy:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+      - system
+      - deploy
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:

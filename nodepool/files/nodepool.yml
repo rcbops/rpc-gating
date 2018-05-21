@@ -10,12 +10,6 @@ zookeeper-servers:
     port: 2181
 
 labels:
-  - name: ubuntu-xenial
-    min-ready: 0
-    max-ready-age: 3600
-  - name: ubuntu-trusty
-    min-ready: 0
-    max-ready-age: 3600
   - name: ubuntu-xenial-g1-8
     min-ready: 3
     max-ready-age: 3600
@@ -28,35 +22,30 @@ labels:
   - name: ubuntu-trusty-p2-15
     min-ready: 0
     max-ready-age: 3600
+  - name: ubuntu-xenial-om-io2
+    min-ready: 2
+    max-ready-age: 3600
 
 providers:
   - name: pubcloud-iad
     region-name: 'IAD'
     cloud: public_cloud
-    api-timeout: 60
-    boot-timeout: 120
+    boot-timeout: 3600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    cloud-images: &provider_cloudimage_block
+      - name: ubuntu-xenial-onmetal
+        image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: &provider_diskimage_block
       - name: ubuntu-xenial
         config-drive: true
       - name: ubuntu-trusty
         config-drive: true
-    pools: &provider_pools_block
+    pools:
       - name: main
         max-servers: 20
         availability-zones: []
-        labels:
-          - name: ubuntu-xenial
-            diskimage: ubuntu-xenial
-            flavor-name: general1-8
-            key-name: jenkins
-            console-log: true
-          - name: ubuntu-trusty
-            diskimage: ubuntu-trusty
-            flavor-name: general1-8
-            key-name: jenkins
-            console-log: true
+        labels: &provider_pools_main_labels_block
           - name: ubuntu-xenial-g1-8
             diskimage: ubuntu-xenial
             flavor-name: general1-8
@@ -77,26 +66,44 @@ providers:
             flavor-name: performance2-15
             key-name: jenkins
             console-log: true
+      - name: onmetal
+        max-servers: 10
+        availability-zones: []
+        labels: &provider_pools_onmetal_labels_block
+          - name: ubuntu-xenial-om-io2
+            cloud-image: ubuntu-xenial-onmetal
+            flavor-name: onmetal-io2
+            key-name: jenkins
+            console-log: true
 
   - name: pubcloud-dfw
     region-name: 'DFW'
     cloud: public_cloud
-    api-timeout: 60
-    boot-timeout: 120
+    boot-timeout: 3600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    cloud-images: *provider_cloudimage_block
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
-    pools: *provider_pools_block
+      - name: main
+        max-servers: 20
+        availability-zones: []
+        labels: *provider_pools_main_labels_block
+      - name: onmetal
+        max-servers: 10
+        availability-zones: []
+        labels: *provider_pools_onmetal_labels_block
 
   - name: pubcloud-ord
     region-name: 'ORD'
     cloud: public_cloud
-    api-timeout: 60
     boot-timeout: 120
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
-    pools: *provider_pools_block
+      - name: main
+        max-servers: 20
+        availability-zones: []
+        labels: *provider_pools_main_labels_block
 
 diskimages:
   - name: ubuntu-xenial
