@@ -33,7 +33,6 @@ providers:
   - name: pubcloud-iad
     region-name: 'IAD'
     cloud: public_cloud
-    api-timeout: 60
     boot-timeout: 120
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
@@ -81,7 +80,6 @@ providers:
   - name: pubcloud-dfw
     region-name: 'DFW'
     cloud: public_cloud
-    api-timeout: 60
     boot-timeout: 120
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
@@ -91,7 +89,6 @@ providers:
   - name: pubcloud-ord
     region-name: 'ORD'
     cloud: public_cloud
-    api-timeout: 60
     boot-timeout: 120
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
