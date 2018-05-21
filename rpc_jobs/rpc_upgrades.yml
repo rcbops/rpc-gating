@@ -71,7 +71,7 @@
       - "r12.2.5_to_newton_leap"
       - "r12.2.2_to_newton_leap"
       - "r12.1.2_to_newton_leap"
-      - "kilo_to_newton_leap" 
+      - "kilo_to_newton_leap"
       - "r14.7.0_to_newton_minor"
     jira_project_key: "RLM"
     jobs:
@@ -136,10 +136,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          FLAVOR: "onmetal-io1"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io1"
     scenario:
       - "swift"
     action:
@@ -163,10 +160,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          FLAVOR: "onmetal-io1"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io1"
     scenario:
       - "swift"
     action:
