@@ -84,6 +84,7 @@ providers:
     cloud-images: *provider_cloudimage_block
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
+    pools:
       - name: main
         max-servers: 20
         availability-zones: []
@@ -100,6 +101,7 @@ providers:
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
+    pools:
       - name: main
         max-servers: 20
         availability-zones: []
