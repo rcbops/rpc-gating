@@ -28,24 +28,30 @@ labels:
   - name: ubuntu-trusty-p2-15
     min-ready: 0
     max-ready-age: 3600
+  - name: ubuntu-xenial-om-io1
+    min-ready: 1
+    max-ready-age: 3600
 
 providers:
   - name: pubcloud-iad
     region-name: 'IAD'
     cloud: public_cloud
-    boot-timeout: 120
+    boot-timeout: 3600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    cloud-images: &provider_cloudimage_block
+      - name: ubuntu-xenial-onmetal
+        image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: &provider_diskimage_block
       - name: ubuntu-xenial
         config-drive: true
       - name: ubuntu-trusty
         config-drive: true
-    pools: &provider_pools_block
+    pools:
       - name: main
         max-servers: 20
         availability-zones: []
-        labels:
+        labels: &provider_pools_main_labels_block
           - name: ubuntu-xenial
             diskimage: ubuntu-xenial
             flavor-name: general1-8
@@ -76,6 +82,15 @@ providers:
             flavor-name: performance2-15
             key-name: jenkins
             console-log: true
+      - name: onmetal
+        max-servers: 5
+        availability-zones: []
+        labels: &provider_pools_onmetal_labels_block
+          - name: ubuntu-xenial-om-io1
+            cloud-image: ubuntu-xenial-onmetal
+            flavor-name: onmetal-io1
+            key-name: jenkins
+            console-log: true
 
   - name: pubcloud-dfw
     region-name: 'DFW'
@@ -84,7 +99,10 @@ providers:
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
-    pools: *provider_pools_block
+      - name: main
+        max-servers: 20
+        availability-zones: []
+        labels: *provider_pools_main_labels_block
 
   - name: pubcloud-ord
     region-name: 'ORD'
@@ -93,7 +111,10 @@ providers:
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
-    pools: *provider_pools_block
+      - name: main
+        max-servers: 20
+        availability-zones: []
+        labels: *provider_pools_main_labels_block
 
 diskimages:
   - name: ubuntu-xenial
