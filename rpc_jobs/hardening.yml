@@ -6,10 +6,7 @@
     jira_project_key: "RQE"
     image:
       - xenial_mnaio_loose_artifacts:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          FLAVOR: "onmetal-io1"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: ""
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io1"
     scenario:
       - "swift"
     action:
