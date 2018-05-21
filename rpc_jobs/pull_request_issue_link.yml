@@ -23,7 +23,7 @@
           trigger-phrase: '.*recheck_all.*|.*recheck_issue_link.*'
           only-trigger-phrase: false
           auth-id: "github_account_rpc_jenkins_svc"
-          status-context: 'CIT/issue-link'
+          status-context: 'CIT/issue_link'
           cancel-builds-on-update: true
     properties:
       - github:
