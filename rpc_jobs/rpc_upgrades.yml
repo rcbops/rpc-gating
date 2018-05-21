@@ -136,7 +136,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io1"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - "swift"
     action:
@@ -160,7 +160,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io1"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - "swift"
     action:

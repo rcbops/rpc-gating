@@ -6,7 +6,7 @@
     jira_project_key: "RQE"
     image:
       - xenial_mnaio_loose_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io1"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - "swift"
     action:
