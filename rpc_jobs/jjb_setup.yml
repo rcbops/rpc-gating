@@ -38,6 +38,7 @@
             description: "Which jobs to update and with what options."
             default: -r rpc_jobs
         - rpc_gating_params
+    concurrent: true
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
@@ -52,6 +53,7 @@
                     passwordVariable: "JENKINS_API_PASSWORD"
                   )
                 ]){
+                  lock('jjb'){
                   sh """#!/bin/bash -xe
                     source ../.venv/bin/activate
 
@@ -79,9 +81,10 @@
                                  --ignore-cache \
                                  \$JJB_ARGS update \$UPDATE_ARGS $JOBS
                   """
-                }
-              }
-            }
+                  } // lock
+                } // with credentials
+              } // stage
+            } // dir
           } catch(e) {
             print(e)
             // Here we only create a JIRA issue when we are not running the job
