@@ -1,0 +1,16 @@
+- project:
+    name: "rpc-component-master-premerge"
+    repo_name: "rpc_component"
+    repo_url: "https://github.com/rcbops/rpc_component"
+    series: "master"
+    branches:
+      - "master"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "unit"
+    action:
+      - "test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
