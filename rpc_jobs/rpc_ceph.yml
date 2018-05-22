@@ -48,6 +48,8 @@
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
       - rpco_newton:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
+      - rpco_pike:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
 
     # rpc-ceph ignores that setting for now
     action:
