@@ -28,16 +28,13 @@
           sh """#!/bin/bash -xe
               virtualenv --python python3 .venv3
               set +x; . .venv3/bin/activate; set -x
-              pip install -c constraints.txt -r requirements.txt
-              pushd rpc_component
-                  pip install .
-              popd
+              pip install -c '${env.WORKSPACE}/rpc-gating/constraints_rpc_component.txt' rpc_component
           """
           String component_text = sh (script: """#!/bin/bash -xe
               set +x; . .venv3/bin/activate; set -x
               src_branch="origin/master"
               pr_branch="HEAD"
-              component --releases-dir . compare --from \${src_branch} --to \${pr_branch} --verify version || true
+              component --releases-dir . compare --from \${src_branch} --to \${pr_branch} --verify release || true
           """,
           returnStdout: true)
 
@@ -49,7 +46,7 @@
 
             String component = component_yaml['name']
             String series = component_yaml['release']['series']
-            String sha = component_yaml['release']['version']['sha']
+            String sha = component_yaml['release']['sha']
 
             List jobNames = Hudson.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob)*.fullName
 
@@ -164,10 +161,7 @@
           sh """#!/bin/bash -xe
             virtualenv --python python3 .venv3
             set +x; . .venv3/bin/activate; set -x
-            pip install -c constraints.txt -r requirements.txt
-            pushd rpc_component
-                pip install .
-            popd
+            pip install -c '${env.WORKSPACE}/rpc-gating/constraints_rpc_component.txt' rpc_component
           """
           component = readYaml text: component_text
           println "=== component CLI standard out ==="
@@ -179,8 +173,8 @@
               src_branch="origin/master"
               pr_branch="HEAD"
               component --releases-dir .\
-                 component --component-name ${component["name"]}\
-                 get --version ${component["release"]["version"]["version"]} --pred || true
+                 release --component-name ${component["name"]}\
+                 get --version ${component["release"]["version"]} --pred || true
             """,
             returnStdout: true
           )
@@ -193,8 +187,8 @@
 
         ORG=component["repo_url"].split("/")[3]
         REPO=component["name"]
-        VERSION=component["release"]["version"]["version"]
-        PREVIOUS_VERSION=pred_component["release"]["version"]["version"]
+        VERSION=component["release"]["version"]
+        PREVIOUS_VERSION=pred_component["release"]["version"]
         RELEASE_NOTES_FILE="${WORKSPACE}/artifacts/release_notes"
         MAINLINE=component["release"]["series"]
         RC_BRANCH="${MAINLINE}-rc"
