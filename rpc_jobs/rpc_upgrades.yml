@@ -148,6 +148,13 @@
       - "r12.2.2_to_newton_leap"
       - "r12.1.2_to_newton_leap"
       - "kilo_to_newton_leap"
+      - "mitaka_to_newton_leap_system"
+      - "liberty_to_newton_leap_system"
+      - "r12.2.8_to_newton_leap_system"
+      - "r12.2.5_to_newton_leap_system"
+      - "r12.2.2_to_newton_leap_system"
+      - "r12.1.2_to_newton_leap_system"
+      - "kilo_to_newton_leap_system"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
@@ -170,6 +177,12 @@
       - "r12.2.2_to_r14.current_leap"
       - "r12.1.2_to_r14.current_leap"
       - "kilo_to_r14.current_leap"
+      - "liberty_to_r14.current_leap_system"
+      - "r12.2.8_to_r14.current_leap_system"
+      - "r12.2.5_to_r14.current_leap_system"
+      - "r12.2.2_to_r14.current_leap_system"
+      - "r12.1.2_to_r14.current_leap_system"
+      - "kilo_to_r14.current_leap_system"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
