@@ -88,8 +88,9 @@
       debug:
         msg: "Generated inventory: {{ lookup('file', inventory_path+'/hosts')}}"
 
-    - name: Wait for SSH to be available on all hosts
+    - name: Wait for SSH to be available on all hosts (10 min timeout)
       wait_for:
+        timeout: 600
         port: 22
         host: "{{ instance.server.accessIPv4 }}"
 
