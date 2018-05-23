@@ -28,7 +28,7 @@ start_sha=$(git rev-parse --verify HEAD)
 if [[ "${COMPONENT_DEPENDENCIES_UPDATE}" == 'true' ]]; then
   apt-get update
   apt-get install -y python3-pip
-  pip3 install 'git+https://github.com/mattt416/rpc-metadata#rpc_component&subdirectory=rpc_component'
+  pip3 install -c "${WORKSPACE}/rpc-gating/constraints_rpc_component.txt" rpc_component
   component --releases-repo 'https://github.com/mattt416/rpc-metadata' dependency update-requirements
   if [[ ${start_sha} == $(git rev-parse --verify HEAD) ]]; then
     echo "No component dependency updates found."
