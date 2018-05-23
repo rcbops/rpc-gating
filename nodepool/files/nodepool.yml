@@ -23,14 +23,14 @@ labels:
     min-ready: 0
     max-ready-age: 3600
   - name: ubuntu-xenial-om-io2
-    min-ready: 2
+    min-ready: 0
     max-ready-age: 3600
 
 providers:
   - name: pubcloud-iad
     region-name: 'IAD'
     cloud: public_cloud
-    boot-timeout: 3600
+    boot-timeout: 600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     cloud-images: &provider_cloudimage_block
       - name: ubuntu-xenial-onmetal
@@ -79,7 +79,7 @@ providers:
   - name: pubcloud-dfw
     region-name: 'DFW'
     cloud: public_cloud
-    boot-timeout: 3600
+    boot-timeout: 600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     cloud-images: *provider_cloudimage_block
     image-name-format: nodepool-{image_name}-{timestamp}
