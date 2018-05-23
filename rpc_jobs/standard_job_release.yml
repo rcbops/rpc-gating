@@ -318,4 +318,4 @@
           SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.stdJob("release", "{credentials}", "{jira_project_key}")
+      common.stdJob("release", "{credentials}", "{jira_project_key}", "{wrappers}")
