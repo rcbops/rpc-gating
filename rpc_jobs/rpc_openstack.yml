@@ -216,7 +216,10 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
     scenario:
       - ironic
       - swift
@@ -262,7 +265,10 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
     scenario:
       - ironic
       - swift
@@ -308,7 +314,10 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
     scenario:
       - ironic
       - swift
@@ -360,7 +369,10 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
     scenario:
       - swift
     action:
@@ -408,7 +420,10 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
     scenario:
       - swift
     action:
