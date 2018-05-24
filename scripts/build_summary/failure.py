@@ -37,7 +37,10 @@ class Failure(ABC):
     def get_serialisation_dict(self):
         return {
             "type": type(self).__name__,
-            "detail": self.detail,
+            # limit the detail field to 1000 chars, to prevent logs
+            # with super long lines from causing the data file to
+            # baloon
+            "detail": self.detail[:1000],
             "description": self.description,
             "build": self.build.get_serialisation_dict_without_failure_ref(),
             "category": self.category
