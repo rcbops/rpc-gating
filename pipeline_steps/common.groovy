@@ -1351,6 +1351,13 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
               }
             }
 
+            found_hook_dir = findHookDir(hook_dir)
+
+            if (!found_hook_dir) {
+              throw new Exception(
+                "No valid hook directory found in project's `gating` directory")
+            }
+
             stage('Execute Pre Script') {
               // The 'pre' stage is used to prepare the environment for
               // testing but is not the test itself. Retry on failure
@@ -1358,8 +1365,8 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
               retry(3) {
                 sh """#!/bin/bash -xeu
                   cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-                  if [[ -e gating/${hook_dir}/pre ]]; then
-                    gating/${hook_dir}/pre
+                  if [[ -e gating/${found_hook_dir}/pre ]]; then
+                    gating/${found_hook_dir}/pre
                   fi
                 """
               }
@@ -1369,7 +1376,7 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
               stage('Execute Run Script') {
                 sh """#!/bin/bash -xeu
                   cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-                  gating/${hook_dir}/run
+                  gating/${found_hook_dir}/run
                 """
               }
             } finally {
@@ -1381,8 +1388,8 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
                   returnStatus: true,
                   script: """#!/bin/bash -xeu
                              cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-                             if [[ -e gating/${hook_dir}/post ]]; then
-                               gating/${hook_dir}/post
+                             if [[ -e gating/${found_hook_dir}/post ]]; then
+                               gating/${found_hook_dir}/post
                              fi"""
                 )
                 if (post_result != 0) {
@@ -1433,4 +1440,25 @@ Boolean isSkippable(String skip_pattern, String credentials) {
     }
   }
   return skipIt
+}
+
+def findHookDir(String hook_dirs) {
+  String found_hook_dir = null
+  List split_hook_dirs = hook_dirs.split(/,\s?/)
+
+  for (Integer i = 0; i < split_hook_dirs.size(); i++) {
+    if (fileExists("${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}/gating/${split_hook_dirs[i]}")) {
+      found_hook_dir = split_hook_dirs[i]
+      if (i > 0) {
+        print(
+          "DEPRECATION WARNING: This job is using a hook directory of `gating/${found_hook_dir}`.\n" \
+          + "DEPRECATION WARNING: This directory is being removed on 2018-08-24 in favour of `gating/${split_hook_dirs[0]}`.\n" \
+          + "DEPRECATION WARNING: Please update your job accordingly!"
+        )
+      }
+      break
+    }
+  }
+
+  return found_hook_dir
 }

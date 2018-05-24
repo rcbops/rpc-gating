@@ -89,4 +89,4 @@
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.stdJob("post_merge_test", "{credentials}", "{jira_project_key}", "{wrappers}")
+      common.stdJob("periodic,post_merge_test", "{credentials}", "{jira_project_key}", "{wrappers}")
