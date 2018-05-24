@@ -139,4 +139,4 @@
 
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.stdJob("gate", "{credentials}", "")
+      common.stdJob("gate", "{credentials}", "", "{wrappers}")

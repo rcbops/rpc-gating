@@ -1462,3 +1462,140 @@ def findHookDir(String hook_dirs) {
 
   return found_hook_dir
 }
+
+void runReleasesPullRequestWorkflow(String baseBranch, String prBranch){
+  (prType, componentText) = getComponentChange(baseBranch, prBranch)
+
+  if (prType == "release"){
+    testRelease(component_text)
+    createRelease()
+  }else{
+    throw new Exception("The pull request type ${prType} is unsupported.")
+  }
+
+  build(
+    job: "Merge-Pull-Request",
+    wait: false,
+    parameters: [
+      [
+        $class: "StringParameterValue",
+        name: "RPC_GATING_BRANCH",
+        value: RPC_GATING_BRANCH,
+      ],
+      [
+        $class: "StringParameterValue",
+        name: "pr_repo",
+        value: ghprbGhRepository,
+      ],
+      [
+        $class: "StringParameterValue",
+        name: "pr_number",
+        value: ghprbPullId,
+      ],
+      [
+        $class: "StringParameterValue",
+        name: "commit",
+        value: ghprbActualCommit,
+      ],
+    ]
+  )
+}
+
+List getComponentChange(String baseBranch, String prBranch){
+  venv = "${WORKSPACE}/.componentvenv"
+  sh """#!/bin/bash -xe
+      virtualenv --python python3 ${venv}
+      set +x; . ${venv}/bin/activate; set -x
+      pip install -c '${env.WORKSPACE}/rpc-gating/constraints_rpc_component.txt' rpc_component
+  """
+  types = ["release", "registration"]
+  for (i=0; i < types.size(); i++){
+    type = types[i]
+    try{
+      component_text = sh(
+        script: """#!/bin/bash -xe
+          set +x; . ${venv}/bin/activate; set -x
+          component --releases-dir . compare --from ${baseBranch} --to ${prBranch} --verify ${type}
+        """,
+        returnStdout: true
+      )
+      break
+    }catch (e){
+      println "Pull request is not a ${type}."
+      component_text = null
+    }
+  }
+  if (component_text == null) {
+    throw new Exception("The pull request does not correspond to any of the known types ${types}.")
+  }
+
+  println "Pull request is a ${type}."
+  println "=== component CLI standard out ==="
+  println component_text
+
+  return [type, component_text]
+}
+
+void testRelease(component_text){
+  def component = readYaml text: component_text
+  String name = component['name']
+  String series = component['release']['series']
+  String sha = component['release']['sha']
+
+  List jobNames = Hudson.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob)*.fullName
+
+  def parallelBuilds = [:]
+
+  // Cannot do for (job in jobNames), see:
+  // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
+  for (j in jobNames) {
+    def job = j
+    def m = job =~ /RELEASE_${name}-${series}/
+    if (m) {
+      parallelBuilds[job] = {
+        build(
+          job: job,
+          wait: true,
+          parameters: [
+            [
+              $class: 'StringParameterValue',
+              name: 'BRANCH',
+              value: sha
+            ]
+          ]
+        )
+      }
+    }
+  }
+
+  parallel parallelBuilds
+}
+
+void createRelease(){
+  build(
+    job: "Component-Release",
+    wait: true,
+    parameters: [
+      [
+        $class: "StringParameterValue",
+        name: "RPC_GATING_BRANCH",
+        value: RPC_GATING_BRANCH,
+      ],
+      [
+        $class: "StringParameterValue",
+        name: "component_text",
+        value: component_text,
+      ],
+      [
+        $class: "StringParameterValue",
+        name: "pr_repo",
+        value: ghprbGhRepository,
+      ],
+      [
+        $class: "StringParameterValue",
+        name: "pr_number",
+        value: ghprbPullId,
+      ],
+    ]
+  )
+}
