@@ -12,30 +12,21 @@
       common.globalWraps(){
         // Do something that creates an artifact
         stage("Build"){
+          // ARA placeholder included to test that an ARA
+          // link is added to the sidebar of the index page
+          // when an ARA report is present.
           sh """
             mkdir -p artifacts
+            mkdir -p artifacts_report
+            mkdir -p artifacts/localhost/host/openstack/log/ara-report
+            echo "<html>ara report placeholder</html>" \
+              > artifacts/localhost/host/openstack/log/ara-report/index.html;
             date > artifacts/datestamp
+            hostname > artifacts/hostname
+            echo "<html>dstat report placeholder</html>" \
+              > /var/log/dstat.html
+            cp -vr /var/log artifacts
           """
         }
-
-        stage("Upload"){
-          pubcloud.uploadToSwift(
-            archive_name: "artifacts_${BUILD_TAG}.tar.bz2",
-            artifacts_dir: "${WORKSPACE}/artifacts",
-            container: "jenkins_logs",
-            path: "${WORKSPACE}/artifacts",
-            report_dir: "${WORKSPACE}/artifacts_report"
-          )
-        }
-
-        stage("Publish"){
-          // link to artifacts from Jenkins UI
-          publishHTML(
-            alwaysLinkToLastBuild: true,
-            keepAll: true,
-            reportFiles: "index.html",
-            reportName: "Build Artifact Links",
-            reportDir: "${WORKSPACE}/artifacts_report"
-          )
-        }
+        common.archive_artifacts()
       }
