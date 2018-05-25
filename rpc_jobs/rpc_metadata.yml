@@ -1,0 +1,8 @@
+
+- project:
+    name: "rpc-metadata"
+    repo_name: "rpc-metadata"
+    repo_url: "https://github.com/mattt416/rpc-metadata"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
