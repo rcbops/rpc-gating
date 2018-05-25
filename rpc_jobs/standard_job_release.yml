@@ -14,7 +14,7 @@
           cancel-builds-on-update: true
     properties:
       - github:
-          url: "https://github.com/mattt416/rpc-metadata"
+          url: "https://github.com/rcbops/releases"
       - build-discarder:
           days-to-keep: 30
     parameters:
@@ -22,7 +22,7 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
-        dir("${env.WORKSPACE}/rpc-metadata") {
+        dir("${env.WORKSPACE}/releases") {
           common.clone_with_pr_refs()
           common.runReleasesPullRequestWorkflow("origin/master", "HEAD", "RE")
         } // dir
@@ -50,7 +50,7 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
-        dir("${env.WORKSPACE}/rpc-metadata"){
+        dir("${env.WORKSPACE}/releases"){
           common.clone_with_pr_refs(
             ".", "git@github.com:${pr_repo}.git", "origin/pr/${pr_number}/merge",
           )
