@@ -24,7 +24,7 @@
       common.globalWraps(){
         dir("${env.WORKSPACE}/rpc-metadata") {
           common.clone_with_pr_refs()
-          common.runReleasesPullRequestWorkflow("origin/master", "HEAD")
+          common.runReleasesPullRequestWorkflow("origin/master", "HEAD", "RE")
         } // dir
       } // globalWraps
 
