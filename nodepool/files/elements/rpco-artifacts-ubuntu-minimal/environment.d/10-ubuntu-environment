@@ -1,0 +1,31 @@
+export DISTRO_NAME=ubuntu
+export DIB_RELEASE=${DIB_RELEASE:-xenial}
+export DIB_DEBIAN_COMPONENTS=${DIB_DEBIAN_COMPONENTS:-main,universe}
+export DIB_DISTRIBUTION_MIRROR=${DIB_DISTRIBUTION_MIRROR:-http://mirror.rackspace.com/ubuntu}
+export RCBOPS_REPO_URL="http://rpc-repo.rackspace.com"
+export RCBOPS_REPO_APT_URL="${RCBOPS_REPO_URL}/apt-mirror/integrated"
+export RCBOPS_REPO_KEY_URL="${RCBOPS_REPO_URL}/apt-mirror/rcbops-release-signing-key.asc"
+export RPC_RELEASE=${RPC_RELEASE:-r14.2.0}
+
+# For the image build, we only make use of the base
+# repo for the base set of packages from the original
+# release. All updates, backports and security patches
+# come from the RPC-O apt repo source.
+DIB_APT_SOURCES_CONF_DEFAULT=\
+"default:deb ${DIB_DISTRIBUTION_MIRROR} ${DIB_RELEASE} ${DIB_DEBIAN_COMPONENTS//,/}
+rpco:deb ${RCBOPS_REPO_APT_URL} ${RPC_RELEASE}-${DIB_RELEASE} main
+"
+export DIB_APT_SOURCES_CONF=${DIB_APT_SOURCES_CONF:-${DIB_APT_SOURCES_CONF_DEFAULT}}
+
+# Use the RPCO keyring for package validation
+DIB_APT_KEYRING=${RCBOPS_REPO_KEY_URL}
+
+# We need to make sure that python is installed
+# so that DIB can use it. We also ensure that
+# curl is used so that the root.d stage can use
+# it.
+export DIB_DEBOOTSTRAP_EXTRA_ARGS="--include=python,curl"
+
+# We're installing python2, so we force it to be
+# used by DIB for the build.
+export DIB_PYTHON_VERSION="2"
