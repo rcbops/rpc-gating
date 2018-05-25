@@ -1479,32 +1479,32 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch){
     throw new Exception("The pull request type ${prType} is unsupported.")
   }
 
-  build(
-    job: "Merge-Pull-Request",
-    wait: false,
-    parameters: [
-      [
-        $class: "StringParameterValue",
-        name: "RPC_GATING_BRANCH",
-        value: RPC_GATING_BRANCH,
-      ],
-      [
-        $class: "StringParameterValue",
-        name: "pr_repo",
-        value: ghprbGhRepository,
-      ],
-      [
-        $class: "StringParameterValue",
-        name: "pr_number",
-        value: ghprbPullId,
-      ],
-      [
-        $class: "StringParameterValue",
-        name: "commit",
-        value: ghprbActualCommit,
-      ],
-    ]
-  )
+  // build(
+  //   job: "Merge-Pull-Request",
+  //   wait: false,
+  //   parameters: [
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "RPC_GATING_BRANCH",
+  //       value: RPC_GATING_BRANCH,
+  //     ],
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "pr_repo",
+  //       value: ghprbGhRepository,
+  //     ],
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "pr_number",
+  //       value: ghprbPullId,
+  //     ],
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "commit",
+  //       value: ghprbActualCommit,
+  //     ],
+  //   ]
+  // )
 }
 
 List getComponentChange(String baseBranch, String prBranch){
