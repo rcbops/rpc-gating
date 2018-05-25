@@ -44,7 +44,7 @@ providers:
         config-drive: true
       - name: ubuntu-trusty
         config-drive: true
-      - name: rpco-14.2-xenial-base
+      - name: rpco-14.2-xenial-artifacts
         config-drive: true
     pools:
       - name: main
