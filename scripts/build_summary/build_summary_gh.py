@@ -84,6 +84,16 @@ def summary(jobsdir, newerthan, jsonfile):
                 .format(jsonfile=jsonfile))
             traceback.print_exc(file=sys.stderr)
 
+    # Current production data.json has some extremely long failure detail
+    # fields. This commit includes a change to failure.py to ensure
+    # that doesn't happen in future. However to deal with the problem
+    # on disk, we load and truncate the fields here.
+    # At the end of this run, the data file will be rewritten with
+    # truncated values, so this fix code will only be needed once.
+    for b in data['builds']:
+        for f in b['failures']:
+            f['detail'] = f['detail'][:1000]
+
     # create set of build ids so we don't scan builds
     # we already have summary information about
     build_dict = {"{jn}_{bn}".format(jn=b['job_name'], bn=b['build_num']):
