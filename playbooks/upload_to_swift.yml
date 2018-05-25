@@ -3,51 +3,12 @@
   connection: local
   gather_facts: False
   tasks:
-
-    - set_fact:
-        archive_base_name: "{{job_name}}_{{build_number}}"
-
-    # This is done so that downloaded archives have a useful name
-    - name: Move artifacts dir
-      shell: mv "{{ artifacts_dir | basename }}" "{{ archive_base_name }}"
+    - name: Create archive
+      command: "tar -cjf {{ archive_name }} {{ artifacts_dir | basename }}"
       args:
         chdir: "{{ artifacts_dir | dirname }}"
-
-    - set_fact:
-        adir: "{{ artifacts_dir | dirname }}/{{archive_base_name}}"
-
-    - name: Clean up previous attempts
-      shell: rm -f {{ adir | basename }}.txt {{ adir | basename }}.list {{ adir | basename }}-split*
-      args:
-        chdir: "{{ adir |dirname }}"
-        executable: /bin/bash
-        warn: no
-
-    - name: Build full archive file listing
-      shell: find {{ adir | basename }} -type f > {{ adir | basename }}.list
-      args:
-        chdir: "{{ adir | dirname }}"
-        executable: /bin/bash
-
-    # split on macOS can't cope with --lines
-    - name: Split full archive file listing into chunks
-      command: split -l {{ files_per_archive }} {{ adir | basename }}.list {{ adir | basename }}-split.
-      args:
-        chdir: "{{ adir | dirname }}"
-
-    - name: Register split archive contents files
-      shell: "ls -1 {{ adir | basename }}-split.*"
-      args:
-        chdir: "{{ adir | dirname }}"
-        executable: /bin/bash
-      register: _archive_file_lists
-
-    - name: Create the archives from the split file listings
-      command: "tar -cjf {{ item }}.tar.bz2 -T {{ item }}"
-      args:
-        chdir: "{{ adir | dirname }}"
-        warn: no
-      with_items: "{{ _archive_file_lists.stdout_lines }}"
+      tags:
+        - skip_ansible_lint
 
     - name: Create a public Cloud Files container
       os_object:
@@ -72,25 +33,19 @@
         object_cdn: "{{ service_catalog | selectattr('type', 'equalto', 'rax:object-cdn') | first }}"
       when: rax_pub_cloud
 
-    - set_fact:
-        object_cdn_url: "{{ (object_cdn['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}/{{ container }}"
-
-    - set_fact:
-        object_store_url: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region ) | first)['publicURL']}}"
-
-    - name: Enable CDN
-      uri:
-        url: "{{object_cdn_url}}"
-        method: PUT
-        headers:
-          X-AUTH-TOKEN: "{{ auth_token }}"
-          X-Cdn-Enabled: True
-        status_code: "200, 201, 202, 204"
+    # os_object does not currently support setting object expiration header field
+    - name: Upload file to Cloud Files
+      command: "swift upload {{ container }} {{ archive_name }} --header 'X-Delete-After:2592000'"
+      args:
+        chdir: "{{ artifacts_dir | dirname }}"
       no_log: true
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
 
     - name: Get Rackspace CloudFiles CDN URL
       uri:
-        url: "{{ object_cdn_url }}"
+        url: "{{ (object_cdn['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}/{{ container }}"
         method: HEAD
         headers:
           X-AUTH-TOKEN: "{{ auth_token }}"
@@ -107,125 +62,23 @@
         container_public_url: "{{ object_store['endpoints'][0]['publicURL'] }}"
       when: not rax_pub_cloud
 
+    - name: Read artifact description file
+      set_fact:
+        artifact_description: "{{ lookup('file', description_file) }}"
+      no_log: True
+      when:
+        - description_file is defined
+        - description_file != None
 
-    # In order for uploaded files to be browsable:
-    # 1. Static hosting must be enabled (this links index.html to requests for container/)
-    # 2. CDN must be enabled (to allow anonymous http access to the container)
-    # 3. An index page must be generated, as this is not done automatically
-    - name: Enable static web hosting
-      uri:
-        url: "{{object_store_url}}"
-        method: POST
-        headers:
-          X-AUTH-TOKEN: "{{ auth_token }}"
-          X-Container-Meta-Web-Index: index.html
-        status_code: 200, 201, 202, 204
-      no_log: true
+    - name: Create artifact report location if doesn't exist
+      file:
+        path: "{{ report_dir }}"
+        state: directory
 
-    # Do this before generating index.html, styles.css and data.json
-    # So they don't show up on the final page.
-    - name: Generate file list with sizes for index page data
-      shell: |
-        find . \
-          -type f \
-          -mindepth 1 \
-          -exec ls -l {} \; \
-        |sed 's+\./++g'
-      args:
-        chdir: "{{ adir }}"
-      register: file_list
-
-    - name: Copy index.html
-      copy:
-        src: templates/artifact/index.html
-        dest: "{{ adir }}/index.html"
-
-    - name: Copy style.css
-      copy:
-        src: templates/artifact/styles.css
-        dest: "{{ adir }}/styles.css"
-
-    - name: Create the archive wget source file
-      copy:
-        content: |
-          {% for archive in _archive_file_lists.stdout_lines %}
-          {{ container_public_url }}/{{ archive }}.tar.bz2
-          {% endfor %}
-        dest: "{{ adir }}/{{ adir | basename }}.txt"
-
-    # this is json data containing metadata and a list of files
-    # that will be downloaded by index.html
-    # and used to display a list of available artifacts
-    - name: Generate data.json
-      copy:
-        content: |
-          {
-            "job_name": "{{ job_name }}",
-            "build_number": "{{ build_number }}",
-            "archive_base_name": "{{ archive_base_name }}",
-            "container_public_url": "{{ container_public_url}}",
-            "files": [
-              {% for file_line in file_list.stdout_lines %}
-                {% set file_list = file_line.split() %}
-                {% if file_list|length > 3 %}
-                  {
-                    "path": "{{file_list[-1]}}",
-                    "size": {{file_list[4]}}
-                  }{{ "," if not loop.last else "" }}
-                {% endif %}
-              {% endfor %}
-            ],
-            "archives": [
-              {% for archive in _archive_file_lists.stdout_lines %}
-              "{{ container_public_url }}/{{ archive }}.tar.bz2"{{"," if not loop.last else"" }}
-              {% endfor %}
-            ]
-          }
-        dest: "{{ adir }}/data.json"
-
-    # os_object does not currently support setting object expiration header field
-    - name: Upload html index and related files to Cloud Files
-      command: "swift upload {{ container }} index.html styles.css data.json {{ adir | basename }}.txt --header 'X-Delete-After:2592000'"
-      args:
-        chdir: "{{ adir }}"
-      environment:
-        OS_AUTH_TOKEN: "{{ auth_token }}"
-        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
-
-    # os_object does not currently support setting object expiration header field
-    - name: Upload archive files to Cloud Files
-      command: >-
-        swift upload {{ container }} {{ item }}.tar.bz2
-        --header 'X-Delete-After: 7200'
-      args:
-        chdir: "{{ adir | dirname }}"
-      environment:
-        OS_AUTH_TOKEN: "{{ auth_token }}"
-        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
-      with_items: "{{ _archive_file_lists.stdout_lines }}"
-
-    # The Ansible uri module does not support '--upload-file' at this time.
-    # See:
-    # https://github.com/ansible/ansible/issues/24440
-    # https://github.com/ansible/ansible/pull/33689
-    - name: Upload/extract the archives
-      command: >-
-        curl -i -XPUT
-        -H 'X-Auth-Token: {{ auth_token }}'
-        -H 'X-Delete-After: 7200'
-        {{ object_store_url }}/{{ container }}?extract-archive=tar.bz2
-        -T {{ item }}.tar.bz2
-      args:
-        chdir: "{{ adir | dirname }}"
-        warn: no
-      with_items: "{{ _archive_file_lists.stdout_lines }}"
-      no_log: true
-
-    # used by common.archive_artifacts to put the link into the build description
-    - name: "Write public url file"
-      shell: |
-        echo "{{ container_public_url }}/index.html" > ${WORKSPACE}/artifact_public_url
+    - name: Generate HTML report with file URL
+      template:
+        src: swift.html.j2
+        dest: "{{ report_dir }}/index.html"
   vars:
     region: "DFW"
     cloud_name: "public_cloud"
-    files_per_archive: 1000

@@ -293,14 +293,12 @@ def String gen_instance_name(String prefix="AUTO"){
   return instance_name
 }
 
-String container_name(){
-  return "jenkinsjob_"+env.JOB_NAME+"_"+env.BUILD_NUMBER
-}
-
 def archive_artifacts(Map args = [:]){
   stage('Compress and Publish Artifacts'){
 
+    archive_name = args.get("archive_name", "artifacts_${env.BUILD_TAG}.tar.bz2")
     artifacts_dir = args.get("artifacts_dir", "${env.WORKSPACE}/artifacts")
+    report_dir = args.get("report_dir", "${env.WORKSPACE}/artifacts_report")
     results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
 
     dir(results_dir) {
@@ -332,13 +330,19 @@ def archive_artifacts(Map args = [:]){
     }
 
     pubcloud.uploadToSwift(
-      container: container_name(),
-      path: artifacts_dir
+      archive_name: archive_name,
+      container: "jenkins_logs",
+      path: artifacts_dir,
+      report_dir: report_dir
     )
-    if(fileExists(file: "artifact_public_url")){
-      artifact_public_url = readFile(file: "artifact_public_url")
-      currentBuild.description = "<h2><a href='"+artifact_public_url+"'>Build Artifacts</a></h2>"
-    }
+    publishHTML(
+      allowMissing: true,
+      alwaysLinkToLastBuild: true,
+      keepAll: true,
+      reportDir: report_dir,
+      reportFiles: 'index.html',
+      reportName: 'Build Artifact Links'
+    )
   } // stage
 }
 
