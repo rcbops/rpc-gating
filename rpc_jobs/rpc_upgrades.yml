@@ -193,3 +193,20 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "@weekly"
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-incremental"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - xenial_aio:
+          FLAVOR: "performance2-15"
+          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "newton_to_queens_incremental"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
