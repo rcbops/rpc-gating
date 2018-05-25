@@ -1473,6 +1473,8 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch){
   if (prType == "release"){
     testRelease(component_text)
     createRelease()
+  }else if (type == "registration"){
+    registerComponent(component_text)
   }else{
     throw new Exception("The pull request type ${prType} is unsupported.")
   }
@@ -1538,6 +1540,62 @@ List getComponentChange(String baseBranch, String prBranch){
   println component_text
 
   return [type, component_text]
+}
+
+void registerComponent(component_text){
+  def component = readYaml text: component_text
+  createComponentGateTrigger(component["name"], component["repo_url"])
+}
+
+void createComponentGateTrigger(String name, String repoUrl){
+  job = "Component-Gate-Trigger_${name}"
+  componentGateTrigger = [
+    "project": [
+      "name": name,
+      "repo_name": name,
+      "repo_url": repoUrl,
+      "jobs": [job],
+    ]
+  ]
+  filename = "${name}.yml".replace("-", "_")
+  projectsFile = "rpc_jobs/${filename}"
+  dir("${WORKSPACE}/rpc-gating"){
+    if (fileExists(projectsFile)){
+      componentProjects = readYaml file: projectsFile
+    }else {
+      componentProjects = []
+    }
+
+    if (! (componentGateTrigger in componentProjects)){
+      componentProjects << componentGateTrigger
+      withEnv(
+        [
+          "PROJECTS_FILE=${projectsFile}",
+          "REPO_DIR=${WORKSPACE}/rpc-gating",
+          "COMPONENT_NAME=${name}",
+        ]
+      ){
+        withCredentials([
+          string(
+            credentialsId: 'rpc-jenkins-svc-github-pat',
+            variable: 'PAT'
+          ),
+          usernamePassword(
+            credentialsId: "jira_user_pass",
+            usernameVariable: "JIRA_USER",
+            passwordVariable: "JIRA_PASS"
+          )
+        ]){
+          sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+            sh """#!/bin/bash -xe
+              set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+              scripts/add_component_gate_trigger_job.sh
+            """
+          }
+        }
+      }
+    }
+  }
 }
 
 void testRelease(component_text){

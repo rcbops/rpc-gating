@@ -32,6 +32,7 @@
     name: 'Component-Release'
     project-type: pipeline
     concurrent: false
+    jira_project_key: "RE"
     properties:
       - build-discarder:
           days-to-keep: 30
