@@ -1473,36 +1473,38 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch){
   if (prType == "release"){
     testRelease(component_text)
     createRelease()
+  }else if (type == "registration"){
+    registerComponent(component_text)
   }else{
     throw new Exception("The pull request type ${prType} is unsupported.")
   }
 
-  build(
-    job: "Merge-Pull-Request",
-    wait: false,
-    parameters: [
-      [
-        $class: "StringParameterValue",
-        name: "RPC_GATING_BRANCH",
-        value: RPC_GATING_BRANCH,
-      ],
-      [
-        $class: "StringParameterValue",
-        name: "pr_repo",
-        value: ghprbGhRepository,
-      ],
-      [
-        $class: "StringParameterValue",
-        name: "pr_number",
-        value: ghprbPullId,
-      ],
-      [
-        $class: "StringParameterValue",
-        name: "commit",
-        value: ghprbActualCommit,
-      ],
-    ]
-  )
+  // build(
+  //   job: "Merge-Pull-Request",
+  //   wait: false,
+  //   parameters: [
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "RPC_GATING_BRANCH",
+  //       value: RPC_GATING_BRANCH,
+  //     ],
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "pr_repo",
+  //       value: ghprbGhRepository,
+  //     ],
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "pr_number",
+  //       value: ghprbPullId,
+  //     ],
+  //     [
+  //       $class: "StringParameterValue",
+  //       name: "commit",
+  //       value: ghprbActualCommit,
+  //     ],
+  //   ]
+  // )
 }
 
 List getComponentChange(String baseBranch, String prBranch){
@@ -1538,6 +1540,46 @@ List getComponentChange(String baseBranch, String prBranch){
   println component_text
 
   return [type, component_text]
+}
+
+void registerComponent(component_text){
+  def component = readYaml text: component_text
+  createComponentGateTrigger(component["name"], component["repo_url"])
+}
+
+void createComponentGateTrigger(String name, String repoUrl){
+  repo_dir = "${WORKSPACE}/rpc-gating"
+  filename = "${name}.yml".replace("-", "_")
+  projectsFile = "${repo_dir}/rpc_jobs/${filename}"
+  withEnv(
+    [
+      "PROJECTS_FILE=${projectsFile}",
+      "REPO_DIR=${repo_dir}",
+      "COMPONENT_NAME=${name}",
+      "COMPONENT_REPO_URL=${repoUrl}",
+    ]
+  ){
+    withCredentials(
+      [
+        string(
+          credentialsId: 'rpc-jenkins-svc-github-pat',
+          variable: 'PAT'
+        ),
+        usernamePassword(
+          credentialsId: "jira_user_pass",
+          usernameVariable: "JIRA_USER",
+          passwordVariable: "JIRA_PASS"
+        ),
+      ]
+    ){
+      sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+        sh """#!/bin/bash -xe
+          set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+          ${WORKSPACE}/rpc-gating/scripts/add_component_gate_trigger_job.sh
+        """
+      }
+    }
+  }
 }
 
 void testRelease(component_text){
