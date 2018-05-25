@@ -248,10 +248,11 @@ def uploadToSwift(Map args){
         common.venvPlaybook(
           playbooks: ["rpc-gating/playbooks/upload_to_swift.yml"],
           vars: [
+            archive_name: args.archive_name,
             artifacts_dir: args.path,
             container: args.container,
-            job_name: env.JOB_NAME,
-            build_number: env.BUILD_NUMBER,
+            description_file: args.description_file,
+            report_dir: args.report_dir
           ]
         ) // venvPlaybook
       } // withEnv
