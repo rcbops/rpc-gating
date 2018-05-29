@@ -16,38 +16,33 @@
     - set_fact:
         adir: "{{ artifacts_dir | dirname }}/{{archive_base_name}}"
 
-    - name: Clean up previous attempts
-      shell: rm -f {{ adir | basename }}.txt {{ adir | basename }}.list {{ adir | basename }}-split*
+    # links are unlikely to work when expanded on a different
+    # system so remove them. Create a list of removed links
+    # to give users a clue as to why their file is missing.
+    # Also swift client fails on dangling links.
+    - name: Remove links from artifacts
+      shell: |
+        find {{ adir | basename }} \
+          -type l \
+          -print \
+          -delete \
+          | tee {{ adir | basename }}/removedlinks.txt
       args:
         chdir: "{{ adir |dirname }}"
-        executable: /bin/bash
-        warn: no
+      register: removed_links
 
-    - name: Build full archive file listing
-      shell: find {{ adir | basename }} -type f > {{ adir | basename }}.list
+    # This task runs async while the individual files are being uploaded
+    # then when compression is complete, the resultant archive is uploaded.
+    # 3 Hour Timeout
+    - name: Create archive
+      shell: "tar -c {{ adir | basename }} | gzip --fast > {{archive_base_name}}.tar.gz"
       args:
         chdir: "{{ adir | dirname }}"
-        executable: /bin/bash
-
-    # split on macOS can't cope with --lines
-    - name: Split full archive file listing into chunks
-      command: split -l {{ files_per_archive }} {{ adir | basename }}.list {{ adir | basename }}-split.
-      args:
-        chdir: "{{ adir | dirname }}"
-
-    - name: Register split archive contents files
-      shell: "ls -1 {{ adir | basename }}-split.*"
-      args:
-        chdir: "{{ adir | dirname }}"
-        executable: /bin/bash
-      register: _archive_file_lists
-
-    - name: Create the archives from the split file listings
-      command: "tar -cjf {{ item }}.tar.bz2 -T {{ item }}"
-      args:
-        chdir: "{{ adir | dirname }}"
-        warn: no
-      with_items: "{{ _archive_file_lists.stdout_lines }}"
+      async: 10800
+      poll: 0
+      register: create_archive_async
+      tags:
+        - skip_ansible_lint
 
     - name: Create a public Cloud Files container
       os_object:
@@ -145,13 +140,19 @@
         src: templates/artifact/styles.css
         dest: "{{ adir }}/styles.css"
 
-    - name: Create the archive wget source file
-      copy:
-        content: |
-          {% for archive in _archive_file_lists.stdout_lines %}
-          {{ container_public_url }}/{{ archive }}.tar.bz2
-          {% endfor %}
-        dest: "{{ adir }}/{{ adir | basename }}.txt"
+
+    # os_object does not currently support setting object expiration header field
+    # production retention
+    - name: Upload Artifacts to Cloud Files
+      command: "swift upload --object-threads 100 --ignore-checksum --header 'X-Delete-After:{{ retention }}' {{ container }} {{ adir | basename }}"
+      args:
+        chdir: "{{ adir |dirname }}"
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
+      failed_when: false
+      register: artifact_upload
+
 
     # this is json data containing metadata and a list of files
     # that will be downloaded by index.html
@@ -164,6 +165,12 @@
             "build_number": "{{ build_number }}",
             "archive_base_name": "{{ archive_base_name }}",
             "container_public_url": "{{ container_public_url}}",
+            "removed_links_count": {{ removed_links.stdout_lines|count }},
+            "failed_uploads": [
+              {% for line in artifact_upload.stderr_lines %}
+                "{{ line }}"{{ "," if not loop.last else "" }}
+              {% endfor %}
+            ],
             "files": [
               {% for file_line in file_list.stdout_lines %}
                 {% set file_list = file_line.split() %}
@@ -176,56 +183,53 @@
               {% endfor %}
             ],
             "archives": [
-              {% for archive in _archive_file_lists.stdout_lines %}
-              "{{ container_public_url }}/{{ archive }}.tar.bz2"{{"," if not loop.last else"" }}
-              {% endfor %}
+              "{{ container_public_url }}/{{ archive_base_name }}.tar.gz"
             ]
           }
         dest: "{{ adir }}/data.json"
 
     # os_object does not currently support setting object expiration header field
-    - name: Upload html index and related files to Cloud Files
-      command: "swift upload {{ container }} index.html styles.css data.json {{ adir | basename }}.txt --header 'X-Delete-After:2592000'"
+    - name: Upload index data (data.json) to CloudFiles
+      command: >-
+        swift upload {{ container }} {{ adir | basename }}/data.json
+        --header 'X-Delete-After: {{ retention }}'
       args:
-        chdir: "{{ adir }}"
+        chdir: "{{ adir | dirname }}"
       environment:
         OS_AUTH_TOKEN: "{{ auth_token }}"
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
+      register: upload_data
+      until: upload_data|success
+      retries: 2
+
+    - name: Wait for async archive creation to complete
+      async_status:
+        jid: "{{ create_archive_async.ansible_job_id }}"
+      register: caa
+      until: caa.finished
+      retries: 180
+      delay: 60
 
     # os_object does not currently support setting object expiration header field
-    - name: Upload archive files to Cloud Files
+    - name: Upload archive to CloudFiles
       command: >-
-        swift upload {{ container }} {{ item }}.tar.bz2
-        --header 'X-Delete-After: 7200'
+        swift upload {{ container }} {{ archive_base_name }}.tar.gz
+        --header 'X-Delete-After: {{ retention }}'
       args:
         chdir: "{{ adir | dirname }}"
       environment:
         OS_AUTH_TOKEN: "{{ auth_token }}"
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
-      with_items: "{{ _archive_file_lists.stdout_lines }}"
-
-    # The Ansible uri module does not support '--upload-file' at this time.
-    # See:
-    # https://github.com/ansible/ansible/issues/24440
-    # https://github.com/ansible/ansible/pull/33689
-    - name: Upload/extract the archives
-      command: >-
-        curl -i -XPUT
-        -H 'X-Auth-Token: {{ auth_token }}'
-        -H 'X-Delete-After: 7200'
-        {{ object_store_url }}/{{ container }}?extract-archive=tar.bz2
-        -T {{ item }}.tar.bz2
-      args:
-        chdir: "{{ adir | dirname }}"
-        warn: no
-      with_items: "{{ _archive_file_lists.stdout_lines }}"
-      no_log: true
+      register: upload_archive
+      until: upload_archive|success
+      retries: 2
 
     # used by common.archive_artifacts to put the link into the build description
     - name: "Write public url file"
       shell: |
-        echo "{{ container_public_url }}/index.html" > ${WORKSPACE}/artifact_public_url
+        echo "{{ container_public_url }}/{{archive_base_name}}/index.html" > ${WORKSPACE}/artifact_public_url
   vars:
     region: "DFW"
     cloud_name: "public_cloud"
-    files_per_archive: 1000
+    # 30 days
+    retention: 2592000
