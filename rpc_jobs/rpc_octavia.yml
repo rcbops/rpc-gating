@@ -13,11 +13,11 @@
     branches:
       - "master.*"
 
-    # Use image for RPC-O install
+    # Use pre-built RPC-O image - Newton
     image:
       - xenial:
           FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+          IMAGE: "rpc-r14.14.0-xenial-swift"
 
     # Octavia ignores that setting for now
     scenario:
@@ -52,7 +52,7 @@
     image:
       - xenial:
           FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+          IMAGE: "rpc-r16.2.1-xenial_no_artifacts-swift"
 
     # Octavia ignores that setting for now
     scenario:
@@ -69,7 +69,7 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
  - project:
-    name: "rpc-octavia-post-merge"
+    name: "rpc-octavia-master-post-merge"
 
     repo_name: "rpc-octavia"
     # URL of the rpc-octavia repository
@@ -80,13 +80,12 @@
     # upstream installer
     branch:
       - "master"
-      - "pike"
 
     # Use image for RPC-O install
     image:
       - xenial:
           FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+          IMAGE: "rpc-r14.14.0-xenial-swift"
 
     # Octavia ignores that setting for now
     scenario:
@@ -104,3 +103,40 @@
     # Link to the standard pre-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-octavia-pike-post-merge"
+
+    repo_name: "rpc-octavia"
+    # URL of the rpc-octavia repository
+    repo_url: "https://github.com/rcbops/rpc-octavia"
+
+    # currently we only do master and pike. Once RPC-O switches
+    # to Queens we will retire rpc-octavia and use the
+    # upstream installer
+    branch:
+      - "pike"
+
+    # Use image for RPC-O install
+    image:
+      - xenial:
+          FLAVOR: "performance2-15"
+          IMAGE: "rpc-r16.2.1-xenial_no_artifacts-swift"
+
+    # Octavia ignores that setting for now
+    scenario:
+      - "functional"
+
+    # Octavia ignores that setting for now
+    action:
+      - "test"
+
+    jira_project_key: "K8S"
+
+    # Add repo creds to post merge jobs so artefacts can be uploaded
+    credentials: "rpc_repo"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
