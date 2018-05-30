@@ -1,0 +1,59 @@
+- job:
+    name: RE-unit-venv-constraint-leak
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        stage("Check constraints file matches built venv"){
+          sh """#!/bin/bash
+            . .venv/bin/activate
+            # Install test-requirements, so all the test constraints don't get
+            # flagged for removal
+            pip install -r rpc-gating/test-requirements.txt -c rpc-gating/constraints.txt
+            rc=0
+            pip freeze --all |sort > new-constraints.txt
+            sort rpc-gating/constraints.txt > sorted-constraints.txt
+
+            c(){
+              comm \$@ sorted-constraints.txt new-constraints.txt
+            }
+            # lines only in first file (excludes columns 2 & 3)
+            c -23 > extra_constraints.txt
+            # lines only in second file
+            c -13 > missing_constraints.txt
+            # column three is lines common to both files, not printed.
+
+            # non zero message // display message if a file has at least one line
+            # also sets return code to one if the file has at least one line
+            nzm(){
+              file="\$1"
+              msg="\$2"
+              [[ "\$(wc -l < \$file)" -gt 0 ]] && {
+                echo -e "\$msg"
+                cat \$file
+                rc=1
+              }
+            }
+
+            nzm extra_constraints.txt "The following constraints should be removed from the constraints file:"
+            nzm missing_constraints.txt "\n\nThe following constraints should be added to the constraints file:"
+
+            if [[ \$rc -ne 0 ]]; then
+              echo -e "\n\nThe constraints file should be:"
+              cat new-constraints.txt
+              echo -e "\n\nConstraints test failed :("
+            else
+              echo "Constraints test passed :)"
+            fi
+
+            exit \$rc
+
+          """
+        }
+      }
