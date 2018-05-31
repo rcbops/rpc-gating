@@ -27,7 +27,7 @@
     action:
       - "test"
 
-    jira_project_key: "K8S"
+    jira_project_key: "RI"
 
     # Link to the standard pre-merge-template
     jobs:
@@ -62,7 +62,7 @@
     action:
       - "test"
 
-    jira_project_key: "K8S"
+    jira_project_key: "RI"
 
     # Link to the standard pre-merge-template
     jobs:
@@ -96,7 +96,7 @@
     action:
       - "test"
 
-    jira_project_key: "K8S"
+    jira_project_key: "RI"
 
     # Add repo creds to post merge jobs so artefacts can be uploaded
     credentials: "rpc_repo"
@@ -135,7 +135,7 @@
     action:
       - "test"
 
-    jira_project_key: "K8S"
+    jira_project_key: "RI"
 
     # Add repo creds to post merge jobs so artefacts can be uploaded
     credentials: "rpc_repo"
