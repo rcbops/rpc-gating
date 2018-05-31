@@ -3,10 +3,44 @@
   connection: local
   gather_facts: False
   tasks:
-    - name: Create archive
-      command: "tar -cjf {{ archive_name }} {{ artifacts_dir | basename }}"
+
+    - set_fact:
+        archive_base_name: "{{job_name}}_{{build_number}}"
+
+    # This is done so that downloaded archives have a useful name
+    - name: Move artifacts dir
+      shell: mv "{{ artifacts_dir | basename }}" "{{ archive_base_name }}"
       args:
         chdir: "{{ artifacts_dir | dirname }}"
+
+    - set_fact:
+        adir: "{{ artifacts_dir | dirname }}/{{archive_base_name}}"
+
+    # links are unlikely to work when expanded on a different
+    # system so remove them. Create a list of removed links
+    # to give users a clue as to why their file is missing.
+    # Also swift client fails on dangling links.
+    - name: Remove links from artifacts
+      shell: |
+        find {{ adir | basename }} \
+          -type l \
+          -print \
+          -delete \
+          | tee {{ adir | basename }}/removedlinks.txt
+      args:
+        chdir: "{{ adir |dirname }}"
+      register: removed_links
+
+    # This task runs async while the individual files are being uploaded
+    # then when compression is complete, the resultant archive is uploaded.
+    # 3 Hour Timeout
+    - name: Create archive
+      shell: "tar -c {{ adir | basename }} | gzip --fast > {{archive_base_name}}.tar.gz"
+      args:
+        chdir: "{{ adir | dirname }}"
+      async: 10800
+      poll: 0
+      register: create_archive_async
       tags:
         - skip_ansible_lint
 
@@ -33,19 +67,25 @@
         object_cdn: "{{ service_catalog | selectattr('type', 'equalto', 'rax:object-cdn') | first }}"
       when: rax_pub_cloud
 
-    # os_object does not currently support setting object expiration header field
-    - name: Upload file to Cloud Files
-      command: "swift upload {{ container }} {{ archive_name }} --header 'X-Delete-After:2592000'"
-      args:
-        chdir: "{{ artifacts_dir | dirname }}"
+    - set_fact:
+        object_cdn_url: "{{ (object_cdn['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}/{{ container }}"
+
+    - set_fact:
+        object_store_url: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region ) | first)['publicURL']}}"
+
+    - name: Enable CDN
+      uri:
+        url: "{{object_cdn_url}}"
+        method: PUT
+        headers:
+          X-AUTH-TOKEN: "{{ auth_token }}"
+          X-Cdn-Enabled: True
+        status_code: "200, 201, 202, 204"
       no_log: true
-      environment:
-        OS_AUTH_TOKEN: "{{ auth_token }}"
-        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
 
     - name: Get Rackspace CloudFiles CDN URL
       uri:
-        url: "{{ (object_cdn['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}/{{ container }}"
+        url: "{{ object_cdn_url }}"
         method: HEAD
         headers:
           X-AUTH-TOKEN: "{{ auth_token }}"
@@ -62,23 +102,134 @@
         container_public_url: "{{ object_store['endpoints'][0]['publicURL'] }}"
       when: not rax_pub_cloud
 
-    - name: Read artifact description file
-      set_fact:
-        artifact_description: "{{ lookup('file', description_file) }}"
-      no_log: True
-      when:
-        - description_file is defined
-        - description_file != None
 
-    - name: Create artifact report location if doesn't exist
-      file:
-        path: "{{ report_dir }}"
-        state: directory
+    # In order for uploaded files to be browsable:
+    # 1. Static hosting must be enabled (this links index.html to requests for container/)
+    # 2. CDN must be enabled (to allow anonymous http access to the container)
+    # 3. An index page must be generated, as this is not done automatically
+    - name: Enable static web hosting
+      uri:
+        url: "{{object_store_url}}"
+        method: POST
+        headers:
+          X-AUTH-TOKEN: "{{ auth_token }}"
+          X-Container-Meta-Web-Index: index.html
+        status_code: 200, 201, 202, 204
+      no_log: true
 
-    - name: Generate HTML report with file URL
-      template:
-        src: swift.html.j2
-        dest: "{{ report_dir }}/index.html"
+    # Do this before generating index.html, styles.css and data.json
+    # So they don't show up on the final page.
+    - name: Generate file list with sizes for index page data
+      shell: |
+        find . \
+          -type f \
+          -mindepth 1 \
+          -exec ls -l {} \; \
+        |sed 's+\./++g'
+      args:
+        chdir: "{{ adir }}"
+      register: file_list
+
+    - name: Copy index.html
+      copy:
+        src: templates/artifact/index.html
+        dest: "{{ adir }}/index.html"
+
+    - name: Copy style.css
+      copy:
+        src: templates/artifact/styles.css
+        dest: "{{ adir }}/styles.css"
+
+
+    # os_object does not currently support setting object expiration header field
+    # production retention
+    - name: Upload Artifacts to Cloud Files
+      command: "swift upload --object-threads 100 --ignore-checksum --header 'X-Delete-After:{{ retention }}' {{ container }} {{ adir | basename }}"
+      args:
+        chdir: "{{ adir |dirname }}"
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
+      failed_when: false
+      register: artifact_upload
+
+
+    # this is json data containing metadata and a list of files
+    # that will be downloaded by index.html
+    # and used to display a list of available artifacts
+    - name: Generate data.json
+      copy:
+        content: |
+          {
+            "job_name": "{{ job_name }}",
+            "build_number": "{{ build_number }}",
+            "archive_base_name": "{{ archive_base_name }}",
+            "container_public_url": "{{ container_public_url}}",
+            "removed_links_count": {{ removed_links.stdout_lines|count }},
+            "failed_uploads": [
+              {% for line in artifact_upload.stderr_lines %}
+                "{{ line }}"{{ "," if not loop.last else "" }}
+              {% endfor %}
+            ],
+            "files": [
+              {% for file_line in file_list.stdout_lines %}
+                {% set file_list = file_line.split() %}
+                {% if file_list|length > 3 %}
+                  {
+                    "path": "{{file_list[-1]}}",
+                    "size": {{file_list[4]}}
+                  }{{ "," if not loop.last else "" }}
+                {% endif %}
+              {% endfor %}
+            ],
+            "archives": [
+              "{{ container_public_url }}/{{ archive_base_name }}.tar.gz"
+            ]
+          }
+        dest: "{{ adir }}/data.json"
+
+    # os_object does not currently support setting object expiration header field
+    - name: Upload index data (data.json) to CloudFiles
+      command: >-
+        swift upload {{ container }} {{ adir | basename }}/data.json
+        --header 'X-Delete-After: {{ retention }}'
+      args:
+        chdir: "{{ adir | dirname }}"
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
+      register: upload_data
+      until: upload_data|success
+      retries: 2
+
+    - name: Wait for async archive creation to complete
+      async_status:
+        jid: "{{ create_archive_async.ansible_job_id }}"
+      register: caa
+      until: caa.finished
+      retries: 180
+      delay: 60
+
+    # os_object does not currently support setting object expiration header field
+    - name: Upload archive to CloudFiles
+      command: >-
+        swift upload {{ container }} {{ archive_base_name }}.tar.gz
+        --header 'X-Delete-After: {{ retention }}'
+      args:
+        chdir: "{{ adir | dirname }}"
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
+      register: upload_archive
+      until: upload_archive|success
+      retries: 2
+
+    # used by common.archive_artifacts to put the link into the build description
+    - name: "Write public url file"
+      shell: |
+        echo "{{ container_public_url }}/{{archive_base_name}}/index.html" > ${WORKSPACE}/artifact_public_url
   vars:
     region: "DFW"
     cloud_name: "public_cloud"
+    # 30 days
+    retention: 2592000

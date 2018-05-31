@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RE Artefacts</title>
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet" type="text/css">
+  <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet" type="text/css"></link>
+  <link href="styles.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div id="app">
+    <v-app>
+      <v-navigation-drawer
+        fixed
+        :mini-variant="miniVariant"
+        :clipped="clipped"
+        v-model="drawer"
+        app
+      >
+        <v-list>
+          <v-list-tile :value="true" v-for="(item, i) in items" :key="item.title" :href="item.url">
+            <v-list-tile-action>
+              <v-icon light v-html="item.icon"></v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title v-text="item.title"></v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
+      </v-navigation-drawer>
+      <v-toolbar fixed app :clipped-left="clipped">
+        <v-toolbar-side-icon @click.native.stop="drawer = !drawer"></v-toolbar-side-icon>
+        <v-toolbar-title v-text="title"></v-toolbar-title>
+        <v-spacer></v-spacer>
+      </v-toolbar>
+      <main>
+        <v-content>
+          <v-container fluid>
+            <v-layout column>
+              <downloadcard
+                :archives="this.archives"
+              ></downloadcard>
+              <faileduploads
+                :failed_uploads="this.failed_uploads"
+              ></faileduploads>
+              <linkwarning
+                :removed_links_count="this.removed_links_count"
+              ></linkwarning>
+              <filelist
+                :files="this.files"
+                :container_public_url="this.container_public_url"
+                :dataloaded="this.dataloaded"
+                :archive_base_name="this.archive_base_name"
+              ></filelist>
+            </v-layout>
+          </v-container>
+        </v-content>
+      </main>
+      <v-footer :fixed="fixed" app>
+        <span>&copy; Rackspace 2018</span>
+      </v-footer>
+    </v-app>
+  </div>
+
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.0"></script>
+  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.min.js"></script> -->
+  <!-- lodash was used in an attempt to debounce search events, however it was unsuccessfull
+  as dattables refreshes immediately even if the function to switch models is debounced -->
+  <script>
+
+  // Add human readable display func to Number objects
+  //https://stackoverflow.com/a/20463021
+    Object.defineProperty(Number.prototype,'fileSize',{value:function(a,b,c,d){
+      return (a=a?[1e3,'k','B']:[1024,'K','iB'],b=Math,c=b.log,
+        d=c(this)/c(a[0])|0,this/b.pow(a[0],d)).toFixed(2)
+        +' '+(d?(a[1]+'MGTPEZY')[--d]+a[2]:'Bytes');
+    },writable:false,enumerable:false});
+
+    Vue.component('downloadcard',{
+      props: ["archives"],
+      template: `
+        <v-card>
+         <v-card-title>
+           <div>
+             <h3>Download All Artifacts</h3>
+             <div>
+               Use the following link to download an archive of artifacts
+               relating to this job.
+             </div>
+           </div>
+         </v-card-title>
+         <v-list>
+          <downloadlink v-for="archive in archives" :key="archive" :archive="archive"></downloadlink>
+        </v-list>
+       </v-card>
+      `
+    })
+
+    Vue.component('downloadlink',{
+      props: ["archive"],
+      computed: {
+        basename: function() {
+          tokens = this.archive.split("/")
+          return tokens[tokens.length -1]
+        }
+      },
+      template: `
+        <v-list-tile>
+          <v-list-tile-action>
+            <v-icon>archive</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+           <a :href="archive">{{ this.basename }}</a>
+          </v-list-tile-content>
+        </v-list-tile>
+      `
+    })
+
+    Vue.component('linkwarning', {
+      props: ["removed_links_count"],
+      template: `
+        <v-card v-if="removed_links_count > 0">
+         <v-card-title>
+           <div>
+             <h3>Symlinks Removed</h3>
+             <div>
+              {{ removed_links_count }} symlinks have been removed from this
+              artifact set. Please check the <a href="removedlinks.txt">list of removed symlinks</a>
+              if you are missing a file.
+             </div>
+           </div>
+         </v-card-title>
+       </v-card>
+      `
+    })
+
+    Vue.component('faileduploads', {
+      props: ["failed_uploads"],
+      data: function (){
+        return {
+          showfailures: true
+        }
+      },
+      methods: {
+        togglefailures: function(){
+          this.showfailures = ! this.showfailures
+        }
+      },
+      template: `
+        <v-card v-if="failed_uploads.length > 0">
+         <v-card-title>
+           <div>
+             <h3>Some Uploads Failed</h3>
+             <div>
+              {{ failed_uploads.length }} file{{ failed_uploads.length > 1 ? "s" : "" }} failed to upload.
+             </div>
+           </div>
+         </v-card-title>
+         <v-card-actions>
+          <v-btn @click="togglefailures" v-if="showfailures" color="info">Hide Failures</v-btn>
+          <v-btn @click="togglefailures" v-else color="info">Show Failures</v-btn>
+         </v-card-actions>
+         <v-card-text v-if="showfailures">
+          <p v-for="failure in failed_uploads" style="color: red">{{failure}}</p>
+         </v-card-text>
+       </v-card>
+      `
+    })
+
+
+    Vue.component('filelist', {
+      props: ['files', 'container_public_url', 'dataloaded', 'archive_base_name'],
+      methods: {
+        searchchange: function(event){
+          // This function is called when text is entered or removed
+          // from the search box. There are two separate
+          // models for the file list, a hierachy for browsing folders
+          // and a flat list of files for searching.
+          // When ever text is entered into the search box, we switch
+          // to the flat list model, when the search box is cleared
+          // we go back to the hierachy
+          if (event.length == 0){
+            // no text in search box, reset view to root of the file tree
+            this.localfiles = this.listfrombranch(this.filetree)
+          } else {
+            // some text has been entered, set view to filtered flat list
+            // of files
+            this.localfiles = this.files
+          }
+          // Reset the path. This means that a user who has browsed
+          // the file tree will loose their place when searching
+          // however not clearing the path leads to inconsistent ui
+          // which is worse.
+          this.path=[{path: 'Artifacts', size: 0}]
+        },
+        listfrombranch: function(branch){
+          // The data table requires a flat list to render.
+          // This function takes one node from the file tree
+          // and produces a flat list of files and folders
+          flist = []
+          flist = flist.concat(branch.files)
+          Object.keys(branch.children).forEach(key => {
+            child = branch.children[key]
+            flist.push({
+              type: 'folder',
+              icon: 'folder',
+              size: 0,
+              path: child.path,
+              branch: child,
+            })
+          })
+          if (branch.parent != null){
+            flist.push({
+              type: 'folder',
+              icon: 'folder',
+              path: '..',
+              size: 0,
+              branch: branch
+            })
+          }
+          return flist
+        },
+        // called when an item in the file list is clicked
+        clickhandler: function(item){
+          // if this is a folder, dont follow the link
+          // update the display to show the next folder
+          if('type' in item && item.type == 'folder'){
+            event.preventDefault()
+            if (item.path == '..'){
+              // go up to the parent folder
+              this.localfiles = this.listfrombranch(item.branch.parent)
+              this.path.pop()
+            } else {
+              // go down to a child folder
+              this.localfiles = this.listfrombranch(item.branch)
+              this.path.push(item.branch)
+            }
+          }
+          // If it was a file, do nothing, let the browser
+          // load or download the linked file.
+        },
+        // called when a breadcrumb (path trail) item is clicked
+        breadcrumbclick: function(dir){
+          empty_path = [{path: 'Artifacts', size: 0}]
+          // go back to the root of the tree
+          if(dir.path == "Artifacts"){
+            this.localfiles = this.listfrombranch(this.filetree)
+            this.path = empty_path
+            return;
+          }
+
+          // go to whichver dir was clicked then
+          // rebuild the path array
+          this.localfiles=this.listfrombranch(dir)
+          tpath = []
+          while (dir.parent != null){
+            tpath.push(dir)
+            dir=dir.parent
+          }
+          tpath.reverse()
+          this.path = empty_path.concat(tpath)
+        }
+      },
+      computed: {
+        filetree: function(){
+          tree = {
+            parent: null,
+            path: '',
+            files: [],
+            children: {}
+          }
+          this.files.forEach(f => {
+            path = f.path.split('/').filter(p => p.length > 0)
+            dirs = path.slice(0, -1)
+            file = path[path.length -1]
+            branch = tree
+            dirs.forEach(dirname => {
+              if (!(dirname in branch.children)){
+                branch.children[dirname]={
+                  path: dirname,
+                  children: {},
+                  files: [],
+                  parent: branch
+                }
+              }
+              branch = branch.children[dirname]
+            })
+            branch.files.push({
+              path: f.path,
+              size: f.size
+            })
+          })
+          return tree
+        },
+        cfiles: function(){
+          return this.files
+        }
+      },
+      watch: {
+        files: function(n,o){
+          this.localfiles = this.listfrombranch(this.filetree);
+        }
+      },
+      data: function(){
+        return {
+          path: [{path: 'Artifacts', size: 0}],
+          branch: {},
+          localfiles: [],
+          search: '',
+          rows_per_page_items: [25,100,500,{"text":"All","value":-1}],
+          headers: [
+            {
+              text: "File",
+              value: "path"
+            },
+            {
+              text: "Size",
+              value: "size"
+            }
+          ]
+        }
+      },
+      template: `
+      <v-card>
+       <v-card-title>
+          <div>
+            <h3>Browse Artifacts</h3>
+            Use this table to locate and download individual files.
+            <v-breadcrumbs v-if="this.path.length > 1">
+              <v-icon slot="divider">chevron_right</v-icon>
+               <v-breadcrumbs-item v-for="dir in path" :key="dir.path">
+                  <span @click="breadcrumbclick(dir)">{{dir.path.split('/').slice(-1)[0]}}</span>
+               </v-breadcrumbs-item>
+            </v-breadcrumbs>
+          </div>
+         <v-spacer></v-spacer>
+         <v-text-field
+           v-model="search"
+           @input="searchchange"
+           append-icon="search"
+           label="Search"
+           single-line
+           hide-details
+         ></v-text-field>
+       </v-card-title>
+        <v-data-table
+          :headers="this.headers"
+          :items="this.localfiles"
+          :search="search"
+          :loading="! this.dataloaded"
+          :rows-per-page-items="this.rows_per_page_items"
+          class="elevation-1"
+        >
+          <template slot="items" slot-scope="props">
+            <tr @click="clickhandler(props.item)">
+              <td>
+                <v-icon>{{ props.item.type == 'folder' ? 'folder': 'insert_drive_file'}}</v-icon>
+                <a :href="container_public_url +'/' + archive_base_name +'/'+ props.item.path">
+                  {{ search.length > 0 ? props.item.path : props.item.path.split('/').slice(-1)[0] }}
+                </a>
+              </td>
+              <td>{{ props.item.type == 'folder' ? '' : props.item.size.fileSize(1) }}</td>
+            </tr>
+          </template>
+        </v-data-table>
+      </v-card>
+      `
+    })
+    new Vue({
+      el: '#app',
+      created: function(){
+        this.$http.get("data.json").then(function(response){
+          this.files = response.body.files
+          this.job_name = response.body.job_name
+          this.build_number = response.body.build_number
+          this.archive_base_name = response.body.archive_base_name
+          this.archives = response.body.archives
+          this.container_public_url = response.body.container_public_url
+          this.removed_links_count = response.body.removed_links_count
+          this.failed_uploads = response.body.failed_uploads
+          this.dataloaded = true
+        })
+      },
+      computed: {
+        build_id: function(){
+          return this.job_name+'/'+this.build_number
+        },
+        items: function(){
+          items = [
+            {
+              icon: 'face',
+              title: 'View this build in Jenkins',
+              url: "https://rpc.jenkins.cit.rackspace.net/job/" + this.build_id
+            },
+            {
+              icon: 'graphic_eq',
+              title: 'Build Summary Dashboard',
+              url: "http://rpc-repo.rackspace.com/rpcgating/buildsummary/"
+            },
+
+          ]
+
+          // pull out a few known report files from the potentially
+          // large list of artifacts and link to them in the
+          // sidebar
+          this.findreport(
+            items,
+            'ara-report/index.html',
+            'dns',
+            'ARA Report'
+          )
+          this.findreport(
+            items,
+            'dstat.html',
+            'trending_up',
+            'DStat Report'
+          )
+          return items
+        },
+        title: function(){
+          return "RE Build Artefacts for "+this.build_id
+        }
+      },
+      methods: {
+        findreport: function(items, pathsuffix, icon, title){
+          files = this.files.filter(f => f.path.endsWith(pathsuffix))
+          if (files.length > 0){
+            items.push({
+              icon: icon,
+              title: title,
+              url: this.container_public_url + "/" + this.archive_base_name +'/' +files[0].path
+            })
+          }
+        }
+      },
+      data: {
+        failed_uploads: [],
+        archives: [],
+        archive_base_name: '',
+        dataloaded: false,
+        container_public_url: '',
+        files: [],
+        job_name: '',
+        build_number: '',
+        clipped: true,
+        drawer: true,
+        fixed: true,
+        miniVariant: false,
+      }
+    })
+  </script>
+</body>
+</html>
