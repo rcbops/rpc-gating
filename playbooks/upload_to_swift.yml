@@ -109,11 +109,12 @@
     # 3. An index page must be generated, as this is not done automatically
     - name: Enable static web hosting
       uri:
-        url: "{{object_store_url}}"
+        url: "{{object_store_url}}/{{container}}"
         method: POST
         headers:
           X-AUTH-TOKEN: "{{ auth_token }}"
           X-Container-Meta-Web-Index: index.html
+          X-Container-Meta-Web-Listings: True
         status_code: 200, 201, 202, 204
       no_log: true
 
