@@ -45,6 +45,7 @@ def cli(ctxt, org, repo, pat, debug):
     logging.basicConfig(level=level)
     gh = github3.login(token=pat)
     repo_ = gh.repository(org, repo)
+    repo_.github = gh
     repo_.org = gh.organization(org)
     if not repo_:
         raise ValueError("Failed to connect to repo {o}/{r}".format(
@@ -151,6 +152,20 @@ def merge_pr(repo, pull_request_number, commit, message, retries):
             sleep(30)
         else:
             raise Exception("There was a failure updating the pull request.")
+
+    pr_repo = repo.github.repository(*pull_request.head.repo)
+    pr_ref = pr_repo.ref("heads/{ref}".format(ref=pull_request.head.ref))
+    try:
+        pr_branch_deleted = pr_ref.delete()
+    except github3.models.GitHubError:
+        pr_branch_deleted = False
+    click.echo(
+        "Pull request branch {user}:{branch} was{wasnot} deleted.".format(
+            user=pull_request.head.user,
+            branch=pull_request.head.ref,
+            wasnot=("" if pr_branch_deleted else " not")
+        )
+    )
 
 
 def branch_api_request(repo, branch, method, postfix="", data=None):
