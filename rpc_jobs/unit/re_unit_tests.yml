@@ -7,10 +7,10 @@
           org-list:
             - rcbops
           github-hooks: true
-          trigger-phrase: '.*recheck_all.*|.*recheck_unit_?tests.*'
+          trigger-phrase: '.*recheck_all.*|.*recheck_unit_tests.*'
           only-trigger-phrase: false
           auth-id: "github_account_rpc_jenkins_svc"
-          status-context: 'CIT/re_unit_tests'
+          status-context: 'CIT/unit_tests'
           cancel-builds-on-update: true
     properties:
       - rpc-gating-github
