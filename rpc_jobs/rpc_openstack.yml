@@ -209,6 +209,29 @@
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-master-rc-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "master-rc"
+    jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-openstack-master-mnaio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
