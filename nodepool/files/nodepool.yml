@@ -26,7 +26,7 @@ labels:
     min-ready: 0
     max-ready-age: 3600
   - name: rpco-14.2-xenial-base
-    min-ready: 0
+    min-ready: 1
     max-ready-age: 3600
 
 providers:
@@ -73,7 +73,7 @@ providers:
             console-log: true
           - name: rpco-14.2-xenial-base
             diskimage: rpco-14.2-xenial-artifacts
-            flavor-name: 7
+            flavor-name: "15GB Standard Instance"
             key-name: jenkins
             console-log: true
       - name: onmetal
