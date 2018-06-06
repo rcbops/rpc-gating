@@ -121,10 +121,10 @@
     # Use image for RPC-O install
     image:
       - xenial_snapshot:
-          IMAGE: "rpc-r14.12.0-xenial-swift"
+          IMAGE: "rpc-r14.15.0-xenial-swift"
           REGIONS: "DFW"
           FALLBACK_REGIONS: ""
-          FLAVOR: "7"
+          FLAVOR: "8"
           BOOT_TIMEOUT: 1500
 
     # Octavia ignores that setting for now
