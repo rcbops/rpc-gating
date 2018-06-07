@@ -140,52 +140,6 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-mitaka-premerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    series: "mitaka"
-    branches:
-      - "mitaka.*"
-    skip_pattern: |
-      \.md$
-      | \.rst$
-      | ^releasenotes/
-      | ^gating/generate_release_notes/
-      | ^gating/post_merge_test/
-      | ^gating/update_dependencies/
-    image:
-      - trusty:
-          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-    scenario:
-      - "ceph"
-      - "swift"
-    action:
-      - deploy:
-          FLAVOR: "performance2-15"
-    jobs:
-      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
-
-- project:
-    name: "rpc-openstack-mitaka-tox-premerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    series: "mitaka"
-    branches:
-      - "mitaka.*"
-    image:
-      - container:
-          SLAVE_TYPE: "container"
-    scenario:
-      - "ansible-lint"
-      - "bashate"
-      - "flake8"
-      - "releasenotes"
-    action:
-      - "tox-test"
-    jobs:
-      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
-
-- project:
     name: "rpc-openstack-master-aio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
@@ -482,27 +436,6 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
-    name: "rpc-openstack-mitaka-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "mitaka"
-    jira_project_key: "RO"
-    image:
-      - trusty:
-          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-    scenario:
-      - "ceph"
-      - "swift"
-    action:
-      - deploy:
-          FLAVOR: "7"
-    # This is the build that will be triggered by the push trigger job
-    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-openstack-dependency-update"
