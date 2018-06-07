@@ -70,6 +70,77 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
+# NOTE(mattt): the rpc-maas team would rather run all functional
+#              tests on PR (`check`), rather than `gate`. Leaving these
+#              all commented for now.
+#- project:
+#    name: "rpc-maas-master-xenial-gate"
+#    repo_name: "rpc-maas"
+#    repo_url: "https://github.com/rcbops/rpc-maas"
+#    branch: "master"
+#    image:
+#      - "xenial":
+#          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+#    scenario:
+#      - pike
+#      - newton
+#      - ceph
+#    action:
+#      - "deploy"
+#    credentials: "cloud_creds"
+#    jobs:
+#      - 'GATE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+#
+#- project:
+#    name: "rpc-maas-master-trusty-gate"
+#    repo_name: "rpc-maas"
+#    repo_url: "https://github.com/rcbops/rpc-maas"
+#    branch: "master"
+#    image:
+#      - "trusty":
+#          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+#    scenario:
+#      - newton
+#    action:
+#      - "deploy"
+#    credentials: "cloud_creds"
+#    jobs:
+#      - 'GATE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-xenial-release"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    image:
+      - "xenial":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+    scenario:
+      - pike
+      - newton
+      - ceph
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-trusty-release"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    image:
+      - "trusty":
+          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+    scenario:
+      - newton
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
 - project:
     name: "rpc-maas-master-xenial-postmerge"
     repo_name: "rpc-maas"
