@@ -105,3 +105,11 @@
     credentials: "cloud_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
