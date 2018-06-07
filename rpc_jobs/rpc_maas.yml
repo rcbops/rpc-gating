@@ -5,6 +5,13 @@
     series: "master"
     branches:
       - "master.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^doc/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
     image:
       - "xenial"
     scenario:
@@ -33,6 +40,13 @@
     series: "master"
     branches:
       - "master.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^doc/
+      | ^gating/generate_release_notes/
+      | ^gating/post_merge_test/
     image:
       - trusty:
           SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
