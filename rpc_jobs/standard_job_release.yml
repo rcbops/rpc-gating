@@ -78,13 +78,18 @@
           println "=== predecessor component CLI standard out ==="
           println pred_component_text
 
-          pred_component = readYaml text: pred_component_text
+          if (pred_component_text == ""){
+            pred_version = ""
+          }else{
+            pred_component = readYaml text: pred_component_text
+            pred_version = pred_component["release"]["version"]
+          }
         }
 
         ORG=component["repo_url"].split("/")[3]
         REPO=component["name"]
         VERSION=component["release"]["version"]
-        PREVIOUS_VERSION=pred_component["release"]["version"]
+        PREVIOUS_VERSION=pred_version
         RELEASE_NOTES_FILE="${WORKSPACE}/artifacts/release_notes"
         MAINLINE=component["release"]["series"]
         RC_BRANCH="${MAINLINE}-rc"
