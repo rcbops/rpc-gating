@@ -109,13 +109,13 @@
     image:
       - trusty:
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+          FLAVOR: "performance2-15"
       - xenial:
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+          SLAVE_TYPE: "rpco-14.2-xenial-base"
     scenario:
       - "swift"
     action:
-      - deploy:
-          FLAVOR: "performance2-15"
+      - deploy
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
