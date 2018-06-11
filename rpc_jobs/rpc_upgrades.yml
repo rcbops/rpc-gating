@@ -112,7 +112,6 @@
       - "r12.2.2_to_r14.current_leap"
       - "r12.1.2_to_r14.current_leap"
       - "kilo_to_r14.current_leap"
-      - "kilo_to_r14.2.0_leap"
       - "r11.0.0_to_r14.current_leap"
       - "r11.0.1_to_r14.current_leap"
       - "r11.0.4_to_r14.current_leap"
