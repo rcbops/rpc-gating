@@ -53,3 +53,11 @@
     # Link to the standard pre-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-hummingbird"
+    repo_name: "rpc-hummingbird"
+    repo_url: "https://github.com/rcbops/rpc-hummingbird"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
