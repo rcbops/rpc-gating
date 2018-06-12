@@ -1,3 +1,7 @@
+# TODO(mattt): We need to split out existing pre-merge jobs between check and
+#              gate, but this will be done after rpc-openstack has been
+#              successfully added to the release pipeline.
+
 - project:
     name: "rpc-openstack-master-premerge"
     repo_name: "rpc-openstack"
@@ -436,6 +440,65 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-openstack-master-mnaio-release'
+    repo_name: 'rpc-openstack'
+    repo_url: 'https://github.com/rcbops/rpc-openstack'
+    branch: "master-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts:
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
+    scenario:
+      - swift
+    action:
+      - deploy
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-openstack-pike-mnaio-release'
+    repo_name: 'rpc-openstack'
+    repo_url: 'https://github.com/rcbops/rpc-openstack'
+    branch: "pike-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts:
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
+    scenario:
+      - swift
+    action:
+      - deploy
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-newton-mnaio-release"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton-rc"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_loose_artifacts:
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
+    scenario:
+      - swift
+    action:
+      - deploy
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-openstack-dependency-update"
