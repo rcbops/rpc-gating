@@ -456,3 +456,11 @@
           READ_ONLY_TEST: false
     jobs:
       - '{trigger}-Dep-Update_{repo_name}-{branch}'
+
+- project:
+    name: "rpc-openstack"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
