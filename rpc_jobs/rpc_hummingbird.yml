@@ -29,6 +29,34 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-hummingbird-release"
+
+    repo_name: "rpc-hummingbird"
+    repo_url: "https://github.com/rcbops/rpc-hummingbird"
+
+    branch: "master"
+
+    image:
+      - xenial:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+
+    scenario:
+      - "functional"
+
+    # rpc-hummingbird ignores that setting for now
+    action:
+      - "test"
+
+    jira_project_key: "HUM"
+
+    # Required to properly test deployment of rpc-maas
+    credentials: "cloud_creds"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-hummingbird-post-merge"
 
     repo_name: "rpc-hummingbird"
