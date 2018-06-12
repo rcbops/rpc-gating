@@ -28,6 +28,9 @@ labels:
   - name: rpco-14.2-xenial-base
     min-ready: 1
     max-ready-age: 3600
+  - name: rpco-14.2-trusty-base
+    min-ready: 1
+    max-ready-age: 3600
 
 providers:
   - name: pubcloud-iad
@@ -45,6 +48,8 @@ providers:
       - name: ubuntu-trusty
         config-drive: true
       - name: rpco-14.2-xenial-artifacts
+        config-drive: true
+      - name: rpco-14.2-trusty-artifacts
         config-drive: true
     pools:
       - name: main
@@ -73,6 +78,11 @@ providers:
             console-log: true
           - name: rpco-14.2-xenial-base
             diskimage: rpco-14.2-xenial-artifacts
+            flavor-name: "15GB Standard Instance"
+            key-name: jenkins
+            console-log: true
+          - name: rpco-14.2-trusty-base
+            diskimage: rpco-14.2-trusty-artifacts
             flavor-name: "15GB Standard Instance"
             key-name: jenkins
             console-log: true
@@ -180,6 +190,29 @@ diskimages:
       - vm
       - jenkins-slave
     release: xenial
+    env-vars:
+      TMPDIR: /opt/nodepool/dib_tmp
+      DIB_CHECKSUM: '1'
+      DIB_IMAGE_CACHE: /opt/nodepool/dib_cache
+      DIB_GRUB_TIMEOUT: '0'
+      DIB_DISTRIBUTION_MIRROR: 'http://mirror.rackspace.com/ubuntu'
+      DIB_DEBIAN_COMPONENTS: 'main,universe'
+  - name: rpco-14.2-trusty-artifacts
+    # Build fresh images every 24 hrs.
+    # This ensures that any merged config changes
+    # to the diskimage-build scripts or diskimage
+    # config take effect within a reasonable time.
+    rebuild-age: 86400
+    formats:
+      - vhd
+    elements:
+      - rpco-artifacts-ubuntu-minimal
+      - growroot
+      - openssh-server
+      - simple-init
+      - vm
+      - jenkins-slave
+    release: trusty
     env-vars:
       TMPDIR: /opt/nodepool/dib_tmp
       DIB_CHECKSUM: '1'
