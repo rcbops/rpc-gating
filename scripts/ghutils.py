@@ -119,6 +119,32 @@ def add_issue_url_to_pr(repo, pull_request_number, issue_key):
 @cli.command()
 @click.pass_obj
 @click.option(
+    '--commit',
+    required=True,
+)
+@click.option(
+    '--state',
+    required=True,
+)
+@click.option(
+    '--target_url',
+    required=True,
+)
+@click.option(
+    '--description',
+    required=True,
+)
+@click.option(
+    '--context',
+    required=True,
+)
+def create_status(repo, commit, state, target_url, description, context):
+    repo.create_status(commit, state, target_url, description, context)
+
+
+@cli.command()
+@click.pass_obj
+@click.option(
     '--pull-request-number',
     help="Pull request to update",
     required=True,
