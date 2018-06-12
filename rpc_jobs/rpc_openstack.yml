@@ -111,7 +111,7 @@
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
           FLAVOR: "performance2-15"
       - xenial:
-          SLAVE_TYPE: "rpco-14.2-xenial-base"
+          SLAVE_TYPE: "nodepool-rpco-14.2-xenial-base"
     scenario:
       - "swift"
     action:
