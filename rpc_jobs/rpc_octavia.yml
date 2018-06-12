@@ -116,15 +116,17 @@
     # to Queens we will retire rpc-octavia and use the
     # upstream installer
     branch:
-      - "master"
+      - "master":
+          IMAGE: "rpc-r14.15.0-xenial-swift"
+      - "pike":
+          IMAGE: "rpc-r16.2.2-xenial_no_artifacts-swift"
 
     # Use image for RPC-O install
     image:
       - xenial_snapshot:
-          IMAGE: "rpc-r14.15.0-xenial-swift"
           REGIONS: "DFW"
           FALLBACK_REGIONS: ""
-          FLAVOR: "8"
+          FLAVOR: "7"
           BOOT_TIMEOUT: 1500
 
     # Octavia ignores that setting for now
