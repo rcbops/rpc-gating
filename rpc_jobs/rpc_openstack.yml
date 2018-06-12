@@ -108,8 +108,7 @@
       | ^gating/update_dependencies/
     image:
       - trusty:
-          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-          FLAVOR: "performance2-15"
+          SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
       - xenial:
           SLAVE_TYPE: "nodepool-rpco-14.2-xenial-base"
     scenario:
