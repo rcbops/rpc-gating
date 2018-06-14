@@ -9,7 +9,8 @@
     scenario: "embedded"
     action:
       - "deploy"
-      - "deploynoclean"
+      - "deploynoclean":
+          CRON: "# don't trigger based on timer"
     jira_project_key: "REO"
     # includes id_rsa_cloud10_jenkins_file
     # which is the private key that corresponds to the 'jenkins'
