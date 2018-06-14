@@ -4,13 +4,10 @@
 library "rpc-gating@${RPC_GATING_BRANCH}"
 common.globalWraps(){
   image_list = [
-    newton: [
-        "nodepool-rpco-14.2-xenial-base",
-        "nodepool-rpco-14.2-trusty-base"
-    ]
+    "nodepool-rpco-14.2-xenial-base",
+    "nodepool-rpco-14.2-trusty-base"
   ]
-  env.trigger="{ztrigger}"
-  env.series="{series}"
+
   try {
     currentBuild.result = "SUCCESS"
     // We need to checkout the rpc-openstack repo on the CIT Slave
@@ -24,7 +21,7 @@ common.globalWraps(){
     // Python artifacts can be built in parallel for all
     // distributions (images) supported by a series.
     python_parallel = [:]
-    for (x in image_list[env.series]) {
+    for (x in image_list) {
       // Need to bind the image variable before the closure - can't do 'for (image in ...)'
       // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
       def image = x
@@ -35,7 +32,7 @@ common.globalWraps(){
 
     // We can run all the artifact build processes in parallel
     // for PR's because they do not upload anything.
-    if (env.trigger == "pr") {
+    if ( env.ghprbPullId != null ) {
       Map branches = python_parallel + [
         "apt": {
           // We do not need to download existing data from
@@ -51,11 +48,15 @@ common.globalWraps(){
           // images because the artifacts produced are not
           // distro-specific. We take the first one for
           // convenience.
-          artifact_build.git(image_list[env.series][0])
+          artifact_build.git(image_list[0])
         }
       ]
       parallel branches
     } else {
+      // For periodic jobs, we want the results to be pushed
+      // up to the mirror.
+      env.PUSH_TO_MIRROR = "YES"
+
       // When the job is periodic, the jobs must run in a
       // particular sequence in order to ensure that each
       // artifact set is built and uploaded so that it can
@@ -73,8 +74,8 @@ common.globalWraps(){
       // We use the first available image for the series
       // as the artifacts are not distribution-specific.
       stage('Git'){
-        lock("artifact_git_${env.series}"){
-          artifact_build.git(image_list[env.series][0])
+        lock("artifact_git_newton"){
+          artifact_build.git(image_list[0])
         }
       }
 
@@ -82,7 +83,7 @@ common.globalWraps(){
       // more than one job for each series executes at the
       // same time.
       stage('Python'){
-        lock("artifact_python_${env.series}"){
+        lock("artifact_python_newton"){
           parallel python_parallel
         }
       }

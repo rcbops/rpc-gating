@@ -1,33 +1,5 @@
-- project:
-    name: 'RPC-Artifact-Build-Jobs'
-    # Note: branch is the branch for periodics to build
-    #       branches is the branch pattern to match for PR Jobs.
-    series:
-      - newton:
-          branch: newton
-          branches: "newton.*"
-    ztrigger:
-      - pr:
-          CRON: ""
-      - periodic:
-          branches: "do_not_build_on_pr"
-          PUSH_TO_MIRROR: "YES"
-    jobs:
-      - 'RPC-Artifact-Build_{series}-{ztrigger}'
-
-- job-template:
-    # DEFAULTS
-    STAGES: >-
-      Allocate Resources,
-      Connect Slave,
-      Cleanup,
-      Destroy Slave
-    branch: newton
-    PULL_FROM_MIRROR: "YES"
-    PUSH_TO_MIRROR: "NO"
-
-    # TEMPLATE
-    name: 'RPC-Artifact-Build_{series}-{ztrigger}'
+- job:
+    name: 'PM-rpc-openstack-newton-artifact-build'
     project-type: pipeline
     pipeline-scm:
       scm:
@@ -45,20 +17,15 @@
     parameters:
       # See params.yml
       - rpc_repo_params:
-         RPC_BRANCH: "{branch}"
+         RPC_BRANCH: "newton"
       - rpc_gating_params
-      - instance_params:
-         IMAGE: "{IMAGE}"
-         FLAVOR: "general1-4"
-         REGIONS: "{REGIONS}"
-         FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
       - string:
           name: ANSIBLE_PARAMETERS
           default: "-v"
           description: "Change the Ansible parameters for the playbook execution."
       - string:
           name: PULL_FROM_MIRROR
-          default: "{PULL_FROM_MIRROR}"
+          default: "YES"
           description: "Set this to NO to skip downloading existing data from rpc-repo. This may cause the loss of existing artifacts on rpc-repo. USE WITH CAUTION!"
       - string:
           name: REPLACE_ARTIFACTS
@@ -66,21 +33,10 @@
           description: "Set this to YES if you want to replace any existing artifacts for the current release with those built in this job."
       - string:
           name: PUSH_TO_MIRROR
-          default: "{PUSH_TO_MIRROR}"
+          default: "NO"
           description: "Set this to YES if you want to push any changes made in this job to rpc-repo."
-      - string:
-          name: STAGES
-          default: "{STAGES}"
-          description: |
-            Pipeline stages to run CSV. Note that this list does not influence execution order.
-            Options:
-              Allocate Resources (used to create an instance)
-              Connect Slave (used to connect to the instance)
-              Pause (use to hold instance for investigation before cleanup)
-              Cleanup (used to clean up the instance)
-              Destroy Slave (used to destroy the jenkins slave)
     triggers:
-      - timed: "{CRON}"
+      - timed: "@daily"
       - github-pull-request:
           org-list:
             - rcbops
@@ -88,7 +44,7 @@
           trigger-phrase: '.*recheck_all.*|.*recheck_artifact.*'
           only-trigger-phrase: false
           white-list-target-branches:
-            - "{branches}"
+            - "newton.*"
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'CIT/artifact'
           cancel-builds-on-update: true
