@@ -138,6 +138,7 @@
                   sudo git reset --hard
                   sudo git checkout "${env.RPC_BRANCH}"
                   sudo git reset --hard origin/${env.RPC_BRANCH} || sudo git reset --hard ${env.RPC_BRANCH}
+                  sudo git submodule sync
                   sudo git submodule update --init
                 """
               }
