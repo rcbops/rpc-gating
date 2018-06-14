@@ -42,7 +42,7 @@ def apt() {
 }
 
 def git(String image) {
-  pubcloud.runonpubcloud(image: image) {
+  common.use_node(image) {
     try {
       common.withRequestedCredentials("rpc_repo") {
         common.prepareRpcGit()
@@ -58,11 +58,11 @@ def git(String image) {
     } finally {
       common.archive_artifacts()
     }
-  } // pubcloud slave
+  } // use_node
 }
 
 def python(String image) {
-  pubcloud.runonpubcloud(image: image) {
+  common.use_node(image) {
     try {
       common.withRequestedCredentials("rpc_repo") {
         common.prepareRpcGit()
@@ -78,7 +78,7 @@ def python(String image) {
     } finally {
       common.archive_artifacts()
     }
-  } // pubcloud slave
+  } // use_node
 }
 
 return this

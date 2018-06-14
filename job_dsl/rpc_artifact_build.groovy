@@ -5,8 +5,8 @@ library "rpc-gating@${RPC_GATING_BRANCH}"
 common.globalWraps(){
   image_list = [
     newton: [
-        "Ubuntu 16.04.2 LTS prepared for RPC deployment",
-        "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+        "nodepool-rpco-14.2-xenial-base",
+        "nodepool-rpco-14.2-trusty-base"
     ]
   ]
   env.trigger="{ztrigger}"
