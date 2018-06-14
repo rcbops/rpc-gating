@@ -14,6 +14,14 @@ sudo bash -c "cat << EOF >${TARGET_ROOT}/etc/apt/sources.list
 deb ${DIB_DISTRIBUTION_MIRROR} ${DIB_RELEASE} ${DIB_DEBIAN_COMPONENTS//,/ }
 EOF"
 
+# Add a backup of a default set of sources
+sudo bash -c "cat << EOF >${TARGET_ROOT}/etc/apt/sources.list.original
+deb ${DIB_DISTRIBUTION_MIRROR} ${DIB_RELEASE} ${DIB_DEBIAN_COMPONENTS//,/ }
+deb ${DIB_DISTRIBUTION_MIRROR} ${DIB_RELEASE}-updates ${DIB_DEBIAN_COMPONENTS//,/ }
+deb ${DIB_DISTRIBUTION_MIRROR} ${DIB_RELEASE}-backports ${DIB_DEBIAN_COMPONENTS//,/ }
+deb ${DIB_DISTRIBUTION_MIRROR} ${DIB_RELEASE}-security ${DIB_DEBIAN_COMPONENTS//,/ }
+EOF"
+
 # Make sure that the sources.list.d directory exists
 # (it was removed by the debootstrap element)
 sudo bash -c "mkdir ${TARGET_ROOT}/etc/apt/sources.list.d"

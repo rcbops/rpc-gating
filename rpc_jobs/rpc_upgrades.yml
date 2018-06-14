@@ -12,8 +12,7 @@
       | ^gating/generate_release_notes/
     image:
       - trusty_aio:
-          FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+          SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
     scenario:
       - "swift"
     action:
