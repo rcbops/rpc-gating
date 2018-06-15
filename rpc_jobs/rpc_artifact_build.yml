@@ -6,7 +6,7 @@
         - git:
             url: https://github.com/rcbops/rpc-gating
             branches:
-              - "${{RPC_GATING_BRANCH}}"
+              - "${RPC_GATING_BRANCH}"
             credentials-id: "github_account_rpc_jenkins_svc"
       script-path: job_dsl/rpc_artifact_build.groovy
     concurrent: true
