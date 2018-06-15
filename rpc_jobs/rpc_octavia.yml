@@ -1,4 +1,4 @@
- - project:
+- project:
     name: "rpc-octavia-master-pre-merge"
 
     repo_name: "rpc-octavia"
@@ -15,9 +15,12 @@
 
     # Use image for RPC-O install
     image:
-      - xenial:
-          FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_snapshot:
+          IMAGE: "rpc-r14.15.0-xenial-swift"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: ""
+          FLAVOR: "7"
+          BOOT_TIMEOUT: 1500
 
     # Octavia ignores that setting for now
     scenario:
@@ -33,7 +36,7 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
- - project:
+- project:
     name: "rpc-octavia-pike-pre-merge"
 
     repo_name: "rpc-octavia"
@@ -50,9 +53,12 @@
 
     # Use image for RPC-O install
     image:
-      - xenial:
-          FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - xenial_snapshot:
+          IMAGE: "rpc-r16.2.2-xenial_no_artifacts-swift"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: ""
+          FLAVOR: "7"
+          BOOT_TIMEOUT: 1500
 
     # Octavia ignores that setting for now
     scenario:
@@ -68,45 +74,8 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
- - project:
+- project:
     name: "rpc-octavia-post-merge"
-
-    repo_name: "rpc-octavia"
-    # URL of the rpc-octavia repository
-    repo_url: "https://github.com/rcbops/rpc-octavia"
-
-    # currently we only do master and pike. Once RPC-O switches
-    # to Queens we will retire rpc-octavia and use the
-    # upstream installer
-    branch:
-      - "master"
-      - "pike"
-
-    # Use image for RPC-O install
-    image:
-      - xenial:
-          FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
-
-    # Octavia ignores that setting for now
-    scenario:
-      - "functional"
-
-    # Octavia ignores that setting for now
-    action:
-      - "test"
-
-    jira_project_key: "K8S"
-
-    # Add repo creds to post merge jobs so artefacts can be uploaded
-    credentials: "rpc_repo"
-
-    # Link to the standard pre-merge-template
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
- - project:
-    name: "rpc-octavia-post-merge-snapshot"
 
     repo_name: "rpc-octavia"
     # URL of the rpc-octavia repository
