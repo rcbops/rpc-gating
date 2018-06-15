@@ -19,7 +19,7 @@
         // can't use globalWraps because it calls common.shared_slave
         node('pubcloud_multiuse'){
           try{
-            withCredentials(artifact_build.get_rpc_repo_creds()) {
+            common.withRequestedCredentials("rpc_repo") {
 
               deleteDir()
               common.clone_with_pr_refs('rpc-gating',

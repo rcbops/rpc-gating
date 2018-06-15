@@ -1,3 +1,4 @@
+
 def get_rpc_repo_creds(){
   return [
     string(
@@ -29,7 +30,7 @@ def get_rpc_repo_creds(){
 
 def apt() {
   common.use_node('ArtifactBuilder2') {
-    withCredentials(get_rpc_repo_creds()) {
+    common.withRequestedCredentials("rpc_repo") {
       common.prepareRpcGit("auto", env.WORKSPACE)
       dir("${env.WORKSPACE}/rpc-openstack") {
         sh """#!/bin/bash
@@ -41,9 +42,9 @@ def apt() {
 }
 
 def git(String image) {
-  pubcloud.runonpubcloud(image: image) {
+  common.use_node(image) {
     try {
-      withCredentials(get_rpc_repo_creds()) {
+      common.withRequestedCredentials("rpc_repo") {
         common.prepareRpcGit()
         dir("/opt/rpc-openstack/") {
           sh """#!/bin/bash
@@ -57,13 +58,13 @@ def git(String image) {
     } finally {
       common.archive_artifacts()
     }
-  } // pubcloud slave
+  } // use_node
 }
 
 def python(String image) {
-  pubcloud.runonpubcloud(image: image) {
+  common.use_node(image) {
     try {
-      withCredentials(get_rpc_repo_creds()) {
+      common.withRequestedCredentials("rpc_repo") {
         common.prepareRpcGit()
         dir("/opt/rpc-openstack/") {
           sh """#!/bin/bash
@@ -77,7 +78,7 @@ def python(String image) {
     } finally {
       common.archive_artifacts()
     }
-  } // pubcloud slave
+  } // use_node
 }
 
 return this

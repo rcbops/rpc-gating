@@ -1,34 +1,14 @@
-- project:
-    name: 'RPC-Artifact-Build-Jobs'
-    # Note: branch is the branch for periodics to build
-    #       branches is the branch pattern to match for PR Jobs.
-    series:
-      - newton:
-          branch: newton
-          branches: "newton.*"
-    ztrigger:
-      - pr:
-          CRON: ""
-      - periodic:
-          branches: "do_not_build_on_pr"
-          PUSH_TO_MIRROR: "YES"
-    jobs:
-      - 'RPC-Artifact-Build_{series}-{ztrigger}'
-
-- job-template:
-    # DEFAULTS
-    STAGES: >-
-      Allocate Resources,
-      Connect Slave,
-      Cleanup,
-      Destroy Slave
-    branch: newton
-    PULL_FROM_MIRROR: "YES"
-    PUSH_TO_MIRROR: "NO"
-
-    # TEMPLATE
-    name: 'RPC-Artifact-Build_{series}-{ztrigger}'
-    project-type: workflow
+- job:
+    name: 'PM-rpc-openstack-newton-artifact-build'
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${{RPC_GATING_BRANCH}}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/rpc_artifact_build.groovy
     concurrent: true
     properties:
       - build-discarder:
@@ -37,20 +17,15 @@
     parameters:
       # See params.yml
       - rpc_repo_params:
-         RPC_BRANCH: "{branch}"
+         RPC_BRANCH: "newton"
       - rpc_gating_params
-      - instance_params:
-         IMAGE: "{IMAGE}"
-         FLAVOR: "general1-4"
-         REGIONS: "{REGIONS}"
-         FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
       - string:
           name: ANSIBLE_PARAMETERS
           default: "-v"
           description: "Change the Ansible parameters for the playbook execution."
       - string:
           name: PULL_FROM_MIRROR
-          default: "{PULL_FROM_MIRROR}"
+          default: "YES"
           description: "Set this to NO to skip downloading existing data from rpc-repo. This may cause the loss of existing artifacts on rpc-repo. USE WITH CAUTION!"
       - string:
           name: REPLACE_ARTIFACTS
@@ -58,21 +33,10 @@
           description: "Set this to YES if you want to replace any existing artifacts for the current release with those built in this job."
       - string:
           name: PUSH_TO_MIRROR
-          default: "{PUSH_TO_MIRROR}"
+          default: "NO"
           description: "Set this to YES if you want to push any changes made in this job to rpc-repo."
-      - string:
-          name: STAGES
-          default: "{STAGES}"
-          description: |
-            Pipeline stages to run CSV. Note that this list does not influence execution order.
-            Options:
-              Allocate Resources (used to create an instance)
-              Connect Slave (used to connect to the instance)
-              Pause (use to hold instance for investigation before cleanup)
-              Cleanup (used to clean up the instance)
-              Destroy Slave (used to destroy the jenkins slave)
     triggers:
-      - timed: "{CRON}"
+      - timed: "@daily"
       - github-pull-request:
           org-list:
             - rcbops
@@ -80,103 +44,7 @@
           trigger-phrase: '.*recheck_all.*|.*recheck_artifact.*'
           only-trigger-phrase: false
           white-list-target-branches:
-            - "{branches}"
+            - "newton.*"
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'CIT/artifact'
           cancel-builds-on-update: true
-    dsl: |
-      library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.globalWraps(){{
-        image_list = [
-          newton: [
-              "Ubuntu 16.04.2 LTS prepared for RPC deployment",
-              "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-          ]
-        ]
-        env.trigger="{ztrigger}"
-        env.series="{series}"
-        try {{
-          currentBuild.result = "SUCCESS"
-          // We need to checkout the rpc-openstack repo on the CIT Slave
-          // so that we can check whether the patch is a docs-only patch
-          // before allocating resources unnecessarily.
-          common.prepareRpcGit("auto", env.WORKSPACE)
-          if(common.is_doc_update_pr("${{env.WORKSPACE}}/rpc-openstack")){{
-            return
-          }}
-
-          // Python artifacts can be built in parallel for all
-          // distributions (images) supported by a series.
-          python_parallel = [:]
-          for (x in image_list[env.series]) {{
-            // Need to bind the image variable before the closure - can't do 'for (image in ...)'
-            // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-            def image = x
-            python_parallel[image] = {{
-              artifact_build.python(image)
-            }}
-          }}
-
-          // We can run all the artifact build processes in parallel
-          // for PR's because they do not upload anything.
-          if (env.trigger == "pr") {{
-            Map branches = python_parallel + [
-              "apt": {{
-                // We do not need to download existing data from
-                // rpc-repo for PR's as they do not upload their
-                // changes. We only need to do that when making
-                // changes to the data. Skipping the data sync
-                // for PR's saves a ton of time.
-                env.PULL_FROM_MIRROR = "NO"
-                artifact_build.apt()
-              }},
-              "git": {{
-                // We only care about building these on one of the
-                // images because the artifacts produced are not
-                // distro-specific. We take the first one for
-                // convenience.
-                artifact_build.git(image_list[env.series][0])
-              }}
-            ]
-            parallel branches
-          }} else {{
-            // When the job is periodic, the jobs must run in a
-            // particular sequence in order to ensure that each
-            // artifact set is built and uploaded so that it can
-            // be used in the step that follows.
-
-            // The apt artifacts are built on a long-lived slave
-            // with a single executor, so no locking is required.
-            stage('Apt'){{
-              artifact_build.apt()
-            }}
-
-            // We lock the git job per series to ensure that no
-            // more than one job for each series executes at the
-            // same time.
-            // We use the first available image for the series
-            // as the artifacts are not distribution-specific.
-            stage('Git'){{
-              lock("artifact_git_${{env.series}}"){{
-                artifact_build.git(image_list[env.series][0])
-              }}
-            }}
-
-            // We lock the python job per series to ensure that no
-            // more than one job for each series executes at the
-            // same time.
-            stage('Python'){{
-              lock("artifact_python_${{env.series}}"){{
-                parallel python_parallel
-              }}
-            }}
-
-          }} //if
-        }} catch (e) {{
-          print e
-          currentBuild.result = "FAILURE"
-          throw e
-        }} finally {{
-          common.safe_jira_comment("${{currentBuild.result}}: [${{env.BUILD_TAG}}|${{env.BUILD_URL}}]")
-        }}
-      }} // globalWraps

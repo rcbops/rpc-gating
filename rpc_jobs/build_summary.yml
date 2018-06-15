@@ -89,7 +89,7 @@
           """
         } // stage
         stage("Upload Page to Repo"){
-          withCredentials(artifact_build.get_rpc_repo_creds()){
+          common.withRequestedCredentials("rpc_repo"){
             sh """#!/bin/bash -xeu
               # Add ssh host key from secrets
               grep "\${REPO_HOST}" ~/.ssh/known_hosts \
