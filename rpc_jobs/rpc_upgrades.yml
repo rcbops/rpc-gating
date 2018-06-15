@@ -16,6 +16,7 @@
     scenario:
       - "swift"
     action:
+      - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "kilo_to_newton_leap"
     jira_project_key: "RLM"
@@ -63,7 +64,6 @@
     scenario:
       - "swift"
     action:
-      - "mitaka_to_newton_major"
       - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "r12.2.8_to_newton_leap"
@@ -71,7 +71,7 @@
       - "r12.2.2_to_newton_leap"
       - "r12.1.2_to_newton_leap"
       - "kilo_to_newton_leap"
-      - "r14.7.0_to_newton_minor"
+      - "r14.14.0_to_newton_minor"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
