@@ -201,9 +201,12 @@
       - swift
     action:
       - system
+      - sdqc
       - deploy
     exclude:
       - action: system
+        scenario: ironic
+      - action: sdqc
         scenario: ironic
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
