@@ -510,7 +510,8 @@
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch:
-      - "master"
+      - "master":
+          component_dependencies_update: "true"
       - "pike"
       - "newton"
     jira_project_key: "RO"
