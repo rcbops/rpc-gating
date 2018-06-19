@@ -299,46 +299,58 @@ String container_name(){
 
 def archive_artifacts(Map args = [:]){
   stage('Compress and Publish Artifacts'){
+    try{
+      artifacts_dir = args.get("artifacts_dir", "${env.WORKSPACE}/artifacts")
+      results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
 
-    artifacts_dir = args.get("artifacts_dir", "${env.WORKSPACE}/artifacts")
-    results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
+      dir(results_dir) {
+        Integer testXmlLintRc = sh(
+          returnStatus: true,
+          script: """#!/bin/bash -xe
+            test -f /usr/bin/xmllint
+          """
+        )
 
-    dir(results_dir) {
-      Integer testXmlLintRc = sh(
-        returnStatus: true,
-        script: """#!/bin/bash -xe
-          test -f /usr/bin/xmllint
-        """
-      )
+        // The junit step doesn't like parsing non-XML files (resulting in builds
+        // being // marked as UNSTABLE). If xmllint is installed we verify that
+        // all XML input is valid, and if not we move the affected files aside so
+        // the junit pipeline step won't parse them.
+        if (testXmlLintRc == 0) {
+          List xmlFiles = findFiles(glob: '*.xml')
 
-      // The junit step doesn't like parsing non-XML files (resulting in builds
-      // being // marked as UNSTABLE). If xmllint is installed we verify that
-      // all XML input is valid, and if not we move the affected files aside so
-      // the junit pipeline step won't parse them.
-      if (testXmlLintRc == 0) {
-        List xmlFiles = findFiles(glob: '*.xml')
-
-        for (file in xmlFiles) {
-          Integer xmlStatus = sh(
-            returnStatus: true,
-            script: """#!/bin/bash -xe
-              /usr/bin/xmllint ${file} > /dev/null || mv ${file} ${file}-broken
-            """
-          )
+          for (file in xmlFiles) {
+            Integer xmlStatus = sh(
+              returnStatus: true,
+              script: """#!/bin/bash -xe
+                /usr/bin/xmllint ${file} > /dev/null || mv ${file} ${file}-broken
+              """
+            )
+          }
         }
+
+        junit allowEmptyResults: true, testResults: "*.xml"
       }
 
-      junit allowEmptyResults: true, testResults: "*.xml"
-    }
-
-    pubcloud.uploadToSwift(
-      container: container_name(),
-      path: artifacts_dir
-    )
-    if(fileExists(file: "artifact_public_url")){
-      artifact_public_url = readFile(file: "artifact_public_url")
-      currentBuild.description = "<h2><a href='"+artifact_public_url+"'>Build Artifacts</a></h2>"
-    }
+      pubcloud.uploadToSwift(
+        container: container_name(),
+        path: artifacts_dir
+      )
+      if(fileExists(file: "artifact_public_url")){
+        artifact_public_url = readFile(file: "artifact_public_url")
+        currentBuild.description = "<h2><a href='"+artifact_public_url+"'>Build Artifacts</a></h2>"
+      }
+    } catch (e){
+      // This function is called from stdJob, so we must catch exceptions to
+      // prevent failures in RE code eg (artifact archival) from causing
+      // the build result to be set to failure.
+      // try-catch placed here because this function is used in multiple places.
+      print "Error while archiving artifacts, swallowing this exception to prevent "\
+            +"archive errors from failing the build: ${e}"
+      common.create_jira_issue("RE",
+                               "Artifact Archival Failure: ${env.BUILD_TAG}",
+                               "[${env.BUILD_TAG}|${env.BUILD_URL}]",
+                               ["jenkins", "artifact_archive_fail"])
+    }// try
   } // stage
 }
 
@@ -1409,10 +1421,12 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
           }
           throw e
         } finally {
-          archive_artifacts(
-            artifacts_dir: "${env.RE_HOOK_ARTIFACT_DIR}",
-            results_dir: "${env.RE_HOOK_RESULT_DIR}"
-          )
+            // try-catch within archive_artifacts() prevents
+            // this call from failing standard job builds
+            archive_artifacts(
+              artifacts_dir: "${env.RE_HOOK_ARTIFACT_DIR}",
+              results_dir: "${env.RE_HOOK_RESULT_DIR}"
+            )
         } // try
       } // stdJobWrappers
     } // standard_job_slave
