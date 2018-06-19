@@ -89,3 +89,23 @@
 
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: "rpc-hummingbird-dependency-update"
+    repo_name: "rpc-hummingbird"
+    repo_url: "https://github.com/rcbops/rpc-hummingbird"
+    branch:
+      - "master"
+    jira_project_key: "HUM"
+    component_dependencies_update: "true"
+    third_party_dependencies_update: "false"
+    trigger:
+      - PR:
+          CRON: ""
+          branches: "{branch}"
+          NUM_TO_KEEP: 10
+      - PM:
+          branches: "do_not_build_on_pr"
+          READ_ONLY_TEST: false
+    jobs:
+      - '{trigger}-Dep-Update_{repo_name}-{branch}'
