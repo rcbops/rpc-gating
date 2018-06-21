@@ -533,51 +533,23 @@
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
 
-- job:
-    name: "ASC-staging-rpc-openstack-master-xenial-mnaio-no-artifacts-swift-system"
+- project:
+    name: "experimental-asc-rpc-openstack-master-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch:
+      - "master"
+    CRON: "@monthly"
     jira_project_key: ""
-    project-type: pipeline
-    concurrent: true
-    properties:
-      - build-discarder:
-          num-to-keep: 14
-      - github:
-          url: "https://github.com/rcbops/rpc-openstack"
-      - inject:
-          properties-content: |
-            STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
-            BOOT_TIMEOUT=900
-            RE_JOB_NAME=ASC-Staging
-            RE_JOB_IMAGE=staging_asc_xenial_mnaio_no_artifacts
-            RE_JOB_SCENARIO=swift
-            RE_JOB_ACTION=system
-            RE_JOB_FLAVOR=onmetal-io2
-            RE_JOB_REPO_NAME=rpc-openstack
-    parameters:
-      - string:
-          name: RE_JOB_BRANCH
-          default: dev
-          description: Branch of rpc-openstack-system-tests to use
-      - rpc_gating_params
-      - instance_params:
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+    image:
+      - staging_asc_xenial_mnaio_no_artifacts:
           FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
           REGIONS: "IAD"
           FALLBACK_REGIONS: "DFW"
-      - string:
-          name: REPO_URL
-          default: "https://github.com/rcbops/rpc-openstack"
-          description: Url of the repo under test
-      - string:
-          name: BRANCH
-          default: "master"
-          description: Branch of the repo under test
-      - standard_job_params:
-          SLAVE_TYPE: "instance"
-          SLAVE_CONTAINER_DOCKERFILE_REPO: "RE"
-          SLAVE_CONTAINER_DOCKERFILE_PATH: "./Dockerfile.standard_job"
-          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "BASE_IMAGE=ubuntu:16.04"
-
-    dsl: |
-      library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.stdJob("periodic,post_merge_test", "", "", "")
+    scenario:
+      - swift
+    action:
+      - system
+    jobs:
+      - 'SYS_{repo_name}-{branch}-{image}-{scenario}-{action}'

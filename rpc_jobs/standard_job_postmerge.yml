@@ -38,7 +38,7 @@
             REGIONS=DFW
             FALLBACK_REGIONS=
 
-- job-template:
+- job-template: &default_pm_gating_template
     name: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     branch: "master"
     jira_project_key: ""
@@ -90,3 +90,31 @@
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.stdJob("periodic,post_merge_test", "{credentials}", "{jira_project_key}", "{wrappers}")
+
+- job-template:
+    <<: *default_pm_gating_template
+    name: 'SYS_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    parameters:
+      - string:
+          name: SYS_TEST_BRANCH
+          default: "{branch}"
+          description: Url of the system test branch
+      - rpc_gating_params
+      - instance_params:
+          IMAGE: "{IMAGE}"
+          FLAVOR: "{FLAVOR}"
+          REGIONS: "{REGIONS}"
+          FALLBACK_REGIONS: "{FALLBACK_REGIONS}"
+      - string:
+          name: REPO_URL
+          default: "{repo_url}"
+          description: Url of the repo under test
+      - string:
+          name: BRANCH
+          default: "{branch}"
+          description: Branch of the repo under test
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
