@@ -10,6 +10,11 @@
     skip_pattern: |
       \.md$
       | \.rst$
+      | ^releasenotes/
+      | ^docs/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
 
     image:
       - xenial:
@@ -44,6 +49,15 @@
 #    repo_url: "https://github.com/rcbops/rpc-ceph"
 #
 #    branch: "master"
+#
+#    skip_pattern: |
+#      \.md$
+#      | \.rst$
+#      | ^releasenotes/
+#      | ^docs/
+#      | ^gating/generate_release_notes/
+#      | ^gating/periodic/
+#      | ^gating/release/
 #
 #    image:
 #      - "xenial":
