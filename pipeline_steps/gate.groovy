@@ -19,36 +19,35 @@ void testPullRequest(String repoName, Boolean testWithAntecedents, String github
 
 
 void testPullRequestOnly(String repoName){
-    List jobNames = Hudson.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob)*.fullName
+    List allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+    List filteredComponentGateJobs = filterGateJobs(repoName, allWorkflowJobs)
 
     def parallelBuilds = [:]
 
     // Cannot do for (job in jobNames), see:
     // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-    for (j in jobNames) {
-        def job = j
-        def m = job =~ /GATE_${repoName}/
-        if (m) {
-            parallelBuilds[job] = {
-                build(
-                    job: job,
-                    wait: true,
-                    parameters: [
-                        [
-                            $class: "StringParameterValue",
-                            name: "RPC_GATING_BRANCH",
-                            value: RPC_GATING_BRANCH,
-                        ],
-                        [
-                            $class: "StringParameterValue",
-                            name: "BRANCH",
-                            value: sha1,
-                        ]
-                    ]
-                )
-            }
-        }
-    }
+    for (j in filteredComponentGateJobs) {
+      WorkflowJob job = j
+      String jobName = job.displayName
+      parallelBuilds[jobName] = {
+          build(
+              job: jobName,
+              wait: true,
+              parameters: [
+                  [
+                      $class: "StringParameterValue",
+                      name: "RPC_GATING_BRANCH",
+                      value: RPC_GATING_BRANCH,
+                  ],
+                  [
+                      $class: "StringParameterValue",
+                      name: "BRANCH",
+                      value: sha1,
+                  ]
+              ]
+          )
+      } // parallelBuilds
+    } // for
 
     parallel parallelBuilds
 
@@ -112,9 +111,8 @@ void testPullRequestOnly(String repoName){
  * tests are restarted.
  */
 void testPullRequestWithAntecedents(String repoName, String statusContext){
-    allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
-    gateJobs = (allWorkflowJobs.findAll {it.displayName =~ /GATE_${repoName}-${ghprbTargetBranch}/}).sort(false)
-    println("Discovered the following pull request gate jobs for repo ${repoName}:\n${gateJobs.collect() {it.displayName}.join("\n")}")
+    List allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+    List filteredComponentGateJobs = filterGateJobs(repoName, allWorkflowJobs)
 
     triggerJobName = triggerBuild.getParent().displayName
     triggerJob = allWorkflowJobs.find {it.displayName == triggerJobName}
@@ -171,7 +169,7 @@ void testPullRequestWithAntecedents(String repoName, String statusContext){
 
         pullRequestIDsParam = common.dumpCSV(pullRequestIDs)
         def parallelBuilds = [:]
-        for (j in gateJobs) {
+        for (j in filteredComponentGateJobs) {
             WorkflowJob job = j
             if (! (job in gateBuilds)) {
                gateBuilds[job] = [
@@ -201,9 +199,9 @@ void testPullRequestWithAntecedents(String repoName, String statusContext){
                             ],
                         ]
                     )
-                }
-            }
-        }
+                } // parallelBuilds
+            } // if
+        } // for
         if (parallelBuilds){
             parallel parallelBuilds
         }
@@ -227,6 +225,24 @@ void testPullRequestWithAntecedents(String repoName, String statusContext){
     description = "Gate tests passed, merging..."
     github.create_status(prRepoOrg, prRepoName, ghprbActualCommit, "success", triggerBuild.getAbsoluteUrl(), description, statusContext)
     github.merge_pr(prRepoOrg, prRepoName, ghprbPullId, ghprbActualCommit)
+}
+
+
+List filterGateJobs(String repoName, List allWorkflowJobs){
+    List componentGateJobs = (allWorkflowJobs.findAll {it.displayName =~ /GATE_${repoName}-${ghprbTargetBranch}/}).sort(false)
+    println("Discovered the following pull request gate jobs for repo ${repoName}:")
+    println(componentGateJobs.collect() {it.displayName}.join("\n"))
+
+    List filteredComponentGateJobs = componentGateJobs.findAll {
+      def job_skip_pattern = it.getProperty(hudson.model.ParametersDefinitionProperty)
+                               .getParameterDefinition("skip_pattern")
+                               .getDefaultValue()
+      ! common.isSkippable(job_skip_pattern, "")
+    }
+    println("Remaining pull request gate jobs for repo ${repoName} after filtering out skip_pattern:")
+    println(filteredComponentGateJobs.collect() {it.displayName}.join("\n"))
+
+    return filteredComponentGateJobs
 }
 
 

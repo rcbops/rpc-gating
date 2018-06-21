@@ -11,7 +11,8 @@
       | ^releasenotes/
       | ^doc/
       | ^gating/generate_release_notes/
-      | ^gating/post_merge_test/
+      | ^gating/periodic/
+      | ^gating/release/
     image:
       - "xenial"
     scenario:
@@ -46,7 +47,8 @@
       | ^releasenotes/
       | ^doc/
       | ^gating/generate_release_notes/
-      | ^gating/post_merge_test/
+      | ^gating/periodic/
+      | ^gating/release/
     image:
       - trusty:
           SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
@@ -92,6 +94,14 @@
 #    repo_name: "rpc-maas"
 #    repo_url: "https://github.com/rcbops/rpc-maas"
 #    branch: "master"
+#    skip_pattern: |
+#      \.md$
+#      | \.rst$
+#      | ^releasenotes/
+#      | ^doc/
+#      | ^gating/generate_release_notes/
+#      | ^gating/periodic/
+#      | ^gating/release/
 #    image:
 #      - "xenial":
 #          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
@@ -110,6 +120,14 @@
 #    repo_name: "rpc-maas"
 #    repo_url: "https://github.com/rcbops/rpc-maas"
 #    branch: "master"
+#    skip_pattern: |
+#      \.md$
+#      | \.rst$
+#      | ^releasenotes/
+#      | ^doc/
+#      | ^gating/generate_release_notes/
+#      | ^gating/periodic/
+#      | ^gating/release/
 #    image:
 #      - "trusty":
 #          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
