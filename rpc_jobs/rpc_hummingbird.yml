@@ -7,6 +7,14 @@
     branches:
       - "master"
 
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^docs/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+
     image:
       - xenial:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
