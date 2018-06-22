@@ -344,12 +344,16 @@ def archive_artifacts(Map args = [:]){
       // prevent failures in RE code eg (artifact archival) from causing
       // the build result to be set to failure.
       // try-catch placed here because this function is used in multiple places.
-      print "Error while archiving artifacts, swallowing this exception to prevent "\
-            +"archive errors from failing the build: ${e}"
-      common.create_jira_issue("RE",
-                               "Artifact Archival Failure: ${env.BUILD_TAG}",
-                               "[${env.BUILD_TAG}|${env.BUILD_URL}]",
-                               ["jenkins", "artifact_archive_fail"])
+      try {
+        print "Error while archiving artifacts, swallowing this exception to prevent "\
+              +"archive errors from failing the build: ${e}"
+        create_jira_issue("RE",
+                          "Artifact Archival Failure: ${env.BUILD_TAG}",
+                          "[${env.BUILD_TAG}|${env.BUILD_URL}]",
+                          ["jenkins", "artifact_archive_fail"])
+      } catch (f){
+        print "Failed to create Jira Issue :( ${f}"
+      }
     }// try
   } // stage
 }
