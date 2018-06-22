@@ -552,4 +552,4 @@
     action:
       - system
     jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'SYS_{repo_name}-{branch}-{image}-{scenario}-{action}'
