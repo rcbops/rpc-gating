@@ -553,6 +553,30 @@ void clone_external_repo(String directory, String repo, String ref, String refsp
 }
 
 
+/**
+ * Merge list of pull requests.
+ *
+ * Iterate through the list of pull request IDs and merge each change
+ * on top of the current HEAD. If a merge fails an exception is raised.
+ *
+ * @param directory location of the Git repository
+ * @param pullRequestIDs ordered list of pull request numbers to merge
+ * @return null
+ */
+void merge_pr_chain(String directory='./', List pullRequestIDs=null){
+  println("Attempting to merge the following pull requests onto the base branch: ${pullRequestIDs}.")
+  dir(directory){
+    for (pullRequestID in pullRequestIDs) {
+      println("Merging pull request ${pullRequestID}.")
+      sh """#!/bin/bash -xe
+        git merge origin/pr/${pullRequestID}/head
+      """
+    }
+  }
+  println("Finished merging the pull requests onto the base branch.")
+}
+
+
 void configure_git(){
   print "Configuring Git"
   // credentials store created to ensure that non public repos
@@ -1359,6 +1383,10 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
                   env.REPO_URL,
                   env.BRANCH,
                 )
+                if (env.pullRequestChain) {
+                  pullRequestIDs = loadCSV(env.pullRequestChain)
+                  merge_pr_chain("${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}", pullRequestIDs)
+                }
               } else {
                 print("Triggered by PR: ${env.ghprbPullLink}")
                 clone_with_pr_refs(
@@ -1659,4 +1687,14 @@ void createRelease(){
       ],
     ]
   )
+}
+
+
+List loadCSV(String str){
+  str.split(",").collect {it.trim()}
+}
+
+
+String dumpCSV(List l){
+  l.join(",")
 }

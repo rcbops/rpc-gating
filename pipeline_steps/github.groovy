@@ -100,4 +100,37 @@ def merge_pr(
 }
 
 
+def create_status(
+    String org,
+    String repo,
+    String commit,
+    String state,
+    String targetURL,
+    String description,
+    String context
+    ){
+  withCredentials([
+    string(
+      credentialsId: 'rpc-jenkins-svc-github-pat',
+      variable: 'pat'
+    )
+  ]){
+    sh """#!/bin/bash -xe
+      cd ${env.WORKSPACE}
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/ghutils.py\
+        --org '$org'\
+        --repo '$repo'\
+        --pat '$pat'\
+        create_status\
+        --commit '$commit'\
+        --state '$state'\
+        --target_url '$targetURL'\
+        --description '$description'\
+        --context '$context'
+    """
+  }
+}
+
+
 return this;

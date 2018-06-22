@@ -51,7 +51,8 @@ check_groovy(){
          return
        }
   extract_groovy_from_jjb
-  groovy scripts/lint_support_groovy/syntax.groovy \
+  groovy -classpath src \
+    scripts/lint_support_groovy/syntax.groovy \
     scripts/lint_support_groovy/*.groovy \
     pipeline_steps/*.groovy \
     tmp_groovy/*.groovy \
