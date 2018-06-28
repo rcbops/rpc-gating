@@ -27,6 +27,10 @@
     branches:
       - 'master'
 
+    skip_pattern: |
+      \.md$
+      | \.rst$
+
     image:
       - container:
           SLAVE_TYPE: "container"
@@ -60,6 +64,10 @@
     repo_url: "https://github.com/mattt416/rpc-product-1"
 
     branch: "master"
+
+    skip_pattern: |
+      \.md$
+      | \.rst$
 
     image:
       - "xenial":
