@@ -1587,6 +1587,46 @@ List getComponentChange(String baseBranch, String prBranch){
 void registerComponent(String component_text, String jiraProjectKey){
   def component = readYaml text: component_text
   createComponentGateTrigger(component["name"], component["repo_url"], jiraProjectKey)
+  createComponentSkeleton(component["name"], component["repo_url"], jiraProjectKey)
+}
+
+void createComponentSkeleton(String name, String repoUrl, String jiraProjectKey){
+  dir("${WORKSPACE}/${name}"){
+    clone_with_pr_refs(".", repoUrl.replace("https://github.com/", "git@github.com:"), "origin/master")
+    withEnv(
+      [
+        "ISSUE_SUMMARY=Add component skeleton to ${name}",
+        "ISSUE_DESCRIPTION=This issue was generated automatically as part of registering a new component.",
+        "LABELS=component-skeleton",
+        "JIRA_PROJECT_KEY=${jiraProjectKey}",
+        "TARGET_BRANCH=master",
+        "COMMIT_TITLE=Add new component gating skeleton",
+        "COMMIT_MESSAGE=This project is being added to the RE platform. This change adds the\nbasic structure required to make use of the platform. Please modify\nthis pull request before merging to enable the required support.",
+      ]
+    ){
+      withCredentials(
+        [
+          string(
+            credentialsId: 'rpc-jenkins-svc-github-pat',
+            variable: 'PAT'
+          ),
+          usernamePassword(
+            credentialsId: "jira_user_pass",
+            usernameVariable: "JIRA_USER",
+            passwordVariable: "JIRA_PASS"
+          ),
+        ]
+      ){
+        sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+          sh """#!/bin/bash -xe
+            set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+            ${WORKSPACE}/rpc-gating/scripts/add_component_skeleton.py .
+            ${WORKSPACE}/rpc-gating/scripts/commit_and_pull_request.sh
+          """
+        }
+      }
+    }
+  }
 }
 
 void createComponentGateTrigger(String name, String repoUrl, String jiraProjectKey){
