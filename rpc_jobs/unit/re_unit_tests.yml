@@ -22,6 +22,25 @@
       if(env.ghprbPullId != null){
         env.RPC_GATING_BRANCH="origin/pr/${env.ghprbPullId}/merge"
       }
+
+      // We execute this here so that when a PR is submitted
+      // all the parallel builds below do not have to do their
+      // own request for the venv to be built. This helps reduce
+      // the load on jenkins and gets the job done faster.
+      stage("Build-Gating-Venv") {
+        build(
+          job: "Build-Gating-Venv",
+          wait: true,
+          parameters: [
+            [
+              $class: 'StringParameterValue',
+              name: 'RPC_GATING_BRANCH',
+              value: env.RPC_GATING_BRANCH
+            ]
+          ]
+        ) // build
+      } // stage
+
       parallel ([
         "With Requested Credentials": {
           build(
