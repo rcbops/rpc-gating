@@ -58,40 +58,32 @@
       - trusty_aio:
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - "kilo_to_newton_leap"
+      - "liberty_to_newton_leap"
+      - "mitaka_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-pm-minor"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
       - xenial_aio:
           FLAVOR: "performance2-15"
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
     scenario:
       - "swift"
     action:
-      - "mitaka_to_newton_leap"
-      - "liberty_to_newton_leap"
-      - "r12.2.8_to_newton_leap"
-      - "r12.2.5_to_newton_leap"
-      - "r12.2.2_to_newton_leap"
-      - "r12.1.2_to_newton_leap"
-      - "kilo_to_newton_leap"
       - "r14.14.0_to_newton_minor"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    exclude:
-      - image: "xenial_aio"
-        action: "mitaka_to_newton_major"
-      - image: "xenial_aio"
-        action: "mitaka_to_newton_leap"
-      - image: "xenial_aio"
-        action: "liberty_to_newton_leap"
-      - image: "xenial_aio"
-        action: "r12.2.8_to_newton_leap"
-      - image: "xenial_aio"
-        action: "r12.2.5_to_newton_leap"
-      - image: "xenial_aio"
-        action: "r12.2.2_to_newton_leap"
-      - image: "xenial_aio"
-        action: "r12.1.2_to_newton_leap"
-      - image: "xenial_aio"
-        action: "kilo_to_newton_leap"
     CRON: "@weekly"
 
 - project:
@@ -105,11 +97,17 @@
     scenario:
       - "swift"
     action:
+      - "mitaka_to_r14.current_leap"
+      - "r13.0.0_to_r14.current_leap"
+      - "r13.0.2_to_r14.current_leap"
+      - "r13.1.2_to_r14.current_leap"
+      - "r13.1.3_to_r14.current_leap"
+      - "r13.1.4_to_r14.current_leap"
       - "liberty_to_r14.current_leap"
-      - "r12.2.8_to_r14.current_leap"
-      - "r12.2.5_to_r14.current_leap"
-      - "r12.2.2_to_r14.current_leap"
       - "r12.1.2_to_r14.current_leap"
+      - "r12.2.2_to_r14.current_leap"
+      - "r12.2.5_to_r14.current_leap"
+      - "r12.2.8_to_r14.current_leap"
       - "kilo_to_r14.current_leap"
       - "r11.0.0_to_r14.current_leap"
       - "r11.0.1_to_r14.current_leap"
