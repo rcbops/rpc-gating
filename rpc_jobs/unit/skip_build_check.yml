@@ -38,7 +38,7 @@
             git commit --allow-empty -m 'No changes; can be skipped'
           """
           Boolean skip_build = common.skip_build_check(skip_pattern)
-          assert skip_build
+          assert false
         }
 
         stage("Ensure false when some changes match pattern") {
