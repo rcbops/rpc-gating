@@ -94,6 +94,7 @@
         MAINLINE=component["release"]["series"]
         RC_BRANCH="${MAINLINE}-rc"
         dir(REPO){
+          println "=== Checking for the existence of an RC branch ==="
           common.clone_with_pr_refs(
             "./",
             component["repo_url"],
@@ -101,12 +102,13 @@
           )
           no_rc = sh(
             script: """#!/bin/bash -xe
-              git rev-parse --verify ${RC_BRANCH}
+              git rev-parse --verify remotes/origin/${RC_BRANCH}
             """,
             returnStatus: true,
           )
         }
         if (no_rc){
+          println "An RC branch called ${RC_BRANCH} was not found, releasing from ${MAINLINE}"
           release_command = """\
             python rpc-gating/scripts/release.py \
                 --debug \
@@ -129,6 +131,7 @@
                     --bodyfile "${RELEASE_NOTES_FILE}" \
           """
         } else{
+          println "An RC branch called ${RC_BRANCH} was found, releasing from ${RC_BRANCH}"
           release_command = """\
             python rpc-gating/scripts/release.py \
                 --debug \
