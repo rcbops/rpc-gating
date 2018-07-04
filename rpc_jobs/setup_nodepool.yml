@@ -1,26 +1,3 @@
-# Merge Trigger job for setup nodepool.
-# This used to redeploy whenever there are merges to rpc-gating.
-# This ensures that the nodepool/zk cluster is kept updated and that
-# new images are built when there are changes to dib elements or
-# nodepool config.
-- job:
-    name: "Merge-Trigger-Nodepool"
-    project-type: freestyle
-    scm:
-      - git:
-          url: https://github.com/rcbops/rpc-gating
-          branches:
-           - master
-    properties:
-      - build-discarder:
-          num-to-keep: 30
-    triggers:
-        - github
-    builders:
-      - trigger-builds:
-        - project:
-            - "Setup-Nodepool"
-
 - job:
     name: Setup-Nodepool
     project-type: pipeline

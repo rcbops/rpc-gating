@@ -1,0 +1,20 @@
+- job:
+    name: "Merge-Trigger-rpc-gating"
+    project-type: pipeline
+    concurrent: false
+    properties:
+      - rpc-gating-github
+      - build-discarder:
+          num-to-keep: 30
+    triggers:
+        - github
+    parameters:
+      - rpc_gating_params
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${RPC_GATING_BRANCH}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/rpc_gating_merge_trigger.groovy

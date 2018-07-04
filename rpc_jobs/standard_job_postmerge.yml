@@ -9,10 +9,8 @@
     scenario:   "functional"
     action:     "test"
     jira_project_key: "RE"
-    trigger_build: "PM_{repo_name}-{branch}-{image}-{scenario}-{action}"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 # This job is specified as `freestyle` as using a pipeline job with github
 # trigger causes the job to be triggered irrespective of which branch was
