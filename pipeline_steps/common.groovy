@@ -1,5 +1,6 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
 
 void download_venv(){
   sh """#!/bin/bash -xeu
@@ -1631,19 +1632,37 @@ void testRelease(component_text){
   String series = component['release']['series']
   String sha = component['release']['sha']
 
-  List jobNames = Hudson.instance.getAllItems(org.jenkinsci.plugins.workflow.job.WorkflowJob)*.fullName
+  allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+  jobs = (allWorkflowJobs.findAll {it.displayName =~ /RELEASE_${name}-${series}/})
 
   def parallelBuilds = [:]
 
   // Cannot do for (job in jobNames), see:
   // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-  for (j in jobNames) {
+  for (j in jobs) {
     def job = j
-    def m = job =~ /RELEASE_${name}-${series}/
-    if (m) {
-      parallelBuilds[job] = {
+    existingSuccessfulBuild = job.getBuilds().find { build ->
+      buildCause = build.getCauses()[0]
+      generatedFromSamePullRequest = false
+      try{
+        upstreamBuild = buildCause.getUpstreamRun()
+        if (gate.getPullRequestID(upstreamBuild) == ghprbPullId){
+          generatedFromSamePullRequest = true
+        }
+      } catch (e){
+      }
+      (
+        generatedFromSamePullRequest
+        && upstreamBuild.getParent() == currentBuild.rawBuild.getParent()
+        && build.isBuilding() == false
+        && build.getAction(ParametersAction).getParameter("BRANCH").getValue() == sha
+        && build.getResult() == Result.fromString("SUCCESS")
+      )
+    }
+    if (! existingSuccessfulBuild) {
+      parallelBuilds[job.displayName] = {
         build(
-          job: job,
+          job: job.displayName,
           wait: true,
           parameters: [
             [
@@ -1654,6 +1673,8 @@ void testRelease(component_text){
           ]
         )
       }
+    } else {
+      println("Found existing successful build ${existingSuccessfulBuild}, skipping new test.")
     }
   }
 
