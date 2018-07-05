@@ -88,6 +88,7 @@
 
         ORG=component["repo_url"].split("/")[3]
         REPO=component["name"]
+        SHA=component["release"]["sha"]
         VERSION=component["release"]["version"]
         PREVIOUS_VERSION=pred_version
         RELEASE_NOTES_FILE="${WORKSPACE}/artifacts/release_notes"
@@ -117,7 +118,7 @@
                 clone \
                     --ref "${MAINLINE}" \
                 publish_tag \
-                    --ref "${MAINLINE}" \
+                    --ref "${SHA}" \
                     --version "${VERSION}" \
                 generate_release_notes \
                     --version "${VERSION}" \
@@ -140,7 +141,7 @@
                 clone \
                     --ref "${RC_BRANCH}" \
                 publish_tag \
-                    --ref "${RC_BRANCH}" \
+                    --ref "${SHA}" \
                     --version "${VERSION}" \
                 generate_release_notes \
                     --version "${VERSION}" \
