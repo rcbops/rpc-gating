@@ -711,8 +711,9 @@ def safe_jira_comment(body, String repo_path="rpc-openstack"){
 
 // This function creates or updates issues related to build failures.
 // Should be used to report build failures by calling:
-//    common.build_failure_issue(project)
-String build_failure_issue(String project){
+//    common.build_failure_issue(project, labels)
+String build_failure_issue(String project,
+                           List labels = []){
   withCredentials([
     usernamePassword(
       credentialsId: "jira_user_pass",
@@ -727,7 +728,7 @@ String build_failure_issue(String project){
         --user '$JIRA_USER' \
         --password '$JIRA_PASS' \
         build_failure_issue \
-          --project "${project}" \
+          --project "${project}" ${generate_label_options(labels)} \
           --job-name "${env.JOB_NAME}" \
           --job-url "${env.JOB_URL}" \
           --build-tag "${env.BUILD_TAG}" \
@@ -1448,7 +1449,8 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
           currentBuild.result="FAILURE"
           if (env.ghprbPullId == null && ! isUserAbortedBuild() && jira_project_key != '') {
             print("Creating build failure issue.")
-            build_failure_issue(jira_project_key)
+            def labels = ['post-merge-test-failure', 'jenkins', env.JOB_NAME]
+            build_failure_issue(jira_project_key, labels)
           } else {
             print("Skipping build failure issue creation.")
           }

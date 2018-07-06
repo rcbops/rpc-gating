@@ -179,12 +179,19 @@ def get_or_create_issue(project, status, labels, description, summary):
 
 @cli.command()
 @click.option('--project')
+@click.option('--label',
+              'labels',
+              help="Add label to issue, can be specified multiple times",
+              multiple=True,
+              default=[])  # leave empty by default, will be set below
 @click.option('--job-name', help="Name of the job")
 @click.option('--job-url', help="URL of the job")
 @click.option('--build-tag',
               help="Build Tag (string the identifies the job and build.)")
 @click.option('--build-url', help="URL of the build")
-def build_failure_issue(project, job_name, job_url, build_tag, build_url):
+def build_failure_issue(
+        project, labels, job_name, job_url, build_tag,
+        build_url):
     """Create issue for build failure.
 
     1) Identify or create an issue relating to the Job that failed.
@@ -193,10 +200,14 @@ def build_failure_issue(project, job_name, job_url, build_tag, build_url):
     ctx = click.get_current_context()
     authed_jira = ctx.obj
 
+    # set labels to default values if not defined
+    if not labels:
+        labels = ["jenkins-build-failure", "jenkins", job_name]
+
     issue = _get_or_create_issue(
         project=project,
         status="BACKLOG",
-        labels=["jenkins-build-failure", "jenkins", job_name],
+        labels=labels,
         summary="JBF: {jn}".format(jn=job_name),
         description="The following job failed a build: [{jn}|{ju}]"
                     .format(jn=job_name, ju=job_url))
