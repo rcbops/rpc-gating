@@ -127,6 +127,49 @@ providers:
         availability-zones: []
         labels: *provider_pools_main_labels_block
 
+  - name: phobos-nodepool
+    region-name: "RegionOne"
+    cloud: phobos_nodepool
+    boot-timeout: 120
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    image-name-format: nodepool-phobos-{image_name}-{timestamp}
+    diskimages: *provider_diskimage_block
+    pools:
+      - name: main
+        max-servers: 20
+        availability-zones: []
+        labels:
+          - name: ubuntu-xenial-g1-8
+            diskimage: ubuntu-xenial
+            flavor-name: releng-general1-8
+            key-name: openstack_phobos_nodepool
+            console-log: true
+          - name: ubuntu-trusty-g1-8
+            diskimage: ubuntu-trusty
+            flavor-name: releng-general1-8
+            key-name: openstack_phobos_nodepool
+            console-log: true
+          - name: ubuntu-xenial-p2-15
+            diskimage: ubuntu-xenial
+            flavor-name: releng-performance2-15
+            key-name: openstack_phobos_nodepool
+            console-log: true
+          - name: ubuntu-trusty-p2-15
+            diskimage: ubuntu-trusty
+            flavor-name: releng-performance2-15
+            key-name: openstack_phobos_nodepool
+            console-log: true
+          - name: rpco-14.2-xenial-base
+            diskimage: rpco-14.2-xenial-artifacts
+            flavor-name: releng-7
+            key-name: openstack_phobos_nodepool
+            console-log: true
+          - name: rpco-14.2-trusty-base
+            diskimage: rpco-14.2-trusty-artifacts
+            flavor-name: releng-7
+            key-name: openstack_phobos_nodepool
+            console-log: true
+
 diskimages:
   - name: ubuntu-xenial
     # Build fresh images every 24 hrs.
