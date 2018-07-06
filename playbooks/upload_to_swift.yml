@@ -66,7 +66,12 @@
         region_name: "{{ region }}"
       no_log: true
       register: _auth
-      until: (_auth | success) and (auth_token is defined) and (service_catalog is defined)
+      until: (_auth | success) and
+             (auth_token is defined) and
+             (auth_token is not none) and
+             (auth_token | trim != '') and
+             (service_catalog is defined) and
+             (service_catalog is not none)
       retries: 5
       delay: 10
 
