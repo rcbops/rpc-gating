@@ -57,8 +57,8 @@
         cloud: "{{ cloud_name }}"
       register: _create_container
       until: _create_container | success
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
 
     - name: Authenticate to the cloud and retrieve the service catalog
       os_auth:
@@ -72,8 +72,8 @@
              (auth_token | trim != '') and
              (service_catalog is defined) and
              (service_catalog is not none)
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
 
     - name: Extract object-store service catalog
       set_fact:
@@ -104,8 +104,8 @@
         status_code: "201, 202, 204"
       register: _enable_cdn
       until: (_enable_cdn | success) and ('x_cdn_ssl_uri' in _enable_cdn)
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
 
     - name: Set fact for the user-accessible CDN URL for the container
       set_fact:
@@ -127,8 +127,8 @@
         status_code: 204
       register: _enable_static_hosting
       until: _enable_static_hosting | success
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
 
     # Do this before generating index.html, styles.css and data.json
     # So they don't show up on the final page.
@@ -223,8 +223,8 @@
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
       register: upload_data
       until: upload_data | success
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
 
     - name: Wait for async archive creation to complete
       async_status:
@@ -248,8 +248,8 @@
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
       register: upload_archive
       until: upload_archive | success
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
 
     # This is used by common.archive_artifacts to put the link into the
     # build description.
