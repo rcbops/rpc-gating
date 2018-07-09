@@ -1,6 +1,8 @@
 ansible
 click
+croniter
 jenkins-job-builder
 flake8
 tox
 nose
+jmespath

@@ -219,7 +219,9 @@ def get_downtime(client, build, start, end):
 
 
 def return_time(client, query, delta_seconds=0):
-    """ From an InfluxDB query, fetch
+    """Get first point as time object.
+
+    From an InfluxDB query, fetch
     the first point time, and return a
     python time object. Shift it from
     a few seconds (delta_seconds) if necessary.
@@ -263,8 +265,7 @@ def add_time(client, build, stages, started, leapfiledir, completefiledir):
 
 
 def get_build_data(
-    client, build, leapfrog=False, leapfiledir=None, completefiledir=None
-        ):
+        client, build, leapfrog=False, leapfiledir=None, completefiledir=None):
     if leapfrog:
         # This is the first marker file created and so approximately the start
         start_time = get_mtime("clone.complete", leapfiledir, completefiledir)

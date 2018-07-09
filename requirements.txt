@@ -17,8 +17,8 @@ python-swiftclient
 python-subunit
 pytz
 PyYAML
-rackspace_monitoring
-rackspace_monitoring_cli
+rackspace-monitoring
+rackspace-monitoring-cli
 rackspaceauth
 shade
 six

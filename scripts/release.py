@@ -177,9 +177,9 @@ def usage():
         print("<br>{}:<br>".format(name))
         help_lines = command.get_help(click.get_current_context()).split('\n')
         for line in help_lines:
-            if (not (line.startswith("Usage:") or line.startswith("Options:"))
-                    and line):
-                print "{}<br>".format(line)
+            if (not (line.startswith("Usage:") or (
+                    line.startswith("Options:")) and line)):
+                print("{}<br>".format(line))
 
 
 ghutils.cli.add_command(generate_release_notes)

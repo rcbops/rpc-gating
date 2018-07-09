@@ -9,11 +9,13 @@ logger = logging.getLogger("notifications")
 
 
 def try_context(ctx_obj, var, var_name, context_attr):
-    """Try and get a value from context, otherwise use value supplied
-       as an arg/option. If neither are supplied, bail.
+    """Try and get a value from context.
 
-       The idea is to prevent the user from having to supply the same
-       option twice when executing multiple commands.
+    Try and get a value from context, otherwise use value supplied
+    as an arg/option. If neither are supplied, bail.
+
+    The idea is to prevent the user from having to supply the same
+    option twice when executing multiple commands.
          var: the value supplied as an option
          var_name: Name of the option
          context_attr: attribute to attempt to read from the context object.
@@ -100,7 +102,7 @@ def cli(debug):
     help="Body of release announcement message."
          " May be omitted if create_release is used.")
 def mail(to, subject, body):
-    """Send mail via local MTA"""
+    """Send mail via local MTA."""
     data = generate_message_data(subject=subject, body=body)
     msg = MIMEText(data["body"])
     msg["From"] = data["from"]

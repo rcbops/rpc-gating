@@ -63,10 +63,11 @@ def _get_or_create_issue(project, status, labels, description, summary):
     elif len(issues) > 1:
         issue = issues[0]
         LOGGER.debug("Query: {q} Returned >1 issues: {il}. "
-                     "Will use the oldest issue {i}".format(
-                        q=query,
-                        il=",".join(i.key for i in issues),
-                        i=issue))
+                     "Will use the oldest issue {i}"
+                     .format(
+                         q=query,
+                         il=",".join(i.key for i in issues),
+                         i=issue))
     else:
         issue = _create_issue(
             summary=summary,
@@ -325,31 +326,31 @@ def findfailuredupes(squash, query):
             job = match.group(1)
             jobs[job].append(issue)
         else:
-            print "non matching summary: {}".format(issue.fields.summary)
+            print("non matching summary: {}".format(issue.fields.summary))
     duplicates = {job: sorted(issues, key=lambda x: int(x.id))
                   for job, issues in jobs.items()
                   if len(issues) > 1}
     if duplicates:
-        print "Duplicates:"
+        print("Duplicates:")
         for job, issues in duplicates.items():
-            print "{job} --> {issues}".format(
-                job=job, issues=", ".join(i.key for i in issues))
+            print("{job} --> {issues}".format(
+                job=job, issues=", ".join(i.key for i in issues)))
         if squash:
-            print "Squashing duplicates"
+            print("Squashing duplicates")
             for job, issues in duplicates.items():
                 master_issue = issues.pop(0)
-                print "{job} / {master}".format(job=job, master=master_issue)
+                print("{job} / {master}".format(job=job, master=master_issue))
                 for duplicate_issue in issues:
                     # Add comment to master issue
-                    print ("  Adding Comment to master issue: {}"
-                           .format(master_issue.key))
+                    print("  Adding Comment to master issue: {}"
+                          .format(master_issue.key))
                     authed_jira.add_comment(
                         master_issue.key,
                         "Issue {d} closed as a duplicate of this issue".format(
                             d=duplicate_issue.key))
                     # Add comment to duplicate issue
-                    print ("  Adding Comment to duplicate issue: {}"
-                           .format(duplicate_issue.key))
+                    print("  Adding Comment to duplicate issue: {}"
+                          .format(duplicate_issue.key))
                     authed_jira.add_comment(
                         duplicate_issue.key,
                         "Closing as duplicate of {m}".format(
@@ -357,8 +358,8 @@ def findfailuredupes(squash, query):
                     transition = find_done_transition(authed_jira,
                                                       duplicate_issue)
                     # Close duplicate issue
-                    print "  Transitioning: {k} --> {t}".format(
-                        k=duplicate_issue.key, t=transition['name'])
+                    print("  Transitioning: {k} --> {t}".format(
+                        k=duplicate_issue.key, t=transition['name']))
                     authed_jira.transition_issue(
                         duplicate_issue,
                         transition['id'])
@@ -371,11 +372,11 @@ def findfailuredupes(squash, query):
                             }
                 )
 
-            print "Squash Complete"
+            print("Squash Complete")
         else:
-            print "Squash disabled, leaving duplicates"
+            print("Squash disabled, leaving duplicates")
     else:
-        print "No Duplicates Found"
+        print("No Duplicates Found")
 
 
 if __name__ == "__main__":

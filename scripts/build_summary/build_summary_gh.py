@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 # Stdlib import
 import datetime
@@ -123,8 +124,8 @@ def summary(jobsdir, newerthan, jsonfile):
                        and ("PM_" in root or "PR_" in root)]))
     for count, build in build_files:
         path_groups_match = re.search(
-                ('^(?P<build_folder>.*/(?P<job_name>[^/]+)/'
-                 'builds/(?P<build_num>[0-9]+))/'), build)
+            ('^(?P<build_folder>.*/(?P<job_name>[^/]+)/'
+             'builds/(?P<build_num>[0-9]+))/'), build)
         if path_groups_match:
             if (count % 100 == 0):
                 gc.collect()
@@ -132,7 +133,7 @@ def summary(jobsdir, newerthan, jsonfile):
                 print("{}/{} ({:.2f} %)".format(
                     count,
                     total,
-                    float(count/total) * 100
+                    float(count / total) * 100
                 ))
             path_groups = path_groups_match.groupdict()
             job_name = path_groups['job_name']
@@ -254,7 +255,7 @@ def summary(jobsdir, newerthan, jsonfile):
                         build_integrity_fail(id)
                         break
             except Exception as e:
-                    print("Build integrity exception: "+str(e))
+                    print("Build integrity exception: " + str(e))
                     build_integrity_fail(id)
 
         for id, failure in cache_dict["failures"].copy().items():

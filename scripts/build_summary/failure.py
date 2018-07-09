@@ -172,7 +172,7 @@ class AptFailure(Failure):
             if match:
                 self.matches = True
                 self.detail = "Apt Fetch Fail: {fail}".format(
-                                 fail=match.string)
+                    fail=match.string)
                 break
 
 
@@ -242,7 +242,7 @@ class SlaveOfflineFailure(Failure):
                 self.matches = True
                 self.detail = ('Slave Died / Agent went offline'
                                ' during the build: {previous_task}'.format(
-                                    previous_task=previous_task))
+                                   previous_task=previous_task))
                 break
 
 
@@ -274,7 +274,7 @@ class PipFailure(Failure):
                 if not self.failure_ignored(i):
                     self.matches = True
                     self.detail = "Can't find pip package: {fail}".format(
-                                     fail=match.group(1))
+                                  fail=match.group(1))
                 break
 
 
@@ -344,7 +344,7 @@ class BuildTimeoutFailure(Failure):
                 previous_task = self.get_previous_task(i)
                 self.matches = True
                 self.detail = 'Build Timeout: {previous_task}'.format(
-                        previous_task=previous_task)
+                    previous_task=previous_task)
                 break
 
 
