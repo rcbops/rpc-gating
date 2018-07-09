@@ -160,7 +160,7 @@ def check_retention(job, in_file):
             return_value = 1
         except ValueError as e:
             return_value = 1
-            print e
+            print(e)
         else:
             return_value = 0
             break

@@ -29,7 +29,7 @@ def get_token_url(raxmon):
 @click.option("--token", 'webhook_token', required=True)
 @click.pass_context
 def set_webhook_token(ctx, webhook_token):
-    """Sets the token that is included in MaaS webhook notifications
+    """Set the token that is included in MaaS webhook notifications.
 
     This is one method of verifying that receieved requests are
     from MaaS. This is per account.

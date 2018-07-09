@@ -1,14 +1,16 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 # Stdlib import
 import datetime
+import dateutil.parser
 import functools
 import gc
 import json
 import os
 import re
-import sys
 import traceback
+import uuid
 
 # 3rd Party imports
 import click
@@ -55,11 +57,16 @@ def _datetime(dt):
     return str(dt)
 
 
+@to_serializable.register(uuid.UUID)
+def _uuid(uuid):
+    return str(uuid)
+
+
 def serialise(obj):
-    return json.dumps(obj, default=to_serializable).replace("'", "\'")
+    return json.dumps(obj, default=to_serializable)
 
 
-@click.command(help='args are paths to jenkins build.xml files')
+@click.command(help='arg is a jenkins jobs dir')
 @click.argument('jobsdir')
 @click.option('--newerthan', default=0,
               help='Build IDs older than this will not be shown')
@@ -72,17 +79,17 @@ def summary(jobsdir, newerthan, jsonfile):
     age_limit = (datetime.datetime.now()
                  - datetime.timedelta(days=RETENTION_DAYS))
 
-    data = dict(builds=[])
+    data = dict(builds={})
     # read data from json input file
     if os.path.exists(jsonfile):
         try:
             with open(jsonfile, 'r') as f:
                 data = json.load(f)
         except Exception as e:
-            sys.stderr.write(
+            print(
                 "Failed to read json file: {jsonfile}"
                 .format(jsonfile=jsonfile))
-            traceback.print_exc(file=sys.stderr)
+            traceback.print_exc()
 
     # Current production data.json has some extremely long failure detail
     # fields. This commit includes a change to failure.py to ensure
@@ -90,25 +97,44 @@ def summary(jobsdir, newerthan, jsonfile):
     # on disk, we load and truncate the fields here.
     # At the end of this run, the data file will be rewritten with
     # truncated values, so this fix code will only be needed once.
-    for b in data['builds']:
-        for f in b['failures']:
-            f['detail'] = f['detail'][:1000]
+    if "failures" in data:
+        for id, failure in data['failures'].items():
+                failure['detail'] = failure['detail'][:1000]
 
     # create set of build ids so we don't scan builds
     # we already have summary information about
-    build_dict = {"{jn}_{bn}".format(jn=b['job_name'], bn=b['build_num']):
-                  b for b in data['builds']}
+    if "builds" in data:
+        build_dict = {"{jn}_{bn}".format(jn=b['job_name'], bn=b['build_num']):
+                      b for b in data['builds'].values()}
+    else:
+        build_dict = {}
+
+    # These dicts store builds and failures read in from
+    # the input json file that will also be written
+    # to the output json file.
+    cached_builds = {}
+    cached_failures = {}
 
     # walk the supplied dir, scan new builds
-    for count, build in enumerate(["{}/build.xml".format(root)
-                                  for root, dirs, files
-                                  in os.walk(jobsdir)
-                                  if "build.xml" in files
-                                  and ("PM_" in root or "PR_" in root)]):
+    parse_failures = 0
+    build_files = list(enumerate(["{}/build.xml".format(root)
+                       for root, dirs, files
+                       in os.walk(jobsdir)
+                       if "build.xml" in files
+                       and ("PM_" in root or "PR_" in root)]))
+    for count, build in build_files:
         path_groups_match = re.search(
             ('^(?P<build_folder>.*/(?P<job_name>[^/]+)/'
              'builds/(?P<build_num>[0-9]+))/'), build)
         if path_groups_match:
+            if (count % 100 == 0):
+                gc.collect()
+                total = len(build_files)
+                print("{}/{} ({:.2f} %)".format(
+                    count,
+                    total,
+                    float(count / total) * 100
+                ))
             path_groups = path_groups_match.groupdict()
             job_name = path_groups['job_name']
             build_num = path_groups['build_num']
@@ -117,7 +143,27 @@ def summary(jobsdir, newerthan, jsonfile):
                 build_num=build_num
             )
             if key in build_dict:
-                continue
+                try:
+                    # build already cached, don't need to rescan
+                    # But we do need to ensure that the cached data is age
+                    # checked and added to a dict of cached items to be
+                    # written out at the end.
+                    b = build_dict[key]
+                    if dateutil.parser.parse(b["timestamp"]) > age_limit:
+                        cached_builds[b["id"]] = build_dict[key]
+                        # ensure all referenced failures are also stored
+                        for failure_id in b["failures"]:
+                            print("f", end="")
+                            f = data["failures"][failure_id]
+                            cached_failures[f["id"]] = f
+                    print("c", end="")
+                    continue
+                except Exception as e:
+                    # failed to process cache, read the build log
+                    # as if it wasn't cached.
+                    # ! = cache read failure
+                    print("cache failure: " + str(e))
+                    print("!", end="")
             try:
                 build = Build(
                     build_folder=path_groups['build_folder'],
@@ -129,44 +175,99 @@ def summary(jobsdir, newerthan, jsonfile):
                         build.log_lines = build.read_logs()
                         Failure.scan_build(build)
                         build.log_lines = []
-                        if (count % 25 == 0):
-                            gc.collect()
                     build_dict[key] = build
-                    sys.stderr.write(".")
-                    # sys.stderr.write("OK: {key}\n".format(key=key))
+                    # . = build read ok
+                    print(".", end="")
+                    # print("OK: {key}\n".format(key=key))
                 else:
-                    sys.stderr.write("_")
-                    # sys.stderr.write("Old Build: {key}\n" .format(key=key))
+                    # o = old
+                    print("o", end="")
+                    # print("Old Build: {key}\n" .format(key=key))
             except lxml.etree.XMLSyntaxError as e:
-                sys.stderr.write("\nFAIL: {key} {e}\n".format(key=key, e=e))
+                print("\nFAIL: {key} {e}\n".format(key=key, e=e))
+                parse_failures += 1
             except Exception as e:
-                sys.stderr.write("\nFAIL: {key} {e}\n".format(key=key, e=e))
+                parse_failures += 1
+                print("\nFAIL: {key} {e}\n".format(key=key, e=e))
                 if ("can't parse internal" not in str(e)):
-                    traceback.print_exc(file=sys.stderr)
+                    traceback.print_exc()
+
+    print("\nbuilds: {} failures: {}".format(len(build_dict.keys()),
+                                             parse_failures))
 
     # dump data out to json file
     # remove builds older than RETENTION_DAYS
     # ensure we only dump data newer than RETENTION_DAYS
 
     with open(jsonfile, "w") as f:
-        f.write(serialise(dict(
-            builds=build_dict.values(),
+
+        cache_dict = dict(
+            builds={id: build for id, build in Build.builds.items()
+                    if build.timestamp > age_limit},
+            failures={id: f for id, f in Failure.failures.items()
+                      if f.build.timestamp > age_limit},
             timestamp=datetime.datetime.now(),
             retention_days=RETENTION_DAYS
-        )))
+        )
+        # debug statements for combining previously cached
+        # builds and failures with builds and failures
+        # detected on this run
+        print("\nNew Builds: {lcdb}"
+              "\nNew Failures: {lcdf}"
+              "\nBuilds carried forward: {lcb}"
+              "\nFailures carried forward: {lcf}"
+              .format(lcdb=len(cache_dict["builds"]),
+                      lcdf=len(cache_dict["failures"]),
+                      lcb=len(cached_builds),
+                      lcf=len(cached_failures)))
 
-    #
-    # Pickle build objs newer than RETENTION_DAYS to the cache file, so those
-    # logs don't need to be reprocessed on the next run.
-    # cache_dict = {}
-    # for key, build in buildobjs.items():
-    #     if build.timestamp > age_limit:
-    #         cache_dict[key] = build
-    #         # don't cache log_lines as the cache size would get unmanagably
-    #         # large
-    #         build.log_lines = []
-    # with open(cache, 'wb') as f:
-    #     pickle.dump(cache_dict, f, pickle.HIGHEST_PROTOCOL)
+        cache_dict["builds"].update(cached_builds)
+        cache_dict["failures"].update(cached_failures)
+
+        # convert objects to dicts for storage, this would be done
+        # by serialise() but its easier to do the integrity
+        # check when all the values are of the same type.
+        for id, build in cache_dict["builds"].items():
+            if type(build) is not dict:
+                cache_dict["builds"][id] = build.get_serialisation_dict()
+        for id, failure in cache_dict["failures"].items():
+            if type(failure) is not dict:
+                cache_dict["failures"][id] = failure.get_serialisation_dict()
+
+        def build_integrity_fail(id):
+            print("Integrity fail for build: {}".format(id))
+            del cache_dict["builds"][id]
+
+        def failure_integrity_fail(id):
+            print("Integrity fail for failure: {}".format(id))
+            del cache_dict["failures"][id]
+
+        # integrity check
+        # its important the data set is consistent as the
+        # UI assumes consistency. Its better to remove a few
+        # inconsistent items than have the whole UI die.
+        for id, build in cache_dict["builds"].copy().items():
+            try:
+                if build["id"] != id:
+                    build_integrity_fail(id)
+                for failure in build["failures"]:
+                    if failure not in cache_dict["failures"]:
+                        build_integrity_fail(id)
+                        break
+            except Exception as e:
+                    print("Build integrity exception: " + str(e))
+                    build_integrity_fail(id)
+
+        for id, failure in cache_dict["failures"].copy().items():
+            try:
+                if (failure["id"] != id
+                        or failure["build"] not in cache_dict["builds"]):
+                    failure_integrity_fail(id)
+            except Exception:
+                    failure_integrity_fail(id)
+
+        cache_string = serialise(cache_dict)
+        f.write(cache_string)
 
 
 if __name__ == '__main__':

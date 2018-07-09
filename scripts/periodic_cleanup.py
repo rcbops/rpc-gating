@@ -28,13 +28,13 @@ INDENT_STR = 2 * " "
 
 
 def _indp(message, **kwargs):
-    """ Indent Print """
-    print("{indent}{message}".format(
-            indent=INDENT_STR * INDENT,
-            message=message
-        ),
-        **kwargs
-    )
+    """Indent Print."""
+    print("{indent}{message}"
+          .format(
+              indent=INDENT_STR * INDENT,
+              message=message
+          ),
+          **kwargs)
 
 
 def log(f):
@@ -51,8 +51,8 @@ def log(f):
         delta = end - start
         INDENT -= 1
         _indp("Completed: {function} ({delta}s)".format(
-                function=f.func_name,
-                delta=delta.seconds))
+              function=f.func_name,
+              delta=delta.seconds))
         return result
     return wrapper
 
@@ -230,13 +230,13 @@ class Cleanup:
             _indp("Agent token: {}".format(label), end=" ")
 
             if not re.match(self.protected_prefix, hostname):
-                print ("[not protected]", end=" ")
+                print("[not protected]", end=" ")
             else:
                 print()
                 continue
 
             if hostname not in self.server_names:
-                print ("[not related to active instance]", end=" ")
+                print("[not related to active instance]", end=" ")
             else:
                 print()
                 continue

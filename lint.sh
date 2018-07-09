@@ -11,13 +11,18 @@ cleanup(){
   rm -f lint_jjb.ini
 }
 install(){
+  python=${1:-python3}
   which virtualenv >/dev/null \
     || { echo "virtualenv not available, please install via pip"; return; }
-  if [ ! -d $venv ]; then
-    virtualenv $venv
+  if [ ! -d ${venv}_${python} ]; then
+    $python -m virtualenv ${venv}_${python}
   fi
-  . $venv/bin/activate
-  pip install -c constraints.txt -r test-requirements.txt >/dev/null
+  . ${venv}_${python}/bin/activate
+  ${venv}_${python}/bin/${python} -m pip install -c constraints.txt -r test-requirements.txt  >/dev/null \
+    || {
+      echo "Failed to create venv for $python"
+      exit 1
+    }
 }
 
 create_jjb_ini(){
@@ -107,9 +112,19 @@ check_jjb_lint() {
 }
 
 check_python(){
-  flake8 --exclude=.lintvenv,webhooktranslator,playbooks/roles . \
-    && echo "Python syntax ok" \
-    || { echo "Python syntax fail"; rc=1; }
+  python="${1:-python3}"
+  . ${venv}_${python}/bin/activate
+  #D = doc
+  #W503=line break before binary operator
+  ignore="D100,D101,D102,D103,D105,W503"
+
+  echo "$python lint"
+  ${venv}_${python}/bin/${python} \
+    -m flake8 \
+    --ignore="${ignore}"\
+    --exclude=.lintvenv_*,webhooktranslator,playbooks/roles,ansible_v2_3_2_0_1_contrib_inventory_openstack.py . \
+    && echo "$python syntax ok" \
+    || { echo "$python syntax fail"; rc=1; }
 }
 
 check_webhooktranslator(){
@@ -163,16 +178,23 @@ check_jenkins_name_lengths(){
   fi
 }
 
-[[ ${RPC_GATING_LINT_USE_VENV:-yes} == yes ]] && install
+#create the venvs`
+install python3
+install python2.7
+
+# create test only jjb config
 create_jjb_ini
+
+# run the checks
 check_jjb
 check_jenkins_name_lengths
 check_groovy
 check_ansible
 check_bash
-check_python
 check_jjb_lint
 check_webhooktranslator
+check_python python3
+check_python python2.7
 
 if [[ $rc == 0 ]]
 then
