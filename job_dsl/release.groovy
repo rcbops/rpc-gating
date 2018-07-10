@@ -1,4 +1,4 @@
-library "rpc-gating@${RPC_GATING_BRANCH}"
+library "rpc-gating-master"
 common.globalWraps(){
   stage("Configure Git"){
     common.configure_git()

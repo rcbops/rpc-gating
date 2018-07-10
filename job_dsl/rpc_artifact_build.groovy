@@ -1,7 +1,7 @@
 // Can't use env.FOO = {FOO} to transfer JJB vars to groovy
 // as this file won't be templated by JJB.
 // Alternative is to use parameters with JJB vars as the defaults.
-library "rpc-gating@${RPC_GATING_BRANCH}"
+library "rpc-gating-master"
 common.globalWraps(){
   image_list = [
     "nodepool-rpco-14.2-xenial-base",
