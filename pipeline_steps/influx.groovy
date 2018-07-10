@@ -30,19 +30,19 @@ def setup(){
             variable: "SSH_IP_ADDRESS_WHITELIST"
           )
         }
-        withCredentials(creds){
-          dir('rpc-maas'){
-            git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
-            sh """#!/bin/bash
-              export INVENTORY="${env.WORKSPACE}/inventory/hosts"
-              mkdir -p \$(dirname \$INVENTORY)
-              cp ${env.WORKSPACE}/rpc-gating/playbooks/inventory/hosts \$INVENTORY
-              if ! grep influx_hosts \$INVENTORY; then
-                  echo [influx_hosts:children] >> \$INVENTORY
-                  echo job_nodes >> \$INVENTORY
-              fi
-            """
-          }
+        dir('rpc-maas'){
+          git branch: env.RPC_MAAS_BRANCH, url: env.RPC_MAAS_REPO
+          sh """#!/bin/bash
+            export INVENTORY="${env.WORKSPACE}/inventory/hosts"
+            mkdir -p \$(dirname \$INVENTORY)
+            cp ${env.WORKSPACE}/rpc-gating/playbooks/inventory/hosts \$INVENTORY
+            if ! grep influx_hosts \$INVENTORY; then
+              echo [influx_hosts:children] >> \$INVENTORY
+              echo job_nodes >> \$INVENTORY
+            fi
+          """
+        }
+        common.withRequestedCredentials("jenkins_ssh_privkey") {
           common.venvPlaybook(
             playbooks: [
               "rpc-gating/playbooks/slave_security.yml",
@@ -55,12 +55,12 @@ def setup(){
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
             ],
             vars: [
-              WORKSPACE: env.WORKSPACE,
-              influxdb_db_root_password: env.INFLUX_ROOT_PASSWORD,
+              WORKSPACE                  : env.WORKSPACE,
+              influxdb_db_root_password  : env.INFLUX_ROOT_PASSWORD,
               influxdb_db_metric_password: env.INFLUX_METRIC_PASSWORD,
-              grafana_admin_password: env.GRAFANA_ADMIN_PASSWORD
+              grafana_admin_password     : env.GRAFANA_ADMIN_PASSWORD
             ]
-          )
+         )
         }
       })
   } catch (e){

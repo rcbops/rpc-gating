@@ -36,17 +36,7 @@ ${ip}
       if (!("port" in args)){
         args.port = 22
       }
-      withCredentials([
-        file(
-          credentialsId: 'id_rsa_cloud10_jenkins_file',
-          variable: 'JENKINS_SSH_PRIVKEY'
-        ),
-        usernamePassword(
-          credentialsId: "service_account_jenkins_api_creds",
-          usernameVariable: "JENKINS_USERNAME",
-          passwordVariable: "JENKINS_API_KEY"
-        )
-      ]){
+      common.withRequestedCredentials("jenkins_ssh_privkey, jenkins_api_creds"){
         dir("rpc-gating/playbooks"){
           unstash args.inventory
           common.venvPlaybook(
@@ -57,9 +47,9 @@ ${ip}
               "--extra-vars='ansible_port=${args.port}'",
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
             ]
-          )
-        }
-      }
+          ) //venvPlaybook
+        } // dir
+      } // withRequestedCredentials
   })
 }
 
