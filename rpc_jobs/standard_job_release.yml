@@ -24,7 +24,7 @@
       common.globalWraps(){
         dir("${env.WORKSPACE}/releases") {
           common.clone_with_pr_refs()
-          common.runReleasesPullRequestWorkflow("origin/master", "HEAD", "RE")
+          common.runReleasesPullRequestWorkflow("origin/master", "HEAD", "RE", "CIT/release")
         } // dir
       } // globalWraps
 

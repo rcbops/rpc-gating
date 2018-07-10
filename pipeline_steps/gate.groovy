@@ -10,7 +10,7 @@ void testPullRequest(String repoName, Boolean testWithAntecedents, String github
         if (testWithAntecedents) {
            testPullRequestWithAntecedents(repoName, githubStatusContext)
         } else {
-           testPullRequestOnly(repoName)
+           testPullRequestOnly(repoName, githubStatusContext)
         }
     }catch (REException e){
         currentBuild.result="FAILURE"
@@ -18,7 +18,7 @@ void testPullRequest(String repoName, Boolean testWithAntecedents, String github
 }
 
 
-void testPullRequestOnly(String repoName){
+void testPullRequestOnly(String repoName, String statusContext){
     List allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
     List filteredComponentGateJobs = filterGateJobs(repoName, allWorkflowJobs)
 
@@ -51,32 +51,8 @@ void testPullRequestOnly(String repoName){
 
     parallel parallelBuilds
 
-    build(
-      job: "Merge-Pull-Request",
-      wait: false,
-      parameters: [
-        [
-          $class: "StringParameterValue",
-          name: "RPC_GATING_BRANCH",
-          value: RPC_GATING_BRANCH,
-        ],
-        [
-          $class: "StringParameterValue",
-          name: "pr_repo",
-          value: ghprbGhRepository,
-        ],
-        [
-          $class: "StringParameterValue",
-          name: "pr_number",
-          value: ghprbPullId,
-        ],
-        [
-          $class: "StringParameterValue",
-          name: "commit",
-          value: ghprbActualCommit,
-        ],
-      ]
-    )
+    String description = "Gate tests passed, merging..."
+    updateStatusAndMerge(description, statusContext)
 }
 
 
@@ -212,19 +188,8 @@ void testPullRequestWithAntecedents(String repoName, String statusContext){
         }
     }
 
-    (prRepoOrg, prRepoName) = ghprbGhRepository.split("/")
-    /* When a check is required by GitHub, it prevents the pull request being merged if
-       it is not marked as `"success"`. Normally GHPRB would be soley responsible for
-       updating the status context however this would necessitate a separate job to
-       perform the merge. The following section updates the pull request's status
-       context on GitHub if all tests were successful to enable the same build to merge
-       the pull request. GHPRB will the report success again assuming all subsequent
-       steps succeed.
-     */
-    println("Updating pull request status context.")
-    description = "Gate tests passed, merging..."
-    github.create_status(prRepoOrg, prRepoName, ghprbActualCommit, "success", triggerBuild.getAbsoluteUrl(), description, statusContext)
-    github.merge_pr(prRepoOrg, prRepoName, ghprbPullId, ghprbActualCommit)
+    String description = "Gate tests passed, merging..."
+    updateStatusAndMerge(description, statusContext)
 }
 
 
@@ -373,6 +338,22 @@ void killGateBuilds(){
         }
     }
     gateBuilds = [:]
+}
+
+
+void updateStatusAndMerge(String description, String statusContext){
+    def (prRepoOrg, prRepoName) = ghprbGhRepository.split("/")
+    /* When a check is required by GitHub, it prevents the pull request being merged if
+       it is not marked as `"success"`. Normally GHPRB would be soley responsible for
+       updating the status context however this would necessitate a separate job to
+       perform the merge. The following section updates the pull request's status
+       context on GitHub if all tests were successful to enable the same build to merge
+       the pull request. GHPRB will the report success again assuming all subsequent
+       steps succeed.
+     */
+    println("Updating pull request status context.")
+    github.create_status(prRepoOrg, prRepoName, ghprbActualCommit, "success", triggerBuild.getAbsoluteUrl(), description, statusContext)
+    github.merge_pr(prRepoOrg, prRepoName, ghprbPullId, ghprbActualCommit)
 }
 
 
