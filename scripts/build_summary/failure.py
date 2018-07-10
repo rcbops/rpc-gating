@@ -1,38 +1,19 @@
 from abc import ABC, abstractmethod
 import datetime
 import re
-import sys
+import uuid
 
 
 class Failure(ABC):
     description = "Failure Base Class"
-    uuid_re = re.compile("([0-9a-zA-Z]+-){4}[0-9a-zA-Z]+")
-    ip_re = re.compile("([0-9]+\.){3}[0-9]+")
-    colour_code_re = re.compile('(\[8mha:.*)?\[0m')
-    maas_tx_id_re = re.compile('\S*k1k.me\S*')
-    maas_entity_uri_re = re.compile(
-        '/\d+/entities(/[^/]*)?|/\d+/agent_tokens')
-    maas_httpd_tx_id_re = re.compile("'httpdTxnId': '[^']*'")
-    ansible_tmp_re = re.compile('ansible-tmp-[^/]*')
-    node_name_re = re.compile(
-        '(nodepool-[a-zA-Z_0-9]+-[0-9]+)|([a-z]+-[0-9]+-[a-z0-9]+)')
-    normalisers = [
-        (uuid_re, '**UUID**'),
-        (ip_re, '**IPv4**'),
-        (colour_code_re, ''),
-        (maas_tx_id_re, '**TX_ID**'),
-        (maas_entity_uri_re, '**Entity**'),
-        (maas_httpd_tx_id_re,
-            '**HTTP_TX_ID**'),
-        (ansible_tmp_re, 'ansible-tmp-**Removed**'),
-        (node_name_re, '**node-name**')
-    ]
-    failures = []
+    failures = {}
 
     def __init__(self, build):
+        self.id = str(uuid.uuid4())
         self.matches = False
         self.detail = "No detail provided"
         self.build = build
+        Failure.failures[self.id] = self
 
     def get_serialisation_dict(self):
         return {
@@ -42,14 +23,10 @@ class Failure(ABC):
             # baloon
             "detail": self.detail[:1000],
             "description": self.description,
-            "build": self.build.get_serialisation_dict_without_failure_ref(),
-            "category": self.category
+            "build": self.build.id,
+            "category": self.category,
+            "id": self.id
         }
-
-    def get_serialisation_dict_without_build_ref(self):
-        sd = self.get_serialisation_dict()
-        del sd['build']
-        return sd
 
     @classmethod
     def scan_build(cls, build):
@@ -57,7 +34,7 @@ class Failure(ABC):
         if (build.junit is not None):
             cls.scan_junit(build)
         if not build.failures:
-            build.failures.append(UnknownFailure(build))
+            build.failures.append(UnknownFailure(build).id)
 
     @classmethod
     def scan_junit(cls, build):
@@ -101,7 +78,7 @@ class Failure(ABC):
             elif("tempest" in class_name or "tempest" in test_name):
                 f.category = "C8 Tempest"
 
-            build.failures.append(f)
+            build.failures.append(f.id)
 
     @classmethod
     def scan_logs(cls, build):
@@ -113,17 +90,17 @@ class Failure(ABC):
             filter_end_time = datetime.datetime.now()
             if (filter_end_time - filter_start_time >
                     datetime.timedelta(seconds=1)):
-                sys.stderr.write("Slow filter: {d} on build {b}"
-                                 .format(d=subtype.description,
-                                         b=build))
+                print("Slow filter: {d} on build {b}"
+                      .format(d=subtype.description,
+                              b=build))
             if failure.matches:
-                build.failures.append(failure)
-                Failure.failures.append(failure)
+                build.failures.append(failure.id)
+                Failure.failures[failure.id] = failure
         job_end_time = datetime.datetime.now()
         if job_end_time - job_start_time > datetime.timedelta(seconds=5):
-            sys.stderr.write("Slow Build: build {b}"
-                             .format(d=subtype.description,
-                                     b=build))
+            print("Slow Build: build {b}"
+                  .format(d=subtype.description,
+                          b=build))
 
     def get_previous_task(self, line, order=-1, get_line_num=False):
         previous_task_re = re.compile(
@@ -189,13 +166,13 @@ class AptFailure(Failure):
 
     def scan(self):
         match_re = re.compile(
-            ".: Failed to fetch (\s*from\s*)?([^\s]*)( Hash Sum mismatch)?")
+            "Failed to fetch (\s*from\s*)?([^\s]*)( Hash Sum mismatch)?")
         for line in self.build.log_lines:
             match = match_re.search(line)
             if match:
                 self.matches = True
                 self.detail = "Apt Fetch Fail: {fail}".format(
-                                 fail=match.group(1))
+                    fail=match.string)
                 break
 
 
@@ -265,7 +242,7 @@ class SlaveOfflineFailure(Failure):
                 self.matches = True
                 self.detail = ('Slave Died / Agent went offline'
                                ' during the build: {previous_task}'.format(
-                                    previous_task=previous_task))
+                                   previous_task=previous_task))
                 break
 
 
@@ -297,7 +274,7 @@ class PipFailure(Failure):
                 if not self.failure_ignored(i):
                     self.matches = True
                     self.detail = "Can't find pip package: {fail}".format(
-                                     fail=match.group(1))
+                                  fail=match.group(1))
                 break
 
 
@@ -367,7 +344,7 @@ class BuildTimeoutFailure(Failure):
                 previous_task = self.get_previous_task(i)
                 self.matches = True
                 self.detail = 'Build Timeout: {previous_task}'.format(
-                        previous_task=previous_task)
+                    previous_task=previous_task)
                 break
 
 

@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import argparse
 from time import sleep
+from six import xrange
 
 import openstack.connection
 
@@ -33,15 +34,14 @@ def find_new_image(conn, current_ids, name):
                 print("Found new image matching {}".format(name))
                 return image
             else:
-                print ("Skipping {name}/{id} as it predates the "
-                       "required image."
-                       .format(name=name, id=image.id))
+                print("Skipping {name}/{id} as it predates the "
+                      "required image."
+                      .format(name=name, id=image.id))
     raise Exception("Image {i} not found.".format(i=name))
 
 
 def main():
     """Run the main application."""
-
     # Setup argument parsing
     parser = argparse.ArgumentParser(
         description='Basic cloud CLI utilities',
@@ -130,7 +130,7 @@ def main():
         print("Deleting Image: {n}/{id}".format(n=image.name, id=image.id))
         conn.image.delete_image(image)
 
-    print ("Image Creation Complete.")
+    print("Image Creation Complete.")
 
 
 if __name__ == "__main__":

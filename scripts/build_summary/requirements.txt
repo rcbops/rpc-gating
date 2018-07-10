@@ -2,3 +2,4 @@ click
 humanize
 Jinja2
 lxml
+python-dateutil

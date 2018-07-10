@@ -226,9 +226,9 @@ def get_webhooks(ctx, url_match):
         for hook in repo.iter_hooks():
             for k, v in hook.config.items():
                 if (url_match and url_match_re.search(v)) or not url_match:
-                    print "{org}.{repo}.{name}.{k}: {v}".format(
-                        org=org.login, repo=repo.name,
-                        name=hook.name, k=k, v=v)
+                    print("{org}.{repo}.{name}.{k}: {v}".format(
+                          org=org.login, repo=repo.name,
+                          name=hook.name, k=k, v=v))
 
 
 @cli.command()
@@ -272,8 +272,7 @@ def update_rc_branch(ctx, mainline, rc):
             logger.debug("Branch {branch} has protection enabled,"
                          " config: {bp_config}".format(
                              branch=rc,
-                             bp_config=branch_protection_response.json()
-                             ))
+                             bp_config=branch_protection_response.json()))
             branch_protection_enabled = True
             # disable branch protection
             r = branch_api_request(repo, rc, 'DELETE')
@@ -464,9 +463,9 @@ def create_pr(repo, source_branch, target_branch, title, body):
                               base=target_branch,
                               head=source_branch,
                               body=body)
-    print "{org}/{repo}#{num}".format(org=repo.owner,
+    print("{org}/{repo}#{num}".format(org=repo.owner,
                                       repo=repo.name,
-                                      num=pr.number)
+                                      num=pr.number))
 
 
 if __name__ == "__main__":

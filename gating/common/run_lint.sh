@@ -8,4 +8,4 @@ pip install -c constraints.txt -r requirements.txt
 pip install -c constraints.txt -r test-requirements.txt
 
 export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
-RPC_GATING_LINT_USE_VENV=no ./lint.sh
+./lint.sh

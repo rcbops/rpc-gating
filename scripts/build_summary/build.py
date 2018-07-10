@@ -2,6 +2,7 @@
 import datetime
 import gzip
 import re
+import uuid
 
 # 3rd Party imports
 # Imports with C deps
@@ -20,7 +21,10 @@ class Build(object):
     the build.xml, injected_vars and log files.
     """
 
+    builds = {}
+
     def __init__(self, build_folder, job_name, build_num):
+        self.id = str(uuid.uuid4())
         self.failed = False
         self.build_start = datetime.datetime.now()
         self.stdlib_path_re = re.compile(
@@ -29,7 +33,8 @@ class Build(object):
         self.result = self.tree.find('./result').text
         # jenkins uses miliseconds not seconds
         self.timestamp = datetime.datetime.fromtimestamp(
-            float(self.tree.find('startTime').text)/1000)
+            float(self.tree.find('startTime').text) / 1000)
+        self.duration = float(self.tree.find('duration').text) / 1000
         self.build_folder = build_folder
         self.job_name = job_name
         self.build_num = build_num
@@ -65,6 +70,7 @@ class Build(object):
         except IOError:
             # junitResult.xml won't exist in lots of cases
             self.junit = None
+        Build.builds[self.id] = self
 
     def get_serialisation_dict(self):
         return {
@@ -76,17 +82,14 @@ class Build(object):
             "branch": self.branch,
             "result": self.result,
             "build_hierachy": self.build_hierachy,
-            "stage": self.stage
+            "stage": self.stage,
+            "id": self.id,
+            "duration": self.duration
         }
-
-    def get_serialisation_dict_without_failure_ref(self):
-        sd = self.get_serialisation_dict()
-        del sd['failures']
-        return sd
 
     def get_stage(self):
         for candidate in ['PM', 'PR']:
-            if self.job_name.startswith(candidate+"_"):
+            if self.job_name.startswith(candidate + "_"):
                 return candidate
         else:
             raise Exception("Job stage unknown: {}".format(self.job_name))
@@ -230,7 +233,7 @@ class Build(object):
                     lines = f.readlines()
             except IOError:
                 try:
-                    with gzip.open(log_file+".gz", 'rt') as f:
+                    with gzip.open(log_file + ".gz", 'rt') as f:
                         lines = f.readlines()
                 except IOError:
                     return []
