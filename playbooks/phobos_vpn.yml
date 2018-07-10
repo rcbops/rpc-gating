@@ -1,5 +1,5 @@
-- name: Configure Phobos VPN Tunnel (should only be run on single use slaves)
-  hosts: localhost
+- name: Configure Phobos VPN Tunnel
+  hosts: "{{ target_hosts | default('localhost') }}"
   tasks:
     # Use shell because python-apt isn't available so the apt module fails.
     # I don't want to add python-apt to one of the more general slave setup
