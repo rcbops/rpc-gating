@@ -139,13 +139,8 @@
     scenario:
       - "swift"
     action:
-      - "mitaka_to_newton_major"
       - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
-      - "r12.2.8_to_newton_leap"
-      - "r12.2.5_to_newton_leap"
-      - "r12.2.2_to_newton_leap"
-      - "r12.1.2_to_newton_leap"
       - "kilo_to_newton_leap"
       - "liberty_to_newton_leap_system"
     jira_project_key: "RLM"
@@ -167,6 +162,12 @@
     scenario:
       - "swift"
     action:
+      - "mitaka_to_r14.current_leap"
+      - "r13.0.0_to_r14.current_leap"
+      - "r13.0.2_to_r14.current_leap"
+      - "r13.1.2_to_r14.current_leap"
+      - "r13.1.3_to_r14.current_leap"
+      - "r13.1.4_to.r14.current_leap"
       - "liberty_to_r14.current_leap"
       - "r12.2.8_to_r14.current_leap"
       - "r12.2.5_to_r14.current_leap"
