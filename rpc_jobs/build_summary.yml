@@ -86,7 +86,9 @@
               # Upload HTML ui and JSON data.
               page="${WORKSPACE}/rpc-gating/scripts/build_summary/index.html"
               data="${HOME}/buildsummary/out/data.json"
-              scp -i \$REPO_USER_KEY \$page \$data \$REPO_USER@\$REPO_HOST:\$REPO_PATH
+              js="${WORKSPACE}/rpc-gating/scripts/build_summary/*.js"
+              css="${WORKSPACE}/rpc-gating/scripts/build_summary/*.css"
+              scp -i \$REPO_USER_KEY \$page \$data \$js \$css \$REPO_USER@\$REPO_HOST:\$REPO_PATH
             """
           } // creds
         } // stage
