@@ -153,7 +153,7 @@
       - "master"
     jira_project_key: "CEPHSTORA"
     component_dependencies_update: "true"
-    third_party_dependencies_update: "false"
+    third_party_dependencies_update: "true"
     trigger:
       - PR:
           CRON: ""
