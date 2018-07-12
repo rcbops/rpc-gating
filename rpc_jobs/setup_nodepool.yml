@@ -73,8 +73,7 @@
                 common.venvPlaybook(
                   playbooks: [
                     "drop_ssh_auth_keys.yml",
-                    "slave_security.yml",
-                    "phobos_vpn.yml"
+                    "slave_security.yml"
                   ],
                   args: [
                     "-v",
