@@ -4,18 +4,15 @@
   gather_facts: False
   vars:
     keyname: "jenkins"
-    # Each region in the primary regions list will be tried this number of times.
-    primary_region_attempts: 3
     inventory_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks/inventory"
     user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
     cloud_name: "public_cloud"
     boot_timeout: "{{ lookup('env', 'BOOT_TIMEOUT') | default(900, true) }}"
   tasks:
 
-    # Region should be a CSV string.
-    # Primary regions are those specified in the region var,
-    # they are tried first in a random order. After that,
-    # fallback regions are tried in a random order.
+    # regions, and fallback_regions should be CSV strings
+    # We randomly shuffle them both, then use the first
+    # item of the resulting lists for the try/rescue block.
 
     - name: Create primary region list
       set_fact:
@@ -25,49 +22,91 @@
         # upper: convert to upper case
         # select: remove empty strings from the list
         # shuffle: randomise order
-        regions_shuf: "{{ (regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|shuffle }}"
+        regions_shuff: "{{ (regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|shuffle }}"
 
     - name: Create fallback region list
       set_fact:
-        fallback_regions_shuff: "{{ (fallback_regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|difference(regions)|shuffle }}"
+        # difference: ensure that the fallback regions list does not include any items from
+        #             the primary regions list
+        fallback_regions_shuff: "{{ (fallback_regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|difference(regions_shuff)|shuffle }}"
 
-      # As this is a with_items loop not, do-until, we have to use
-      # failed_when: false. Otherwise the loop would exit after
-      # the first failure.
-      # When is used to skip further attempts once instances have booted.
     - name: Provision a cloud instance
-      os_server:
-        name: "{{ instance_name }}"
-        flavor: "{{ flavor }}"
-        state: present
-        cloud: "{{ cloud_name }}"
-        region_name: "{{ item }}"
-        image: "{{ image }}"
-        key_name: "{{ keyname }}"
-        userdata: "{{ lookup('file', user_data_path) }}"
-        config_drive: yes
-        meta:
-          build_config: core
-        wait: yes
-        timeout: "{{ boot_timeout }}"
-      register: result
-      with_items: "{{ regions_shuf + fallback_regions_shuff }}"
-      when:
-        - result is undefined or 'server' not in result or result.server.status != 'ACTIVE'
-      failed_when: false
+      block:
+        - name: Output the primary region list
+          debug:
+            msg: "Job-provided primary regions: {{ regions }}; Resulting shuffled regions: {{ regions_shuff }}"
+
+        - name: Fail when no primary regions are provided
+          fail:
+            msg: "No primary regions were provided. Please review job configuration."
+          when:
+            - regions_shuff | length == 0
+
+        - name: Provision a cloud instance (first primary region)
+          os_server:
+            name: "{{ instance_name }}"
+            flavor: "{{ flavor }}"
+            state: present
+            cloud: "{{ cloud_name }}"
+            region_name: "{{ regions_shuff[0] }}"
+            image: "{{ image }}"
+            key_name: "{{ keyname }}"
+            userdata: "{{ lookup('file', user_data_path) }}"
+            config_drive: yes
+            meta:
+              build_config: core
+            wait: yes
+            timeout: "{{ boot_timeout }}"
+          register: _instance_provision
+
+        - name: Wait for SSH connectivity to the cloud instance (10 min timeout)
+          wait_for_connection:
+            timeout: 600
+            port: 22
+            host: "{{ _instance_provision.server.accessIPv4 }}"
+
+      rescue:
+        - name: Output the fallback region list
+          debug:
+            msg: "Job-provided secondary regions: {{ fallback_regions }}; Resulting shuffled regions: {{ fallback_regions_shuff }}"
+
+        - name: Fail when no fallback regions are provided
+          fail:
+            msg: "No fallback regions were provided. Please review job configuration."
+          when:
+            - fallback_regions_shuff | length == 0
+
+        - name: Provision a cloud instance (first fallback region)
+          os_server:
+            name: "{{ instance_name }}"
+            flavor: "{{ flavor }}"
+            state: present
+            cloud: "{{ cloud_name }}"
+            region_name: "{{ fallback_regions_shuff[0] }}"
+            image: "{{ image }}"
+            key_name: "{{ keyname }}"
+            userdata: "{{ lookup('file', user_data_path) }}"
+            config_drive: yes
+            meta:
+              build_config: core
+            wait: yes
+            timeout: "{{ boot_timeout }}"
+          register: _instance_provision
+
+        - name: Wait for SSH connectivity to the fallback cloud instance (10 min timeout)
+          wait_for_connection:
+            timeout: 600
+            port: 22
+            host: "{{ _instance_provision.server.accessIPv4 }}"
 
     - name: Show results of instance provision task
       debug:
-        var: result
-
-    - name: Extract instance boot result from loop results array
-      set_fact:
-        instance: "{{ (result |json_query('results[?changed]'))[0] }}"
+        var: _instance_provision
 
     - name: Add Host
       add_host:
         hostname: "singleuseslave"
-        ansible_ssh_host: "{{instance.server.accessIPv4}}"
+        ansible_ssh_host: "{{ _instance_provision.server.accessIPv4 }}"
 
     - name: Create inventory directory
       file:
@@ -81,18 +120,12 @@
           hosts
 
           [hosts]
-          {{instance.server.name}} ansible_host={{instance.server.accessIPv4}} ansible_user=root rax_region={{instance.server.region}}
+          {{ _instance_provision.server.name }} ansible_host={{ _instance_provision.server.accessIPv4 }} ansible_user=root rax_region={{ _instance_provision.server.region }}
         dest: '{{ inventory_path }}/hosts'
 
     - name: Show generated inventory
       debug:
         msg: "Generated inventory: {{ lookup('file', inventory_path+'/hosts')}}"
-
-    - name: Wait for SSH to be available on all hosts (10 min timeout)
-      wait_for:
-        timeout: 600
-        port: 22
-        host: "{{ instance.server.accessIPv4 }}"
 
     - name: Wait for startup tasks to finish
       pause:
