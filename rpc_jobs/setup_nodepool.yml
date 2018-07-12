@@ -70,17 +70,41 @@
                 // play list.
 
                 // Run the instance prep plays
-                common.venvPlaybook(
-                  playbooks: [
-                    "drop_ssh_auth_keys.yml",
-                    "slave_security.yml"
-                  ],
-                  args: [
-                    "-v",
-                    "-e target_hosts=nodepool_server"
-                  ]
-                ) //venvPlaybook
-
+                withCredentials([
+                  usernamePassword(
+                    credentialsId: "phobos_vpn_ipsec",
+                    usernameVariable: "ipsec_id",
+                    passwordVariable: "ipsec_secret"
+                  ),
+                  usernamePassword(
+                    credentialsId: "phobos_vpn_xauth",
+                    usernameVariable: "xauth_user",
+                    passwordVariable: "xauth_pass"
+                  ),
+                  string(
+                    credentialsId: 'phobos_vpn_gateway',
+                    variable: 'gw_from_creds'
+                  ),
+                ]){
+                  common.venvPlaybook(
+                    playbooks: [
+                      "drop_ssh_auth_keys.yml",
+                      "slave_security.yml",
+                      "phobos_vpn.yml"
+                    ],
+                    args: [
+                      "-v",
+                      "-e target_hosts=nodepool_server"
+                    ],
+                    vars: [
+                      ipsec_id: env.ipsec_id,
+                      ipsec_secret: env.ipsec_secret,
+                      xauth_user: env.xauth_user,
+                      xauth_pass: env.xauth_pass,
+                      gateway: env.gw_from_creds
+                    ]
+                  ) //venvPlaybook
+                } // withCredentials
               } //dir
             } // stage
 
