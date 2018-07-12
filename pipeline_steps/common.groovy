@@ -1530,23 +1530,23 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
         "master",
       )
       println "=== Checking that the specified SHA exists ==="
-      Integer no_sha = sh(
+      Boolean sha_exists = ! sh(
         script: """#!/bin/bash -xe
           git rev-parse --verify ${SHA}^{commit}
         """,
         returnStatus: true,
       )
-      if (no_sha) {
+      if (! sha_exists) {
         throw new Exception("The supplied SHA ${SHA} was not found.")
       }
       println "=== Checking for the existence of an RC branch ==="
-      Integer no_rc = sh(
+      Boolean has_rc_branch = ! sh(
         script: """#!/bin/bash -xe
           git rev-parse --verify remotes/origin/${RC_BRANCH}
         """,
         returnStatus: true,
       )
-      if (!no_rc) {
+      if (has_rc_branch) {
         println "=== Checking that the specified SHA is the tip of RC branch ${RC_BRANCH} ==="
         String latest_sha = sh(
           script: """#!/bin/bash -xe
@@ -1564,7 +1564,7 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
       }
 
       testRelease(componentText)
-      createRelease(componentText, !no_rc)
+      createRelease(componentText, has_rc_branch)
     }
   }else if (type == "registration"){
     registerComponent(componentText, jiraProjectKey)
