@@ -7,6 +7,7 @@
 
 import argparse
 import jmespath
+import operator
 import os
 import re
 import sys
@@ -26,7 +27,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--exclude-files",
                         required=False,
-                        default=[],
+                        default="",
                         help="Comma seperated list of files to exclude")
     parser.add_argument("--dirs",
                         required=True,
@@ -316,17 +317,27 @@ def check_timed_trigger(data, in_file):
 if __name__ == "__main__":
     args = parse_args()
     rc = 0
+
+    excludes = map(operator.methodcaller("strip"),
+                   args.exclude_files.split(','))
+
     for _dir in args.dirs.split(','):
+
+        # exclude any dirs that match args.exclude_files
+        walk_list = []
         for root, dirs, files in os.walk(_dir):
+            if not any(e in root for e in excludes):
+                walk_list.append((root, dirs, files))
+
+        for root, dirs, files in walk_list:
             for _file in files:
                 if _file in args.exclude_files:
-                    pass
-                else:
-                    if (_file.endswith(".yml")) or (_file.endswith(".yaml")):
-                        if parse_jjb_file(root, _file):
-                            rc = 1
-                    if parse_file_name(root, _file):
+                    continue
+                if (_file.endswith(".yml")) or (_file.endswith(".yaml")):
+                    if parse_jjb_file(root, _file):
                         rc = 1
+                if parse_file_name(root, _file):
+                    rc = 1
     if rc:
         out = "RPC-Gating JJB conventions:\n\t%s\n" % \
             "https://github.com/rcbops/rpc-gating#conventions"

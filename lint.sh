@@ -103,10 +103,10 @@ check_jjb_lint() {
   # and its own tox.
   # Excludes NonCPS.groovy as this filename is required, but
   # not matching rpc-gating conventions
-  dirs_to_lint="pipeline_steps,rpc_jobs,scripts"
-  exclude_files="NonCPS.groovy"
+  dirs_to_lint="pipeline_steps,rpc_jobs"
+  exclude_files="NonCPS.groovy,venv,.venv,.lintvenv_python3,.lintvenv_python2.7"
   python scripts/lint_jjb.py \
-    --dirs ${dirs_to_lint} --exclude ${exclude_files} \
+    --dirs ${dirs_to_lint} --exclude-files ${exclude_files} \
     && echo "JJB Lint: OK" \
     || { echo "JJB Lint: FAIL"; rc=1; }
 }
@@ -122,7 +122,7 @@ check_python(){
   ${venv}_${python}/bin/${python} \
     -m flake8 \
     --ignore="${ignore}"\
-    --exclude=.lintvenv_*,webhooktranslator,playbooks/roles,ansible_v2_3_2_0_1_contrib_inventory_openstack.py . \
+    --exclude=.venv,venv,.lintvenv_*,webhooktranslator,playbooks/roles,ansible_v2_3_2_0_1_contrib_inventory_openstack.py . \
     && echo "$python syntax ok" \
     || { echo "$python syntax fail"; rc=1; }
 }
