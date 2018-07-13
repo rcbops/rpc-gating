@@ -1513,13 +1513,61 @@ def findHookDir(String hook_dirs) {
 }
 
 void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String jiraProjectKey){
-  (prType, componentText) = getComponentChange(baseBranch, prBranch)
+  def (prType, componentText) = getComponentChange(baseBranch, prBranch)
+  def componentYaml = readYaml text: componentText
 
   if (prType == "release"){
-    testRelease(component_text)
-    createRelease()
+    String REPO_NAME=componentYaml["name"]
+    String REPO_URL=componentYaml["repo_url"]
+    String SHA=componentYaml["release"]["sha"]
+    String MAINLINE=componentYaml["release"]["series"]
+    String RC_BRANCH="${MAINLINE}-rc"
+
+    dir(REPO_NAME){
+      clone_with_pr_refs(
+        "./",
+        REPO_URL,
+        "master",
+      )
+      println "=== Checking that the specified SHA exists ==="
+      Boolean sha_exists = ! sh(
+        script: """#!/bin/bash -xe
+          git rev-parse --verify ${SHA}^{commit}
+        """,
+        returnStatus: true,
+      )
+      if (! sha_exists) {
+        throw new Exception("The supplied SHA ${SHA} was not found.")
+      }
+      println "=== Checking for the existence of an RC branch ==="
+      Boolean has_rc_branch = ! sh(
+        script: """#!/bin/bash -xe
+          git rev-parse --verify remotes/origin/${RC_BRANCH}
+        """,
+        returnStatus: true,
+      )
+      if (has_rc_branch) {
+        println "=== Checking that the specified SHA is the tip of RC branch ${RC_BRANCH} ==="
+        String latest_sha = sh(
+          script: """#!/bin/bash -xe
+            git rev-parse --verify remotes/origin/${RC_BRANCH}
+          """,
+          returnStdout: true,
+        ).trim()
+        // (NOTE(mattt): We should be releasing the tip of ${RC_BRANCH}, so
+        //               if the SHA specified in the release does not match
+        //               the tip of ${RC_BRANCH} we throw an exception to
+        //               abort the release.
+        if (latest_sha != SHA) {
+          throw new Exception("The supplied SHA ${SHA} is not the tip on RC branch ${RC_BRANCH}.")
+        }
+      }
+
+      testRelease(componentText)
+      createRelease(componentText, has_rc_branch)
+    }
   }else if (type == "registration"){
-    registerComponent(component_text, jiraProjectKey)
+    registerComponent(componentText, jiraProjectKey)
   }else{
     throw new Exception("The pull request type ${prType} is unsupported.")
   }
@@ -1723,7 +1771,7 @@ void testRelease(component_text){
   parallel parallelBuilds
 }
 
-void createRelease(){
+void createRelease(String component_text, Boolean from_rc_branch){
   build(
     job: "Component-Release",
     wait: true,
@@ -1747,6 +1795,11 @@ void createRelease(){
         $class: "StringParameterValue",
         name: "pr_number",
         value: ghprbPullId,
+      ],
+      [
+        $class: "BooleanParameterValue",
+        name: "from_rc_branch",
+        value: from_rc_branch,
       ],
     ]
   )

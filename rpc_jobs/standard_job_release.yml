@@ -39,6 +39,9 @@
       - rpc_gating_params
       - text:
           name: component_text
+      - bool:
+          name: from_rc_branch
+          default: false
       - validating-string:
           name: pr_repo
           regex: "[a-zA-Z0-9-]+/[a-zA-Z0-9._-]+"
@@ -94,21 +97,8 @@
         RELEASE_NOTES_FILE="${WORKSPACE}/artifacts/release_notes"
         MAINLINE=component["release"]["series"]
         RC_BRANCH="${MAINLINE}-rc"
-        dir(REPO){
-          println "=== Checking for the existence of an RC branch ==="
-          common.clone_with_pr_refs(
-            "./",
-            component["repo_url"],
-            "master",
-          )
-          no_rc = sh(
-            script: """#!/bin/bash -xe
-              git rev-parse --verify remotes/origin/${RC_BRANCH}
-            """,
-            returnStatus: true,
-          )
-        }
-        if (no_rc){
+
+        if (from_rc_branch == "false"){
           println "An RC branch called ${RC_BRANCH} was not found, releasing from ${MAINLINE}"
           release_command = """\
             python rpc-gating/scripts/release.py \
