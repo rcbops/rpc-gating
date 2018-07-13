@@ -78,8 +78,10 @@
     dsl: |
       if ("{repo_name}" == "rpc-gating"){{
         env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
+        library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      }} else {{
+        library "rpc-gating-master"
       }}
-      library "rpc-gating@${{RPC_GATING_BRANCH}}"
       if (! common.isSkippable(skip_pattern, "{credentials}")) {{
         common.stdJob("check,pre_merge_test", "{credentials}", "", "{wrappers}")
       }}

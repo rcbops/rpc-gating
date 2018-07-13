@@ -86,5 +86,5 @@
       - timed: "{CRON}"
 
     dsl: |
-      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      library "rpc-gating-master"
       common.stdJob("periodic,post_merge_test", "{credentials}", "{jira_project_key}", "{wrappers}")

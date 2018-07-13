@@ -20,7 +20,7 @@
     parameters:
       - rpc_gating_params
     dsl: |
-      library "rpc-gating@${RPC_GATING_BRANCH}"
+      library "rpc-gating-master"
       common.globalWraps(){
         dir("${env.WORKSPACE}/releases") {
           common.clone_with_pr_refs()

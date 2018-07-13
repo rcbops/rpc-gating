@@ -89,5 +89,5 @@
             A comma separated list of pull requsts IDs to enable the testing of a chain of pull requests.
 
     dsl: |
-      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      library "rpc-gating-master"
       common.stdJob("gate", "{credentials}", "", "{wrappers}")
