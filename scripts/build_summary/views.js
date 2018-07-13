@@ -160,6 +160,10 @@ failureCategoryView = Vue.component("failureCategoryView",{
     dsFilter: function(ds){
       var category = this.category
       return ds.label==category
+    },
+    typeFilter: function(failure){
+      var category = this.category
+      return failure.category == category
     }
   },
   template: `
@@ -178,7 +182,8 @@ failureCategoryView = Vue.component("failureCategoryView",{
         :builds="this.builds"
         :sort="this.sort"
         :showFailurePercent="false"
-        :showTopFailureCategory="false">
+        :showTopFailureCategory="false"
+        :typeFilter="this.typeFilter">
       </jobTable>
       <buildTable
         :buildsOrFilter="this.builds"
