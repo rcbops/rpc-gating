@@ -14,7 +14,7 @@
       common.globalWraps(){
         try{
           common.withRequestedCredentials(
-            "cloud_creds, id_rsa_cloud10_jenkins_file, "
+            "id_rsa_cloud10_jenkins_file, "
             + "RE_GRAFANA_ADMIN_PASSWORD, "
             + "RE_GRAFANA_GRAFYAML_API_KEY"
           ){
@@ -38,10 +38,7 @@
             stage("Prepare Environment"){
 
               // write the clouds.yaml file
-              env.OS_CLIENT_CONFIG_FILE = common.writeCloudsCfg(
-                username: env.PUBCLOUD_USERNAME,
-                api_key: env.PUBCLOUD_API_KEY
-              )
+              env.OS_CLIENT_CONFIG_FILE = common.writeCloudsCfg()
 
               // Tell ansible where to find roles
               env.ANSIBLE_ROLES_PATH = "${env.WORKSPACE}/roles"

@@ -13,7 +13,7 @@
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
         try{
-          common.withRequestedCredentials("cloud_creds, id_rsa_cloud10_jenkins_file"){
+          common.withRequestedCredentials("id_rsa_cloud10_jenkins_file"){
             stage("Prepare Ansible Roles"){
               // Getting the roles is a bit flaky sometimes, so we
               // implement a retry to improve the chances of success.
@@ -34,10 +34,7 @@
             stage("Prepare Environment"){
 
               // write the clouds.yaml file
-              env.OS_CLIENT_CONFIG_FILE = common.writeCloudsCfg(
-                username: env.PUBCLOUD_USERNAME,
-                api_key: env.PUBCLOUD_API_KEY
-              )
+              env.OS_CLIENT_CONFIG_FILE = common.writeCloudsCfg()
 
               // Tell ansible where to find roles
               env.ANSIBLE_ROLES_PATH = "${env.WORKSPACE}/roles"

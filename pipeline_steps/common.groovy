@@ -380,8 +380,9 @@ List get_cloud_creds(){
   ]
 }
 
-def writeCloudsCfg(Map args){
-  String cfg = """
+def writeCloudsCfg(){
+  withRequestedCredentials("cloud_creds") {
+    String cfg = """
 client:
   force_ipv4: true
 clouds:
@@ -389,8 +390,8 @@ clouds:
     profile: rackspace
     auth_type: rackspace_apikey
     auth:
-      username: ${args.username}
-      api_key: ${args.api_key}
+      username: ${env.PUBCLOUD_USERNAME}
+      api_key: ${env.PUBCLOUD_API_KEY}
     # The default regions include LON which is not
     # in the same catalog, causing errors when
     # using the ansible dynamic inventory due to
@@ -402,21 +403,33 @@ clouds:
       - ORD
       - HKG
       - SYD
+
+  phobos_nodepool:
+    identity_api_version: 3
+    insecure: true
+    auth:
+      auth_url: "${env.PHOBOS_NODEPOOL_AUTH_URL}"
+      project_name: "${env.PHOBOS_NODEPOOL_PROJECT_NAME}"
+      project_id: "${env.PHOBOS_NODEPOOL_PROJECT_ID}"
+      username: "${env.PHOBOS_NODEPOOL_USERNAME}"
+      password: "${env.PHOBOS_NODEPOOL_PASSWORD}"
+      user_domain_name: "${env.PHOBOS_NODEPOOL_USER_DOMAIN_NAME}"
+
 # This configuration is used by ansible
 # when using the openstack dynamic inventory.
 ansible:
   use_hostnames: True
   expand_hostvars: False
-  fail_on_errors: True
+  fail_on_errors: False
 """
 
-  String tmp_dir = pwd(tmp:true)
-  String clouds_cfg = "${tmp_dir}/clouds.yaml"
-  sh """
+    String tmp_dir = pwd(tmp: true)
+    String clouds_cfg = "${tmp_dir}/clouds.yaml"
+    sh """
     echo "${cfg}" > ${clouds_cfg}
-  """
-
-  return clouds_cfg
+    """
+    return clouds_cfg
+  }
 }
 
 def writeRaxmonCfg(Map args){
@@ -1027,22 +1040,7 @@ void standard_job_slave(String slave_type, Closure body){
 
 
 void connect_phobos_vpn(String gateway=null){
-  withCredentials([
-    usernamePassword(
-      credentialsId: "phobos_vpn_ipsec",
-      usernameVariable: "ipsec_id",
-      passwordVariable: "ipsec_secret"
-    ),
-    usernamePassword(
-      credentialsId: "phobos_vpn_xauth",
-      usernameVariable: "xauth_user",
-      passwordVariable: "xauth_pass"
-    ),
-    string(
-      credentialsId: 'phobos_vpn_gateway',
-      variable: 'gw_from_creds'
-    ),
-  ]){
+  withRequestedCredentials("phobos_vpn_auth_creds"){
     dir('rpc-gating/playbooks'){
       if (gateway == null){
         gateway = env.gw_from_creds
@@ -1063,7 +1061,7 @@ void connect_phobos_vpn(String gateway=null){
         ]
       ) //venvPlaybook
     } // dir
-  } // withCredentials
+  } // withRequestedCredentials
 }
 
 // Build an array suitable for passing to withCredentials
@@ -1072,21 +1070,47 @@ void connect_phobos_vpn(String gateway=null){
 List build_creds_array(String list_of_cred_ids){
     print("Building credentials array from the following list of IDs: ${list_of_cred_ids}")
     Map creds_bundles = [
-      "cloud_creds": ['dev_pubcloud_username',
-                      'dev_pubcloud_api_key',
-                      'dev_pubcloud_tenant_id'],
-      "rpc_asc_creds": ['RPC_ASC_QTEST_API_TOKEN'],
-      "rpc_ri_creds": ['RPC_RI_APPFORMIX_CF_ACCOUNT'],
-      "rpc_repo": ['RPC_REPO_IP',
-                   'RPC_REPO_SSH_USERNAME_TEXT',
-                   'RPC_REPO_SSH_USER_PRIVATE_KEY_FILE',
-                   'RPC_REPO_SSH_HOST_PUBLIC_KEY_FILE',
-                   'RPC_REPO_GPG_SECRET_KEY_FILE',
-                   'RPC_REPO_GPG_PUBLIC_KEY_FILE'
-                  ],
-      "phobos_embedded": ['phobos_clouds_rpc_jenkins_user',
-                         'id_rsa_cloud10_jenkins_file',
-                         'rackspace_ca_crt']
+      "cloud_creds": [
+        'dev_pubcloud_username',
+        'dev_pubcloud_api_key',
+        'dev_pubcloud_tenant_id',
+        'phobos_nodepool_auth_url',
+        'phobos_nodepool_project_name',
+        'phobos_nodepool_project_id',
+        'phobos_nodepool_username',
+        'phobos_nodepool_password',
+        'phobos_nodepool_user_domain_name'
+      ],
+      "rpc_asc_creds": [
+        'RPC_ASC_QTEST_API_TOKEN'
+      ],
+      "rpc_ri_creds": [
+        'RPC_RI_APPFORMIX_CF_ACCOUNT'
+      ],
+      "rpc_repo": [
+        'RPC_REPO_IP',
+        'RPC_REPO_SSH_USERNAME_TEXT',
+        'RPC_REPO_SSH_USER_PRIVATE_KEY_FILE',
+        'RPC_REPO_SSH_HOST_PUBLIC_KEY_FILE',
+        'RPC_REPO_GPG_SECRET_KEY_FILE',
+        'RPC_REPO_GPG_PUBLIC_KEY_FILE'
+      ],
+      "phobos_embedded": [
+        'phobos_clouds_rpc_jenkins_user',
+        'id_rsa_cloud10_jenkins_file',
+        'rackspace_ca_crt'
+      ],
+      "phobos_vpn_auth_creds": [
+        "phobos_vpn_ipsec",
+        "phobos_vpn_xauth",
+        "phobos_vpn_gateway"
+      ],
+      "jenkins_ssh_privkey": [
+        'id_rsa_cloud10_jenkins_file',
+      ],
+      "jenkins_api_creds": [
+        'service_account_jenkins_api_creds'
+      ]
     ]
     // only needs to contain creds that should be exposed.
     // every cred added should also be documented in RE for Projects
@@ -1163,9 +1187,51 @@ List build_creds_array(String list_of_cred_ids){
       "rackspace_ca_crt": file(
         credentialsId: "rackspace_ca_crt",
         variable: "rackspace_ca_crt"
+      ),
+      "phobos_vpn_ipsec": usernamePassword(
+        credentialsId: "phobos_vpn_ipsec",
+        usernameVariable: "ipsec_id",
+        passwordVariable: "ipsec_secret"
+      ),
+      "phobos_vpn_xauth": usernamePassword(
+        credentialsId: "phobos_vpn_xauth",
+        usernameVariable: "xauth_user",
+        passwordVariable: "xauth_pass"
+      ),
+      "phobos_vpn_gateway": string(
+        credentialsId: 'phobos_vpn_gateway',
+        variable: 'gw_from_creds'
+      ),
+      "phobos_nodepool_auth_url": string(
+        credentialsId: "phobos_nodepool_auth_url",
+        variable: "PHOBOS_NODEPOOL_AUTH_URL"
+      ),
+      "phobos_nodepool_project_name": string(
+        credentialsId: "phobos_nodepool_project_name",
+        variable: "PHOBOS_NODEPOOL_PROJECT_NAME"
+      ),
+      "phobos_nodepool_project_id": string(
+        credentialsId: "phobos_nodepool_project_id",
+        variable: "PHOBOS_NODEPOOL_PROJECT_ID"
+      ),
+      "phobos_nodepool_username": string(
+        credentialsId: "phobos_nodepool_username",
+        variable: "PHOBOS_NODEPOOL_USERNAME"
+      ),
+      "phobos_nodepool_password": string(
+        credentialsId: "phobos_nodepool_password",
+        variable: "PHOBOS_NODEPOOL_PASSWORD"
+      ),
+      "phobos_nodepool_user_domain_name": string(
+        credentialsId: "phobos_nodepool_user_domain_name",
+        variable: "PHOBOS_NODEPOOL_USER_DOMAIN_NAME"
+      ),
+      "service_account_jenkins_api_creds": usernamePassword(
+        credentialsId: "service_account_jenkins_api_creds",
+        usernameVariable: "JENKINS_USERNAME",
+        passwordVariable: "JENKINS_API_KEY"
       )
     ]
-
 
     // split string into list, reject empty items.
     List requested_creds = list_of_cred_ids.split(/[, ]+/).findAll({

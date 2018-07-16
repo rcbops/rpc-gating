@@ -1,17 +1,14 @@
 /* Remove public cloud instances
  */
 def cleanup(Map args){
-  withCredentials(common.get_cloud_creds()){
-    dir("rpc-gating/playbooks"){
-      if (!("inventory" in args)){
-        args.inventory = "inventory"
-      }
-      unstash(args.inventory)
-      clouds_cfg = common.writeCloudsCfg(
-        username: env.PUBCLOUD_USERNAME,
-        api_key: env.PUBCLOUD_API_KEY
-      )
-      withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+  dir("rpc-gating/playbooks"){
+    if (!("inventory" in args)){
+      args.inventory = "inventory"
+    }
+    unstash(args.inventory)
+    clouds_cfg = common.writeCloudsCfg()
+    withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+      common.withRequestedCredentials("jenkins_ssh_privkey") {
         common.venvPlaybook(
           playbooks: ['cleanup_pubcloud.yml'],
           args: [
@@ -20,9 +17,9 @@ def cleanup(Map args){
           ],
           vars: args
         )
-      } // withEnv
-    } // directory
-  } //withCredentials
+      }
+    } // withEnv
+  } // directory
 } //call
 
 
@@ -44,15 +41,12 @@ def savePubCloudSlave(Map args){
   if (!("inventory" in args)){
     args.inventory = "inventory"
   }
-  withCredentials(common.get_cloud_creds()){
 
-    dir("rpc-gating/playbooks"){
-      clouds_cfg = common.writeCloudsCfg(
-        username: env.PUBCLOUD_USERNAME,
-        api_key: env.PUBCLOUD_API_KEY
-      )
-      env.OS_CLIENT_CONFIG_FILE = clouds_cfg
-      env.SAVE_IMAGE_NAME = args.image
+  dir("rpc-gating/playbooks"){
+    clouds_cfg = common.writeCloudsCfg()
+    env.OS_CLIENT_CONFIG_FILE = clouds_cfg
+    env.SAVE_IMAGE_NAME = args.image
+    common.withRequestedCredentials("jenkins_ssh_privkey") {
       common.venvPlaybook(
         playbooks: ['save_pubcloud.yml'],
         args: [
@@ -61,12 +55,12 @@ def savePubCloudSlave(Map args){
         ],
         vars: args
       )
-      stash (
-        name: args.inventory,
-        includes: "${args.inventory}/hosts"
-      )
-    } // dir
-  } //withCredentials
+    }
+    stash (
+      name: args.inventory,
+      includes: "${args.inventory}/hosts"
+    )
+  } // dir
 } //save
 
 
@@ -92,27 +86,24 @@ String getPubCloudSlave(Map args){
       if (!("inventory" in args)){
         args.inventory = "inventory"
       }
-      withCredentials(common.get_cloud_creds()){
-        dir("rpc-gating/playbooks"){
-          clouds_cfg = common.writeCloudsCfg(
-            username: env.PUBCLOUD_USERNAME,
-            api_key: env.PUBCLOUD_API_KEY
-          )
-          env.OS_CLIENT_CONFIG_FILE = clouds_cfg
+
+      dir("rpc-gating/playbooks"){
+        clouds_cfg = common.writeCloudsCfg()
+        env.OS_CLIENT_CONFIG_FILE = clouds_cfg
+        common.withRequestedCredentials("jenkins_ssh_privkey") {
           common.venvPlaybook(
-            playbooks: ["allocate_pubcloud.yml",
-                        "drop_ssh_auth_keys.yml"],
+            playbooks: ["allocate_pubcloud.yml", "drop_ssh_auth_keys.yml"],
             args: [
               "-i ${args.inventory}",
               "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
             ],
             vars: args
           )
-          stash (
-            name: args.inventory,
-            includes: "${args.inventory}/hosts"
-          )
         }
+        stash (
+          name: args.inventory,
+          includes: "${args.inventory}/hosts"
+        )
       }
     }
   )
@@ -239,23 +230,18 @@ def runonpubcloud(Map args=[:], Closure body){
 def uploadToSwift(Map args){
   if (fileExists(args.path)) {
     print("Directory ${args.path} found. Uploading contents.")
-    withCredentials(common.get_cloud_creds()) {
-      clouds_cfg = common.writeCloudsCfg(
-        username: env.PUBCLOUD_USERNAME,
-        api_key: env.PUBCLOUD_API_KEY
-      )
-      withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
-        common.venvPlaybook(
-          playbooks: ["rpc-gating/playbooks/upload_to_swift.yml"],
-          vars: [
-            artifacts_dir: args.path,
-            container: args.container,
-            job_name: env.JOB_NAME,
-            build_number: env.BUILD_NUMBER,
-          ]
-        ) // venvPlaybook
-      } // withEnv
-    } // withCredentials
+    clouds_cfg = common.writeCloudsCfg()
+    withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+      common.venvPlaybook(
+        playbooks: ["rpc-gating/playbooks/upload_to_swift.yml"],
+        vars: [
+          artifacts_dir: args.path,
+          container: args.container,
+          job_name: env.JOB_NAME,
+          build_number: env.BUILD_NUMBER,
+        ]
+      ) // venvPlaybook
+    } // withEnv
   } else {
     print("Directory ${args.path} not found. Skipping upload.")
   }
