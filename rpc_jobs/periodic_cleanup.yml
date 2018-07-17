@@ -87,7 +87,7 @@
                   git branch: env.RPC_GATING_BRANCH, url: "https://github.com/rcbops/rpc-gating"
                 }
                 stage("Public Cloud Cleanup"){
-                  withRequestedCredentials("jenkins_api_creds") {
+                  common.withRequestedCredentials("jenkins_api_creds") {
                     clouds_cfg = common.writeCloudsCfg()
                     withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
                       sh "python scripts/periodic_cleanup.py"
