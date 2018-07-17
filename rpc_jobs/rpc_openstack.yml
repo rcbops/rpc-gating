@@ -14,7 +14,7 @@
       | \.rst$
       | ^releasenotes/
       | ^gating/generate_release_notes/
-      | ^gating/post_merge_test/
+      | ^gating/periodic/
       | ^gating/update_dependencies/
     image:
       - xenial_no_artifacts:
@@ -61,7 +61,7 @@
       | \.rst$
       | ^releasenotes/
       | ^gating/generate_release_notes/
-      | ^gating/post_merge_test/
+      | ^gating/periodic/
       | ^gating/update_dependencies/
     image:
       - xenial_no_artifacts:
@@ -108,7 +108,7 @@
       | \.rst$
       | ^releasenotes/
       | ^gating/generate_release_notes/
-      | ^gating/post_merge_test/
+      | ^gating/periodic/
       | ^gating/update_dependencies/
     image:
       - xenial_no_artifacts:
@@ -155,7 +155,7 @@
       | \.rst$
       | ^releasenotes/
       | ^gating/generate_release_notes/
-      | ^gating/post_merge_test/
+      | ^gating/periodic/
       | ^gating/update_dependencies/
     image:
       - trusty:
