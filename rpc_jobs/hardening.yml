@@ -14,9 +14,12 @@
       - "swift"
     action:
       - "deploy_master"
+      - "deploy_queens"
+      - "deploy_queens-rc"
       - "deploy_pike"
       - "deploy_pike-rc"
       - "deploy_newton"
       - "deploy_newton-rc"
+    CRON: "@weekly"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
