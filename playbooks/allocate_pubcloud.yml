@@ -135,8 +135,23 @@
   remote_user: root
   gather_facts: False
   tasks:
-    - name: RLM-275 Adds python packages if python is not present
-      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal python-yaml)
+    - name: Update apt cache (RE-1752)
+      raw: apt-get update
+      args:
+        executable: /bin/bash
+      register: install_packages
+      until: install_packages | success
+      retries: 3
+      delay: 15
+
+    - name: Install python packages if python is not present (RLM-275)
+      raw: test -e /usr/bin/python || apt-get install -y python-minimal python-yaml
+      args:
+        executable: /bin/bash
+      register: install_packages
+      until: install_packages | success
+      retries: 3
+      delay: 15
 
 - hosts: singleuseslave
   tasks:
