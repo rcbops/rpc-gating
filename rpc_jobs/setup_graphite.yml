@@ -46,6 +46,9 @@
               // Tell ansible where the dynamic inventory is
               env.ANSIBLE_INVENTORY = "${env.WORKSPACE}/rpc-gating/scripts/ansible_v2_3_2_0_1_contrib_inventory_openstack.py"
 
+              // Tell the dynamic inventory script to only use the 'public_cloud' cloud
+              env.OS_CLOUD = "public_cloud"
+
               // Tell ansible where the ssh private key is
               env.ANSIBLE_PRIVATE_KEY_FILE = "${env.JENKINS_SSH_PRIVKEY}"
 
