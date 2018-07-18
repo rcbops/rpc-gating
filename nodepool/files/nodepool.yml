@@ -133,7 +133,23 @@ providers:
     boot-timeout: 120
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-phobos-{image_name}-{timestamp}
-    diskimages: *provider_diskimage_block
+    diskimages:
+      - name: ubuntu-xenial
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+      - name: ubuntu-trusty
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+      - name: rpco-14.2-xenial-artifacts
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+      - name: rpco-14.2-trusty-artifacts
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
     pools:
       - name: main
         max-servers: 0
