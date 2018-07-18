@@ -136,7 +136,7 @@ providers:
     diskimages: *provider_diskimage_block
     pools:
       - name: main
-        max-servers: 20
+        max-servers: 0
         availability-zones: []
         labels:
           - name: ubuntu-xenial-g1-8

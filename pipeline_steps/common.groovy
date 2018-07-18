@@ -406,7 +406,7 @@ clouds:
 
   phobos_nodepool:
     identity_api_version: 3
-    insecure: true
+    verify: False
     auth:
       auth_url: "${env.PHOBOS_NODEPOOL_AUTH_URL}"
       project_name: "${env.PHOBOS_NODEPOOL_PROJECT_NAME}"
