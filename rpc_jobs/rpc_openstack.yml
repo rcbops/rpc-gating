@@ -681,6 +681,7 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch:
       - "master"
+      - "queens"
       - "pike"
       - "newton"
     jira_project_key: "RO"
