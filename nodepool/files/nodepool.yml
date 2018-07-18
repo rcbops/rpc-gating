@@ -138,36 +138,38 @@ providers:
       - name: main
         max-servers: 0
         availability-zones: []
+        networks:
+          - rpc-releng-private
         labels:
           - name: ubuntu-xenial-g1-8
             diskimage: ubuntu-xenial
             flavor-name: releng-general1-8
-            key-name: openstack_phobos_nodepool
+            key-name: jenkins
             console-log: true
           - name: ubuntu-trusty-g1-8
             diskimage: ubuntu-trusty
             flavor-name: releng-general1-8
-            key-name: openstack_phobos_nodepool
+            key-name: jenkins
             console-log: true
           - name: ubuntu-xenial-p2-15
             diskimage: ubuntu-xenial
             flavor-name: releng-performance2-15
-            key-name: openstack_phobos_nodepool
+            key-name: jenkins
             console-log: true
           - name: ubuntu-trusty-p2-15
             diskimage: ubuntu-trusty
             flavor-name: releng-performance2-15
-            key-name: openstack_phobos_nodepool
+            key-name: jenkins
             console-log: true
           - name: rpco-14.2-xenial-base
             diskimage: rpco-14.2-xenial-artifacts
             flavor-name: releng-7
-            key-name: openstack_phobos_nodepool
+            key-name: jenkins
             console-log: true
           - name: rpco-14.2-trusty-base
             diskimage: rpco-14.2-trusty-artifacts
             flavor-name: releng-7
-            key-name: openstack_phobos_nodepool
+            key-name: jenkins
             console-log: true
 
 diskimages:
