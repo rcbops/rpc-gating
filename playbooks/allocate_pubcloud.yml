@@ -135,23 +135,46 @@
   remote_user: root
   gather_facts: False
   tasks:
+    - name: Add apt debug configuration (RE-1758)
+      raw: echo 'Debug::Acquire::http "true";' > /etc/apt/apt.conf.d/99debug
+      args:
+        executable: /bin/bash
+
     - name: Update apt cache (RE-1752)
       raw: apt-get update
       args:
         executable: /bin/bash
-      register: install_packages
-      until: install_packages | success
+      register: _update_cache
+      until: _update_cache | success
       retries: 3
       delay: 15
+
+    - name: Show the output of the apt cache update (RE-1758)
+      debug:
+        var: _update_cache
+
+    - name: Check the package candidates (RE-1758)
+      raw: apt-cache policy python-minimal python-yaml
+      args:
+        executable: /bin/bash
+      register: _package_candidates
+
+    - name: Show the package candidates (RE-1758)
+      debug:
+        var: _package_candidates
 
     - name: Install python packages if python is not present (RLM-275)
       raw: test -e /usr/bin/python || apt-get install -y python-minimal python-yaml
       args:
         executable: /bin/bash
-      register: install_packages
-      until: install_packages | success
+      register: _install_packages
+      until: _install_packages | success
       retries: 3
       delay: 15
+
+    - name: Show the output of the apt package install (RE-1758)
+      debug:
+        var: _install_packages
 
 - hosts: singleuseslave
   tasks:
