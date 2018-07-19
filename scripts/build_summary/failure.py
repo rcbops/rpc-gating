@@ -8,6 +8,8 @@ import uuid
 class Failure(ABC):
     description = "Failure Base Class"
     failures = {}
+    console_note_re = re.compile(r'\[8mha:[^\s]*\s?\[0m(.\[[0-9];[0-9]{2}m)?')
+    max_detail_length = 1000
 
     def __init__(self, build):
         self.id = str(uuid.uuid4())
@@ -22,12 +24,21 @@ class Failure(ABC):
             # limit the detail field to 1000 chars, to prevent logs
             # with super long lines from causing the data file to
             # baloon
-            "detail": self.detail[:1000],
+            "detail": self.detail[:Failure.max_detail_length],
             "description": self.description,
             "build": self.build.id,
             "category": self.category,
             "id": self.id
         }
+
+    @property
+    def detail(self):
+        return self.__detail
+
+    @detail.setter
+    def detail(self, detail):
+        self.__detail = re.sub(self.console_note_re,
+                               "", detail)[:Failure.max_detail_length]
 
     @classmethod
     def scan_build(cls, build):
