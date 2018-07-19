@@ -140,6 +140,14 @@
       args:
         executable: /bin/bash
 
+    - name: Show apt mirrors (RE-1758)
+      raw: >-
+        echo "Dumping /etc/apt/sources.list..." &&
+        cat /etc/apt/sources.list &&
+        for i in `ls /etc/apt/sources.list.d/*`; do echo "Dumping $i..." && cat $i; done
+      args:
+        executable: /bin/bash
+
     - name: Update apt cache (RE-1752)
       raw: apt-get update
       args:
