@@ -65,6 +65,7 @@
 
       expect fork
       respawn
+      respawn limit unlimited
       exec /usr/sbin/vpnc --pid-file /run/vpnc/phobos.pid /etc/vpnc/phobos.conf
       EOF
 
