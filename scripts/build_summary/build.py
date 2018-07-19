@@ -29,7 +29,9 @@ class Build(object):
         self.build_start = datetime.datetime.now()
         self.stdlib_path_re = re.compile(
             "/usr/lib/python[0-9]*.[0-9]*/[^ /]*\.pyc?")
-        self.tree = etree.parse('{bf}/build.xml'.format(bf=build_folder))
+        self.parser = etree.XMLParser(recover=True)
+        self.tree = etree.parse('{bf}/build.xml'.format(bf=build_folder),
+                                self.parser)
         self.result = self.tree.find('./result').text
         # jenkins uses miliseconds not seconds
         self.timestamp = datetime.datetime.fromtimestamp(
@@ -66,7 +68,7 @@ class Build(object):
             self.failed = True
         try:
             self.junit = etree.parse('{bf}/junitResult.xml'.format(
-                bf=build_folder))
+                bf=build_folder), self.parser)
         except IOError:
             # junitResult.xml won't exist in lots of cases
             self.junit = None
