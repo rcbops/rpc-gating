@@ -212,63 +212,12 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
-- project:
-    name: "rpc-openstack-master-rc-aio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "master-rc"
-    jira_project_key: "RO"
-    # We have an MNAIO equivalent of this PM job, but we need to keep
-    # this for the push triggering for snapshot building.
-    CRON: "@monthly"
-    image:
-      - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    scenario:
-      - "swift"
-    action:
-      - deploy:
-          FLAVOR: "7"
-    # This is the build that will be triggered by the push trigger job
-    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-openstack-master-mnaio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "master"
-    jira_project_key: "RO"
-    image:
-      - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
-    scenario:
-      - ironic
-      - swift
-    action:
-      - system
-      - sdqc
-      - deploy
-    exclude:
-      - action: system
-        scenario: ironic
-      - action: sdqc
-        scenario: ironic
-    # Required by RPC-ASC team to upload test results qTest
-    credentials: "rpc_asc_creds"
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
-    name: "rpc-openstack-master-rc-mnaio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "master-rc"
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
@@ -596,25 +545,6 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
-    name: 'rpc-openstack-master-mnaio-release'
-    repo_name: 'rpc-openstack'
-    repo_url: 'https://github.com/rcbops/rpc-openstack'
-    branch: "master-rc"
-    jira_project_key: "RO"
-    image:
-      - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
-    scenario:
-      - swift
-    action:
-      - deploy
-    jobs:
-      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
     name: 'rpc-openstack-queens-mnaio-release'
