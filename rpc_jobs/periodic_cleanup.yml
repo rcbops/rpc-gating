@@ -111,6 +111,12 @@
             sh """#!/bin/bash
               cd /var/lib/jenkins/jobs
               while read stagelog; do
+                  # If we encountered the cooresponding gzip file, then the prior gzip operation on this file
+                  # was interruped or failed for some reason. Note the error, clean up, and move on.
+                  if [[ -f \$stagelog.gz ]]; then
+                    echo "Both \$stagelog and \$stagelog.gz exist. Was gzip previously interrupted? Removing \$stagelog.gz..."
+                    rm -f \$stagelog.gz
+                  fi
                   echo "Compressing log: \$stagelog..."
                   gzip \$stagelog
                   _rc=\$?
