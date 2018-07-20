@@ -127,54 +127,104 @@
       debug:
         msg: "Generated inventory: {{ lookup('file', inventory_path+'/hosts')}}"
 
-    - name: Wait for startup tasks to finish
+    - name: Wait for host preparation to complete
       pause:
         minutes: 5
 
+# Note(odyssey4me):
+# We use the raw module for this Ansible play because
+# we do not know if python and python-yaml are on the
+# system yet, and Ansible requires those installed to
+# use any modules other than raw.
 - hosts: singleuseslave
   remote_user: root
   gather_facts: False
   tasks:
-    - name: Add apt debug configuration (RE-1758)
-      raw: echo 'Debug::Acquire::http "true";' > /etc/apt/apt.conf.d/99debug
-      args:
-        executable: /bin/bash
+    - name: Check whether python is present on the host
+      raw: |
+        if [[ -e /usr/bin/python ]]; then
+          echo yes
+        else
+          echo no
+        fi
+      register: _python_check
 
-    - name: Update apt cache (RE-1752)
-      raw: apt-get update
-      args:
-        executable: /bin/bash
-      register: _update_cache
-      until: _update_cache | success
-      retries: 3
-      delay: 15
-
-    - name: Show the output of the apt cache update (RE-1758)
+    - name: Show the results of the python check
       debug:
-        var: _update_cache
+        var: _python_check
 
-    - name: Check the package candidates (RE-1758)
-      raw: apt-cache policy python-minimal python-yaml
-      args:
-        executable: /bin/bash
-      register: _package_candidates
+    - name: Install python onto the host if it is not already present
+      when:
+        - "_python_check.stdout | bool"
+      block:
+        # To assist with debugging any problems if there
+        # is an apt failure, we set enable debugging.
+        - name: Add apt debug configuration
+          raw: echo 'Debug::Acquire::http "true";' > /etc/apt/apt.conf.d/99debug
+          args:
+            executable: /bin/bash
 
-    - name: Show the package candidates (RE-1758)
-      debug:
-        var: _package_candidates
+        # The apt sources in the OnMetal builds uses
+        # archive.ubuntu.com which has turned out to
+        # be a bit unreliable in providing complete
+        # data back when doing apt updates/installs.
+        # We prefer our local mirror which provides
+        # us with reliable and quick responses.
+        # ref: RE-1758
+        - name: Reconfigure the host to use Rackspace Mirrors
+          raw: |
+            mv /etc/apt/sources.list /etc/apt/sources.list.original
+            DISTRO_MIRROR="http://mirror.rackspace.com/ubuntu"
+            DISTRO_COMPONENTS="main,universe"
+            if [[ -e /etc/lsb-release ]]; then
+              source /etc/lsb-release
+              DISTRO_RELEASE=${DISTRIB_CODENAME}
+            elif [[ -e /etc/os-release ]]; then
+              source /etc/os-release
+              DISTRO_RELEASE=${UBUNTU_CODENAME}
+            else
+              echo "Unable to determine distribution due to missing lsb/os-release files."
+              exit 1
+            fi
+            cat << EOF >/etc/apt/sources.list
+            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE} ${DISTRO_COMPONENTS//,/ }
+            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-updates ${DISTRO_COMPONENTS//,/ }
+            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-backports ${DISTRO_COMPONENTS//,/ }
+            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-security ${DISTRO_COMPONENTS//,/ }
+            EOF
+          args:
+            executable: /bin/bash
 
-    - name: Install python packages if python is not present (RLM-275)
-      raw: test -e /usr/bin/python || apt-get install -y python-minimal python-yaml
-      args:
-        executable: /bin/bash
-      register: _install_packages
-      until: _install_packages | success
-      retries: 3
-      delay: 15
+        - name: Update apt cache
+          raw: apt-get update
+          args:
+            executable: /bin/bash
+          register: _update_cache
+          until: _update_cache | success
+          retries: 3
+          delay: 15
 
-    - name: Show the output of the apt package install (RE-1758)
-      debug:
-        var: _install_packages
+        # We check to see whether the packages are available
+        # and where they will come from.
+        # ref: RE-1758
+        - name: Check the package candidates
+          raw: apt-cache policy python-minimal python-yaml
+          args:
+            executable: /bin/bash
+          register: _package_candidates
+
+        - name: Show the package candidates
+          debug:
+            var: _package_candidates
+
+        - name: Install minimal Ansible requirements so that Ansible can be used to setup the slave
+          raw: apt-get install -y python-minimal python-yaml
+          args:
+            executable: /bin/bash
+          register: _install_packages
+          until: _install_packages | success
+          retries: 3
+          delay: 15
 
 - hosts: singleuseslave
   tasks:
