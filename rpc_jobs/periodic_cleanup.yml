@@ -111,10 +111,11 @@
             sh """#!/bin/bash
               cd /var/lib/jenkins/jobs
               while read stagelog; do
-                  echo \$stagelog
+                  echo "Compressing log: \$stagelog..."
                   gzip \$stagelog
                   _rc=\$?
                   if [ \$_rc -ne '0' ]; then
+                    echo "gzip file \$stagelog failed with a non-zero response code of: \$_rc. Setting job stage response code to: \$_rc. This will fail the stage."
                     rc=\$_rc
                   fi
               done < <(find . -regex '.+/builds/[0-9]+/\\([0-9]+\\.\\)?log' -mtime +1)
