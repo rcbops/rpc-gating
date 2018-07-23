@@ -166,9 +166,9 @@
     - name: Check whether python is present on the host
       raw: |
         if [[ -e /usr/bin/python ]]; then
-          echo yes
+          echo -n yes
         else
-          echo no
+          echo -n no
         fi
       register: _python_check
 
@@ -178,7 +178,7 @@
 
     - name: Install python onto the host if it is not already present
       when:
-        - "_python_check.stdout | bool"
+        - "(_python_check.stdout | trim) | bool"
       block:
         # To assist with debugging any problems if there
         # is an apt failure, we set enable debugging.
