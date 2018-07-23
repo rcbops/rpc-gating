@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import datetime
+import itertools
 import re
 import uuid
 
@@ -7,6 +8,8 @@ import uuid
 class Failure(ABC):
     description = "Failure Base Class"
     failures = {}
+    console_note_re = re.compile(r'\[8mha:[^\s]*\s?\[0m(.\[[0-9];[0-9]{2}m)?')
+    max_detail_length = 1000
 
     def __init__(self, build):
         self.id = str(uuid.uuid4())
@@ -21,12 +24,21 @@ class Failure(ABC):
             # limit the detail field to 1000 chars, to prevent logs
             # with super long lines from causing the data file to
             # baloon
-            "detail": self.detail[:1000],
+            "detail": self.detail[:Failure.max_detail_length],
             "description": self.description,
             "build": self.build.id,
             "category": self.category,
             "id": self.id
         }
+
+    @property
+    def detail(self):
+        return self.__detail
+
+    @detail.setter
+    def detail(self, detail):
+        self.__detail = re.sub(self.console_note_re,
+                               "", detail)[:Failure.max_detail_length]
 
     @classmethod
     def scan_build(cls, build):
@@ -160,16 +172,41 @@ class Failure(ABC):
         pass
 
 
+class GitFetchFailure(Failure):
+    description = "Failed to fetch from remote git repo"
+    category = "C1 Remote Dependency"
+
+    def scan(self):
+        match_res = [
+            re.compile(r'Failed to fetch (\s*from\s*)?([^\s]*)\.git'),
+            re.compile(r'hudson\.plugins\.git')
+        ]
+        for line, match_re in itertools.product(self.build.log_lines,
+                                                match_res):
+            match = match_re.search(line)
+            if match:
+                self.matches = True
+                self.detail = "Git Fetch Fail: {fail}".format(
+                    fail=match.string)
+                break
+
+
 class AptFailure(Failure):
     description = "Failures relating to APT"
     category = "C1 Remote Dependency"
 
     def scan(self):
-        match_re = re.compile(
-            "Failed to fetch (\s*from\s*)?([^\s]*)( Hash Sum mismatch)?")
-        for line in self.build.log_lines:
+        match_res = [
+            re.compile(
+                r"Failed to fetch (\s*from\s*)?([^\s]*)( Hash Sum mismatch)?"),
+            re.compile("E: (?:Unable to locate package ([a-zA-Z-_]+)"
+                       "|Package '([a-zA-Z-_]+)' has "
+                       "no installation candidate)")
+        ]
+        for line, match_re in itertools.product(self.build.log_lines,
+                                                match_res):
             match = match_re.search(line)
-            if match:
+            if match and ".git" not in line:
                 self.matches = True
                 self.detail = "Apt Fetch Fail: {fail}".format(
                     fail=match.string)
@@ -284,9 +321,14 @@ class JenkinsException(Failure):
 
     def scan(self):
         match_re = re.compile("hudson\.[^ ]*Exception.*")
+        excludes = [
+            "script returned exit code",
+            "hudson.plugins.git"
+        ]
         for line in self.build.log_lines:
             match = match_re.search(line)
-            if match:
+            exclude_match = any(e in line for e in excludes)
+            if match and not exclude_match:
                 self.matches = True
                 self.detail = match.group()
 
@@ -353,14 +395,30 @@ class SSHFailure(Failure):
     category = "C3 SSH"
 
     def scan(self):
-        match_str = ("SSH Error: data could not be sent to the remote host. "
-                     "Make sure this host can be reached over ssh")
-        match_alt = ("Failed to connect to the host via ssh")
-        match_3 = ("Timeout when waiting for search string OpenSSH")
+        match_strings = [
+            ("SSH Error: data could not be sent to the remote host. "
+             "Make sure this host can be reached over ssh"),
+            "Failed to connect to the host via ssh",
+            "Timeout when waiting for search string OpenSSH",
+        ]
+        match_res = [
+            re.compile("Timeout when waiting for (.*):22")
+        ]
         for line in self.build.log_lines:
-            if match_str in line or match_alt in line or match_3 in line:
-                self.matches = True
-                self.detail = match_str.strip()
+            for str_ in match_strings:
+                if str_ in line:
+                    self.matches = True
+                    self.detail = str_.strip()
+                    break
+            if self.matches:
+                break
+            for p in match_res:
+                m = p.search(line)
+                if m:
+                    self.matches = True
+                    self.detail = m.string.strip()
+                    break
+            if self.matches:
                 break
 
 
@@ -371,6 +429,24 @@ class JunitFailure(Failure):
     def scan(self):
         # not used for scanning logs so return false
         return False
+
+
+class ArtifactArchiveFailure(Failure):
+    description = "Failure related to storing data generated by a build"
+    category = "C8 RE Infra"
+
+    def scan(self):
+        match_strings = [
+            "Warning: failed to create container",
+            ("This server could not verify that you are authorized to "
+             "access the document you requested"),
+        ]
+        for line, match_string in itertools.product(self.build.log_lines,
+                                                    match_strings):
+                if match_string in line:
+                    self.matches = True
+                    self.detail = str.strip()
+                    break
 
 
 class UnknownFailure(Failure):

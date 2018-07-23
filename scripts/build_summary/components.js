@@ -487,6 +487,13 @@ jobTable = Vue.component("jobTable",{
     },
     'showTopFailureType':{
       default: true
+    },
+    'typeFilter': {
+      default: function(){
+        return function(item){
+          return true
+        }
+      }
     }
   },
   computed: {
@@ -501,13 +508,18 @@ jobTable = Vue.component("jobTable",{
         var numBuilds = builds.length
         var numFailedBuilds = builds.filter(b => b.result != "SUCCESS").length
         var oldestNewest = this.$root.oldestNewestBuilds(builds)
+        // typeFilter is used to ensure top failures are only
+        // from one category, when viewing a category
+        var topFailureTypes = this.$root.failuresByType(builds)
+          .filter((t) => this.typeFilter(t[2][0]))
+
         a.push({
           jobName: name,
           numBuilds: numBuilds,
           oldest: this.$root.dfmt(oldestNewest.oldest.timestamp),
           newest: this.$root.dfmt(oldestNewest.newest.timestamp),
           failPercent: ((numFailedBuilds/numBuilds)*100).toFixed(0),
-          topFailureType: this.$root.failuresByType(builds)[0][1]
+          topFailureType: topFailureTypes[0][1]
         })
         return a
       }, [])

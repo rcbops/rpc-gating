@@ -170,11 +170,17 @@ def summary(jobsdir, newerthan, jsonfile):
                     job_name=path_groups['job_name'],
                     build_num=path_groups['build_num'])
                 if build.timestamp > age_limit:
-                    if build.failed:
-                        # store the log in memory only as long as necessary
-                        build.log_lines = build.read_logs()
-                        Failure.scan_build(build)
-                        build.log_lines = []
+                    # if build.failed:
+                    # failed check removed, as not all failures are fatal
+                    # especially those that relate to re infrastructure
+                    # as we attempt to insulate those from affecting the
+                    # build reult. However measuring their frequency is
+                    # still useful
+
+                    # store the log in memory only as long as necessary
+                    build.log_lines = build.read_logs()
+                    Failure.scan_build(build)
+                    build.log_lines = []
                     build_dict[key] = build
                     # . = build read ok
                     print(".", end="")
