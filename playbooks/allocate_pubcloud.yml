@@ -178,7 +178,7 @@
 
     - name: Install python onto the host if it is not already present
       when:
-        - "(_python_check.stdout | trim) | bool"
+        - "not (_python_check.stdout | trim) | bool"
       block:
         # To assist with debugging any problems if there
         # is an apt failure, we set enable debugging.
