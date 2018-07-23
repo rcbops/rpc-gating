@@ -10,6 +10,11 @@
     boot_timeout: "{{ lookup('env', 'BOOT_TIMEOUT') | default(900, true) }}"
   tasks:
 
+    - name: Create inventory directory
+      file:
+        path: "{{ inventory_path }}"
+        state: directory
+
     # regions, and fallback_regions should be CSV strings
     # We randomly shuffle them both, then use the first
     # item of the resulting lists for the try/rescue block.
@@ -59,13 +64,34 @@
             timeout: "{{ boot_timeout }}"
           register: _instance_provision
 
+        - name: Write inventory
+          copy:
+            content: |
+              [job_nodes:children]
+              hosts
+
+              [hosts]
+              {{ _instance_provision.server.name }} ansible_host={{ _instance_provision.server.accessIPv4 }} ansible_user=root rax_region={{ _instance_provision.server.region }}
+            dest: '{{ inventory_path }}/hosts'
+
         - name: Wait for SSH connectivity to the cloud instance (10 min timeout)
-          wait_for_connection:
+          wait_for:
             timeout: 600
             port: 22
             host: "{{ _instance_provision.server.accessIPv4 }}"
+            sleep: 10
+            search_regex: "OpenSSH"
 
       rescue:
+        - name: Ensure first attempt instance is removed.
+          os_server:
+            name: "{{ instance_name }}"
+            state: absent
+            cloud: "{{ cloud_name }}"
+            region_name: "{{ regions_shuff[0] }}"
+            wait: yes
+            timeout: "{{ boot_timeout }}"
+
         - name: Output the fallback region list
           debug:
             msg: "Job-provided secondary regions: {{ fallback_regions }}; Resulting shuffled regions: {{ fallback_regions_shuff }}"
@@ -93,11 +119,23 @@
             timeout: "{{ boot_timeout }}"
           register: _instance_provision
 
+        - name: Write inventory
+          copy:
+            content: |
+              [job_nodes:children]
+              hosts
+
+              [hosts]
+              {{ _instance_provision.server.name }} ansible_host={{ _instance_provision.server.accessIPv4 }} ansible_user=root rax_region={{ _instance_provision.server.region }}
+            dest: '{{ inventory_path }}/hosts'
+
         - name: Wait for SSH connectivity to the fallback cloud instance (10 min timeout)
-          wait_for_connection:
+          wait_for:
             timeout: 600
             port: 22
             host: "{{ _instance_provision.server.accessIPv4 }}"
+            sleep: 10
+            search_regex: "OpenSSH"
 
     - name: Show results of instance provision task
       debug:
@@ -107,21 +145,6 @@
       add_host:
         hostname: "singleuseslave"
         ansible_ssh_host: "{{ _instance_provision.server.accessIPv4 }}"
-
-    - name: Create inventory directory
-      file:
-        path: "{{ inventory_path }}"
-        state: directory
-
-    - name: Write inventory
-      copy:
-        content: |
-          [job_nodes:children]
-          hosts
-
-          [hosts]
-          {{ _instance_provision.server.name }} ansible_host={{ _instance_provision.server.accessIPv4 }} ansible_user=root rax_region={{ _instance_provision.server.region }}
-        dest: '{{ inventory_path }}/hosts'
 
     - name: Show generated inventory
       debug:
