@@ -218,6 +218,16 @@
           args:
             executable: /bin/bash
 
+        - name: Check the resulting apt sources file
+          raw: cat /etc/apt/sources.list
+          args:
+            executable: /bin/bash
+          register: _apt_sources_result
+
+        - name: Show the resulting apt sources file
+          debug:
+            var: _apt_sources_result
+
         - name: Update apt cache
           raw: apt-get update
           args:
