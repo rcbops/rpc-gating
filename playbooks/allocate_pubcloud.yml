@@ -195,28 +195,7 @@
         # us with reliable and quick responses.
         # ref: RE-1758
         - name: Reconfigure the host to use Rackspace Mirrors
-          raw: |
-            mv /etc/apt/sources.list /etc/apt/sources.list.original
-            DISTRO_MIRROR="http://mirror.rackspace.com/ubuntu"
-            DISTRO_COMPONENTS="main,universe"
-            if [[ -e /etc/lsb-release ]]; then
-              source /etc/lsb-release
-              DISTRO_RELEASE=${DISTRIB_CODENAME}
-            elif [[ -e /etc/os-release ]]; then
-              source /etc/os-release
-              DISTRO_RELEASE=${UBUNTU_CODENAME}
-            else
-              echo "Unable to determine distribution due to missing lsb/os-release files."
-              exit 1
-            fi
-            cat << EOF >/etc/apt/sources.list
-            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE} ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE}-updates ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE}-backports ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE}-security ${DISTRO_COMPONENTS//,/ }
-            EOF
-          args:
-            executable: /bin/bash
+          script: "{{ playbook_dir }}/../scripts/reconfigure_apt_sources.sh"
 
         - name: Check the resulting apt sources file
           raw: cat /etc/apt/sources.list
