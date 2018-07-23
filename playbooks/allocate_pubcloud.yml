@@ -210,10 +210,10 @@
               exit 1
             fi
             cat << EOF >/etc/apt/sources.list
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE} ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-updates ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-backports ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-security ${DISTRO_COMPONENTS//,/ }
+            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE} ${DISTRO_COMPONENTS//,/ }
+            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE}-updates ${DISTRO_COMPONENTS//,/ }
+            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE}-backports ${DISTRO_COMPONENTS//,/ }
+            deb ${DISTRO_MIRROR} ${DISTRO_RELEASE}-security ${DISTRO_COMPONENTS//,/ }
             EOF
           args:
             executable: /bin/bash
