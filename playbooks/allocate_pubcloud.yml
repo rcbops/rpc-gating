@@ -10,6 +10,11 @@
     boot_timeout: "{{ lookup('env', 'BOOT_TIMEOUT') | default(900, true) }}"
   tasks:
 
+    - name: Create inventory directory
+      file:
+        path: "{{ inventory_path }}"
+        state: directory
+
     # regions, and fallback_regions should be CSV strings
     # We randomly shuffle them both, then use the first
     # item of the resulting lists for the try/rescue block.
@@ -59,13 +64,34 @@
             timeout: "{{ boot_timeout }}"
           register: _instance_provision
 
+        - name: Write inventory
+          copy:
+            content: |
+              [job_nodes:children]
+              hosts
+
+              [hosts]
+              {{ _instance_provision.server.name }} ansible_host={{ _instance_provision.server.accessIPv4 }} ansible_user=root rax_region={{ _instance_provision.server.region }}
+            dest: '{{ inventory_path }}/hosts'
+
         - name: Wait for SSH connectivity to the cloud instance (10 min timeout)
-          wait_for_connection:
+          wait_for:
             timeout: 600
             port: 22
             host: "{{ _instance_provision.server.accessIPv4 }}"
+            sleep: 10
+            search_regex: "OpenSSH"
 
       rescue:
+        - name: Ensure first attempt instance is removed.
+          os_server:
+            name: "{{ instance_name }}"
+            state: absent
+            cloud: "{{ cloud_name }}"
+            region_name: "{{ regions_shuff[0] }}"
+            wait: yes
+            timeout: "{{ boot_timeout }}"
+
         - name: Output the fallback region list
           debug:
             msg: "Job-provided secondary regions: {{ fallback_regions }}; Resulting shuffled regions: {{ fallback_regions_shuff }}"
@@ -93,11 +119,23 @@
             timeout: "{{ boot_timeout }}"
           register: _instance_provision
 
+        - name: Write inventory
+          copy:
+            content: |
+              [job_nodes:children]
+              hosts
+
+              [hosts]
+              {{ _instance_provision.server.name }} ansible_host={{ _instance_provision.server.accessIPv4 }} ansible_user=root rax_region={{ _instance_provision.server.region }}
+            dest: '{{ inventory_path }}/hosts'
+
         - name: Wait for SSH connectivity to the fallback cloud instance (10 min timeout)
-          wait_for_connection:
+          wait_for:
             timeout: 600
             port: 22
             host: "{{ _instance_provision.server.accessIPv4 }}"
+            sleep: 10
+            search_regex: "OpenSSH"
 
     - name: Show results of instance provision task
       debug:
@@ -107,21 +145,6 @@
       add_host:
         hostname: "singleuseslave"
         ansible_ssh_host: "{{ _instance_provision.server.accessIPv4 }}"
-
-    - name: Create inventory directory
-      file:
-        path: "{{ inventory_path }}"
-        state: directory
-
-    - name: Write inventory
-      copy:
-        content: |
-          [job_nodes:children]
-          hosts
-
-          [hosts]
-          {{ _instance_provision.server.name }} ansible_host={{ _instance_provision.server.accessIPv4 }} ansible_user=root rax_region={{ _instance_provision.server.region }}
-        dest: '{{ inventory_path }}/hosts'
 
     - name: Show generated inventory
       debug:
@@ -143,9 +166,9 @@
     - name: Check whether python is present on the host
       raw: |
         if [[ -e /usr/bin/python ]]; then
-          echo yes
+          echo -n yes
         else
-          echo no
+          echo -n no
         fi
       register: _python_check
 
@@ -155,7 +178,7 @@
 
     - name: Install python onto the host if it is not already present
       when:
-        - "_python_check.stdout | bool"
+        - "not (_python_check.stdout | trim) | bool"
       block:
         # To assist with debugging any problems if there
         # is an apt failure, we set enable debugging.
@@ -172,28 +195,17 @@
         # us with reliable and quick responses.
         # ref: RE-1758
         - name: Reconfigure the host to use Rackspace Mirrors
-          raw: |
-            mv /etc/apt/sources.list /etc/apt/sources.list.original
-            DISTRO_MIRROR="http://mirror.rackspace.com/ubuntu"
-            DISTRO_COMPONENTS="main,universe"
-            if [[ -e /etc/lsb-release ]]; then
-              source /etc/lsb-release
-              DISTRO_RELEASE=${DISTRIB_CODENAME}
-            elif [[ -e /etc/os-release ]]; then
-              source /etc/os-release
-              DISTRO_RELEASE=${UBUNTU_CODENAME}
-            else
-              echo "Unable to determine distribution due to missing lsb/os-release files."
-              exit 1
-            fi
-            cat << EOF >/etc/apt/sources.list
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE} ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-updates ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-backports ${DISTRO_COMPONENTS//,/ }
-            deb ${DISTRO_MIRROR} ${DISTRO__RELEASE}-security ${DISTRO_COMPONENTS//,/ }
-            EOF
+          script: "{{ playbook_dir }}/../scripts/reconfigure_apt_sources.sh"
+
+        - name: Check the resulting apt sources file
+          raw: cat /etc/apt/sources.list
           args:
             executable: /bin/bash
+          register: _apt_sources_result
+
+        - name: Show the resulting apt sources file
+          debug:
+            var: _apt_sources_result
 
         - name: Update apt cache
           raw: apt-get update

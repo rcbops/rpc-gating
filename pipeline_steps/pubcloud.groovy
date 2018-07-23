@@ -90,20 +90,27 @@ String getPubCloudSlave(Map args){
       dir("rpc-gating/playbooks"){
         clouds_cfg = common.writeCloudsCfg()
         env.OS_CLIENT_CONFIG_FILE = clouds_cfg
-        common.withRequestedCredentials("jenkins_ssh_privkey") {
-          common.venvPlaybook(
-            playbooks: ["allocate_pubcloud.yml", "drop_ssh_auth_keys.yml"],
-            args: [
-              "-i ${args.inventory}",
-              "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
-            ],
-            vars: args
+        try {
+          common.withRequestedCredentials("jenkins_ssh_privkey") {
+            common.venvPlaybook(
+              playbooks: ["allocate_pubcloud.yml", "drop_ssh_auth_keys.yml"],
+              args: [
+                "-i ${args.inventory}",
+                "--private-key=\"${env.JENKINS_SSH_PRIVKEY}\""
+              ],
+              vars: args
+            )
+          }
+        } finally {
+          // Its important to try the stash even if the playbooks fail
+          // as cleanup requires the stash in order to function. The
+          // allocate playbook has plenty of tasks after writing the
+          // inventory that could fail.
+          stash (
+            name: args.inventory,
+            includes: "${args.inventory}/hosts"
           )
         }
-        stash (
-          name: args.inventory,
-          includes: "${args.inventory}/hosts"
-        )
       }
     }
   )
