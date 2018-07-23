@@ -8,6 +8,7 @@ ConditionPathExists=/dev/net/tun
 [Service]
 Type=forking
 PIDFile=/run/vpnc/phobos.pid
+Restart=always
 
 ExecStart=/usr/sbin/vpnc --pid-file /run/vpnc/phobos.pid /etc/vpnc/phobos.conf
 
