@@ -152,7 +152,7 @@ providers:
           hypervisor_type: qemu
     pools:
       - name: main
-        max-servers: 0
+        max-servers: 5
         availability-zones: []
         networks:
           - rpc-releng-private
