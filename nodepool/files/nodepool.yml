@@ -38,6 +38,8 @@ providers:
     cloud: public_cloud
     boot-timeout: 600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    # Ignore the quota given by public cloud and only respect what we provide as max-servers
+    ignore-provider-quota: True
     cloud-images: &provider_cloudimage_block
       - name: ubuntu-xenial-onmetal
         image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
@@ -101,6 +103,8 @@ providers:
     cloud: public_cloud
     boot-timeout: 600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    # Ignore the quota given by public cloud and only respect what we provide as max-servers
+    ignore-provider-quota: True
     cloud-images: *provider_cloudimage_block
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
@@ -119,6 +123,8 @@ providers:
     cloud: public_cloud
     boot-timeout: 120
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    # Ignore the quota given by public cloud and only respect what we provide as max-servers
+    ignore-provider-quota: True
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
     pools:
@@ -132,6 +138,8 @@ providers:
     cloud: phobos_nodepool
     boot-timeout: 120
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    # Ignore the quota given by public cloud and only respect what we provide as max-servers
+    ignore-provider-quota: True
     image-name-format: nodepool-phobos-{image_name}-{timestamp}
     diskimages:
       - name: ubuntu-xenial
