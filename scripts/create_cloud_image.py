@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import argparse
 from time import sleep
-from six import xrange
+from six.moves import xrange
 
 import openstack.connection
 
