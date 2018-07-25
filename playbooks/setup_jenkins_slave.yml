@@ -21,6 +21,10 @@
       timeout: 180
       # Sleep 5 seonds between checks
       sleep: 5
+    jenkins_apt_packages:
+      - git-core
+      - openjdk-8-jre-headless
+      - libxml2-utils
   roles:
     - role: willshersystems.sshd
       sshd:
@@ -41,25 +45,44 @@
     - name: Add OpenJDK PPA
       apt_repository:
         repo: ppa:openjdk-r/ppa
+        update_cache: no
       register: install_ppa
       until: install_ppa | success
-      retries: 5
-      delay: 2
+      retries: 3
+      delay: 15
       when: ansible_distribution_release | lower == 'trusty'
 
-    - name: Install apt packages
-      apt:
-        pkg: "{{ item }}"
-        state: installed
-        update_cache: yes
-      register: install_packages
-      until: install_packages | success
-      retries: 5
-      delay: 2
-      with_items:
-        - git-core
-        - openjdk-8-jre-headless
-        - libxml2-utils
+    # TODO(odyssey4me):
+    # Once we use Ansible 2.5+ we can use the apt/package
+    # module here instead of the shell module, because
+    # it will expose the apt errors properly. In Ansible
+    # 2.3 and below the errors are swallowed.
+    - name: Update apt cache
+      shell: |
+        apt-get update
+      args:
+        executable: /bin/bash
+        warn: no
+      register: _update_cache
+      until: _update_cache | success
+      retries: 3
+      delay: 15
+
+    # TODO(odyssey4me):
+    # Once we use Ansible 2.5+ we can use the apt/package
+    # module here instead of the shell module, because
+    # it will expose the apt errors properly. In Ansible
+    # 2.3 and below the errors are swallowed.
+    - name: Install minimal jenkins requirements
+      shell: |
+        apt-get install -y {{ jenkins_apt_packages | join(' ') }}
+      args:
+        executable: /bin/bash
+        warn: no
+      register: _install_packages
+      until: _install_packages | success
+      retries: 3
+      delay: 15
 
     - name: Create Jenkins user
       user:
