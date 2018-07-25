@@ -453,13 +453,30 @@
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+# We create a separate snapshot project since we don't need all newton-aio
+# jobs triggering snapshot builds.
+- project:
+    name: "rpc-openstack-newton-aio-postmerge-snapshot"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton"
+    jira_project_key: "RO"
+    image:
       - xenial_loose_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           # We have an MNAIO equivalent of this PM job, but we need to keep
           # this for the push triggering for snapshot building.
           CRON: "@monthly"
-      - trusty:
-          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
       - trusty_loose_artifacts:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     scenario:
@@ -504,13 +521,31 @@
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
+      - trusty:
+          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+# We create a separate snapshot project since we don't need all newton-rc-aio
+# jobs triggering snapshot builds.
+- project:
+    name: "rpc-openstack-newton-rc-aio-postmerge-snapshot"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "newton-rc"
+    jira_project_key: "RO"
+    image:
       - xenial_loose_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           # We have an MNAIO equivalent of this PM job, but we need to keep
           # this for the push triggering for snapshot building.
           CRON: "@monthly"
-      - trusty:
-          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
       - trusty_loose_artifacts:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     scenario:
