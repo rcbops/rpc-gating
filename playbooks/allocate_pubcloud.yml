@@ -163,6 +163,13 @@
   remote_user: root
   gather_facts: False
   tasks:
+    # To assist with debugging any problems if there
+    # is an apt failure, we set enable debugging.
+    - name: Add apt debug configuration
+      raw: echo 'Debug::Acquire::http "true";' > /etc/apt/apt.conf.d/99debug
+      args:
+        executable: /bin/bash
+
     - name: Check whether python is present on the host
       raw: |
         if [[ -e /usr/bin/python ]]; then
@@ -180,13 +187,6 @@
       when:
         - "not (_python_check.stdout | trim) | bool"
       block:
-        # To assist with debugging any problems if there
-        # is an apt failure, we set enable debugging.
-        - name: Add apt debug configuration
-          raw: echo 'Debug::Acquire::http "true";' > /etc/apt/apt.conf.d/99debug
-          args:
-            executable: /bin/bash
-
         # The apt sources in the OnMetal builds uses
         # archive.ubuntu.com which has turned out to
         # be a bit unreliable in providing complete
