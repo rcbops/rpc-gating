@@ -54,7 +54,7 @@ providers:
     pools:
       - name: main
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
-        ignore-provider-quota: True
+        ignore-provider-quota: true
         max-servers: 20
         availability-zones: []
         labels: &provider_pools_main_labels_block
@@ -89,6 +89,8 @@ providers:
             key-name: jenkins
             console-log: true
       - name: onmetal
+        # Ignore the quota given by public cloud and only respect what we provide as max-servers
+        ignore-provider-quota: true
         max-servers: 10
         availability-zones: []
         labels: &provider_pools_onmetal_labels_block
@@ -109,13 +111,13 @@ providers:
     pools:
       - name: main
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
-        ignore-provider-quota: True
+        ignore-provider-quota: true
         max-servers: 20
         availability-zones: []
         labels: *provider_pools_main_labels_block
       - name: onmetal
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
-        ignore-provider-quota: True
+        ignore-provider-quota: true
         max-servers: 10
         availability-zones: []
         labels: *provider_pools_onmetal_labels_block
