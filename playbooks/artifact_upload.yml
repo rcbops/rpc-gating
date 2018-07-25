@@ -1,0 +1,73 @@
+---
+- name: Artifact uploader
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars:
+    region: "DFW"
+    cloud_name: "public_cloud"
+    component_metadata_file_path: "{{ lookup('env', 'WORKSPACE') }}/{{ lookup('env', 'RE_JOB_REPO_NAME') }}/component_metadata.yml"
+    legacy_artifact_log_type:
+      - "type": "log"
+        "source": "{{ lookup('env', 'RE_HOOK_ARTIFACT_DIR') | default(lookup('env', 'WORKSPACE') ~ '/artifacts', true) }}"
+    artifact_type_include: all
+  tasks:
+    - name: Check for component metadata file
+      stat:
+        path: "{{ component_metadata_file_path }}"
+        get_attributes: no
+        get_checksum: no
+        get_md5: no
+        get_mime: no
+      register: _component_metadata_file
+
+    - name: Load and display the component metadata
+      when:
+        - "_component_metadata_file.stat.exists | bool"
+      block:
+        - name: Import component metadata file if it exists
+          set_fact:
+            component_metadata: "{{ lookup('file', component_metadata_file_path) | from_yaml }}"
+
+        - name: Show the component metadata
+          debug:
+            var: component_metadata
+
+    - name: Try analysing the file, but fall back to the legacy hook if we fail
+      block:
+        - name: Determine the list of artifacts to upload
+          set_fact:
+            component_artifacts: >-
+              {%- if (_component_metadata_file.stat.exists | bool) and (component_metadata.artifacts is defined) %}
+              {%-   if 'log' in component_metadata.artifacts | json_query('[*].type') %}
+              {%-     set _result = component_metadata.artifacts %}
+              {%-   else %}
+              {%-     set _result = component_metadata.artifacts + legacy_artifact_log_type %}
+              {%-   endif %}
+              {%- else %}
+              {%-   set _result = legacy_artifact_log_type %}
+              {%- endif %}
+              {{- _result }}
+      rescue:
+        - name: Fall back to the default/legacy log artifact hook
+          set_fact:
+            component_artifacts: "{{ legacy_artifact_log_type }}"
+
+    - name: Show the component artifacts data
+      debug:
+        var: component_artifacts
+
+    - name: Upload any artifacts destined for Cloud Files
+      when:
+        - "((component_artifacts | json_query('[*].type') | list) | intersect(['file', 'log'])) | length > 0"
+      block:
+        - include: tasks/artifact_upload/cloudfiles_authenticate.yml
+          static: no
+
+        - include: "tasks/artifact_upload/upload_{{ artifact.type }}.yml"
+          static: no
+          when:
+            - "(artifact_type_include == 'all') or (artifact.type == artifact_type_include)"
+          with_items: "{{ component_artifacts }}"
+          loop_control:
+            loop_var: artifact

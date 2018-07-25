@@ -1,0 +1,87 @@
+---
+- name: Check that the artifacts source path has been provided
+  assert:
+    msg: |
+      The file artifact source path must be provided.
+    that:
+      - "artifact['source'] is defined"
+
+# TODO(odyssey4me):
+# Perhaps have these facts provided by variables
+# defined in groovy instead so that we do not have
+# to rely on environment variables. This may make
+# the switch to declaritive pipelines easier.
+- name: Set dependent facts
+  set_fact:
+    object_store_container_name: "{{ lookup('env', 'RE_JOB_REPO_NAME') }}"
+
+- name: Check that the RE_JOB_REPO_NAME has been provided
+  debug:
+    msg: |
+      The RE_JOB_REPO_NAME environment variable must be set. Skipping artifact upload.
+  when:
+    - "object_store_container_name == ''"
+
+- name: Check if the source exists
+  stat:
+    path: "{{ artifact['source'] }}"
+    follow: yes
+    get_attributes: no
+    get_checksum: no
+    get_md5: no
+    get_mime: no
+  register: _artifact_path
+
+- name: Show whether the source exists
+  debug:
+    msg: "source {{ artifact['source'] }} exists: {{ _artifact_path.stat.exists | bool }}"
+
+- name: Upload the artifacts if all conditions are met
+  when:
+    - "_artifact_path.stat.exists | bool"
+    - "object_store_container_name != ''"
+  block:
+
+    - include: cloudfiles_create_container.yml
+
+    - name: Create the destination path and move the source file(s) into it
+      shell: |
+        mkdir -p {{ artifact['dest'] }}
+        mv {{ artifact['source'] | basename }} {{ artifact['dest'] }}/
+      args:
+        warn: no
+        executable: /bin/bash
+        chdir: "{{ artifact['source'] | dirname }}"
+      when:
+        - "artifact['dest'] is defined"
+
+    - name: Set the name of the file/folder to upload
+      set_fact:
+        artifact_basename: "{{ (artifact['dest'] is defined) | ternary(artifact.get('dest').split('/')[0], artifact['source'] | basename) }}"
+
+    - name: Show the name of the file/folder to upload
+      debug:
+        var: artifact_basename
+
+    # The ansible os_object module does not currently support setting
+    # the object expiration header field, nor does it do threaded uploads
+    # (which make this much faster), so we use the swift client instead.
+    - name: Upload Artifacts to Cloud Files
+      command: >-
+        swift upload {{ object_store_container_name }} {{ artifact_basename }}
+        --object-threads 100
+        --skip-identical
+        {{ artifact.expire_after is defined | ternary("--header 'X-Delete-After:" ~ artifact.get('expire_after') ~ "'", "") }}
+      args:
+        chdir: "{{ artifact['source'] | dirname }}"
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
+      register: upload_archive
+      until: upload_archive | success
+      retries: 10
+      delay: 30
+
+    - name: Show the public CDN URL for file artifacts
+      debug:
+        msg: "Public CDN URL: {{ container_public_url }}"

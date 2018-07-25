@@ -234,24 +234,19 @@ def runonpubcloud(Map args=[:], Closure body){
   } //outer try
 }
 
-def uploadToSwift(Map args){
-  if (fileExists(args.path)) {
-    print("Directory ${args.path} found. Uploading contents.")
-    clouds_cfg = common.writeCloudsCfg()
-    withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
-      common.venvPlaybook(
-        playbooks: ["rpc-gating/playbooks/upload_to_swift.yml"],
-        vars: [
-          artifacts_dir: args.path,
-          container: args.container,
-          job_name: env.JOB_NAME,
-          build_number: env.BUILD_NUMBER,
-        ]
-      ) // venvPlaybook
-    } // withEnv
-  } else {
-    print("Directory ${args.path} not found. Skipping upload.")
-  }
+def uploadArtifacts(Map args = [:]){
+  print("Uploading artifacts.")
+  clouds_cfg = common.writeCloudsCfg()
+  withEnv(["OS_CLIENT_CONFIG_FILE=${clouds_cfg}"]){
+    common.venvPlaybook(
+      playbooks: [
+        "rpc-gating/playbooks/artifact_upload.yml"
+      ],
+      vars: [
+        artifact_type_include: args.artifact_types
+      ]
+    ) // venvPlaybook
+  } // withEnv
 }
 
 return this

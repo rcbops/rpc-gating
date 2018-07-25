@@ -1,0 +1,76 @@
+---
+- name: Check for required variables
+  assert:
+    msg: |
+      The variables 'object_store_container_name', 'cloud_name', and 'region' are required.
+    that:
+      - "object_store_container_name is defined"
+      - "cloud_name is defined"
+      - "region is defined"
+
+- name: Create a Cloud Files container
+  os_object:
+    container: "{{ object_store_container_name }}"
+    container_access: "public"
+    region_name: "{{ region }}"
+    cloud: "{{ cloud_name }}"
+  register: _create_container
+  until: _create_container | success
+  retries: 10
+  delay: 30
+
+- name: Extract object-store service catalog
+  set_fact:
+    object_store: "{{ service_catalog | selectattr('type', 'equalto', 'object-store') | first }}"
+
+- name: Determine the object-store service endpoint URL for the region
+  set_fact:
+    object_store_url: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region ) | first)['publicURL']}}"
+
+- name: Extract object-cdn service catalog
+  set_fact:
+    object_cdn: "{{ service_catalog | selectattr('type', 'equalto', 'rax:object-cdn') | first }}"
+
+- name: Determine the object-cdn service endpoint URL for the region
+  set_fact:
+    object_cdn_url: "{{ (object_cdn['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}/{{ object_store_container_name }}"
+
+- name: Enable CDN for the Cloud Files container
+  uri:
+    url: "{{ object_cdn_url }}"
+    method: PUT
+    headers:
+      X-AUTH-TOKEN: "{{ auth_token }}"
+      X-Ttl: 900
+      X-Cdn-Enabled: True
+    # 201 (Created): The container was CDN-enabled as requested.
+    # 202 (Accepted): The container was already CDN-enabled.
+    # 204 (No Content): The container was CDN-enabled as requested, but has no content.
+    status_code: "201, 202, 204"
+  register: _enable_cdn
+  until: (_enable_cdn | success) and ('x_cdn_ssl_uri' in _enable_cdn)
+  retries: 10
+  delay: 30
+
+- name: Set fact for the user-accessible CDN URL for the container
+  set_fact:
+    container_public_url: "{{ _enable_cdn['x_cdn_ssl_uri'] }}"
+
+# In order for uploaded files to be browsable:
+# 1. Static hosting must be enabled (this links index.html to requests for container/)
+# 2. CDN must be enabled (to allow anonymous http access to the container)
+# 3. An index page must be generated and/or web listings enabled.
+- name: Enable static web hosting
+  uri:
+    url: "{{ object_store_url }}/{{ object_store_container_name }}"
+    method: POST
+    headers:
+      X-AUTH-TOKEN: "{{ auth_token }}"
+      X-Container-Meta-Web-Index: index.html
+      X-Container-Meta-Web-Listings: True
+    # 204 (No Content): The container was enabled as requested.
+    status_code: 204
+  register: _enable_static_hosting
+  until: _enable_static_hosting | success
+  retries: 10
+  delay: 30
