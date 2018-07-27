@@ -1,0 +1,144 @@
+- job:
+    name: 'Bump-Snapshot-Images'
+    project-type: pipeline
+    concurrent: false
+    properties:
+      - build-discarder:
+          days-to-keep: 30
+    parameters:
+      - rpc_gating_params
+    triggers:
+      - timed: "@daily"
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        List releases = [[series: 'newton', major: '14', image: 'xenial_loose_artifacts-swift'],
+                         [series: 'newton', major: '14', image: 'trusty_loose_artifacts-swift'],
+                         [series: 'pike', major: '16', image: 'xenial_no_artifacts-swift'],
+                         [series: 'queens', major: '17', image: 'xenial_no_artifacts-swift']]
+        dir("rpc-openstack"){
+          git branch: 'master', url: 'https://github.com/rcbops/rpc-openstack'
+
+          for ( release in releases ) {
+
+            String latest = sh(
+              returnStdout: true,
+              script: """#!/bin/bash -xe
+                git tag --list | egrep "r${release['major']}\\." | sort --version-sort -r | head -1
+              """
+            ).trim()
+
+            String previous = sh(
+              returnStdout: true,
+              script: """#!/bin/bash -xe
+                git tag --list | egrep "r${release['major']}\\." | sort --version-sort -r | head -2 | tail -1
+              """
+            ).trim()
+
+            release['latest'] = latest
+            release['previous'] = previous
+          } // for
+        } // dir
+        dir("rpc-gating"){
+          def parallelBuilds = [:]
+
+          for ( r in releases ) {
+            def release = r
+            println "series => ${release['series']}, latest => ${release['latest']}, previous => ${release['previous']}"
+
+            parallelBuilds["${release['series']}-${release['image']}"] = {
+              build(
+                job: 'PM_rpc-gating-master-snapshot-snapshot-test',
+                wait: true,
+                parameters: [
+                  [
+                    $class: "StringParameterValue",
+                    name: "RPC_GATING_BRANCH",
+                    value: env.RPC_GATING_BRANCH,
+                  ],
+                  [
+                    $class: "StringParameterValue",
+                    name: "IMAGE",
+                    value: "rpc-${release['latest']}-${release['image']}",
+                  ]
+                ]
+              )
+            } // parallelBuilds
+          } // for
+
+          parallel parallelBuilds
+
+          for ( release in releases ) {
+            sh """#!/bin/bash -xe
+              sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" rpc_jobs/*.yml
+            """
+          } // for
+
+          withCredentials(
+            [
+              string(
+                credentialsId: 'rpc-jenkins-svc-github-pat',
+                variable: 'PAT'
+              ),
+              usernamePassword(
+                credentialsId: "jira_user_pass",
+                usernameVariable: "JIRA_USER",
+                passwordVariable: "JIRA_PASS"
+              ),
+            ]
+          ) {
+            sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']) {
+              // NOTE(matt): We end up with untracked files in this repo, so
+              // we skip showing untracked files when we run git status
+              String git_status = sh(
+                returnStdout: true,
+                script: """#!/bin/bash -xe
+                  git status -s -uno
+                """
+              ).trim()
+
+              if (git_status) {
+                String owner = "rcbops"
+                String repo = "rpc-gating"
+                String ssh_url = "git@github.com:${owner}/${repo}"
+                String title = "Bump snapshot versions"
+                String message = "This change was triggered by the jenkins job Bump-Snapshot-Images."
+
+                String jira_issue = sh(
+                  returnStdout: true,
+                  script: """#!/bin/bash -xe
+                    set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+                    python ${WORKSPACE}/rpc-gating/scripts/jirautils.py \
+                      --user "${JIRA_USER}" \
+                      --password "${JIRA_PASS}" \
+                      get_or_create_issue \
+                        --project "RE" \
+                        --summary "${title}" \
+                        --description "${message}" \
+                        --label SNAPSHOT_BUMP \
+                        --label jenkins
+                  """
+                ).trim()
+
+                String pr_branch = "${jira_issue}_snapshot_version_bump"
+
+                sh """#!/bin/bash -xe
+                  git commit -a -m "${jira_issue} ${title}" -m "${message}"
+                  git push -f "$ssh_url" "HEAD:${pr_branch}"
+
+                  set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+                  python scripts/ghutils.py \
+                    --org "$owner" \
+                    --repo "$repo" \
+                    --debug \
+                    create_pr \
+                      --source-branch "${pr_branch}" \
+                      --target-branch "master" \
+                      --title "${jira_issue} ${title}" \
+                      --body "${message}"
+                """
+              } // if
+            } // sshagent
+          } // withCredentials
+        } // dir
+      } // globalWraps
