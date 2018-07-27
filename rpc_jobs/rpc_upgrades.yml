@@ -10,6 +10,8 @@
       | \.rst$
       | ^releasenotes/
       | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
     image:
       - trusty_aio:
           SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
@@ -34,6 +36,8 @@
       | \.rst$
       | ^releasenotes/
       | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
     image:
       - container:
           SLAVE_TYPE: "container"
@@ -49,6 +53,23 @@
     jira_project_key: "RLM"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-release"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branch: "master"
+    image:
+      - trusty_aio:
+          SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
+    scenario:
+      - "swift"
+    action:
+      - "mitaka_to_newton_leap"
+      - "liberty_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-upgrades-aio-newton-head-pm"
