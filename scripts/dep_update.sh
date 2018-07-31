@@ -54,8 +54,7 @@ ssh_url="git@github.com:${owner}/${repo}"
 if [[ -n "$(git status -s)" ]] || [[ ${start_sha} != $(git rev-parse --verify HEAD) ]]; then
   echo "Looking for Jira issue, will create if not found."
   issue_message="This issue was generated automatically by the Jenkins job ${RE_JOB_NAME}.
-  Please refer to the associated pull request ${ghprbPullLink}
-  More details are available at update_dependencies in https://rpc-openstack.atlassian.net/wiki/spaces/RE/pages/19005457/RE+for+Projects."
+  See update_dependencies in https://rpc-openstack.atlassian.net/wiki/spaces/RE/pages/19005457/RE+for+Projects for more details."
   jira_summary="Update ${repo}:${BRANCH} dependencies"
   issue=$(python ${WORKSPACE}/rpc-gating/scripts/jirautils.py \
         --user "${JIRA_USER}" \
