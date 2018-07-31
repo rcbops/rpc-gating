@@ -198,3 +198,11 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "@weekly"
+
+- project:
+    name: "rpc-upgrades"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
