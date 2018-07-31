@@ -51,26 +51,6 @@ owner="${url_split[3]}"
 repo=${REPO_URL#https://github.com/${owner}/}
 ssh_url="git@github.com:${owner}/${repo}"
 
-if [[ -n "$(git status -s)" ]] || [[ ${start_sha} != $(git rev-parse --verify HEAD) ]]; then
-  echo "Looking for Jira issue, will create if not found."
-  issue_message="This issue was generated automatically by the Jenkins job ${RE_JOB_NAME}.
-  Please refer to the associated pull request ${ghprbPullLink}
-  More details are available at update_dependencies in https://rpc-openstack.atlassian.net/wiki/spaces/RE/pages/19005457/RE+for+Projects."
-  jira_summary="Update ${repo}:${BRANCH} dependencies"
-  issue=$(python ${WORKSPACE}/rpc-gating/scripts/jirautils.py \
-        --user "${JIRA_USER}" \
-        --password "${JIRA_PASS}" \
-        get_or_create_issue \
-          --project "${JIRA_PROJECT_KEY}" \
-          --summary "${jira_summary}" \
-          --description "${issue_message}" \
-          --label RE_DEP_UPDATE \
-          --label jenkins \
-          --label "${repo}_${BRANCH}"
-  )
-  echo "Issue: ${issue}"
-fi
-
 if [[ -z "$(git status -s)" ]]
 then
   echo "Repo is clean, prep script made no changes to be committed."
@@ -90,7 +70,7 @@ if [[ ${start_sha} != $(git rev-parse --verify HEAD) ]]; then
   # Create PR from pushed commit.
   # This will not create a new PR if one already exists.
   echo "Creating PR"
-  python ${WORKSPACE}/rpc-gating/scripts/ghutils.py \
+  pr_info=$(python ${WORKSPACE}/rpc-gating/scripts/ghutils.py \
     --org "$owner" \
     --repo "$repo" \
     --debug \
@@ -98,9 +78,38 @@ if [[ ${start_sha} != $(git rev-parse --verify HEAD) ]]; then
       --source-branch "${pr_branch}"\
       --target-branch "${BRANCH}" \
       --title "${issue} Update ${BRANCH} dependencies" \
-      --body "Automated dependency update pull request, see individual commits for details."
+      --body "Automated dependency update pull request, see individual commits for details.")
+  echo "$pr_info"
 else
   echo "No pull request created, update scripts did not discover any dependency changes."
+fi
+
+if [[ -n "$(git status -s)" ]] || [[ ${start_sha} != $(git rev-parse --verify HEAD) ]]; then
+  if [[ -z ${ghprbPullLink} ]]; then
+    if [[ -n $pr_info ]]; then
+      pr_link="https://github.com/`echo $pr_info | sed s:#:/pull/:`" #reformat "{org}/{repo}#{num}" to a valid web address
+      pr_message="Please refer to the associated pull request at $pr_link"
+    fi #else pr_message is empty
+  else
+    pr_message="Please refer to the associated pull request at ${ghprbPullLink}"
+  fi
+  echo "Looking for Jira issue, will create if not found."
+  issue_message="This issue was generated automatically by the Jenkins job ${RE_JOB_NAME}.
+  $pr_message
+  More details are available at update_dependencies in https://rpc-openstack.atlassian.net/wiki/spaces/RE/pages/19005457/RE+for+Projects."
+  jira_summary="Update ${repo}:${BRANCH} dependencies"
+  issue=$(python ${WORKSPACE}/rpc-gating/scripts/jirautils.py \
+        --user "${JIRA_USER}" \
+        --password "${JIRA_PASS}" \
+        get_or_create_issue \
+          --project "${JIRA_PROJECT_KEY}" \
+          --summary "${jira_summary}" \
+          --description "${issue_message}" \
+          --label RE_DEP_UPDATE \
+          --label jenkins \
+          --label "${repo}_${BRANCH}"
+  )
+  echo "Issue: ${issue}"
 fi
 
 run_hook "gating/update_dependencies/post"
