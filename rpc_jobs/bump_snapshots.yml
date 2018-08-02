@@ -16,7 +16,7 @@
                          [series: 'newton', major: '14', image: 'trusty_loose_artifacts-swift'],
                          [series: 'pike', major: '16', image: 'xenial_no_artifacts-swift'],
                          [series: 'queens', major: '17', image: 'xenial_no_artifacts-swift']]
-        dir("rpc-openstack"){
+        dir("rpc-openstack") {
           git branch: 'master', url: 'https://github.com/rcbops/rpc-openstack'
 
           for ( release in releases ) {
@@ -39,7 +39,12 @@
             release['previous'] = previous
           } // for
         } // dir
-        dir("rpc-gating"){
+        // NOTE(mattt): We re-clone rpc-gating here because the existing clone
+        // has cruft in it which we don't want to have committed in our
+        // subsequent PR
+        dir("rpc-gating-master") {
+          git branch: 'master', url: 'https://github.com/rcbops/rpc-gating'
+
           def parallelBuilds = [:]
 
           for ( r in releases ) {
@@ -74,71 +79,46 @@
             """
           } // for
 
-          withCredentials(
+          withEnv(
             [
-              string(
-                credentialsId: 'rpc-jenkins-svc-github-pat',
-                variable: 'PAT'
-              ),
-              usernamePassword(
-                credentialsId: "jira_user_pass",
-                usernameVariable: "JIRA_USER",
-                passwordVariable: "JIRA_PASS"
-              ),
+              "ISSUE_SUMMARY=Bump snapshot versions",
+              "ISSUE_DESCRIPTION=This change was triggered by the jenkins job Bump-Snapshot-Images.",
+              "LABELS=snapshot-bump",
+              "JIRA_PROJECT_KEY=RE",
+              "TARGET_BRANCH=master",
+              "COMMIT_TITLE=Bump snapshot versions",
+              "COMMIT_MESSAGE=This change was triggered by the jenkins job Bump-Snapshot-Images.",
             ]
           ) {
-            sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']) {
-              // NOTE(matt): We end up with untracked files in this repo, so
-              // we skip showing untracked files when we run git status
-              String git_status = sh(
-                returnStdout: true,
-                script: """#!/bin/bash -xe
-                  git status -s -uno
-                """
-              ).trim()
-
-              if (git_status) {
-                String owner = "rcbops"
-                String repo = "rpc-gating"
-                String ssh_url = "git@github.com:${owner}/${repo}"
-                String title = "Bump snapshot versions"
-                String message = "This change was triggered by the jenkins job Bump-Snapshot-Images."
-
-                String jira_issue = sh(
+            withCredentials(
+              [
+                string(
+                  credentialsId: 'rpc-jenkins-svc-github-pat',
+                  variable: 'PAT'
+                ),
+                usernamePassword(
+                  credentialsId: "jira_user_pass",
+                  usernameVariable: "JIRA_USER",
+                  passwordVariable: "JIRA_PASS"
+                ),
+              ]
+            ) {
+              sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']) {
+                String git_status = sh(
                   returnStdout: true,
                   script: """#!/bin/bash -xe
-                    set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
-                    python ${WORKSPACE}/rpc-gating/scripts/jirautils.py \
-                      --user "${JIRA_USER}" \
-                      --password "${JIRA_PASS}" \
-                      get_or_create_issue \
-                        --project "RE" \
-                        --summary "${title}" \
-                        --description "${message}" \
-                        --label SNAPSHOT_BUMP \
-                        --label jenkins
+                    git status -s
                   """
                 ).trim()
 
-                String pr_branch = "${jira_issue}_snapshot_version_bump"
-
-                sh """#!/bin/bash -xe
-                  git commit -a -m "${jira_issue} ${title}" -m "${message}"
-                  git push -f "$ssh_url" "HEAD:${pr_branch}"
-
-                  set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
-                  python scripts/ghutils.py \
-                    --org "$owner" \
-                    --repo "$repo" \
-                    --debug \
-                    create_pr \
-                      --source-branch "${pr_branch}" \
-                      --target-branch "master" \
-                      --title "${jira_issue} ${title}" \
-                      --body "${message}"
-                """
-              } // if
-            } // sshagent
-          } // withCredentials
+                if (git_status) {
+                  sh """#!/bin/bash -xe
+                    set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+                    ${WORKSPACE}/rpc-gating/scripts/commit_and_pull_request.sh
+                  """
+                } // if
+              } // sshagent
+            } // withCredentials
+          } // withEnv
         } // dir
       } // globalWraps
