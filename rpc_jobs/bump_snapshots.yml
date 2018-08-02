@@ -12,44 +12,42 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
-        List releases = [[series: 'newton', major: '14', image: 'xenial_loose_artifacts-swift'],
-                         [series: 'newton', major: '14', image: 'trusty_loose_artifacts-swift'],
-                         [series: 'pike', major: '16', image: 'xenial_no_artifacts-swift'],
-                         [series: 'queens', major: '17', image: 'xenial_no_artifacts-swift']]
-        dir("rpc-openstack") {
-          git branch: 'master', url: 'https://github.com/rcbops/rpc-openstack'
-
-          for ( release in releases ) {
-
-            String latest = sh(
-              returnStdout: true,
-              script: """#!/bin/bash -xe
-                git tag --list | egrep "r${release['major']}\\." | sort --version-sort -r | head -1
-              """
-            ).trim()
-
-            String previous = sh(
-              returnStdout: true,
-              script: """#!/bin/bash -xe
-                git tag --list | egrep "r${release['major']}\\." | sort --version-sort -r | head -2 | tail -1
-              """
-            ).trim()
-
-            release['latest'] = latest
-            release['previous'] = previous
-          } // for
-        } // dir
+        dir("releases") {
+          git branch: 'master', url: 'https://github.com/rcbops/releases'
+        }
         // NOTE(mattt): We re-clone rpc-gating here because the existing clone
         // has cruft in it which we don't want to have committed in our
         // subsequent PR
         dir("rpc-gating-master") {
           git branch: 'master', url: 'https://github.com/rcbops/rpc-gating'
 
+          def componentData = readFile "${env.WORKSPACE}/releases/components/rpc-openstack.yml"
+          def rpcoReleases = readYaml text: componentData
+
+          List releases = []
+
+          for ( r in rpcoReleases['releases'] ) {
+            if (r['series'] == 'newton') {
+              for ( s in ['trusty', 'xenial'] ) {
+                def image = "${s}_loose_artifacts-swift"
+                releases << [series: r['series'],
+                             latest: r['versions'][0]['version'],
+                             previous: r['versions'][1]['version'],
+                             image: image]
+              } // for
+            } else {
+              releases << [series: r['series'],
+                           latest: r['versions'][0]['version'],
+                           previous: r['versions'][1]['version'],
+                           image: 'xenial_no_artifacts-swift' ]
+            } // if
+          } // for
+
           def parallelBuilds = [:]
 
           for ( r in releases ) {
             def release = r
-            println "series => ${release['series']}, latest => ${release['latest']}, previous => ${release['previous']}"
+            println r
 
             parallelBuilds["${release['series']}-${release['image']}"] = {
               build(
@@ -59,6 +57,11 @@
                   [
                     $class: "StringParameterValue",
                     name: "RPC_GATING_BRANCH",
+                    value: env.RPC_GATING_BRANCH,
+                  ],
+                  [
+                    $class: "StringParameterValue",
+                    name: "BRANCH",
                     value: env.RPC_GATING_BRANCH,
                   ],
                   [
