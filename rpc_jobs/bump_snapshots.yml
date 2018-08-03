@@ -47,12 +47,13 @@
 
           for ( r in releases ) {
             def release = r
-            println r
+            println release
 
             parallelBuilds["${release['series']}-${release['image']}"] = {
-              build(
+              def buildResult = build(
                 job: 'PM_rpc-gating-master-snapshot-snapshot-test',
                 wait: true,
+                propagate: false,
                 parameters: [
                   [
                     $class: "StringParameterValue",
@@ -71,15 +72,21 @@
                   ]
                 ]
               )
+              if (buildResult.result != "SUCCESS") {
+                println "Build failed, no updates will take place for image rpc-${release['latest']}-${release['image']}"
+              }
+              release['result'] = buildResult.result
             } // parallelBuilds
           } // for
 
           parallel parallelBuilds
 
           for ( release in releases ) {
-            sh """#!/bin/bash -xe
-              sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" rpc_jobs/*.yml
-            """
+            if (release['result'] == "SUCCESS") {
+              sh """#!/bin/bash -xe
+                sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" rpc_jobs/*.yml
+              """
+            }
           } // for
 
           withEnv(
