@@ -10,6 +10,8 @@
     triggers:
       - timed: "@daily"
     dsl: |
+      import org.jenkinsci.plugins.workflow.job.WorkflowJob
+
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
         dir("releases") {
@@ -25,6 +27,7 @@
           def rpcoReleases = readYaml text: componentData
 
           List releases = []
+          Boolean sendFailure = false
 
           for ( r in rpcoReleases['releases'] ) {
             if (r['series'] == 'newton') {
@@ -33,14 +36,33 @@
                 releases << [series: r['series'],
                              latest: r['versions'][0]['version'],
                              previous: r['versions'][1]['version'],
-                             image: image]
+                             image: image,
+                             consecutiveFailures: 0]
               } // for
             } else {
               releases << [series: r['series'],
                            latest: r['versions'][0]['version'],
                            previous: r['versions'][1]['version'],
-                           image: 'xenial_no_artifacts-swift' ]
+                           image: 'xenial_no_artifacts-swift',
+                           consecutiveFailures: 0]
             } // if
+          } // for
+
+          def allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+          def job = (allWorkflowJobs.find {it.displayName =~ /PM_rpc-gating-master-snapshot-snapshot-test/})
+
+          // NOTE(mattt): We reverse job.getBuilds() so we operate on oldest to newest jobs
+          for ( build in job.getBuilds().reverse() ) {
+            for ( r in releases ) {
+              def image = build.getAction(ParametersAction).getParameter("IMAGE").getValue()
+              if (image == "rpc-${r['latest']}-${r['image']}") {
+                if (build.getResult().isWorseThan(Result.fromString("SUCCESS"))) {
+                  r['consecutiveFailures'] += 1
+                } else {
+                  r['consecutiveFailures'] = 0
+                }
+              } // if
+            } // for
           } // for
 
           def parallelBuilds = [:]
@@ -49,34 +71,39 @@
             def release = r
             println release
 
-            parallelBuilds["${release['series']}-${release['image']}"] = {
-              def buildResult = build(
-                job: 'PM_rpc-gating-master-snapshot-snapshot-test',
-                wait: true,
-                propagate: false,
-                parameters: [
-                  [
-                    $class: "StringParameterValue",
-                    name: "RPC_GATING_BRANCH",
-                    value: env.RPC_GATING_BRANCH,
-                  ],
-                  [
-                    $class: "StringParameterValue",
-                    name: "BRANCH",
-                    value: env.RPC_GATING_BRANCH,
-                  ],
-                  [
-                    $class: "StringParameterValue",
-                    name: "IMAGE",
-                    value: "rpc-${release['latest']}-${release['image']}",
+            if (release['consecutiveFailures'] < 7) {
+              parallelBuilds["${release['series']}-${release['image']}"] = {
+                def buildResult = build(
+                  job: 'PM_rpc-gating-master-snapshot-snapshot-test',
+                  wait: true,
+                  propagate: false,
+                  parameters: [
+                    [
+                      $class: "StringParameterValue",
+                      name: "RPC_GATING_BRANCH",
+                      value: env.RPC_GATING_BRANCH,
+                    ],
+                    [
+                      $class: "StringParameterValue",
+                      name: "BRANCH",
+                      value: env.RPC_GATING_BRANCH,
+                    ],
+                    [
+                      $class: "StringParameterValue",
+                      name: "IMAGE",
+                      value: "rpc-${release['latest']}-${release['image']}",
+                    ]
                   ]
-                ]
-              )
-              if (buildResult.result != "SUCCESS") {
-                println "Build failed, no updates will take place for image rpc-${release['latest']}-${release['image']}"
-              }
-              release['result'] = buildResult.result
-            } // parallelBuilds
+                )
+                if (buildResult.result != "SUCCESS") {
+                  println "Build failed, no updates will take place for image rpc-${release['latest']}-${release['image']}"
+                }
+                release['result'] = buildResult.result
+              } // parallelBuilds
+            } else {
+              println "rpc-${release['latest']}-${release['image']} has failed 7 times consecutively, creating RE issue for follow-up"
+              sendFailure = true
+            } // if
           } // for
 
           parallel parallelBuilds
@@ -130,5 +157,12 @@
               } // sshagent
             } // withCredentials
           } // withEnv
+
+          if (sendFailure) {
+            common.create_jira_issue("RE",
+                                     "Bump Snapshots Failure: ${env.BUILD_TAG}",
+                                     "[${env.BUILD_TAG}|${env.BUILD_URL}]",
+                                     ["jenkins", "bump_snapshots_fail"])
+          } // if
         } // dir
       } // globalWraps
