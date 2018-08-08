@@ -75,6 +75,9 @@
     name: "rpc-upgrades-aio-newton-head-pm"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
+    # NOTE(mattt): ORD doesn't have the custom RPC images in it
+    REGIONS: "DFW"
+    FALLBACK_REGIONS: "IAD"
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -94,6 +97,9 @@
     name: "rpc-upgrades-aio-newton-head-pm-minor"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
+    # NOTE(mattt): ORD doesn't have the custom RPC images in it
+    REGIONS: "DFW"
+    FALLBACK_REGIONS: "IAD"
     image:
       - xenial_aio:
           FLAVOR: "performance2-15"
@@ -113,6 +119,9 @@
     name: "rpc-upgrades-aio-newton-release-pm"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
+    # NOTE(mattt): ORD doesn't have the custom RPC images in it
+    REGIONS: "DFW"
+    FALLBACK_REGIONS: "IAD"
     image:
       - trusty_aio:
           FLAVOR: "performance2-15"
@@ -207,6 +216,9 @@
     name: "rpc-upgrades-aio-newton-head-incremental"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
+    # NOTE(mattt): ORD doesn't have the custom RPC images in it
+    REGIONS: "DFW"
+    FALLBACK_REGIONS: "IAD"
     image:
       - xenial_aio:
           FLAVOR: "performance2-15"

@@ -450,6 +450,9 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "newton"
     jira_project_key: "RO"
+    # NOTE(mattt): ORD doesn't have the custom RPC images in it
+    REGIONS: "DFW"
+    FALLBACK_REGIONS: "IAD"
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
@@ -518,6 +521,9 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "newton-rc"
     jira_project_key: "RO"
+    # NOTE(mattt): ORD doesn't have the custom RPC images in it
+    REGIONS: "DFW"
+    FALLBACK_REGIONS: "IAD"
     image:
       - xenial:
           IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
