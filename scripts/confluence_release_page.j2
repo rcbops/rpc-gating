@@ -1,0 +1,13 @@
+<p><strong>Date</strong>: {{ date }}</p>
+<p><strong>Meta Version</strong>: {{ meta_version }}</p>
+<p><strong>Product versions included</strong></p>
+<table class="wrapped">
+<colgroup><col /><col /><col /><col /></colgroup>
+<tbody>
+<tr><th>Product</th><th>Version</th><th>Release Notes</th><th>Comments</th></tr>
+{% for row in rows %}
+<tr><td>{{ row.product }}</td><td>{{ row.version }}</td><td>{{ row.release_notes | urlize }}</td><td>{{ row.comments | wordwrap(width=79, break_long_words=False, wrapstring="<br/>") }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+<p class="auto-cursor-target"><br /></p>

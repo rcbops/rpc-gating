@@ -120,6 +120,9 @@
                 create_release \
                     --version "${VERSION}" \
                     --bodyfile "${RELEASE_NOTES_FILE}" \
+                publish_release_to_wiki \
+                    --component "${REPO}" \
+                    --version "${VERSION}" \
           """
         } else{
           println "An RC branch called ${RC_BRANCH} was found, releasing from ${RC_BRANCH}"
@@ -146,6 +149,9 @@
                 update_rc_branch \
                     --rc "${RC_BRANCH}" \
                     --mainline "${MAINLINE}" \
+                publish_release_to_wiki \
+                    --component "${REPO}" \
+                    --version "${VERSION}" \
           """
         }
         build(
