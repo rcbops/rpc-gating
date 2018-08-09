@@ -18,3 +18,24 @@
               - "${RPC_GATING_BRANCH}"
             credentials-id: "github_account_rpc_jenkins_svc"
       script-path: job_dsl/rpc_gating_merge_trigger.groovy
+
+- project:
+    name: "rpc-gating-snapshot-test"
+    repo_name: "rpc-gating"
+    repo_url: "https://github.com/rcbops/rpc-gating"
+    branch: "master"
+    jira_project_key: "RE"
+    CRON: "@monthly"
+    image:
+      - snapshot:
+          IMAGE: "rpc-r17.0.0-xenial_no_artifacts-swift"
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: ""
+          FLAVOR: "7"
+          BOOT_TIMEOUT: 1500
+    scenario:
+      - snapshot
+    action:
+      - test
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
