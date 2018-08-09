@@ -20,7 +20,7 @@
       - newton:
           IMAGE: "rpc-r14.16.0-xenial_loose_artifacts-swift"
       - pike:
-          IMAGE: "rpc-r16.2.2-xenial_no_artifacts-swift"
+          IMAGE: "rpc-r16.2.3-xenial_no_artifacts-swift"
       - queens:
           IMAGE: "rpc-r17.0.1-xenial_no_artifacts-swift"
     action:
