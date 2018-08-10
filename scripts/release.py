@@ -7,6 +7,7 @@ import traceback
 import click
 import git
 
+import confluenceutils
 import ghutils
 from notifications import mail, mailgun, try_context
 
@@ -187,6 +188,7 @@ ghutils.cli.add_command(publish_tag)
 ghutils.cli.add_command(mail)
 ghutils.cli.add_command(mailgun)
 ghutils.cli.add_command(usage)
+ghutils.cli.add_command(confluenceutils.publish_release_to_wiki)
 
 
 if __name__ == "__main__":

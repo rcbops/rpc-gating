@@ -71,6 +71,10 @@
                     --mainline "${MAINLINE}" \
                 mailgun \
                     --to "${NOTIFICATION_ADDRESS}"
+                publish_release_to_wiki \
+                    --component "${REPO}" \
+                    --version "${VERSION}" \
+
           description: |
             Commands and available options.
               Note that options that are also used
@@ -148,3 +152,18 @@
                 --body TEXT     Body of release announcement message. May be omitted if<br>
                                 create_release is used.<br>
                 --help          Show this message and exit.<br>
+              <br>publish_release_to_wiki:<br>
+                --username TEXT                Confluence username.  [required]<br>
+                --password TEXT                Confluence password.  [required]<br>
+                --base-url TEXT                Confluence instance.<br>
+                --scheduled-release-page TEXT<br>
+                --async-release-page TEXT<br>
+                --component TEXT               Component name, e.g. rpc-foo.  [required]<br>
+                --version TEXT                 Component release version, e.g. 1.0.4.<br>
+                                               [required]<br>
+                --release-notes-url TEXT       Component release notes URL, e.g.<br>
+                                               https://github.com/rcbops/rpc-<br>
+                                               foo/release/tag/1.0.0.<br>
+                --comment TEXT                 Additional information to add against release<br>
+                                               in wiki.<br>
+                --help                         Show this message and exit.<br>

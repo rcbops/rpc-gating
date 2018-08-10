@@ -26,6 +26,11 @@ common.globalWraps(){
       string(
         credentialsId: 'mailgun_mattt_api_key',
         variable: 'MAILGUN_API_KEY'
+      ),
+      usernamePassword(
+        credentialsId: "jira_user_pass",
+        usernameVariable: "JIRA_USER",
+        passwordVariable: "JIRA_PASS"
       )
     ]){
       sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
