@@ -176,6 +176,8 @@
       - "kilo_to_newton_leap"
       - "liberty_to_newton_leap_system"
     jira_project_key: "RLM"
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "@weekly"
@@ -208,6 +210,8 @@
       - "kilo_to_r14.current_leap"
       - "liberty_to_r14.current_leap_system"
     jira_project_key: "RLM"
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "@weekly"
