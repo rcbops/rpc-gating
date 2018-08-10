@@ -227,6 +227,27 @@
       - "swift"
     action:
       - "newton_to_queens_incremental"
+      - "pike_to_queens_incremental"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "@weekly"
+
+- project:
+    name: "rpc-upgrades-mnaio-newton-head-incremental"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - xenial_mnaio:
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
+    scenario:
+      - "swift"
+    action:
+      - "newton_to_queens_incremental"
+      - "pike_to_queens_incremental"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
