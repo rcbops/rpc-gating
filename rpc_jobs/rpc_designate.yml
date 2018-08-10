@@ -62,3 +62,11 @@
     # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-designate"
+    repo_name: "rpc-designate"
+    repo_url: "https://github.com/rcbops/rpc-designate"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
