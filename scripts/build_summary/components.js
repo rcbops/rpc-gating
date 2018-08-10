@@ -359,7 +359,9 @@ buildTable = Vue.component("buildTable",{
       return this.builds.reduce((a,c)=> {
         c.searchText= [
           c.result,
-          c.timestamp,
+          c.timestamp.toISOString(),
+          c.timestamp.toDateString(),
+          c.timestamp.toLocaleDateString(),
           c.branch,
           ...c.build_hierachy.map(b => b.name),
           ...c.build_hierachy.map(b => b.build_num),

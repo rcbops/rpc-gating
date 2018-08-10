@@ -144,6 +144,7 @@
             b.failures = b.failures.map(id => this.failures_raw[id])
             // convert build ids in failure objects to build objects
             b.failures.forEach(f => f.build = this.$root.builds_raw[f.build])
+            b.timestamp = new Date(b.timestamp)
           })
           // this method actually mutates the builds_raw dict,
           // but making use of the 'builds' computed var will cause
@@ -191,7 +192,7 @@
         },
         dateSortedBuilds: function(builds) {
           var sorted = builds.sort(function(a, b) {
-            return new Date(a.timestamp) - new Date(b.timestamp)
+            return a.timestamp - b.timestamp
           })
           return sorted;
         },
@@ -200,10 +201,9 @@
           return {oldest: dsb[0],
                   newest: dsb.slice(-1)[0]}
         },
-        dfmt: function(date_string) {
-          d = new Date(date_string)
+        dfmt: function(date) {
           //return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
-          return d.toISOString()
+          return date.toISOString()
         },
         colours: function(numRequired){
           // Generate colours for chart series in hsla() format
