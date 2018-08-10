@@ -1662,6 +1662,7 @@ List getComponentChange(String baseBranch, String prBranch){
 void registerComponent(String component_text, String jiraProjectKey){
   def component = readYaml text: component_text
   createComponentGateTrigger(component["name"], component["repo_url"], jiraProjectKey)
+  createComponentPreReleaseJobs(component["name"], component["repo_url"], component["releases"], jiraProjectKey)
   createComponentSkeleton(component["name"], component["repo_url"], jiraProjectKey)
 }
 
@@ -1738,6 +1739,85 @@ void createComponentGateTrigger(String name, String repoUrl, String jiraProjectK
       }
     }
   }
+}
+
+void createComponentPreReleaseJobs(String name, String repoUrl, List releases, String jiraProjectKey){
+  String repo_dir = "${WORKSPACE}/rpc-gating-master"
+  String filename = "${name}.yml".replace("-", "_")
+  String projectsFile = "${repo_dir}/rpc_jobs/${filename}"
+  String jjb
+
+  dir(repo_dir) {
+    // NOTE(mattt): We re-clone rpc-gating here because the existing clone
+    // has cruft in it which we don't want to have committed in our
+    // subsequent PR
+    git branch: 'master', url: 'https://github.com/rcbops/rpc-gating'
+
+    Integer projectNotExists = sh(
+      returnStatus: true,
+      script: """#!/bin/bash -xe
+        grep -s 'RE-Release-PR_{repo}-{BRANCH}' ${projectsFile}
+      """
+    )
+
+    // NOTE(mattt): If projectsFile does not exist, projectNotExists will get
+    // set to 2.
+    if (projectNotExists == 1 && releases) {
+      jjb = """
+- project:
+    name: "${name}-re-release-pr"
+    repo:
+"""
+
+      for ( release in releases ) {
+        jjb += """      - ${name}:
+          URL: "${repoUrl}"
+          BRANCH: "${release['series']}"
+"""
+      } //for
+
+      jjb += """    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+"""
+
+      sh """#!/bin/bash -xe
+        echo "${jjb}" >> ${projectsFile}
+      """
+
+      withEnv(
+        [
+          "ISSUE_SUMMARY=Add component skeleton to ${name}",
+          "ISSUE_DESCRIPTION=This issue was generated automatically as part of registering a new component.",
+          "LABELS=component-skeleton",
+          "JIRA_PROJECT_KEY=${jiraProjectKey}",
+          "TARGET_BRANCH=master",
+          "COMMIT_TITLE=Add pre-release testing jobs to ${name}",
+          "COMMIT_MESSAGE=This project is being added to the RE platform. This change adds some\njobs which exercise the read-only parts of the release tooling (such\nas release note generation).",
+        ]
+      ){
+        withCredentials(
+          [
+            string(
+              credentialsId: 'rpc-jenkins-svc-github-pat',
+              variable: 'PAT'
+            ),
+            usernamePassword(
+              credentialsId: "jira_user_pass",
+              usernameVariable: "JIRA_USER",
+              passwordVariable: "JIRA_PASS"
+            ),
+          ]
+        ){
+          sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+            sh """#!/bin/bash -xe
+              set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+              ${WORKSPACE}/rpc-gating/scripts/commit_and_pull_request.sh
+            """
+          } // sshagent
+        } // withCredentials
+      } // withEnv
+    } //if
+  } // dir
 }
 
 void testRelease(component_text){

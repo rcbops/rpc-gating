@@ -1,22 +1,3 @@
-- project:
-    name: "RE-Release-PR"
-    repo:
-      - rpc-openstack:
-          URL: "https://github.com/rcbops/rpc-openstack"
-          BRANCH: "master"
-      - rpc-openstack:
-          URL: "https://github.com/rcbops/rpc-openstack"
-          BRANCH: "queens"
-      - rpc-openstack:
-          URL: "https://github.com/rcbops/rpc-openstack"
-          BRANCH: "pike"
-      - rpc-openstack:
-          URL: "https://github.com/rcbops/rpc-openstack"
-          BRANCH: "newton"
-    jobs:
-      - 'RE-Release-PR_{repo}-{BRANCH}'
-
-
 - job-template:
     RPC_GATING_BRANCH: master
     name: 'RE-Release-PR_{repo}-{BRANCH}'
