@@ -164,13 +164,30 @@
           var r = Object.values(this.builds).countBy("repo")
           return r
         },
+        histogram_end: function(){
+          // Defines the most recent end of date based histogram.
+          // Buckets will be measured in units of 24 hours preceeding this point.
+
+          // Previously histogram end was always the current time, but this meant
+          // histogram buckets were the previous 24 hours before now, which didn't line
+          // up with the date labels on the graphs. It also meant that the values for
+          // each date varied during the day as a build could age enough to move up to
+          // the next bucket. This was exacerbated by a rounding error that caused
+          // builds for one day to be evenly split over two buckets
+          // (the correct day and the next day)
+          // Now histogram end is aligned with a day boundary so that the 24 hour
+          // buckets are aligned with calendar days.
+          end = new Date() // now
+          end.setHours(0,0,0,0) //start of today
+          end.setDate(end.getDate()+1) //start of tomorrow
+          return end
+        },
         labels: function(){
-          now = new Date()
           return [...Array(this.retention_days).keys()].map(
             (i) => {
               var daysAgo = this.retention_days-i
               var dayInMillis = 86400000
-              return new Date(now-dayInMillis * daysAgo).toLocaleDateString()
+              return new Date(this.histogram_end-dayInMillis * daysAgo).toLocaleDateString()
             }
           )
         }
@@ -178,14 +195,17 @@
       methods: {
         histogram: function(builds, length, inc) {
           histogram = new Array(length).fill(0);
-          now = new Date()
-          vueobj = this
+          histogram_end = this.histogram_end
+          // oldest bucket
+          histogram_start = new Date(histogram_end)
+          histogram_start.setDate(histogram_start.getDate()-length)
           builds.forEach(function(build) {
-            build_age = new Date(build.timestamp)
-            age_millis = (now - build_age)
-            age_days = Math.round(age_millis * 1.0 / (1000 * 60 * 60 * 24))
-            if (age_days < length) {
-              histogram[length - age_days - 1] += inc
+            age_millis = (histogram_end - build.timestamp)
+            // note previously math.round was used here which caused results for a day
+            // to be spread over it and the next day.
+            age_days = Math.ceil(age_millis * 1.0 / (1000 * 60 * 60 * 24))
+            if (build.timestamp > histogram_start) {
+              histogram[length - age_days] += inc
             }
           })
           return histogram
