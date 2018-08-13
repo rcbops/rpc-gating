@@ -117,7 +117,7 @@ failureTypesTrend = Vue.component("failureTypesTrend",{
       },
     datasets: function(){
       var colours = this.$root.colours(this.topFailureTypes.length + 1)
-      var ds = this.topFailureTypes.reduce((a,c,i)=>{
+      var ds = this.topFailureTypes.reduce((a,c,i) => {
         a.push({
           label: c[1],
           // ensure success is always green
@@ -167,7 +167,7 @@ failureCategoriesTrend = Vue.component("failureCategoriesTrend",{
     datasets: function(){
       var failuresByCategory = this.$root.failuresByCategory(this.builds)
       var colours = this.$root.colours(failuresByCategory.length + 1)
-      var ds = failuresByCategory.reduce((a,c,i)=>{
+      var ds = failuresByCategory.reduce((a, c, i) => {
         a.push({
           label: c[1],
           // ensure success is always green
@@ -198,7 +198,7 @@ repoTable = Vue.component("repoTable",{
       sortBy: 'failPercent',
       descending: true
     }
-    d.rowsperpage = [5,15,25,50,100,{text:"All",value:-1}]
+    d.rowsperpage = [5, 15, 25, 50, 100, {text:"All",value:-1}]
     d.items = []
     Object.values(this.$root.repos).forEach(r => {
       var builds = r[2]
@@ -210,7 +210,7 @@ repoTable = Vue.component("repoTable",{
                 failPercent: 0}
       var buildFailures = builds.filter(b => b.result != "SUCCESS")
       var failCount = buildFailures.length
-      ro.failPercent = ((failCount/ro.numBuilds)*100).toFixed(0)
+      ro.failPercent = ((failCount / ro.numBuilds) * 100).toFixed(0)
       mostFailingJob = buildFailures.countBy("job_name")[0]
       ro.mostFailingJob = mostFailingJob[1]
       ro.mostFailingJobCount = mostFailingJob[0]
@@ -356,7 +356,7 @@ buildTable = Vue.component("buildTable",{
       // this is used with methods/filter to search
       // as the default search won't look into
       // nested structures
-      return this.builds.reduce((a,c)=> {
+      return this.builds.reduce((a, c)=> {
         c.searchText= [
           c.result,
           c.timestamp.toISOString(),
@@ -378,7 +378,7 @@ buildTable = Vue.component("buildTable",{
   methods: {
     filter: function(items, search, filter){
       return items.filter(i =>
-        i.searchText.indexOf(search.toLowerCase())>=0)
+        i.searchText.indexOf(search.toLowerCase()) >= 0)
     }
   },
   data: function(){
@@ -391,7 +391,7 @@ buildTable = Vue.component("buildTable",{
           {text: "Failures", value: "failures", sortable: false}
         ],
         search: '',
-        rowsperpage: [5,15,25,50,{text: "All", value: -1}],
+        rowsperpage: [5, 15, 25, 50, {text: "All", value: -1}],
         pagination: {
           sortBy: 'timestamp',
           descending: true
@@ -503,7 +503,7 @@ jobTable = Vue.component("jobTable",{
     //   return this.$root.repos[this.repo.name].jobs
     // },
     items: function(){
-      return this.builds.countBy("job_name").reduce((a,c) => {
+      return this.builds.countBy("job_name").reduce((a, c) => {
       //return Object.values(this.jobs).reduce((a,c) => {
         var builds = c[2]
         var name = c[1]
@@ -520,7 +520,7 @@ jobTable = Vue.component("jobTable",{
           numBuilds: numBuilds,
           oldest: this.$root.dfmt(oldestNewest.oldest.timestamp),
           newest: this.$root.dfmt(oldestNewest.newest.timestamp),
-          failPercent: ((numFailedBuilds/numBuilds)*100).toFixed(0),
+          failPercent: ((numFailedBuilds / numBuilds) * 100).toFixed(0),
           topFailureType: topFailureTypes[0][1]
         })
         return a
@@ -536,7 +536,7 @@ jobTable = Vue.component("jobTable",{
           {text: "Newest Build", value: "newest"}
         ],
         search: '',
-        rowsperpage: [5,10,25,50,{text: "All", value: -1}],
+        rowsperpage: [5, 10, 25, 50, {text: "All", value: -1}],
         pagination: this.sort,
       }
     if(this.showFailurePercent){
@@ -643,7 +643,7 @@ failureCategoryTable = Vue.component("failureCategoryTable", {
       var totalBuilds = Object.values(this.builds).length
       // builds by failure type
       var failuresByCategory = this.$root.failuresByCategory(Object.values(this.builds))
-      return failuresByCategory.reduce((a,c) => {
+      return failuresByCategory.reduce((a, c) => {
         // list of builds for this type
         var category = c[1]
         var categoryBuilds = c[2].map(f => f.build)
@@ -656,11 +656,11 @@ failureCategoryTable = Vue.component("failureCategoryTable", {
           // Category, then read its category.
           failureCategory: categoryFailures[0].category,
           failureOccurences: categoryBuilds.length,
-          failurePercent: ((categoryBuilds.length/totalBuilds)*100).toFixed(0),
+          failurePercent: ((categoryBuilds.length / totalBuilds) * 100).toFixed(0),
           oldest: oldestNewest.oldest.timestamp,
           newest: oldestNewest.newest.timestamp,
-          topJobs: categoryBuilds.countBy("job_name").slice(0,this.numTopJobs),
-          topFailureTypes: this.$root.failuresByType(categoryBuilds).slice(0,this.numTopTypes)
+          topJobs: categoryBuilds.countBy("job_name").slice(0, this.numTopJobs),
+          topFailureTypes: this.$root.failuresByType(categoryBuilds).slice(0, this.numTopTypes)
         })
         return a
       }, [])
@@ -677,7 +677,7 @@ failureCategoryTable = Vue.component("failureCategoryTable", {
           {text: "Top Failure Types", value: "topFailureTypes"},
         ],
         search: '',
-        rowsperpage: [5,10,25,50,{text: "All", value: -1}],
+        rowsperpage: [5, 10, 25, 50, {text: "All", value: -1}],
         pagination: {
           sortBy: 'failureOccurences',
           descending: true
@@ -763,7 +763,7 @@ failureTable = Vue.component("failureTable",{
       var totalBuilds = Object.values(this.builds).length
       // builds by failure type
       var failuresByType = this.$root.failuresByType(Object.values(this.builds))
-      return failuresByType.reduce((a,c) => {
+      return failuresByType.reduce((a, c) => {
         // list of builds for this type
         var type = c[1]
         var typeBuilds = c[2].map(f => f.build)
@@ -776,10 +776,10 @@ failureTable = Vue.component("failureTable",{
           // type, then read its category.
           failureCategory: typeFailures[0].category,
           failureOccurences: typeBuilds.length,
-          failurePercent: ((typeBuilds.length/totalBuilds)*100).toFixed(0),
+          failurePercent: ((typeBuilds.length / totalBuilds) * 100).toFixed(0),
           oldest: oldestNewest.oldest.timestamp,
           newest: oldestNewest.newest.timestamp,
-          topJobs: typeBuilds.countBy("job_name").slice(0,this.numTopJobs),
+          topJobs: typeBuilds.countBy("job_name").slice(0, this.numTopJobs),
         })
         return a
       }, [])
@@ -795,7 +795,7 @@ failureTable = Vue.component("failureTable",{
           {text: "Newest Occurence", value: "newest"},
         ],
         search: '',
-        rowsperpage: [5,10,25,50,{text: "All", value: -1}],
+        rowsperpage: [5, 10, 25, 50, {text: "All", value: -1}],
         pagination: {
           sortBy: 'failureOccurences',
           descending: true
@@ -891,10 +891,10 @@ toolbarmenu = Vue.component("toolbarmenu",{
   },
   computed: {
     items: function(){
-      return this.counteditems.reduce((a,c) => {
+      return this.counteditems.reduce((a, c) => {
         a.push({
           title: c[1],
-          url: '/'+this.urlbase+'/'+c[1]
+          url: '/' + this.urlbase + '/' + c[1]
         })
         return a
       },[])

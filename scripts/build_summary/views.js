@@ -93,7 +93,7 @@ failureTypeView = Vue.component("failureTypeView",{
   computed: {
       failures: function(){
         return this.$root.failuresByType(Object.values(this.$root.builds))
-          .filter(l=> l[1]==this.type)[0][2]
+          .filter(l=> l[1] == this.type)[0][2]
       },
       builds: function(){
         return this.failures.map(f => f.build)
@@ -105,7 +105,7 @@ failureTypeView = Vue.component("failureTypeView",{
   methods: {
     dsFilter: function(ds){
       var type = this.type
-      return ds.label==type
+      return ds.label == type
     }
   },
   template: `
@@ -150,7 +150,7 @@ failureCategoryView = Vue.component("failureCategoryView",{
   computed: {
       failures: function(){
         return this.$root.failuresByCategory(Object.values(this.$root.builds))
-          .filter(l=> l[1]==this.category)[0][2]
+          .filter(l => l[1] == this.category)[0][2]
       },
       builds: function(){
         return this.failures.map(f => f.build)
@@ -159,7 +159,7 @@ failureCategoryView = Vue.component("failureCategoryView",{
   methods: {
     dsFilter: function(ds){
       var category = this.category
-      return ds.label==category
+      return ds.label == category
     },
     typeFilter: function(failure){
       var category = this.category
