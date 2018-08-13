@@ -62,3 +62,13 @@
     # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: rpc-designate-re-release-pr
+    repo:
+      - rpc-designate:
+          URL: https://github.com/rcbops/rpc-designate
+          BRANCH: master
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
