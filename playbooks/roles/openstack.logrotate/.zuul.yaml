@@ -1,0 +1,30 @@
+- job:
+    name: ansible-role-logrotate
+    run: tests/test.yaml
+    roles:
+      - zuul: openstack/ansible-role-logrotate
+
+- job:
+    name: ansible-role-logrotate-fedora-27
+    parent: ansible-role-logrotate
+    nodeset: fedora-27
+
+- job:
+    name: ansible-role-logrotate-ubuntu-xenial
+    parent: ansible-role-logrotate
+    nodeset: ubuntu-xenial
+
+- project:
+    templates:
+      - windmill-jobs-fedora-27
+      - windmill-jobs-xenial
+    check:
+      jobs:
+        - ansible-role-logrotate-fedora-27
+        - ansible-role-logrotate-ubuntu-xenial
+        - tox-linters
+    gate:
+      jobs:
+        - ansible-role-logrotate-fedora-27
+        - ansible-role-logrotate-ubuntu-xenial
+        - tox-linters
