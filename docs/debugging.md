@@ -23,27 +23,37 @@ operations such as creating a single use instance for a project's jobs to
 execute on. As the console includes logging for steps not defined by a project,
 it's inefficient to wade through it when looking for the cause of a failure.
 
-## Artifacts
+## Log Artifacts
 While command outputs as viewed in blue ocean or the console are useful, they
-don't tell the whole story. Jobs can produce artifacts which are stored
-for a [set time](https://github.com/rcbops/rpc-gating/blob/master/playbooks/upload_to_swift.yml) after the completion of a job. Any job can produce artifacts
-and use the provided functions to publish those. Jobs artifacts should include
-everything required to debug a build.
+don't tell the whole story. Jobs can be configured to publish log artifacts to
+a Rackspace Cloud Files container, which automatically has CDN and web browsing
+enabled.
 
-To view artifacts, click "Build Artifact Links" in the sidebar from the standard
-Jenkins build page.
+Artifact gathering and publishing is configured by creating a file named
+``component_metadata.yml`` in the root of the git repository which has the
+following format:
 
-### Artifact Example: RPCO
+``` yaml
+"artifacts": [
+  {
+     "type": "log",
+     "source": "/foo"
+  }
+]
+```
+
+The above configuration will upload ``log`` files from every job, sourced from
+the ``/foo`` directory. These will be published and set to expire after 30 days.
+The link to where they are published will be available and displayed
+prominently in the Jenkins job result.
+
+### Log Artifact Example: RPCO
 
 RPC-O builds archive the etc and log dirs of each container and the host.
 This includes the openstack_deploy directory, all the ansible facts, the generated
 configuration files and log files for each service. This comprehensive set of
 artifacts saves times recreating problems as usually the required information
 is stored with the failing job.
-
-
-
-
 
 For AIO jobs, the host is the deploy node, so the openstack_deploy directory
 which contains all the ansible config can be found in the hosts's etc folder.

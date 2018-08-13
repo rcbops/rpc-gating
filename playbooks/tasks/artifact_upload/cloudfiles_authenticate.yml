@@ -1,0 +1,23 @@
+---
+- name: Check for required variables
+  assert:
+    msg: |
+      The variables 'cloud_name' and 'region' are required.
+    that:
+      - "cloud_name is defined"
+      - "region is defined"
+
+- name: Authenticate to the cloud and retrieve the service catalog
+  os_auth:
+    cloud: "{{ cloud_name }}"
+    region_name: "{{ region }}"
+  no_log: true
+  register: _auth
+  until: (_auth | success) and
+         (auth_token is defined) and
+         (auth_token is not none) and
+         (auth_token | trim != '') and
+         (service_catalog is defined) and
+         (service_catalog is not none)
+  retries: 10
+  delay: 30

@@ -301,7 +301,18 @@ String container_name(){
 def archive_artifacts(Map args = [:]){
   stage('Compress and Publish Artifacts'){
     try{
-      artifacts_dir = args.get("artifacts_dir", "${env.WORKSPACE}/artifacts")
+      // If the build fails, or this is a PR, the default
+      // artifact types to upload are 'log'. Otherwise we
+      // will attempt all types.
+      if ((currentBuild.result == "FAILURE") || (env.ghprbPullId != null)) {
+        suggested_artifact_types = "log"
+      } else {
+        suggested_artifact_types = "all"
+      }
+
+      // However, if an argument is given then use it instead.
+      artifact_types = args.get("artifact_types", suggested_artifact_types)
+
       results_dir = args.get("results_dir", "${env.WORKSPACE}/results")
 
       dir(results_dir) {
@@ -332,10 +343,7 @@ def archive_artifacts(Map args = [:]){
         junit allowEmptyResults: true, testResults: "*.xml"
       }
 
-      pubcloud.uploadToSwift(
-        container: container_name(),
-        path: artifacts_dir
-      )
+      pubcloud.uploadArtifacts("artifact_types": artifact_types)
       if(fileExists(file: "artifact_public_url")){
         artifact_public_url = readFile(file: "artifact_public_url")
         currentBuild.description = "<h2><a href='"+artifact_public_url+"'>Build Artifacts</a></h2>"
@@ -1525,7 +1533,6 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
             // try-catch within archive_artifacts() prevents
             // this call from failing standard job builds
             archive_artifacts(
-              artifacts_dir: "${env.RE_HOOK_ARTIFACT_DIR}",
               results_dir: "${env.RE_HOOK_RESULT_DIR}"
             )
         } // try

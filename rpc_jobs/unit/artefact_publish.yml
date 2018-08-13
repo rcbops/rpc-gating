@@ -26,7 +26,24 @@
             echo "<html>dstat report placeholder</html>" \
               > /var/log/dstat.html
             cp -vr /var/log artifacts
+            cp -r artifacts file_artifacts
           """
+
+          // Set the RE_JOB_REPO_NAME (normally done by standard jobs)
+          env.RE_JOB_REPO_NAME = "rpc-gating"
+
+          // Create a temporary component_metadata file
+          def artifacts_data = [
+            artifacts: [
+              [
+                type: "file",
+                source: "${env.WORKSPACE}/file_artifacts",
+                dest: "${env.JOB_NAME}/${env.BUILD_NUMBER}/",
+                expire_after: 86400
+              ]
+            ]
+          ]
+          writeYaml file: "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}/component_metadata.yml", data: artifacts_data
         }
-        common.archive_artifacts()
+        common.archive_artifacts(artifact_types: "all")
       }

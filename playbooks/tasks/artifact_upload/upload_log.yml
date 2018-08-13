@@ -1,25 +1,63 @@
 ---
-- hosts: localhost
-  connection: local
-  gather_facts: False
-  vars:
-    region: "DFW"
-    cloud_name: "public_cloud"
+- name: Check for required variables
+  assert:
+    msg: |
+      The log artifact source must be provided.
+    that:
+      - "artifact.source is defined"
+
+# TODO(odyssey4me):
+# Perhaps have these facts provided by variables
+# defined in groovy instead so that we do not have
+# to rely on environment variables. This may make
+# the switch to declaritive pipelines easier.
+- name: Set dependent facts
+  set_fact:
     # 30 days
-    retention: 2592000
-  tasks:
-    - name: Set the archive base name
+    artifacts_expire_after: 2592000
+    job_name: "{{ lookup('env', 'JOB_NAME') }}"
+    build_number: "{{ lookup('env', 'BUILD_NUMBER') }}"
+
+- name: Check that the JOB_NAME and BUILD_NUMBER have been provided
+  debug:
+    msg: |
+      The JOB_NAME and BUILD_NUMBER environment variables must be set. Skipping artifact upload.
+  when:
+    - "(job_name == '') or (build_number == '')"
+
+- name: Check if the source exists
+  stat:
+    path: "{{ artifact.source }}"
+    follow: yes
+    get_attributes: no
+    get_checksum: no
+    get_md5: no
+    get_mime: no
+  register: _artifact_path
+
+- name: Show whether the source exists
+  debug:
+    msg: "source {{ artifact.source }} exists: {{ _artifact_path.stat.exists | bool }}"
+
+- name: Upload the artifacts if all conditions are met
+  when:
+    - "_artifact_path.stat.exists | bool"
+    - "job_name != ''"
+    - "build_number != ''"
+  block:
+    - name: Set the archive base name and object container name
       set_fact:
         archive_base_name: "{{ job_name }}_{{ build_number }}"
+        object_store_container_name: "jenkinsjob_{{ job_name }}_{{ build_number }}"
 
     - name: Move artifacts dir so that downloaded archives have a useful name
-      shell: mv "{{ artifacts_dir | basename }}" "{{ archive_base_name }}"
+      shell: mv "{{ artifact['source'] | basename }}" "{{ archive_base_name }}"
       args:
-        chdir: "{{ artifacts_dir | dirname }}"
+        chdir: "{{ artifact['source'] | dirname }}"
 
     - name: Set the archive directory
       set_fact:
-        adir: "{{ artifacts_dir | dirname }}/{{archive_base_name}}"
+        adir: "{{ artifact['source'] | dirname }}/{{ archive_base_name }}"
 
     # Links are unlikely to work when expanded on a different
     # system so remove them. Create a list of removed links
@@ -33,14 +71,14 @@
           -delete \
           | tee {{ adir | basename }}/removedlinks.txt
       args:
-        chdir: "{{ adir |dirname }}"
+        chdir: "{{ adir | dirname }}"
       register: removed_links
 
     # This task runs async while the individual files are being uploaded
     # then when compression is complete, the resultant archive is uploaded.
     # 3 Hour Timeout
     - name: Create archive asynchronously
-      shell: "tar -c {{ adir | basename }} | gzip --fast > {{archive_base_name}}.tar.gz"
+      shell: "tar -c {{ adir | basename }} | gzip --fast > {{ archive_base_name }}.tar.gz"
       args:
         chdir: "{{ adir | dirname }}"
       async: 10800
@@ -49,86 +87,7 @@
       tags:
         - skip_ansible_lint
 
-    - name: Create a Cloud Files container
-      os_object:
-        container: "{{ container }}"
-        container_access: "public"
-        region_name: "{{ region }}"
-        cloud: "{{ cloud_name }}"
-      register: _create_container
-      until: _create_container | success
-      retries: 10
-      delay: 30
-
-    - name: Authenticate to the cloud and retrieve the service catalog
-      os_auth:
-        cloud: "{{ cloud_name }}"
-        region_name: "{{ region }}"
-      no_log: true
-      register: _auth
-      until: (_auth | success) and
-             (auth_token is defined) and
-             (auth_token is not none) and
-             (auth_token | trim != '') and
-             (service_catalog is defined) and
-             (service_catalog is not none)
-      retries: 10
-      delay: 30
-
-    - name: Extract object-store service catalog
-      set_fact:
-        object_store: "{{ service_catalog | selectattr('type', 'equalto', 'object-store') | first }}"
-
-    - name: Determine the object-store service endpoint URL for the region
-      set_fact:
-        object_store_url: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region ) | first)['publicURL']}}"
-
-    - name: Extract object-cdn service catalog
-      set_fact:
-        object_cdn: "{{ service_catalog | selectattr('type', 'equalto', 'rax:object-cdn') | first }}"
-
-    - name: Determine the object-cdn service endpoint URL for the region
-      set_fact:
-        object_cdn_url: "{{ (object_cdn['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}/{{ container }}"
-
-    - name: Enable CDN for the Cloud Files container
-      uri:
-        url: "{{ object_cdn_url }}"
-        method: PUT
-        headers:
-          X-AUTH-TOKEN: "{{ auth_token }}"
-          X-Cdn-Enabled: True
-        # 201 (Created): The container was CDN-enabled as requested.
-        # 202 (Accepted): The container was already CDN-enabled.
-        # 204 (No Content): The container was CDN-enabled as requested, but has no content.
-        status_code: "201, 202, 204"
-      register: _enable_cdn
-      until: (_enable_cdn | success) and ('x_cdn_ssl_uri' in _enable_cdn)
-      retries: 10
-      delay: 30
-
-    - name: Set fact for the user-accessible CDN URL for the container
-      set_fact:
-        container_public_url: "{{ _enable_cdn['x_cdn_ssl_uri'] }}"
-
-    # In order for uploaded files to be browsable:
-    # 1. Static hosting must be enabled (this links index.html to requests for container/)
-    # 2. CDN must be enabled (to allow anonymous http access to the container)
-    # 3. An index page must be generated and/or web listings enabled.
-    - name: Enable static web hosting
-      uri:
-        url: "{{ object_store_url }}/{{ container }}"
-        method: POST
-        headers:
-          X-AUTH-TOKEN: "{{ auth_token }}"
-          X-Container-Meta-Web-Index: index.html
-          X-Container-Meta-Web-Listings: True
-        # 204 (No Content): The container was enabled as requested.
-        status_code: 204
-      register: _enable_static_hosting
-      until: _enable_static_hosting | success
-      retries: 10
-      delay: 30
+    - include: cloudfiles_create_container.yml
 
     # Do this before generating index.html, styles.css and data.json
     # So they don't show up on the final page.
@@ -159,12 +118,12 @@
     # Checksum validation is also disabled to improve upload speed.
     - name: Upload Artifacts to Cloud Files
       command: >-
-        swift upload {{ container }} {{ adir | basename }}
+        swift upload {{ object_store_container_name }} {{ adir | basename }}
         --object-threads 100
         --ignore-checksum
-        --header 'X-Delete-After:{{ retention }}'
+        --header 'X-Delete-After:{{ artifacts_expire_after }}'
       args:
-        chdir: "{{ adir |dirname }}"
+        chdir: "{{ adir | dirname }}"
       environment:
         OS_AUTH_TOKEN: "{{ auth_token }}"
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
@@ -214,8 +173,8 @@
     # (which make this much faster), so we use the swift client instead.
     - name: Upload index data (data.json) to Cloud Files
       command: >-
-        swift upload {{ container }} {{ adir | basename }}/data.json
-        --header 'X-Delete-After: {{ retention }}'
+        swift upload {{ object_store_container_name }} {{ adir | basename }}/data.json
+        --header 'X-Delete-After: {{ artifacts_expire_after }}'
       args:
         chdir: "{{ adir | dirname }}"
       environment:
@@ -239,8 +198,8 @@
     # (which make this much faster), so we use the swift client instead.
     - name: Upload archive to Cloud Files
       command: >-
-        swift upload {{ container }} {{ archive_base_name }}.tar.gz
-        --header 'X-Delete-After: {{ retention }}'
+        swift upload {{ object_store_container_name }} {{ archive_base_name }}.tar.gz
+        --header 'X-Delete-After: {{ artifacts_expire_after }}'
       args:
         chdir: "{{ adir | dirname }}"
       environment:
@@ -255,4 +214,4 @@
     # build description.
     - name: "Write public url file"
       shell: |
-        echo "{{ container_public_url }}/{{archive_base_name}}/index.html" > ${WORKSPACE}/artifact_public_url
+        echo "{{ container_public_url }}/{{ archive_base_name }}/index.html" > ${WORKSPACE}/artifact_public_url
