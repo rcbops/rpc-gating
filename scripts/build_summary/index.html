@@ -73,16 +73,16 @@
   Array.prototype.countBy = function(prop){
     var count = Object.entries(this.groupBy(prop))
       .map(t => [t[1].length, t[0], t[1]])
-      .sort((a,b) => a[0] < b[0] ? 1 : -1)
+      .sort((a, b) => a[0] < b[0] ? 1 : -1)
     if (count.length == 0){
-      return [0,"",[]]
+      return [0, "", []]
     }
     return count
   }
 
   // Recursively flatten a list
   Array.prototype.flatten = function(){
-    return this.reduce((a,c) => {
+    return this.reduce((a, c) => {
       if (Array.isArray(c)){
         c = c.flatten()
         return [...a, ...c]
@@ -144,6 +144,7 @@
             b.failures = b.failures.map(id => this.failures_raw[id])
             // convert build ids in failure objects to build objects
             b.failures.forEach(f => f.build = this.$root.builds_raw[f.build])
+            b.timestamp = new Date(b.timestamp)
           })
           // this method actually mutates the builds_raw dict,
           // but making use of the 'builds' computed var will cause
@@ -163,13 +164,30 @@
           var r = Object.values(this.builds).countBy("repo")
           return r
         },
+        histogram_end: function(){
+          // Defines the most recent end of date based histogram.
+          // Buckets will be measured in units of 24 hours preceeding this point.
+
+          // Previously histogram end was always the current time, but this meant
+          // histogram buckets were the previous 24 hours before now, which didn't line
+          // up with the date labels on the graphs. It also meant that the values for
+          // each date varied during the day as a build could age enough to move up to
+          // the next bucket. This was exacerbated by a rounding error that caused
+          // builds for one day to be evenly split over two buckets
+          // (the correct day and the next day)
+          // Now histogram end is aligned with a day boundary so that the 24 hour
+          // buckets are aligned with calendar days.
+          end = new Date() // now
+          end.setHours(0, 0, 0, 0) //start of today
+          end.setDate(end.getDate() + 1) //start of tomorrow
+          return end
+        },
         labels: function(){
-          now = new Date()
           return [...Array(this.retention_days).keys()].map(
             (i) => {
-              var daysAgo = this.retention_days-i
+              var daysAgo = this.retention_days - i
               var dayInMillis = 86400000
-              return new Date(now-dayInMillis * daysAgo).toLocaleDateString()
+              return new Date(this.histogram_end - dayInMillis * daysAgo).toLocaleDateString()
             }
           )
         }
@@ -177,21 +195,24 @@
       methods: {
         histogram: function(builds, length, inc) {
           histogram = new Array(length).fill(0);
-          now = new Date()
-          vueobj = this
+          histogram_end = this.histogram_end
+          // oldest bucket
+          histogram_start = new Date(histogram_end)
+          histogram_start.setDate(histogram_start.getDate() - length)
           builds.forEach(function(build) {
-            build_age = new Date(build.timestamp)
-            age_millis = (now - build_age)
-            age_days = Math.round(age_millis * 1.0 / (1000 * 60 * 60 * 24))
-            if (age_days < length) {
-              histogram[length - age_days - 1] += inc
+            age_millis = (histogram_end - build.timestamp)
+            // note previously math.round was used here which caused results for a day
+            // to be spread over it and the next day.
+            age_days = Math.ceil(age_millis * 1.0 / (1000 * 60 * 60 * 24))
+            if (build.timestamp > histogram_start) {
+              histogram[length - age_days] += inc
             }
           })
           return histogram
         },
         dateSortedBuilds: function(builds) {
           var sorted = builds.sort(function(a, b) {
-            return new Date(a.timestamp) - new Date(b.timestamp)
+            return a.timestamp - b.timestamp
           })
           return sorted;
         },
@@ -200,10 +221,9 @@
           return {oldest: dsb[0],
                   newest: dsb.slice(-1)[0]}
         },
-        dfmt: function(date_string) {
-          d = new Date(date_string)
+        dfmt: function(date) {
           //return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
-          return d.toISOString()
+          return date.toISOString()
         },
         colours: function(numRequired){
           // Generate colours for chart series in hsla() format
@@ -215,12 +235,12 @@
           // hue 0-359, green (used for success is 120)
           var greenHue = 120
           var maxHue = 359
-          var arc = (maxHue+1.0)/(numRequired+0.0)
+          var arc = (maxHue + 1.0)/(numRequired + 0.0)
           // push green in first
           colours.push('hsla('+greenHue+', 80%, 60%, 0.39)')
           // then add as many other colours as required.
-          for(i=1; i<=numRequired-1; i++){
-            var hue = ((greenHue + (i*arc)) % maxHue).toFixed(0)
+          for(i = 1; i <= numRequired - 1; i++){
+            var hue = ((greenHue + (i * arc)) % maxHue).toFixed(0)
             colours.push('hsla('+hue+', 80%, 60%, 0.39)')
           }
           return colours
@@ -231,9 +251,9 @@
           // based on an in put percent (Value between 0 and 1)
           var lumMax = 100
           var lumMin = 62
-          var lumRange = lumMax-lumMin
+          var lumRange = lumMax - lumMin
           var lum = lumMax - (percent * lumRange)
-          var c = 'hsl(5, 100%, '+lum+'%)'
+          var c = 'hsl(5, 100%, ' + lum + '%)'
           return c
         },
         failuresByCategory: function(builds){

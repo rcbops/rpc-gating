@@ -45,8 +45,6 @@ class Failure(ABC):
         cls.scan_logs(build)
         if (build.junit is not None):
             cls.scan_junit(build)
-        if not build.failures:
-            build.failures.append(UnknownFailure(build).id)
 
     @classmethod
     def scan_junit(cls, build):
@@ -447,11 +445,3 @@ class ArtifactArchiveFailure(Failure):
                     self.matches = True
                     self.detail = str.strip()
                     break
-
-
-class UnknownFailure(Failure):
-    description = "No known failures matched"
-    category = "C7 Uncategorised"
-
-    def scan(self):
-        return False
