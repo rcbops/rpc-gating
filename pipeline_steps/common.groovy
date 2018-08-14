@@ -1788,7 +1788,7 @@ void createComponentPreReleaseJobs(String name, String repoUrl, List releases, S
         [
           "ISSUE_SUMMARY=Add component skeleton to ${name}",
           "ISSUE_DESCRIPTION=This issue was generated automatically as part of registering a new component.",
-          "LABELS=component-skeleton",
+          "LABELS=component-skeleton jenkins",
           "JIRA_PROJECT_KEY=${jiraProjectKey}",
           "TARGET_BRANCH=master",
           "COMMIT_TITLE=Add pre-release testing jobs to ${name}",
