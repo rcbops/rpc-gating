@@ -32,7 +32,7 @@ influxdb==4.1.1
 ipaddress==1.0.18
 iso8601==0.1.11
 jenkinsapi==0.3.3
-jenkins-job-builder==2.0.0.0b2
+jenkins-job-builder==2.2.1
 Jinja2==2.9.6
 jira==1.0.10
 jmespath==0.9.3
@@ -76,7 +76,7 @@ pyparsing==2.2.0
 pyperclip==1.6.1
 python-dateutil==2.6.0
 python-ironicclient==2.3.0
-python-jenkins==0.4.14
+python-jenkins==0.4.15
 python-keystoneclient==3.10.0
 python-mimeparse==1.6.0
 python-novaclient==2.27.0
