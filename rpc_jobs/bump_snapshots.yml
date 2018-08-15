@@ -120,7 +120,7 @@
             [
               "ISSUE_SUMMARY=Bump snapshot versions",
               "ISSUE_DESCRIPTION=This change was triggered by the jenkins job Bump-Snapshot-Images.",
-              "LABELS=snapshot-bump",
+              "LABELS=snapshot-bump jenkins",
               "JIRA_PROJECT_KEY=RE",
               "TARGET_BRANCH=master",
               "COMMIT_TITLE=Bump snapshot versions",

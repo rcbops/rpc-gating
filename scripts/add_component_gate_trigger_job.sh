@@ -24,6 +24,7 @@ EOF
           --description "${issue_message}" \
           --label COMPONENT_GATE_TRIGGER \
           --label "${COMPONENT_NAME}" \
+          --label jenkins
   )
   echo "Issue: ${issue}"
 
