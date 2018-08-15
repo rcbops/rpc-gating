@@ -1,6 +1,7 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 void download_venv(){
   sh """#!/bin/bash -xeu
@@ -1772,43 +1773,45 @@ void createComponentGateTrigger(String name, String repoUrl, String jiraProjectK
   }
 }
 
+WorkflowRun findExistingSuccessfulBuild(WorkflowJob job, String sha) {
+  job.getBuilds().find { build ->
+    (
+      build.isBuilding() == false
+      && build.getAction(ParametersAction).getParameter("_BUILD_SHA")
+      && build.getAction(ParametersAction).getParameter("_BUILD_SHA").getValue() == sha
+      && build.getResult() == Result.fromString("SUCCESS")
+    )
+  }
+}
+
 void testRelease(component_text){
   def component = readYaml text: component_text
   String name = component['name']
   String series = component['release']['series']
   String sha = component['release']['sha']
 
-  allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
-  jobs = (allWorkflowJobs.findAll {it.displayName =~ /RELEASE_${name}-${series}/})
+  List allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+  List releaseJobs = (allWorkflowJobs.findAll {it.displayName =~ /RELEASE_${name}-${series}/})
 
   def parallelBuilds = [:]
 
   // Cannot do for (job in jobNames), see:
   // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-  for (j in jobs) {
-    def job = j
-    existingSuccessfulBuild = job.getBuilds().find { build ->
-      buildCause = build.getCauses()[0]
-      generatedFromSamePullRequest = false
-      try{
-        upstreamBuild = buildCause.getUpstreamRun()
-        if (gate.getPullRequestID(upstreamBuild) == ghprbPullId){
-          generatedFromSamePullRequest = true
-        }
-      } catch (e){
-      }
-      (
-        generatedFromSamePullRequest
-        && upstreamBuild.getParent() == currentBuild.rawBuild.getParent()
-        && build.isBuilding() == false
-        && build.getAction(ParametersAction).getParameter("BRANCH").getValue() == sha
-        && build.getResult() == Result.fromString("SUCCESS")
-      )
-    }
+  for (j in releaseJobs) {
+    WorkflowJob releaseJob = j
+    WorkflowRun existingSuccessfulBuild = findExistingSuccessfulBuild(releaseJob, sha)
     if (! existingSuccessfulBuild) {
-      parallelBuilds[job.displayName] = {
+      String periodicJobName = releaseJob.displayName.replace("RELEASE", "PM")
+      WorkflowJob periodicJob = allWorkflowJobs.find {it.displayName == periodicJobName}
+      if (periodicJob) {
+        existingSuccessfulBuild = findExistingSuccessfulBuild(periodicJob, sha)
+      }
+    }
+
+    if (! existingSuccessfulBuild) {
+      parallelBuilds[releaseJob.displayName] = {
         build(
-          job: job.displayName,
+          job: releaseJob.displayName,
           wait: true,
           parameters: [
             [
