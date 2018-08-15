@@ -1444,6 +1444,13 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
                   "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
                 )
               }
+              dir("${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}"){
+                updateStringParam(
+                  "_BUILD_SHA",
+                  sh(script: "git rev-parse --verify HEAD", returnStdout: true).trim(),
+                  "The SHA tested by this build."
+                )
+              }
             }
 
             found_hook_dir = findHookDir(hook_dir)
@@ -1914,4 +1921,18 @@ List loadCSV(String str){
 
 String dumpCSV(List l){
   l.join(",")
+}
+
+/**
+ * Update string parameter.
+ *
+ * This procedure updates the value and description of an existing string
+ * parameter.
+ */
+void updateStringParam(String name, String value, String description){
+    println "Updating string parameter '${name}' to '${value}'."
+    List updatedParam = [new StringParameterValue(name, value, description)]
+    ParametersAction existingAction = currentBuild.rawBuild.getAction(ParametersAction)
+    ParametersAction newAction = existingAction.createUpdated(updatedParam)
+    currentBuild.rawBuild.addOrReplaceAction(newAction)
 }

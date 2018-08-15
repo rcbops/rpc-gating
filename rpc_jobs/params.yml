@@ -135,6 +135,13 @@
             build. This defaults to "BASE_IMAGE=ubuntu:16.04", which is
             specifically applicable to the "./Dockerfile.standard_job" in
             rpc-gating.
+      - string:
+          name: "_BUILD_SHA"
+          default: ""
+          description: >
+            This parameter is for tracking completed builds and is set
+            automatically. This variable should not be used by a project's
+            gating scripts and overriding the default value has no effect.
 
 - parameter:
     name: phobos_params
