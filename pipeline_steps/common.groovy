@@ -106,7 +106,7 @@ def venvPlaybook(Map args){
       sh """#!/bin/bash -x
         which scl && source /opt/rh/python27/enable
         set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
-        export ANSIBLE_HOST_KEY_CHECKING=False
+        export ANSIBLE_CONFIG=${env.WORKSPACE}/rpc-gating/playbooks/ansible.cfg
         ansible-playbook ${args.args.join(' ')} -e@${vars_file} ${playbook}
       """
     } //for
@@ -134,11 +134,8 @@ These vars should be set every time deploy.sh or test-upgrade is run
 List get_deploy_script_env(){
   String forks = calc_ansible_forks()
   return [
-    'ANSIBLE_FORCE_COLOR=true',
-    'ANSIBLE_HOST_KEY_CHECKING=False',
     'TERM=linux',
     "ANSIBLE_FORKS=${forks}",
-    'ANSIBLE_SSH_RETRIES=3',
   ]
 }
 
