@@ -139,28 +139,6 @@ List get_deploy_script_env(){
   ]
 }
 
-def openstack_ansible(Map args){
-  if (!('path' in args)){
-    args.path = "/opt/rpc-openstack/openstack-ansible/playbooks"
-  }
-  if (!('args' in args)){
-    args.args = ""
-  }
-  if (!('environment_vars' in args)){
-    args.environment_vars = []
-  }
-  def full_env = args.environment_vars + get_deploy_script_env()
-
-  dir(args.path) {
-    withEnv(full_env){
-      sh """#!/bin/bash
-      openstack-ansible ${args.playbook} ${args.args}
-      """
-    }
-  }
-}
-
-
 /*
  * JsonSluperClassic and JsonOutput are not serializable, so they
  * can only be used in @NonCPS methods. However readFile and writeFile
