@@ -1278,7 +1278,7 @@ void setTriggerVars(){
       env.RE_JOB_TRIGGER_DETAIL = root_cause.getShortDescription()
   } else if (root_cause instanceof org.jenkinsci.plugins.ghprb.GhprbCause){
       env.RE_JOB_TRIGGER="PULL"
-      env.RE_JOB_TRIGGER_DETAIL = "\"${root_cause.title}/${root_cause.pullID}\""
+      env.RE_JOB_TRIGGER_DETAIL = "${root_cause.title}/${root_cause.pullID}"
   } else {
       env.RE_JOB_TRIGGER="OTHER"
   }
