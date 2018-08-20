@@ -50,6 +50,54 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-openstack-rocky-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "rocky"
+    branches:
+      - "rocky.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/update_dependencies/
+    image:
+      - xenial_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
+    scenario:
+      - ironic:
+          TRIGGER_PR_PHRASE_ONLY: true
+      - "swift"
+    action:
+      - "deploy"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-rocky-tox-premerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    series: "rocky"
+    branches:
+      - "rocky.*"
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "ansible-syntax"
+      - "bashate"
+      - "pep8"
+      - "releasenotes"
+    action:
+      - "tox-test"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+
+- project:
     name: "rpc-openstack-queens-premerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
@@ -241,6 +289,60 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-openstack-rocky-aio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "rocky"
+    jira_project_key: "RO"
+    # We have an MNAIO equivalent of this PM job, but we need to keep
+    # this for the push triggering for snapshot building.
+    CRON: "@monthly"
+    image:
+      - xenial_no_artifacts:
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+    scenario:
+      - "swift"
+    action:
+      - deploy:
+          FLAVOR: "7"
+    # This is the build that will be triggered by the push trigger job
+    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+
+- project:
+    name: "rpc-openstack-rocky-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "rocky"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts:
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
+    scenario:
+      - ironic
+      - swift
+    action:
+      - system
+      - sdqc
+      - deploy
+    exclude:
+      - action: system
+        scenario: ironic
+      - action: sdqc
+        scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
 
 - project:
     name: "rpc-openstack-queens-aio-postmerge"
@@ -588,6 +690,25 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
+    name: 'rpc-openstack-rocky-mnaio-release'
+    repo_name: 'rpc-openstack'
+    repo_url: 'https://github.com/rcbops/rpc-openstack'
+    branch: "rocky"
+    jira_project_key: "RO"
+    image:
+      - xenial_mnaio_no_artifacts:
+          FLAVOR: "onmetal-io2"
+          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+          REGIONS: "IAD"
+          FALLBACK_REGIONS: "DFW"
+    scenario:
+      - swift
+    action:
+      - deploy
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
     name: 'rpc-openstack-queens-mnaio-release'
     repo_name: 'rpc-openstack'
     repo_url: 'https://github.com/rcbops/rpc-openstack'
@@ -652,6 +773,7 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch:
       - "master"
+      - "rocky"
       - "queens"
       - "pike"
       - "newton"
