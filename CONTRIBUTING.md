@@ -49,7 +49,8 @@ In your commit message please consider the following points:
 
 ### Pull requests
 
-* A pull request (PR) should contain a single commit, or multiple commits all related to the problem being solved by the PR.
+* Pull Requests (PRs) should be made from a branch on your own fork of the repo, and you should ['Allow edits from maintainers'](https://git.io/fNGr9) so that others can commit/edit the PR if you are unavailable.
+* A PR should contain a single commit, or multiple commits all related to the problem being solved by the PR.
 * The PR title and message should contain information relevant to why the commit(s) are happening. This can be based off the commit message.
 * The PR description should reference the original issue.
 
