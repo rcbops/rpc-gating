@@ -1669,8 +1669,8 @@ List getComponentChange(String baseBranch, String prBranch){
 
 void registerComponent(String component_text, String jiraProjectKey){
   def component = readYaml text: component_text
-  createComponentGateTrigger(component["name"], component["repo_url"], jiraProjectKey)
   createComponentSkeleton(component["name"], component["repo_url"], jiraProjectKey)
+  createComponentJobs(component["name"], component["repo_url"], component["releases"], jiraProjectKey)
 }
 
 void createComponentSkeleton(String name, String repoUrl, String jiraProjectKey){
@@ -1712,40 +1712,117 @@ void createComponentSkeleton(String name, String repoUrl, String jiraProjectKey)
   }
 }
 
-void createComponentGateTrigger(String name, String repoUrl, String jiraProjectKey){
-  repo_dir = "${WORKSPACE}/rpc-gating"
-  filename = "${name}.yml".replace("-", "_")
-  projectsFile = "${repo_dir}/rpc_jobs/${filename}"
-  withEnv(
-    [
-      "PROJECTS_FILE=${projectsFile}",
-      "REPO_DIR=${repo_dir}",
-      "COMPONENT_NAME=${name}",
-      "COMPONENT_REPO_URL=${repoUrl}",
-      "JIRA_PROJECT_KEY=${jiraProjectKey}",
-    ]
-  ){
-    withCredentials(
+void createComponentJobs(String name, String repoUrl, List releases, String jiraProjectKey){
+  String repoDir = "${WORKSPACE}/rpc-gating-master"
+  String filename = "${name}.yml".replace("-", "_")
+  String projectsFile = "${repoDir}/rpc_jobs/${filename}"
+
+  dir(repoDir) {
+    // NOTE(mattt): while likely to be unnecessary, we just re-clone rpc-gating
+    // here to ensure we're not committing anything sensitive that may have
+    // been created in ${WORKSPACE}/rpc-gating.
+    git branch: 'master', url: 'https://github.com/rcbops/rpc-gating'
+
+    createComponentGateTrigger(name, repoUrl, projectsFile)
+    createComponentPreRelease(name, repoUrl, releases, projectsFile)
+
+    withEnv(
       [
-        string(
-          credentialsId: 'rpc-jenkins-svc-github-pat',
-          variable: 'PAT'
-        ),
-        usernamePassword(
-          credentialsId: "jira_user_pass",
-          usernameVariable: "JIRA_USER",
-          passwordVariable: "JIRA_PASS"
-        ),
+        "ISSUE_SUMMARY=Add component skeleton to ${name}",
+        "ISSUE_DESCRIPTION=This issue was generated automatically as part of registering a new component.",
+        "LABELS=component-skeleton jenkins",
+        "JIRA_PROJECT_KEY=${jiraProjectKey}",
+        "TARGET_BRANCH=master",
+        "COMMIT_TITLE=Add default jobs to ${name}",
+        "COMMIT_MESSAGE=This project is being added to the RE platform. This change adds some\ndefault jobs required by all projects.",
       ]
     ){
-      sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
-        sh """#!/bin/bash -xe
-          set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
-          ${WORKSPACE}/rpc-gating/scripts/add_component_gate_trigger_job.sh
-        """
-      }
-    }
-  }
+      withCredentials(
+        [
+          string(
+            credentialsId: 'rpc-jenkins-svc-github-pat',
+            variable: 'PAT'
+          ),
+          usernamePassword(
+            credentialsId: "jira_user_pass",
+            usernameVariable: "JIRA_USER",
+            passwordVariable: "JIRA_PASS"
+          ),
+        ]
+      ){
+        sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+          sh """#!/bin/bash -xe
+            set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+            git status
+            git diff
+            ${WORKSPACE}/rpc-gating/scripts/commit_and_pull_request.sh
+          """
+        } // sshagent
+      } // withCredentials
+    } // withEnv
+  } // dir
+}
+
+void createComponentGateTrigger(String name, String repoUrl, String projectsFile){
+  String jjb = """
+- project:
+    name: "${name}-gate-trigger"
+    repo_name: "${name}"
+    repo_url: "${repoUrl}"
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'"""
+
+  Boolean jobNotExists = sh(
+    returnStatus: true,
+    script: """#!/bin/bash -xe
+      grep -s 'Component-Gate-Trigger_{repo_name}' ${projectsFile}
+    """
+  ).asBoolean()
+
+  if (jobNotExists) {
+    sh """#!/bin/bash -xe
+      echo "${jjb}" >> ${projectsFile}
+    """
+  } // if
+}
+
+void createComponentPreRelease(String name, String repoUrl, List releases, String projectsFile){
+  String jjb
+
+  Boolean jobNotExists = sh(
+    returnStatus: true,
+    script: """#!/bin/bash -xe
+      grep -s 'RE-Release-PR_{repo}-{BRANCH}' ${projectsFile}
+    """
+  ).asBoolean()
+
+  if (jobNotExists) {
+    if (!releases){
+      // NOTE(mattt): If no releases have been specified, then we just
+      // add a job for the project's master branch.
+      releases = [["series": "master"]]
+    } // if
+
+    jjb = """
+- project:
+    name: "${name}-re-release-pr"
+    repo:
+"""
+
+    for ( release in releases ) {
+      jjb += """      - ${name}:
+          URL: "${repoUrl}"
+          BRANCH: "${release['series']}"
+"""
+    } //for
+
+    jjb += """    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'"""
+
+    sh """#!/bin/bash -xe
+      echo "${jjb}" >> ${projectsFile}
+    """
+  } // if
 }
 
 WorkflowRun findExistingSuccessfulBuild(WorkflowJob job, String sha) {

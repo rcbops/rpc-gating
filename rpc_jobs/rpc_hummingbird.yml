@@ -117,3 +117,12 @@
           READ_ONLY_TEST: false
     jobs:
       - '{trigger}-Dep-Update_{repo_name}-{branch}'
+
+- project:
+    name: "rpc-hummingbird-re-release-pr"
+    repo:
+      - rpc-hummingbird:
+          URL: "https://github.com/rcbops/rpc-hummingbird"
+          BRANCH: "master"
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'

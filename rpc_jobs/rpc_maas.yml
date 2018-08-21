@@ -217,3 +217,12 @@
 
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: "rpc-maas-re-release-pr"
+    repo:
+      - rpc-maas:
+          URL: "https://github.com/rcbops/rpc-maas"
+          BRANCH: "master"
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'

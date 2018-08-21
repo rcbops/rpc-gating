@@ -264,3 +264,12 @@
 
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: "rpc-upgrades-re-release-pr"
+    repo:
+      - rpc-upgrades:
+          URL: "https://github.com/rcbops/rpc-upgrades"
+          BRANCH: "master"
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
