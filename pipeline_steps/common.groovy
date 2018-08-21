@@ -1,7 +1,6 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 void download_venv(){
   sh """#!/bin/bash -xeu
@@ -1445,13 +1444,6 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
                   "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
                 )
               }
-              dir("${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}"){
-                updateStringParam(
-                  "_BUILD_SHA",
-                  sh(script: "git rev-parse --verify HEAD", returnStdout: true).trim(),
-                  "The SHA tested by this build."
-                )
-              }
             }
 
             found_hook_dir = findHookDir(hook_dir)
@@ -1825,45 +1817,43 @@ void createComponentPreRelease(String name, String repoUrl, List releases, Strin
   } // if
 }
 
-WorkflowRun findExistingSuccessfulBuild(WorkflowJob job, String sha) {
-  job.getBuilds().find { build ->
-    (
-      build.isBuilding() == false
-      && build.getAction(ParametersAction).getParameter("_BUILD_SHA")
-      && build.getAction(ParametersAction).getParameter("_BUILD_SHA").getValue() == sha
-      && build.getResult() == Result.fromString("SUCCESS")
-    )
-  }
-}
-
 void testRelease(component_text){
   def component = readYaml text: component_text
   String name = component['name']
   String series = component['release']['series']
   String sha = component['release']['sha']
 
-  List allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
-  List releaseJobs = (allWorkflowJobs.findAll {it.displayName =~ /RELEASE_${name}-${series}/})
+  allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+  jobs = (allWorkflowJobs.findAll {it.displayName =~ /RELEASE_${name}-${series}/})
 
   def parallelBuilds = [:]
 
   // Cannot do for (job in jobNames), see:
   // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-  for (j in releaseJobs) {
-    WorkflowJob releaseJob = j
-    WorkflowRun existingSuccessfulBuild = findExistingSuccessfulBuild(releaseJob, sha)
-    if (! existingSuccessfulBuild) {
-      String periodicJobName = releaseJob.displayName.replace("RELEASE", "PM")
-      WorkflowJob periodicJob = allWorkflowJobs.find {it.displayName == periodicJobName}
-      if (periodicJob) {
-        existingSuccessfulBuild = findExistingSuccessfulBuild(periodicJob, sha)
+  for (j in jobs) {
+    def job = j
+    existingSuccessfulBuild = job.getBuilds().find { build ->
+      buildCause = build.getCauses()[0]
+      generatedFromSamePullRequest = false
+      try{
+        upstreamBuild = buildCause.getUpstreamRun()
+        if (gate.getPullRequestID(upstreamBuild) == ghprbPullId){
+          generatedFromSamePullRequest = true
+        }
+      } catch (e){
       }
+      (
+        generatedFromSamePullRequest
+        && upstreamBuild.getParent() == currentBuild.rawBuild.getParent()
+        && build.isBuilding() == false
+        && build.getAction(ParametersAction).getParameter("BRANCH").getValue() == sha
+        && build.getResult() == Result.fromString("SUCCESS")
+      )
     }
-
     if (! existingSuccessfulBuild) {
-      parallelBuilds[releaseJob.displayName] = {
+      parallelBuilds[job.displayName] = {
         build(
-          job: releaseJob.displayName,
+          job: job.displayName,
           wait: true,
           parameters: [
             [
@@ -1924,18 +1914,4 @@ List loadCSV(String str){
 
 String dumpCSV(List l){
   l.join(",")
-}
-
-/**
- * Update string parameter.
- *
- * This procedure updates the value and description of an existing string
- * parameter.
- */
-void updateStringParam(String name, String value, String description){
-    println "Updating string parameter '${name}' to '${value}'."
-    List updatedParam = [new StringParameterValue(name, value, description)]
-    ParametersAction existingAction = currentBuild.rawBuild.getAction(ParametersAction)
-    ParametersAction newAction = existingAction.createUpdated(updatedParam)
-    currentBuild.rawBuild.addOrReplaceAction(newAction)
 }
