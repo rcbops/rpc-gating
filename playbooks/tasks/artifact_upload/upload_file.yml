@@ -44,10 +44,13 @@
 
     - include: cloudfiles_create_container.yml
 
-    - name: Create the destination path and move the source file(s) into it
+    # If the artifact source path is a mount point, then we cannot
+    # move it, so rather than doing that we create a symlink. The
+    # swift client will follow the symlink and upload it as a file.
+    - name: Create the destination path and create a symlink in it to the artifact
       shell: |
-        mkdir -p {{ artifact['dest'] }}
-        mv {{ artifact['source'] | basename }} {{ artifact['dest'] }}/
+        mkdir -p {{ artifact['dest'] | dirname }}
+        ln -s {{ artifact['source'] }} {{ artifact['dest'] }}
       args:
         warn: no
         executable: /bin/bash
