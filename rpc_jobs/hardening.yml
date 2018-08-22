@@ -11,6 +11,7 @@
       - "swift"
     action:
       - "deploy_master"
+      - "deploy_rocky"
       - "deploy_queens"
       - "deploy_pike"
       - "deploy_newton"
