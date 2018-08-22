@@ -269,10 +269,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - ironic
       - swift
@@ -322,10 +319,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - ironic
       - swift
@@ -398,10 +392,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - ironic
       - swift
@@ -420,33 +411,30 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-     name: "rpc-openstack-queens-rc-mnaio-postmerge"
-     repo_name: "rpc-openstack"
-     repo_url: "https://github.com/rcbops/rpc-openstack"
-     branch: "queens-rc"
-     jira_project_key: "RO"
-     image:
+    name: "rpc-openstack-queens-rc-mnaio-postmerge"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch: "queens-rc"
+    jira_project_key: "RO"
+    image:
        - xenial_mnaio_no_artifacts:
-           FLAVOR: "onmetal-io2"
-           IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-           REGIONS: "IAD"
-           FALLBACK_REGIONS: "DFW"
-     scenario:
-       - ironic
-       - swift
-     action:
-       - system
-       - sdqc
-       - deploy
-     exclude:
-       - action: system
-         scenario: ironic
-       - action: sdqc
-         scenario: ironic
-     # Required by RPC-ASC team to upload test results qTest
-     credentials: "rpc_asc_creds"
-     jobs:
-       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+    scenario:
+      - ironic
+      - swift
+    action:
+      - system
+      - sdqc
+      - deploy
+    exclude:
+      - action: system
+        scenario: ironic
+      - action: sdqc
+        scenario: ironic
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
     name: "rpc-openstack-pike-aio-postmerge"
@@ -479,10 +467,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - ironic
       - swift
@@ -528,10 +513,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - ironic
       - swift
@@ -603,10 +585,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - swift
     action:
@@ -675,10 +654,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - swift
     action:
@@ -697,10 +673,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - swift
     action:
@@ -716,10 +689,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - swift
     action:
@@ -735,10 +705,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - swift
     action:
@@ -754,10 +721,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - swift
     action:
@@ -807,10 +771,7 @@
     jira_project_key: ""
     image:
       - staging_asc_xenial_mnaio_no_artifacts:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - swift
     action:
