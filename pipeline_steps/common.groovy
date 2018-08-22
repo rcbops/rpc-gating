@@ -1,6 +1,7 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 void download_venv(){
   sh """#!/bin/bash -xeu
@@ -467,7 +468,7 @@ def prepareRpcGit(String branch = "auto", String dest = "/opt"){
 // compatibility with the jenkins git scm step.
 // Note: Creds are not supplied for https connections
 // If you need autheniticated access, use ssh:// or git@
-void clone_with_pr_refs(
+String clone_with_pr_refs(
   String directory='./',
   String repo="git@github.com:${env.ghprbGhRepository}",
   String ref="origin/pr/${env.ghprbPullId}/merge",
@@ -485,15 +486,17 @@ void clone_with_pr_refs(
       "ref not supplied to common.clone_with_pr_refs or env.ghprbPullID not "\
       + "set, attempting to checkout PR for a periodic build?")
   }
+  String sha
   if (is_internal_repo_id(repo)) {
-    clone_internal_repo(directory, repo, ref, refspec)
+    sha = clone_internal_repo(directory, repo, ref, refspec)
   } else {
-    clone_external_repo(directory, repo, ref, refspec)
+    sha = clone_external_repo(directory, repo, ref, refspec)
   }
+  return sha
 }
 
 
-void clone_repo(String directory, String ssh_key, String repo, String ref, String refspec) {
+String clone_repo(String directory, String ssh_key, String repo, String ref, String refspec) {
   print "Cloning Repo: ${repo}@${ref}"
   sshagent (credentials:[ssh_key]){
     sh """#!/bin/bash -xe
@@ -511,6 +514,8 @@ void clone_repo(String directory, String ssh_key, String repo, String ref, Strin
       git submodule update --init
     """
   }
+  String sha = sh(script: "cd ${directory}; git rev-parse --verify HEAD", returnStdout: true).trim()
+  return sha
 }
 
 
@@ -519,7 +524,7 @@ Boolean is_internal_repo_id(String repo_url) {
 }
 
 
-void clone_internal_repo(String directory, String internal_repo, String ref, String refspec) {
+String clone_internal_repo(String directory, String internal_repo, String ref, String refspec) {
   repo_secret_id = internal_repo.split(":", 2)[1]
   repo_creds = [
     string(
@@ -528,9 +533,10 @@ void clone_internal_repo(String directory, String internal_repo, String ref, Str
     ),
   ]
 
+  String sha
   internal_slave() {
     withCredentials(repo_creds) {
-      clone_repo(directory, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
+      sha = clone_repo(directory, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
     }
 
     if (directory.endsWith("/")) {
@@ -542,10 +548,11 @@ void clone_internal_repo(String directory, String internal_repo, String ref, Str
     stash includes: directory_pattern, name: "repo-clone"
   }
   unstash "repo-clone"
+  return sha
 }
 
 
-void clone_external_repo(String directory, String repo, String ref, String refspec) {
+String clone_external_repo(String directory, String repo, String ref, String refspec) {
     clone_repo(directory, "rpc-jenkins-svc-github-ssh-key", repo, ref, refspec)
 }
 
@@ -1428,8 +1435,9 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
           withRequestedCredentials(credentials) {
 
             stage('Checkout') {
+              String commit
               if (env.ghprbPullId == null) {
-                clone_with_pr_refs(
+                commit = clone_with_pr_refs(
                   "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
                   env.REPO_URL,
                   env.BRANCH,
@@ -1440,10 +1448,15 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
                 }
               } else {
                 print("Triggered by PR: ${env.ghprbPullLink}")
-                clone_with_pr_refs(
+                commit = clone_with_pr_refs(
                   "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
                 )
               }
+              updateStringParam(
+                "_BUILD_SHA",
+                commit,
+                "The SHA tested by this build."
+              )
             }
 
             found_hook_dir = findHookDir(hook_dir)
@@ -1817,43 +1830,45 @@ void createComponentPreRelease(String name, String repoUrl, List releases, Strin
   } // if
 }
 
+WorkflowRun findExistingSuccessfulBuild(WorkflowJob job, String sha) {
+  job.getBuilds().find { build ->
+    (
+      build.isBuilding() == false
+      && build.getAction(ParametersAction).getParameter("_BUILD_SHA")
+      && build.getAction(ParametersAction).getParameter("_BUILD_SHA").getValue() == sha
+      && build.getResult() == Result.fromString("SUCCESS")
+    )
+  }
+}
+
 void testRelease(component_text){
   def component = readYaml text: component_text
   String name = component['name']
   String series = component['release']['series']
   String sha = component['release']['sha']
 
-  allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
-  jobs = (allWorkflowJobs.findAll {it.displayName =~ /RELEASE_${name}-${series}/})
+  List allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+  List releaseJobs = (allWorkflowJobs.findAll {it.displayName =~ /RELEASE_${name}-${series}/})
 
   def parallelBuilds = [:]
 
   // Cannot do for (job in jobNames), see:
   // https://jenkins.io/doc/pipeline/examples/#parallel-multiple-nodes
-  for (j in jobs) {
-    def job = j
-    existingSuccessfulBuild = job.getBuilds().find { build ->
-      buildCause = build.getCauses()[0]
-      generatedFromSamePullRequest = false
-      try{
-        upstreamBuild = buildCause.getUpstreamRun()
-        if (gate.getPullRequestID(upstreamBuild) == ghprbPullId){
-          generatedFromSamePullRequest = true
-        }
-      } catch (e){
-      }
-      (
-        generatedFromSamePullRequest
-        && upstreamBuild.getParent() == currentBuild.rawBuild.getParent()
-        && build.isBuilding() == false
-        && build.getAction(ParametersAction).getParameter("BRANCH").getValue() == sha
-        && build.getResult() == Result.fromString("SUCCESS")
-      )
-    }
+  for (j in releaseJobs) {
+    WorkflowJob releaseJob = j
+    WorkflowRun existingSuccessfulBuild = findExistingSuccessfulBuild(releaseJob, sha)
     if (! existingSuccessfulBuild) {
-      parallelBuilds[job.displayName] = {
+      String periodicJobName = releaseJob.displayName.replace("RELEASE", "PM")
+      WorkflowJob periodicJob = allWorkflowJobs.find {it.displayName == periodicJobName}
+      if (periodicJob) {
+        existingSuccessfulBuild = findExistingSuccessfulBuild(periodicJob, sha)
+      }
+    }
+
+    if (! existingSuccessfulBuild) {
+      parallelBuilds[releaseJob.displayName] = {
         build(
-          job: job.displayName,
+          job: releaseJob.displayName,
           wait: true,
           parameters: [
             [
@@ -1914,4 +1929,18 @@ List loadCSV(String str){
 
 String dumpCSV(List l){
   l.join(",")
+}
+
+/**
+ * Update string parameter.
+ *
+ * This procedure updates the value and description of an existing string
+ * parameter.
+ */
+void updateStringParam(String name, String value, String description){
+    println "Updating string parameter '${name}' to '${value}'."
+    List updatedParam = [new StringParameterValue(name, value, description)]
+    ParametersAction existingAction = currentBuild.rawBuild.getAction(ParametersAction)
+    ParametersAction newAction = existingAction.createUpdated(updatedParam)
+    currentBuild.rawBuild.addOrReplaceAction(newAction)
 }
