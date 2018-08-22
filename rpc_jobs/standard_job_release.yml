@@ -226,3 +226,22 @@
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
       common.stdJob("release", "{credentials}", "{jira_project_key}", "{wrappers}")
+
+- project:
+    name: "releases-pr-commenter"
+    repo_name: "releases"
+    repo_url: "https://github.com/rcbops/releases"
+    branches:
+      - "master"
+    jira_project_key: "RE"
+    comment_body: |
+      Thank you for submitting a pull request to `{repo_name}`!
+
+      Once all `check` jobs have passed and the pull request has received a
+      sufficient amount of reviews, the repository's `release` jobs can be triggered by
+      adding a comment of `run_component_release` to this pull request.
+
+      When the `release` jobs have completed successfully and the release itself has been
+      completed, this pull request will get merged automatically.
+    jobs:
+      - 'Component-PR-Commenter_{repo_name}-{series}'

@@ -73,6 +73,7 @@
           white-list-target-branches: "{branches}"
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'CIT/{image}_{scenario}_{action}'
+          failure-status: 'To recheck, add comment with "recheck_{image}_{scenario}_{action}"'
           cancel-builds-on-update: true
 
     dsl: |
@@ -85,3 +86,42 @@
       if (! common.isSkippable(skip_pattern, "{credentials}")) {{
         common.stdJob("check", "{credentials}", "", "{wrappers}")
       }}
+
+- job-template:
+    name: 'Component-PR-Commenter_{repo_name}-{series}'
+    series: "master"
+    comment_body: |
+      Thank you for submitting a pull request to `{repo_name}`!
+
+      Once all `check` jobs have passed and the pull request has received a
+      sufficient amount of reviews, the repository's `gate` jobs can be triggered by
+      adding a comment of `check_component_gate` to this pull request.
+
+      When the `gate` jobs have completed successfully, this pull request will get
+      merged automatically.
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: "30"
+      - github:
+          url: "{repo_url}"
+    parameters:
+      - rpc_gating_params
+      - text:
+          name: COMMENT_BODY
+          default: "{comment_body}"
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          white-list-target-branches: "{branches}"
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/commenter'
+          cancel-builds-on-update: false
+    dsl: |
+      library "rpc-gating-master"
+      common.globalWraps(){{
+        github.add_comment_to_pr(env.COMMENT_BODY)
+      }} // globalWraps

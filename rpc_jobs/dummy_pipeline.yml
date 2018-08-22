@@ -331,3 +331,13 @@
 
     jobs:
       - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-product-1-pr-commenter"
+    repo_name: "rpc-product-1"
+    repo_url: "https://github.com/mattt416/rpc-product-1"
+    branches:
+      - "master"
+    jira_project_key: "RE"
+    jobs:
+      - 'Component-PR-Commenter_{repo_name}-{series}'
