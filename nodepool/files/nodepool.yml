@@ -23,7 +23,7 @@ labels:
     min-ready: 0
     max-ready-age: 3600
   - name: ubuntu-xenial-om-io2
-    min-ready: 0
+    min-ready: 2
     max-ready-age: 3600
   - name: rpco-14.2-xenial-base
     min-ready: 1
