@@ -164,10 +164,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - "swift"
     action:
@@ -189,10 +186,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - "swift"
     action:
@@ -243,10 +237,7 @@
     repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       - xenial_mnaio:
-          FLAVOR: "onmetal-io2"
-          IMAGE: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
-          REGIONS: "IAD"
-          FALLBACK_REGIONS: "DFW"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - "swift"
     action:
