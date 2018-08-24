@@ -65,12 +65,16 @@
 
     # The ansible os_object module does not currently support setting
     # the object expiration header field, nor does it do threaded uploads
-    # (which make this much faster), so we use the swift client instead.
+    # (which make this much faster), nor does it support setting a segment
+    # size (for large files), so we use the swift client instead. We use
+    # a segment size of 1GB to ensure that large files are segmented to
+    # less than the 5GB limit implemented by Cloud Files.
     - name: Upload Artifacts to Cloud Files
       command: >-
         swift upload {{ object_store_container_name }} {{ artifact_basename }}
         --object-threads 100
         --skip-identical
+        --segment-size 1073741824
         {{ artifact.expire_after is defined | ternary("--header 'X-Delete-After:" ~ artifact.get('expire_after') ~ "'", "") }}
       args:
         chdir: "{{ artifact['source'] | dirname }}"
