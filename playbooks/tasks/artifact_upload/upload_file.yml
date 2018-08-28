@@ -46,18 +46,26 @@
 
     - name: Create the destination path and move the source file(s) into it
       shell: |
-        mkdir -p {{ artifact['dest'] }}
-        mv {{ artifact['source'] | basename }} {{ artifact['dest'] }}/
+        mkdir -p {{ artifact['dest'] | dirname }}
+        mv -v {{ artifact['source'] | basename }} {{ artifact['dest'] }}
       args:
         warn: no
         executable: /bin/bash
         chdir: "{{ artifact['source'] | dirname }}"
+      register: _move_source_files
+      when:
+        - "artifact['dest'] is defined"
+
+    - name: Show the output of the artifact move
+      debug:
+        var: _move_source_files.stdout
       when:
         - "artifact['dest'] is defined"
 
     - name: Set the name of the file/folder to upload
       set_fact:
-        artifact_basename: "{{ (artifact['dest'] is defined) | ternary(artifact.get('dest').split('/')[0], artifact['source'] | basename) }}"
+        artifact_basename: >-
+          {{ (artifact['dest'] is defined) | ternary(artifact.get('dest') | regex_replace('^(\/?[^\/]*).*$', '\1'), artifact['source'] | basename) }}
 
     - name: Show the name of the file/folder to upload
       debug:

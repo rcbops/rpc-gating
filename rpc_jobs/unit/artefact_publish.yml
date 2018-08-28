@@ -26,7 +26,8 @@
             echo "<html>dstat report placeholder</html>" \
               > /var/log/dstat.html
             cp -vr /var/log artifacts
-            cp -r artifacts file_artifacts
+            cp -r artifacts file_artifacts_dest
+            cp -r artifacts file_artifacts_no_dest
           """
 
           // Set the RE_JOB_REPO_NAME (normally done by standard jobs)
@@ -37,8 +38,13 @@
             artifacts: [
               [
                 type: "file",
-                source: "${env.WORKSPACE}/file_artifacts",
-                dest: "${env.JOB_NAME}/${env.BUILD_NUMBER}/",
+                source: "${env.WORKSPACE}/file_artifacts_dest",
+                dest: "${env.JOB_NAME}/${env.BUILD_NUMBER}",
+                expire_after: 86400
+              ],
+              [
+                type: "file",
+                source: "${env.WORKSPACE}/file_artifacts_no_dest",
                 expire_after: 86400
               ]
             ]
