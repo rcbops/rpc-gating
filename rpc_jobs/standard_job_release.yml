@@ -24,6 +24,12 @@
       common.globalWraps(){
         dir("${env.WORKSPACE}/releases") {
           common.clone_with_pr_refs()
+          if (! github.is_pr_approved(["CIT/release"])) {
+            throw new Exception(
+              "Release process cannot continue until the pull request is "
+              + "approved by required reviewers and checks."
+            )
+          }
           common.runReleasesPullRequestWorkflow("origin/master", "HEAD", "RE", "CIT/release")
         } // dir
       } // globalWraps
