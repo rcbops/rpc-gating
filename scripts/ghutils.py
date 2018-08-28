@@ -3,6 +3,7 @@
 # This script contains github related utilties for Jenkins.
 
 
+from functools import partial
 import json
 import logging
 import re
@@ -11,6 +12,8 @@ from time import sleep
 import click
 import git
 import github3
+import jmespath
+import requests
 
 from notifications import try_context
 
@@ -51,7 +54,32 @@ def cli(ctxt, org, repo, pat, debug):
         raise ValueError("Failed to connect to repo {o}/{r}".format(
             o=org, r=repo
         ))
+
+    session = requests.Session()
+    adapter = requests.adapters.HTTPAdapter(max_retries=3)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    session.headers["Authorization"] = "bearer {token}".format(token=pat)
+    # This Accept header field allows use of functionality not currently part
+    # part of the official API - https://developer.github.com/v4/previews
+    session.headers["Accept"] = "application/vnd.github.luke-cage-preview+json"
+    repo_.v4_query = partial(
+        v4_query, partial(session.post, "https://api.github.com/graphql")
+    )
+
     ctxt.obj = repo_
+
+
+def v4_query(post, query, variables=None):
+    logger.debug(query)
+    logger.debug(variables)
+    resp = post(json={"query": query, "variables": variables})
+    logger.debug(resp)
+    resp.raise_for_status()
+
+    data = resp.json()
+    logger.debug(json.dumps(data, indent=4))
+    return data
 
 
 @cli.command()
@@ -466,6 +494,194 @@ def create_pr(repo, source_branch, target_branch, title, body):
     print("{org}/{repo}#{num}".format(org=repo.owner,
                                       repo=repo.name,
                                       num=pr.number))
+
+
+@cli.command()
+@click.option(
+    "--pull-request-number",
+    type=click.INT,
+    help="Pull request to update",
+    required=True,
+)
+@click.option(
+    "--excluded-check",
+    "excluded_checks",
+    help="Pull request check context to exclude from validation",
+    multiple=True,
+)
+def is_pull_request_approved(pull_request_number, excluded_checks):
+    """Report status of pull request approval by reviewers and tests."""
+    ctx_obj = click.get_current_context().obj
+    querier = ctx_obj.v4_query
+    org = ctx_obj.owner.login
+    repo = ctx_obj.name
+
+    is_approved = all(
+        (
+            _is_pull_request_reviewer_approved(
+                querier, org, repo, pull_request_number
+            ),
+            _is_pull_request_test_approved(
+                querier, org, repo, pull_request_number, excluded_checks
+            ),
+        )
+    )
+    if is_approved:
+        click.echo("Pull request meets approval requirements.")
+    else:
+        click.echo("Pull request fails approval requirements.")
+
+
+def _is_pull_request_reviewer_approved(querier, org, repo, pr_id):
+    """Confirm whether or not pull request has been approved by reviewers."""
+    query = """
+        query($org:String!, $repo:String!, $pullRequestID:Int!){
+            repository(owner: $org, name: $repo){
+                protectedBranches(first: 100){
+                    nodes{
+                        name
+                        requiredApprovingReviewCount
+                    }
+                }
+                pullRequest(number: $pullRequestID){
+                    baseRefName
+                    reviews(last: 100){
+                        nodes{
+                            state
+                            author{
+                                login
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "pullRequestID": pr_id,
+        "org": org,
+        "repo": repo,
+    }
+
+    data = querier(query, variables)
+
+    base_ref_name = jmespath.search(
+        "data.repository.pullRequest.baseRefName",
+        data
+    )
+
+    required_approval_count = jmespath.search(
+        """
+            data
+            .repository
+            .protectedBranches
+            .nodes[?name == '{branch}']
+            |[0]
+            .requiredApprovingReviewCount
+        """.format(branch=base_ref_name),
+        data
+    )
+
+    review_history = jmespath.search(
+        """
+            data
+            .repository
+            .pullRequest
+            .reviews
+            .nodes[*]
+            .{approver: author.login, state: state}
+        """,
+        data
+    )
+    reviews = {r["approver"]: r["state"] for r in review_history}
+    approval_count = reviews.values().count("APPROVED")
+
+    if required_approval_count and approval_count < required_approval_count:
+        is_approved = False
+    else:
+        is_approved = True
+
+    return is_approved
+
+
+def _is_pull_request_test_approved(querier, org, repo, pr_id, excluded=None):
+    """Confirm whether or not pull request has passed required checks."""
+    if not excluded:
+        excluded = []
+    query = """
+        query($org:String!, $repo:String!, $pullRequestID:Int!){
+            repository(owner: $org, name: $repo){
+                protectedBranches(first: 100){
+                    nodes{
+                        name
+                        requiredStatusCheckContexts
+                    }
+                }
+                pullRequest(number: $pullRequestID){
+                    baseRefName
+                    commits(last: 1){
+                        nodes{
+                            commit{
+                                status{
+                                    contexts{
+                                        context
+                                        state
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "pullRequestID": pr_id,
+        "org": org,
+        "repo": repo,
+    }
+
+    data = querier(query, variables)
+
+    base_ref_name = jmespath.search(
+        "data.repository.pullRequest.baseRefName",
+        data
+    )
+
+    required_checks = jmespath.search(
+        """
+            data
+            .repository
+            .protectedBranches
+            .nodes[?name == '{branch}']
+            | [0]
+            .requiredStatusCheckContexts
+        """.format(branch=base_ref_name),
+        data
+    ) or []
+
+    check_statuses = jmespath.search(
+        """
+            data
+            .repository
+            .pullRequest
+            .commits
+            .nodes[0]
+            .commit
+            .status
+            .contexts[?contains(`{required}`, context) == `true`]
+        """.format(required=json.dumps(required_checks)),
+        data
+    )
+    if len(required_checks) != len(check_statuses):
+        is_required_success = False
+    else:
+        is_required_success = all(
+            c["state"] == "SUCCESS"
+            for c in check_statuses
+            if c["context"] not in excluded
+        )
+    return is_required_success
 
 
 if __name__ == "__main__":

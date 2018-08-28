@@ -133,4 +133,40 @@ def create_status(
 }
 
 
+/**
+ * Confirm state of pull request merge pre-conditions
+ */
+Boolean is_pr_approved(List excluded_checks){
+  List org_repo = env.ghprbGhRepository.split("/")
+  String org = org_repo[0]
+  String repo = org_repo[1]
+  Integer pull_request_number = env.ghprbPullId as Integer
+
+  String is_approved_output
+  withCredentials([
+    string(
+      credentialsId: 'rpc-jenkins-svc-github-pat',
+      variable: 'pat'
+    )
+  ]){
+    String excluded_args = excluded_checks.collect() {"--excluded-check ${it}"}.join(" ")
+    is_approved_output = sh(
+      script: """#!/bin/bash -xe
+      cd $env.WORKSPACE
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/ghutils.py\
+        --org '$org'\
+        --repo '$repo'\
+        --pat '$pat'\
+        is_pull_request_approved\
+        --pull-request-number '$pull_request_number'\
+        ${excluded_args}
+      """,
+      returnStdout: true,
+    )
+  }
+  print is_approved_output
+  return is_approved_output.split("\n")[-1].trim() == "Pull request meets approval requirements."
+}
+
 return this;
