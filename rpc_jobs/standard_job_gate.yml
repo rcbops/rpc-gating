@@ -26,6 +26,12 @@
 
       common.globalWraps(){{
           testWithAntecedents = "{test_with_antecedents}".toBoolean()
+          if (! github.is_pr_approved(["{status_context}"])) {{
+              throw new Exception(
+                  "Gate process cannot continue until the pull request is "
+                  + "approved by required reviewers and checks."
+              )
+          }}
           gate.testPullRequest("{repo_name}", testWithAntecedents, "{status_context}")
       }} // globalWraps
 
