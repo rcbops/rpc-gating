@@ -1,0 +1,15 @@
+- project:
+    name: osp-mnaio-gate-trigger
+    repo_name: osp-mnaio
+    repo_url: https://github.com/rcbops/osp-mnaio
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: osp-mnaio-re-release-pr
+    repo:
+      - osp-mnaio:
+          URL: https://github.com/rcbops/osp-mnaio
+          BRANCH: master
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
