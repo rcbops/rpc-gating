@@ -1,7 +1,7 @@
 - project:
     name: "rpc-product-1-dependency-update"
     repo_name: "rpc-product-1"
-    repo_url: "https://github.com/mattt416/rpc-product-1"
+    repo_url: "https://github.com/rcbops/rpc-product-1"
     branch:
       - "master"
     jira_project_key: "RE"
@@ -22,7 +22,7 @@
     name: 'rpc-product-1-pre-merge'
 
     repo_name: 'rpc-product-1'
-    repo_url: 'https://github.com/mattt416/rpc-product-1'
+    repo_url: 'https://github.com/rcbops/rpc-product-1'
 
     branches:
       - 'master'
@@ -52,7 +52,7 @@
     name: "rpc-product-1"
 
     repo_name: "rpc-product-1"
-    repo_url: "https://github.com/mattt416/rpc-product-1"
+    repo_url: "https://github.com/rcbops/rpc-product-1"
 
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
@@ -61,7 +61,7 @@
     name: "rpc-product-1-gate"
 
     repo_name: "rpc-product-1"
-    repo_url: "https://github.com/mattt416/rpc-product-1"
+    repo_url: "https://github.com/rcbops/rpc-product-1"
 
     branch: "master"
 
@@ -86,7 +86,7 @@
     name: 'rpc-product-1-post-merge'
 
     repo_name: 'rpc-product-1'
-    repo_url: 'https://github.com/mattt416/rpc-product-1'
+    repo_url: 'https://github.com/rcbops/rpc-product-1'
 
     branch: 'master'
 
@@ -109,7 +109,7 @@
     name: 'rpc-component-1-pre-merge'
 
     repo_name: 'rpc-component-1'
-    repo_url: 'https://github.com/mattt416/rpc-component-1'
+    repo_url: 'https://github.com/rcbops/rpc-component-1'
 
     branches:
       - 'master'
@@ -135,7 +135,7 @@
     name: "rpc-component-1"
 
     repo_name: "rpc-component-1"
-    repo_url: "https://github.com/mattt416/rpc-component-1"
+    repo_url: "https://github.com/rcbops/rpc-component-1"
 
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
@@ -144,7 +144,7 @@
     name: "rpc-component-1-gate"
 
     repo_name: "rpc-component-1"
-    repo_url: "https://github.com/mattt416/rpc-component-1"
+    repo_url: "https://github.com/rcbops/rpc-component-1"
 
     branch: "master"
 
@@ -165,7 +165,7 @@
     name: 'rpc-component-1-post-merge'
 
     repo_name: 'rpc-component-1'
-    repo_url: 'https://github.com/mattt416/rpc-component-1'
+    repo_url: 'https://github.com/rcbops/rpc-component-1'
 
     branch: 'master'
 
@@ -188,7 +188,7 @@
     name: 'rpc-component-2-pre-merge'
 
     repo_name: 'rpc-component-2'
-    repo_url: 'https://github.com/mattt416/rpc-component-2'
+    repo_url: 'https://github.com/rcbops/rpc-component-2'
 
     branches:
       - 'master'
@@ -214,7 +214,7 @@
     name: "rpc-component-2"
 
     repo_name: "rpc-component-2"
-    repo_url: "https://github.com/mattt416/rpc-component-2"
+    repo_url: "https://github.com/rcbops/rpc-component-2"
 
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
@@ -223,7 +223,7 @@
     name: "rpc-component-2-gate"
 
     repo_name: "rpc-component-2"
-    repo_url: "https://github.com/mattt416/rpc-component-2"
+    repo_url: "https://github.com/rcbops/rpc-component-2"
 
     branch: "master"
 
@@ -244,7 +244,7 @@
     name: 'rpc-component-2-post-merge'
 
     repo_name: 'rpc-component-2'
-    repo_url: 'https://github.com/mattt416/rpc-component-2'
+    repo_url: 'https://github.com/rcbops/rpc-component-2'
 
     branch: 'master'
 
@@ -267,7 +267,7 @@
     name: 'rpc-product-1-release'
 
     repo_name: 'rpc-product-1'
-    repo_url: 'https://github.com/mattt416/rpc-product-1'
+    repo_url: 'https://github.com/rcbops/rpc-product-1'
 
     branch: 'master'
 
@@ -290,7 +290,7 @@
     name: 'rpc-component-1-release'
 
     repo_name: 'rpc-component-1'
-    repo_url: 'https://github.com/mattt416/rpc-component-1'
+    repo_url: 'https://github.com/rcbops/rpc-component-1'
 
     branch: 'master'
 
@@ -313,7 +313,7 @@
     name: 'rpc-component-2-release'
 
     repo_name: 'rpc-component-2'
-    repo_url: 'https://github.com/mattt416/rpc-component-2'
+    repo_url: 'https://github.com/rcbops/rpc-component-2'
 
     branch: 'master'
 
