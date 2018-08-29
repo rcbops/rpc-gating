@@ -179,7 +179,7 @@
     repo_name: "rpc-maas"
     repo_url: "https://github.com/rcbops/rpc-maas"
     branch: "master"
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
     image:
       - "xenial":
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
@@ -198,7 +198,7 @@
     repo_name: "rpc-maas"
     repo_url: "https://github.com/rcbops/rpc-maas"
     branch: "master"
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
     image:
       - "trusty":
           SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
@@ -237,4 +237,3 @@
           repo_url: 'https://github.com/rcbops/rpc-maas'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
-

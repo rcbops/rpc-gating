@@ -1,5 +1,5 @@
 - job-template:
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
     RPC_GATING_BRANCH: master
     NUM_TO_KEEP: 30
     READ_ONLY_TEST: true

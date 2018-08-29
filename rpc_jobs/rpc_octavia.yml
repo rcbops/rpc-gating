@@ -115,4 +115,4 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"

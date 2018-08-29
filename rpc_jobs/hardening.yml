@@ -15,6 +15,6 @@
       - "deploy_queens"
       - "deploy_pike"
       - "deploy_newton"
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'

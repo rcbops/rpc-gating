@@ -1,7 +1,14 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
+import groovy.json.JsonException
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import java.time.LocalDateTime
+import java.time.DayOfWeek
+import java.time.Duration
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.math.MathContext
 
 void download_venv(){
   sh """#!/bin/bash -xeu
@@ -483,7 +490,7 @@ String clone_with_pr_refs(
   }
   if(ref == "origin/pr/null/merge"){
     throw new Exception(
-      "ref not supplied to common.clone_with_pr_refs or env.ghprbPullID not "\
+      "ref not supplied to common.clone_with_pr_refs or env.ghprbPullId not "\
       + "set, attempting to checkout PR for a periodic build?")
   }
   String sha
@@ -1395,6 +1402,14 @@ void globalWraps(Closure body){
     timeout(time: 10, unit: 'HOURS'){
       shared_slave(){
         wrap([$class: 'LogfilesizecheckerWrapper', 'maxLogSize': 200, 'failBuild': true, 'setOwn': true]) {
+          setTriggerVars()
+          // This test must be outside a function so that return can be used to abort the job
+          // Alternatively we could throw a custom exception and abort when catching it here.
+          if (issueExistsForNextMaintenanceWindow() && willOverlapMaintenanceWindow()){
+            common.recordAbortDueToMaintenance()
+            currentBuild.result == "ABORTED"
+            return
+          }
           print("common.globalWraps pre body")
           body()
           print("common.globalWraps post body")
@@ -1443,9 +1458,6 @@ return this
 
 void stdJob(String hook_dir, String credentials, String jira_project_key, String wrappers) {
   globalWraps(){
-    // set env.RE_JOB_TRIGGER & env.RE_JOB_TRIGGER_DETAIL
-    setTriggerVars()
-
     standard_job_slave(env.SLAVE_TYPE) {
       wrapList(stdJobWrappers(wrappers)){
         env.RE_HOOK_ARTIFACT_DIR="${env.WORKSPACE}/artifacts"
@@ -1968,4 +1980,202 @@ void updateStringParam(String name, String value, String description){
     ParametersAction existingAction = currentBuild.rawBuild.getAction(ParametersAction)
     ParametersAction newAction = existingAction.createUpdated(updatedParam)
     currentBuild.rawBuild.addOrReplaceAction(newAction)
+}
+
+/**
+* Get the predicted duration for the current build in milliseconds.
+* Prediction is based on up to 6 recent builds.
+* See: https://javadoc.jenkins-ci.org/hudson/model/Job.html#getEstimatedDurationCandidates--
+* NonCPS because build is not serialisable
+*/
+@NonCPS
+Duration getPredictedDuration(){
+  Run build = currentBuild.rawBuild
+  Job job = build.getParent()
+  return Duration.ofMillis(job.getEstimatedDuration())
+}
+
+/**
+* Get the predicted end time for this build, based on the time it moved out of the queue
+* and its predicted duration.
+* NonCPS because build is not serialisable
+*/
+@NonCPS
+LocalDateTime getPredictedCompletionTime(){
+  Run build = currentBuild.rawBuild
+  Long startTimeInSeconds = (build.getStartTimeInMillis()/1000).round(MathContext.DECIMAL32).longValueExact()
+  LocalDateTime startTime = LocalDateTime.ofEpochSecond(startTimeInSeconds, 0, ZoneOffset.UTC)
+  return startTime.plus(getPredictedDuration())
+}
+
+/**
+* Get date object representing the start of the next maintenance window
+*/
+LocalDateTime getNextMaintenanceWindowStart(){
+  // set start of maintenance window
+
+  DayOfWeek maintDay = DayOfWeek.MONDAY
+  Integer maintHour = 10
+  Integer maintDuration = 2
+  Integer daysInWeek = 7
+
+  // get current time & date
+  LocalDateTime now = LocalDateTime.now()
+  LocalDateTime maintStart
+
+  if (now.getDayOfWeek() == maintDay){
+    // its Monday, we either need to return today's maintenance window
+    // or next Monday's.
+    // 1 hour buffer after the maintenance to allow
+    //  maint end jobs to run without this function referring
+    // to next week's maintenance.
+    if (now.getHour() > maintHour + maintDuration + 1){
+      // return next week's maintenance window
+      maintStart = now.plusDays(7)
+    } else {
+      maintStart = now
+    }
+  } else {
+    // Its not Monday.
+    Integer doW = now.getDayOfWeek().getValue()
+    Integer mDoW = maintDay.getValue()
+    Integer daysTillNextMaint = (daysInWeek -(doW - mDoW)) % daysInWeek
+    maintStart = now.plusDays(daysTillNextMaint)
+  }
+
+  // Maintstart is now a date time with the correct date, fix the time and return it.
+  return maintStart.withHour(maintHour)\
+                   .withMinute(0)\
+                   .withSecond(0)\
+                   .withNano(0)
+
+}
+
+/**
+* Check if this job is likely to run into the next maintenance window
+*/
+Boolean willOverlapMaintenanceWindow(){
+  // The pr buffer is an hour before the maintenance window starts.
+  // PRs must be predicted to finish before the PR buffer starts
+  // to be allowed to run. This gives PR jobs an hour to overrun
+  // their predicted duration.
+  Duration prBuffer = Duration.ofHours(1)
+
+  LocalDateTime completion = getPredictedCompletionTime()
+  LocalDateTime maintWindowStart = getNextMaintenanceWindowStart()
+  LocalDateTime prBufferStart = maintWindowStart.minus(prBuffer)
+
+  return prBufferStart.isBefore(completion)
+}
+
+Boolean issueExistsForNextMaintenanceWindow(project="RE"){
+  LocalDateTime nextWindow = getNextMaintenanceWindowStart()
+  String nextWindowDateString = nextWindow.format(DateTimeFormatter.ISO_LOCAL_DATE)
+  List issues = jira_query("project=\"${project}\" AND summary ~ '${nextWindowDateString} Maintenance Window'")
+  return issues.size > 0
+}
+
+/*
+* Create an issue for the next maintenance window, returns the issue key
+*/
+String getOrCreateIssueForNextMaintenanceWindow(){
+  LocalDateTime nextWindow = getNextMaintenanceWindowStart()
+  String nextWindowDateString = nextWindow.format(DateTimeFormatter.ISO_LOCAL_DATE)
+  String jiraIssue = get_or_create_jira_issue(
+    "RE",
+    "BACKLOG",
+    "${nextWindowDateString} Maintenance Window",
+    "Jira issue to collect notes relating to a maintenance window, for more information please see https://rpc-openstack.atlassian.net/wiki/spaces/RE/pages/469794817/RE+Infrastructure+Maintenance+Window",
+    ["jenkins", "re", "maintenance"]
+  )
+  return jiraIssue
+}
+
+String jiraLinkFromIssueKey(String issueKey){
+  return "https://rpc-openstack.atlassian.net/browse/${issueKey}"
+}
+
+void recordAbortDueToMaintenance(){
+  String pullLinkComment = ""
+
+  String jiraIssue = maintenanceIssueForDate("today")
+
+  print("Jira Issue Key: ${jiraIssue}")
+  String jiraLink=jiraLinkFromIssueKey(jiraIssue)
+
+  if(env.RE_JOB_TRIGGER == "PULL"){
+    // Build triggered by a PR
+
+    String comment = "Build ${env.BUILD_URL} was aborted as its estimated completion time overlapped an RE maintenance window. See Jira Issue: ${jiraLink}"
+    github.add_comment_to_pr(comment, true)
+
+    // Set pull link string that will be embedded in a Jira comment,
+    // so that RE team members reviewing the maintenance ticket can
+    // easily find affected PRs.
+    pullLinkComment = "PR: ${env.ghprbPullLink}"
+  }
+
+  // Store PR data as JSON in the jira issue comment.
+  // This will be read back at the end of the maintenance window to automatically
+  // restart aborted jobs.
+  // Not storing the job id, because there isn't a good way to map job names to
+  // trigger phrases so we'll have to recheck_all on every PR that has a failure.
+  Map data = [
+    repo: env.ghprbGhRepository,
+    prnum: env.ghprbPullId,
+    link: env.ghprbPullLink,
+    build: env.BUILD_URL
+  ]
+  String json = _write_json_string(obj: data)
+  print("Jira Comment: ${json}")
+  jiraComment(
+    issueKey: jiraIssue,
+    body: json
+  )
+  println("Build aborted as it may have run into the maintenance window. ${pullLinkComment} ${jiraLink}")
+  }
+
+/**
+* date should be an ISO8601 date YYYY-MM-DD or "today"
+*/
+String maintenanceIssueForDate(String date="today", project="RE"){
+  if (date == "today"){
+    LocalDateTime now = LocalDateTime.now()
+    date = now.format(DateTimeFormatter.ISO_LOCAL_DATE)
+  }
+  String query = "project=\"${project}\" AND summary ~ '${date} Maintenance Window'"
+  List issues = jira_query(query)
+  if (issues.size < 1){
+    raise Exception("No maintenance issue found matching ${query}")
+  } else if (issues.size > 1){
+    raise Exception("More than one maintenance issue found matching ${query}: ${issues}")
+  }
+  return issues[0]
+}
+
+/**
+* When jobs are aborted due to a maintenance window,
+* some json data is added as a comment to the maintenance
+* jira issue. This method uses that data to determine
+* which PRs need to be rechecked.
+*/
+void restartAbortedPRBuilds(String maint_date="today"){
+  String jiraIssue = maintenanceIssueForDate(maint_date)
+  List comments = jira_comments(jiraIssue)
+  // Map used to deduplicate comments, so we don't recheck the same PR twice.
+  Map prsWithFailures = [:]
+  for (comment in comments){
+    try {
+      Map pr_data = _parse_json_string(json_text: comment)
+      prsWithFailures[pr_data['link']] = pr_data
+    } catch (groovy.json.JsonException e){
+      print("Ignoring non-json comment: ${comment}")
+    }
+  }
+  for (pr in prsWithFailures){
+    pr_data = pr.value
+    print("Adding recheck_all comment to ${pr_data['link']}")
+    github.add_comment_to_pr("recheck_all", true, pr_data['repo'], pr_data['prnum'])
+  }
+
 }

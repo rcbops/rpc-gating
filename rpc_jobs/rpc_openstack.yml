@@ -245,7 +245,7 @@
     jira_project_key: "RO"
     # We have an MNAIO equivalent of this PM job, but we need to keep
     # this for the push triggering for snapshot building.
-    CRON: "@monthly"
+    CRON: "{CRON_MONTHLY}"
     image:
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
@@ -295,7 +295,7 @@
     jira_project_key: "RO"
     # We have an MNAIO equivalent of this PM job, but we need to keep
     # this for the push triggering for snapshot building.
-    CRON: "@monthly"
+    CRON: "{CRON_MONTHLY}"
     image:
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
@@ -346,7 +346,7 @@
     jira_project_key: "RO"
     # We have an MNAIO equivalent of this PM job, but we need to keep
     # this for the push triggering for snapshot building.
-    CRON: "@monthly"
+    CRON: "{CRON_MONTHLY}"
     image:
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
@@ -395,7 +395,7 @@
     jira_project_key: "RO"
     # We have an MNAIO equivalent of this PM job, but we need to keep
     # this for the push triggering for snapshot building.
-    CRON: "@monthly"
+    CRON: "{CRON_MONTHLY}"
     image:
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
@@ -468,7 +468,7 @@
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
           # We have an MNAIO equivalent of this PM job, but we need to keep
           # this for the push triggering for snapshot building.
-          CRON: "@monthly"
+          CRON: "{CRON_MONTHLY}"
       - trusty_loose_artifacts:
           IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
     scenario:
@@ -603,7 +603,7 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch:
       - "master"
-    CRON: "@monthly"
+    CRON: "{CRON_MONTHLY}"
     jira_project_key: ""
     image:
       - staging_asc_xenial_mnaio_no_artifacts:

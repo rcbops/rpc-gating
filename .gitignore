@@ -2,6 +2,8 @@
 *.swp
 *.pyc
 .lintvenv
+.lintvenv_python2.7
+.lintvenv_python3
 **/.?venv/
 **/.?lintvenv*/
 playbooks/roles/

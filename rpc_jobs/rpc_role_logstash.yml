@@ -51,7 +51,7 @@
     repo_name: "rpc-role-logstash"
     repo_url: "https://github.com/rcbops/rpc-role-logstash"
     branch: "master"
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
     image:
       - "xenial":
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"

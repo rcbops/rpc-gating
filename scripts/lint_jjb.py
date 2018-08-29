@@ -6,6 +6,7 @@
 #   * Retention Policy
 
 import argparse
+from datetime import datetime, timedelta
 import jmespath
 import operator
 import os
@@ -20,6 +21,10 @@ import yaml
 # crontab.CronSlices.is_valid(None)
 # crontab.CronSlices.is_valid(0)
 from croniter import croniter
+
+# In this script, a return value of 1 indicates an error has occured,
+# 0 indicates success (same as bash).
+# Note that in python truth, 1 -> True and 0 -> False
 
 
 def parse_args():
@@ -176,142 +181,239 @@ def check_retention(job, in_file):
 #   job:
 #     triggers:
 #      - timed: "@daily"
-def check_timed_trigger_value(trigger):
+def check_timed_trigger_value(schedule, data):
+    name = data['name']
 
-    # Non-standard CRON values allowed by jenkins
-    # Reference:
-    # https://en.wikipedia.org/wiki/Cron#Nonstandard_predefined_scheduling_definitions
-    # http://www.scmgalaxy.com/tutorials/setting-up-the-cron-jobs-in-jenkins-using-build-periodically-scheduling-the-jenins-job/
-    allowed_non_standard_values = [
-        "@yearly", "@annually", "@monthly", "@weekly", "@daily",
-        "@midnight", "@hourly"
-    ]
+    # Values from grammar in Jenkins core:
+    # https://github.com/jenkinsci/jenkins/blob/2652a1b1eb90b5859686f505a0c6459af2dc2299/core/src/main/grammar/crontab.g#L46-L76
+    named_schedules = {
+        "@yearly": "H H H H *",
+        "@annually": "H H H H *",
+        "@monthly": "H H H * *",
+        "@weekly": "H H * * H",
+        "@daily": "H H * * *",
+        "@midnight": "H H(0-2) * * *",
+        "@hourly": "H * * * *",
 
-    # If the trigger provided is a NoneType,
-    # then the job has no value, so pass it.
-    if trigger is None:
-        return_value = 0
+        # The following are from rpc-gating/rpc-jobs/defaults.yml
+        "{CRON_DAILY}": "H H * * 2-7",
+        "{CRON_WEEKLY}": "H H * * H(2-7)",
+        "{CRON_MONTHLY}": "H H H * 2-7"
+    }
+
     # If the trigger provided is not a string,
     # then it is not valid.
-    elif not isinstance(trigger, str):
-        return_value = 1
-    # If the CRON macro is used, we do not need
-    # to validate it.
-    elif trigger == "{CRON}":
-        return_value = 0
-    # If non-standard predefined schedule definitions
-    # are used, pass them.
-    elif trigger in allowed_non_standard_values:
+    if not isinstance(schedule, str):
+        return 1
+
+    # A comment can't be invalid.
+    if is_comment(schedule):
+        return 0
+
+    # Replace Jenkins named schedules with cron patterns
+    # that croniter can parse
+    if schedule in named_schedules:
+        schedule = named_schedules[schedule]
+
+    if (is_valid_cron_expression(schedule, name)
+            and no_maint_window_conflict(schedule, name)
+            and allowed_stdjob_schedule(schedule, data)):
         return_value = 0
     else:
-        # Jenkins supports the use of hashes, denoted by the symbol H,
-        # in the trigger to allow the load to be spread on the system.
-        # The croniter library does not know how to validate them, so
-        # we replace them.
-        # Valid inputs and what they should output after replacement:
-        # 1. "H * * * *" > "* * * * *"
-        # 2. "H(0-29)/10 * * * *" > "0-29/10 * * * *"
-        # 3. "H/10 H(10-11) * H *" > "*/10 10-11 * * *"
-
-        # handle the H(..) pattern first
-        _trigger = re.sub(r'H\((\d+-\d+)\)', r'\1', trigger)
-
-        # then handle the H pattern
-        _trigger = re.sub(r'H', r'*', _trigger)
-
-        if croniter.is_valid(_trigger):
-            return_value = 0
-        else:
-            return_value = 1
-
-    return return_value
-
-
-# Ensure all jobs have a valid timed triggers entry
-# Structure:
-#   job:
-#     triggers:
-#      - timed: "@daily"
-#      - timed: "{CRON}"
-def check_timed_trigger_list(data, in_file):
-
-    timed_trigger_list = jmespath.search('triggers[*].timed', data)
-
-    return_value = 0
-    for trigger in timed_trigger_list or []:
-
-        error_message = ("{f}/{n}: Valid timer trigger not found."
-                         " trigger: {t}\n"
-                         .format(n=data['name'], f=in_file,
-                                 t=trigger))
-
-        if check_timed_trigger_value(trigger) == 1:
-            sys.stderr.write(error_message)
-            return_value = 1
-
-    return return_value
-
-
-def check_timed_trigger_cron(data, in_file):
-    error_message = ("{f}/{n}: Valid CRON value not found."
-                     " CRON: {t}\n"
-                     .format(n=data['name'], f=in_file,
-                             t=data.get('CRON')))
-
-    cron_value = data.get('CRON')
-
-    return_value = 0
-    if check_timed_trigger_value(cron_value) == 1:
-        sys.stderr.write(error_message)
         return_value = 1
 
     return return_value
 
 
-def check_timed_trigger_cron_std(data, in_file):
+def translate_hash(schedule, rep_mode="all"):
+    # rep_mode = all
+    # replace H with * and ranges with *, this is for checking
+    # all possible times a job could be scheduled (useful for
+    # maintenance window checking)
 
+    # repo_mode = one
+    # replace H with a single value, and ranges with the lowest
+    # value in the range. This is useful for checking the interval
+    # between executions.
+
+    # Jenkins supports the use of hashes, denoted by the symbol H,
+    # in the trigger to allow the load to be spread on the system.
+    # The croniter library does not know how to validate them, so
+    # we replace them.
+    # Valid inputs and what they should output after replacement:
+    # 1. "H * * * *" > "* * * * *"
+    # 2. "H(0-29)/10 * * * *" > "0-29/10 * * * *"
+    # 3. "H/10 H(10-11) * H *" > "*/10 10-11 * * *"
+
+    # handle the H(..) pattern first
+    if rep_mode == "all":
+        rep_char = "*"
+        # replace a hash range with a standard range
+        schedule = re.sub(r'H\((\d+-\d+)\)', r'\1', schedule)
+    else:
+        rep_char = "1"
+        # replace a hash range with the first value in the
+        # range
+        schedule = re.sub(r'H\((\d+)-\d+\)', r'\1', schedule)
+
+    # then handle the H pattern
+    schedule = re.sub(r'H', rep_char, schedule)
+
+    return schedule
+
+
+def is_valid_cron_expression(schedule, name):
+    raw_schedule = schedule
+    schedule = translate_hash(schedule)
+    if croniter.is_valid(schedule):
+        return True
+    else:
+        sys.stderr.write("{n} Invalid cron expression: {s}"
+                         " (translated from {rs})\n"
+                         .format(n=name, s=schedule, rs=raw_schedule))
+        return False
+
+
+def is_comment(schedule):
+    if re.match(r'^\s*#', schedule):
+        return True
+    else:
+        return False
+
+
+def allowed_stdjob_schedule(build_schedule, data):
+    """ Standard jobs should run at most daily"""
+    # non standard jobs are not validated by this rule
+    if not is_standard_job(data):
+        return True
+
+    raw_schedule = build_schedule
+    # This check is about the interval, so the H values
+    # in the input cron expression should be translated
+    # to a single value as Jenkins does
+    # rather than * which represents all values.
+    build_schedule = translate_hash(build_schedule, rep_mode="one")
+    name = data['name']
+
+    base = datetime.now()
+    build_iter = croniter(build_schedule, base)
+    build_start_1 = build_iter.get_next(datetime)
+    build_start_2 = build_iter.get_next(datetime)
+    delta = build_start_2 - build_start_1
+    if delta < timedelta(hours=23):
+        sys.stderr.write(
+            "{n} Is scheduled too frequently (every {delta}), standard"
+            " jobs should be executed at most daily. Cron: {rs},"
+            " translated to: {s}\n".format(
+                n=name,
+                delta=delta,
+                rs=raw_schedule,
+                s=build_schedule))
+        return False
+    return True
+
+
+def no_maint_window_conflict(build_schedule, name):
+    raw_schedule = build_schedule
+
+    # Convert H --> * as Jenkins could assign
+    # any value to H.
+    build_schedule = translate_hash(build_schedule)
+
+    base = datetime.now()
+    max_build_duration = timedelta(hours=10)
+
+    maint_schedule = "0 10 * * 1"
+    maint_iter = croniter(maint_schedule, base)
+    maint_duration = timedelta(hours=2)
+
+    # Find the interval between builds
+    build_iter = croniter(build_schedule, base)
+    next_build = build_iter.get_next(datetime)
+    second_build = build_iter.get_next(datetime)
+    build_interval = second_build - next_build
+
+    # check the next 60 maintenance windows for conflicts
+    # this is over a year so should cover most eventualities.
+    for _ in range(60):
+        maint_start = maint_iter.get_next(datetime)
+        maint_end = maint_start + maint_duration
+
+        # Start looking for conflicts between builds and the maint window
+        # three build_intervals before the maint window is scheduled to start
+        build_iter = croniter(build_schedule,
+                              maint_start - (3 * build_interval))
+        # loop over builds checking if any of them conflict with the
+        # maintenance window.
+        while True:
+            build_start = build_iter.get_next(datetime)
+            build_end = build_start + max_build_duration
+            if build_start > maint_end:
+                # This job invocation starts after the maintenance
+                # window so can't conflict with it.
+                break
+
+            # Job starts before the maintenance window,
+            # so if job end time is after maint_start the job
+            # will conflict with the maintenance window.
+            elif build_end > maint_start:
+                error_message = (
+                    "Scheduled build of {n} conflicts with Release Engineering"
+                    " Maintenance Window. Build: {bs}-->{be},"
+                    " Window: {ws} --> {we}. Cron: {rs} translated to: {s}"
+                    " for linting."
+                    " See https://rpc-openstack.atlassian.net/wiki/spaces"
+                    "/RE/pages/469794817/RE+Infrastructure+Maintenance+Window"
+                    " for further information and examples.\n"
+                    .format(
+                        n=name,
+                        bs=build_start,
+                        be=build_end,
+                        ws=maint_start,
+                        we=maint_end,
+                        rs=raw_schedule,
+                        s=build_schedule
+                    ))
+                sys.stderr.write(error_message)
+                return False
+    return True
+
+
+def is_standard_job(data):
     standard_pm_template = (
         'PM_{repo_name}-{branch}-{image}-{scenario}-{action}')
-
-    allowed_values = [
-        "@daily", "@weekly", "@monthly"
-    ]
-
-    error_message = ("{f}/{n}: Valid CRON value not found"
-                     " for standard job. Only allowed values"
-                     " are {a}. Found: {t}\n"
-                     .format(n=data['name'], f=in_file,
-                             a=allowed_values, t=data.get('CRON')))
-
-    jobs_list = data.get('jobs') or []
-    cron_value = data.get('CRON')
-
-    # The variable cron_value must have
-    # a value to be tested, otherwise
-    # there is no CRON parameter in the
-    # job so we pass the test.
-    if (cron_value and standard_pm_template in jobs_list):
-
-        if cron_value in allowed_values:
-            return 0
-        else:
-            sys.stderr.write(error_message)
-            return 1
-
-    else:
-        return 0
+    return standard_pm_template in data.get('jobs', [])
 
 
 def check_timed_trigger(data, in_file):
 
-    if (check_timed_trigger_list(data, in_file) == 1 or
-            check_timed_trigger_cron(data, in_file) == 1 or
-            check_timed_trigger_cron_std(data, in_file) == 1):
-        return_value = 1
-    else:
-        return_value = 0
+    # The maintenance window start and end jobs are scheduled within the
+    # maintenance window exclusion time, so skip the time checks.
+    if "re_maintenance_window.yml" in in_file:
+        return 0
 
-    return return_value
+    failures = 0
+
+    jmes_expressions = {
+        "project_key": "CRON",
+        "axis_key": "*[*].*.CRON|[][]",
+        "timed_triggers": "triggers[*].timed"
+    }
+
+    schedules = []
+    for jmes_expression in jmes_expressions.values():
+        result = jmespath.search(jmes_expression, data) or []
+        if not isinstance(result, list):
+            result = [result]
+        schedules += [r for r in result if r not in ["{CRON}", ""]]
+
+    for schedule in schedules:
+        failures += check_timed_trigger_value(schedule, data)
+
+    if failures > 0:
+        return 1
+    else:
+        return 0
 
 
 if __name__ == "__main__":

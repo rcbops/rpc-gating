@@ -49,7 +49,8 @@
             Hours. Instances older than this will be removed.
       - rpc_gating_params
     triggers:
-      - timed: "H * * * *"
+      - timed: "H * * * 2-7"
+      - timed: "H 13-23 * * 1"
     properties:
       - build-discarder:
           days-to-keep: 3

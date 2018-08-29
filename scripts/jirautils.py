@@ -53,8 +53,9 @@ def _get_or_create_issue(project, status, labels, description, summary):
 
     # Check for existing issues
     query = ("{label_terms} AND project = \"{p}\" AND status = {s}"
+             " AND summary ~\"{summary}\""
              .format(label_terms=get_label_query_terms(labels),
-                     p=project, s=status))
+                     p=project, s=status, summary=summary))
     issues = issues_for_query(query)
 
     if len(issues) == 1:
