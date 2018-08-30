@@ -1702,7 +1702,7 @@ void createComponentJobs(String name, String repoUrl, List releases, String jira
 
     createComponentGateTrigger(name, repoUrl, projectsFile)
     createComponentPreRelease(name, repoUrl, releases, projectsFile)
-    createComponentCommenter(name, repoUrl, releases, projectsFile)
+    createPrWhisperer(name, repoUrl, projectsFile)
 
     withEnv(
       [
@@ -1803,37 +1803,29 @@ void createComponentPreRelease(String name, String repoUrl, List releases, Strin
   } // if
 }
 
-void createComponentCommenter(String name, String repoUrl, List releases, String projectsFile){
+void createPrWhisperer(String name, String repoUrl, String projectsFile){
   String jjb = ""
 
   Boolean jobNotExists = sh(
     returnStatus: true,
     script: """#!/bin/bash -xe
-      grep -s 'Component-PR-Commenter_{repo_name}-{series}' ${projectsFile}
+      grep -s 'Pull-Request-Whisperer_{repo}' ${projectsFile}
     """
   ).asBoolean()
 
   if (jobNotExists) {
-    if (!releases){
-      // NOTE(mattt): If no releases have been specified, then we just
-      // add a job for the project's master branch.
-      releases = [["series": "master"]]
-    } // if
-
-    for ( release in releases ) {
-      jjb += """
+    jjb += """
 - project:
-    name: '${name}-${release['series']}-pr-commenter'
-    repo_name: '${name}'
-    repo_url: '${repoUrl}'
-    series: '${release['series']}'
-    branches:
-      - '${release['series']}.*'
-    jira_project_key: "RE"
+    name: '${name}-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - ${name}:
+          repo_url: '${repoUrl}'
     jobs:
-      - 'Component-PR-Commenter_{repo_name}-{series}'
+      - 'Pull-Request-Whisperer_{repo}'
 """
-    } //for
 
     sh """#!/bin/bash -xe
       echo "${jjb}" >> ${projectsFile}

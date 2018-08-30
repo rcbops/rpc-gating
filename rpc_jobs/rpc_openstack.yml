@@ -799,3 +799,15 @@
           BRANCH: "newton"
     jobs:
       - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'rpc-openstack-whisperer'
+    series:
+      - all_branches:
+          branches: ".*"
+    repo:
+      - rpc_openstack:
+          repo_url: "https://github.com/rcbops/rpc-openstack"
+          run_issue_linker: true
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'

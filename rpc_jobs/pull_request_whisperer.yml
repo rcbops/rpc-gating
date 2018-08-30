@@ -1,0 +1,51 @@
+- job-template:
+    name: 'Pull-Request-Whisperer_{repo}'
+    project-type: workflow
+    concurrent: true
+    run_commenter: true
+    run_issue_linker: false
+    comment_body: |
+      Thank you for submitting a pull request to this project!
+
+      Once all `check` jobs have passed and the pull request has received a
+      sufficient number of reviews, the repository's `gate` jobs can be triggered by
+      adding a comment of `check_component_gate` to this pull request.
+
+      When the `gate` jobs have completed successfully, this pull request will get
+      merged automatically.
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_all.*|.*recheck_whisperer.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/whisperer'
+          cancel-builds-on-update: true
+    properties:
+      - github:
+          url: "{repo_url}"
+      - build-discarder:
+          days-to-keep: 7
+    parameters:
+      - rpc_gating_params
+      - text:
+          name: COMMENT_BODY
+          default: "{comment_body}"
+    dsl: |
+      if ("{repo}" == "rpc_gating"){{
+        env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
+      }}
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      common.globalWraps(){{
+        Boolean run_issue_linker = "{run_issue_linker}".toBoolean()
+        Boolean run_commenter = "{run_commenter}".toBoolean()
+
+        if (run_issue_linker) {{
+          github.add_issue_url_to_pr()
+        }}
+        if (run_commenter) {{
+          github.add_comment_to_pr(env.COMMENT_BODY)
+        }}
+      }} // globalWraps
