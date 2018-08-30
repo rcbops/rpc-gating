@@ -71,6 +71,47 @@ void add_issue_url_to_pr(){
 }
 
 
+void add_comment_to_pr(String body){
+  List org_repo = env.ghprbGhRepository.split("/")
+  String org = org_repo[0]
+  String repo = org_repo[1]
+  Integer pull_request_number = env.ghprbPullId as Integer
+
+  String safeBody = sh(script: """#!/usr/bin/env python3
+from shlex import quote
+
+print(quote('''${body}'''))
+  """, returnStdout: true).trim()
+
+  println("=== safeBody ===")
+  println(safeBody)
+
+  withCredentials([
+    string(
+      credentialsId: 'rpc-jenkins-svc-github-pat',
+      variable: 'pat'
+    )
+  ]){
+    // NOTE(mattt): We deliberately leave off the single quotes around
+    // ${safeBody} as it should already be quoted and having both in
+    // place actually results in none being used when ghutils.py is called.
+    sh """#!/bin/bash -xe
+      cd $env.WORKSPACE
+      set +x; . .venv/bin/activate; set -x
+      python rpc-gating/scripts/ghutils.py\
+        --org '$org'\
+        --repo '$repo'\
+        --pat '$pat'\
+        add_comment_to_issue\
+        --issue-number '$pull_request_number'\
+        --body ${safeBody}
+    """
+  }
+
+  return null
+}
+
+
 def merge_pr(
     String org,
     String repo,

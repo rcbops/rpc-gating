@@ -105,6 +105,49 @@ def create_issue(repo, tag, link, label):
 @cli.command()
 @click.pass_obj
 @click.option(
+    '--issue-number',
+    help="Issue or pull request to comment on",
+    required=True,
+)
+@click.option(
+    '--body',
+    help="The body of the comment to post to the issue",
+    required=True,
+)
+@click.option(
+    '--allow-duplicates/--no-allow-duplicates',
+    help="Allow duplicate issue comments to be posted to the issue",
+    default=False,
+)
+def add_comment_to_issue(repo, issue_number, body, allow_duplicates):
+    """Add a comment to a GitHub issue.
+
+    Internally, issues and pull requests are treated the same and either
+    an issue ID or pull request ID can be passed into --issue-number.
+    """
+    found = False
+    issue = repo.issue(issue_number)
+
+    if not allow_duplicates:
+        for comment in issue.iter_comments():
+            if comment.body == body:
+                found = True
+                break
+
+    if allow_duplicates or not found:
+        success = issue.create_comment(body)
+        if success:
+            click.echo("The comment was successfully posted to the issue.")
+        else:
+            click.echo("There was a failure commenting on the issue.")
+            raise SystemExit(1)
+    else:
+        click.echo("An identical comment was found, skipping posting comment.")
+
+
+@cli.command()
+@click.pass_obj
+@click.option(
     '--pull-request-number',
     help="Pull request to update",
     required=True,
