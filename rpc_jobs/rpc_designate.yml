@@ -62,3 +62,34 @@
     # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: rpc-designate-gate-trigger
+    repo_name: rpc-designate
+    repo_url: https://github.com/rcbops/rpc-designate
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: rpc-designate-re-release-pr
+    repo:
+      - rpc-designate:
+          URL: https://github.com/rcbops/rpc-designate
+          BRANCH: dev
+      - rpc-designate:
+          URL: https://github.com/rcbops/rpc-designate
+          BRANCH: master
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'rpc-designate-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-designate:
+          repo_url: 'https://github.com/rcbops/rpc-designate'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
