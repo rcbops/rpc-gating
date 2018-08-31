@@ -10,11 +10,20 @@ zookeeper-servers:
     port: 2181
 
 labels:
+  #g1-8
+  - name: ubuntu-bionic-g1-8
+    min-ready: 3
+    max-ready-age: 3600
   - name: ubuntu-xenial-g1-8
     min-ready: 3
     max-ready-age: 3600
   - name: ubuntu-trusty-g1-8
     min-ready: 0
+    max-ready-age: 3600
+
+  #p2-15
+  - name: ubuntu-bionic-p2-15
+    min-ready: 1
     max-ready-age: 3600
   - name: ubuntu-xenial-p2-15
     min-ready: 1
@@ -22,9 +31,16 @@ labels:
   - name: ubuntu-trusty-p2-15
     min-ready: 0
     max-ready-age: 3600
+
+  # onmetal io2
+  - name: ubuntu-bionic-om-io2
+    min-ready: 1
+    max-ready-age: 3600
   - name: ubuntu-xenial-om-io2
     min-ready: 2
     max-ready-age: 3600
+
+  # rpco base images
   - name: rpco-14.2-xenial-base
     min-ready: 1
     max-ready-age: 3600
@@ -39,6 +55,8 @@ providers:
     boot-timeout: 600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     cloud-images: &provider_cloudimage_block
+      - name: ubuntu-bionic-onmetal
+        image-name: "OnMetal - Ubuntu 18.04 LTS (Bionic Beaver)"
       - name: ubuntu-xenial-onmetal
         image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
     image-name-format: nodepool-{image_name}-{timestamp}
@@ -58,6 +76,12 @@ providers:
         max-servers: 20
         availability-zones: []
         labels: &provider_pools_main_labels_block
+          #g1-8
+          - name: ubuntu-bionic-g1-8
+            diskimage: ubuntu-bionic
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
           - name: ubuntu-xenial-g1-8
             diskimage: ubuntu-xenial
             flavor-name: general1-8
@@ -66,6 +90,13 @@ providers:
           - name: ubuntu-trusty-g1-8
             diskimage: ubuntu-trusty
             flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
+
+          #p2-15
+          - name: ubuntu-bionic-p2-15
+            diskimage: ubuntu-bionic
+            flavor-name: performance2-15
             key-name: jenkins
             console-log: true
           - name: ubuntu-xenial-p2-15
@@ -78,6 +109,8 @@ providers:
             flavor-name: performance2-15
             key-name: jenkins
             console-log: true
+
+          #rpco base
           - name: rpco-14.2-xenial-base
             diskimage: rpco-14.2-xenial-artifacts
             flavor-name: "15GB Standard Instance"
@@ -94,6 +127,11 @@ providers:
         max-servers: 10
         availability-zones: []
         labels: &provider_pools_onmetal_labels_block
+          - name: ubuntu-bionic-om-io2
+            cloud-image: ubuntu-bionic-onmetal
+            flavor-name: onmetal-io2
+            key-name: jenkins
+            console-log: true
           - name: ubuntu-xenial-om-io2
             cloud-image: ubuntu-xenial-onmetal
             flavor-name: onmetal-io2
@@ -197,6 +235,29 @@ providers:
             console-log: true
 
 diskimages:
+  - name: ubuntu-bionic
+    # Build fresh images every 24 hrs.
+    # This ensures that any merged config changes
+    # to the diskimage-build scripts or diskimage
+    # config take effect within a reasonable time.
+    rebuild-age: 86400
+    formats:
+      - vhd
+    elements:
+      - ubuntu-minimal
+      - growroot
+      - openssh-server
+      - simple-init
+      - vm
+      - jenkins-slave
+    release: bionic
+    env-vars:
+      TMPDIR: /opt/nodepool/dib_tmp
+      DIB_CHECKSUM: '1'
+      DIB_IMAGE_CACHE: /opt/nodepool/dib_cache
+      DIB_GRUB_TIMEOUT: '0'
+      DIB_DISTRIBUTION_MIRROR: 'http://mirror.rackspace.com/ubuntu'
+      DIB_DEBIAN_COMPONENTS: 'main,universe'
   - name: ubuntu-xenial
     # Build fresh images every 24 hrs.
     # This ensures that any merged config changes
