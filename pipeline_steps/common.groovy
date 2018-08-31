@@ -1100,6 +1100,12 @@ List build_creds_array(String list_of_cred_ids){
       ],
       "jenkins_api_creds": [
         'service_account_jenkins_api_creds'
+      ],
+      "rpc_osp": [
+        "RPC_OSP_REDHAT_ISO_URL",
+        "RPC_OSP_REDHAT_POOL_ID",
+        "RPC_OSP_REDHAT_PASSWORD",
+        "RPC_OSP_REDHAT_USERNAME"
       ]
     ]
     // only needs to contain creds that should be exposed.
@@ -1220,6 +1226,22 @@ List build_creds_array(String list_of_cred_ids){
         credentialsId: "service_account_jenkins_api_creds",
         usernameVariable: "JENKINS_USERNAME",
         passwordVariable: "JENKINS_API_KEY"
+      ),
+      "RPC_OSP_REDHAT_ISO_URL": string(
+        credentialsId: "RPC_OSP_REDHAT_ISO_URL",
+        variable: "RPC_OSP_REDHAT_ISO_URL"
+      ),
+      "RPC_OSP_REDHAT_POOL_ID": string(
+        credentialsId: "RPC_OSP_REDHAT_POOL_ID",
+        variable: "RPC_OSP_REDHAT_POOL_ID"
+      ),
+      "RPC_OSP_REDHAT_PASSWORD": string(
+        credentialsId: "RPC_OSP_REDHAT_PASSWORD",
+        variable: "RPC_OSP_REDHAT_PASSWORD"
+      ),
+      "RPC_OSP_REDHAT_USERNAME": string(
+        credentialsId: "RPC_OSP_REDHAT_USERNAME",
+        variable: "RPC_OSP_REDHAT_USERNAME"
       )
     ]
 
