@@ -1,0 +1,12 @@
+- job:
+    name: RE-Jenkins
+    project-type: "multibranch"
+    days-to-keep: 14
+    concurrent: False
+
+    scm:
+      - github:
+          repo: "re-jenkins"
+          repo-owner: "rcbops"
+          credentials-id: "github_account_rpc_jenkins_svc"
+          discover-tags: true
