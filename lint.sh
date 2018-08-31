@@ -18,6 +18,10 @@ install(){
     $python -m virtualenv ${venv}_${python}
   fi
   . ${venv}_${python}/bin/activate
+
+  # find homebrew libs on macOS
+  [[ "$OSTYPE" =~ "darwin" ]] && export CFLAGS="-I/usr/local/include -L/usr/local/lib"
+
   ${venv}_${python}/bin/${python} -m pip install -c constraints.txt -r test-requirements.txt  >/dev/null \
     || {
       echo "Failed to create venv for $python"
