@@ -9,7 +9,7 @@
 
       Once all `check` jobs have passed and the pull request has received a
       sufficient number of reviews, the repository's `gate` jobs can be triggered by
-      adding a comment of `check_component_gate` to this pull request.
+      adding a comment of `:shipit:` to this pull request.
 
       When the `gate` jobs have completed successfully, this pull request will get
       merged automatically.
