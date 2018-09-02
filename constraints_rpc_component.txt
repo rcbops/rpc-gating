@@ -1,3 +1,3 @@
 GitPython==2.1.9
-git+https://github.com/rcbops/rpc_component@2e7841146634850fef02ba392f5e3910031a0d63#egg=rpc_component
+git+https://github.com/rcbops/rpc_component@1a3f0ddac31ff118f4aa2b1d3dd3081d4c353a10#egg=rpc_component
 schema==0.6.7

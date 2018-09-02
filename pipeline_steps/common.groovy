@@ -1633,6 +1633,14 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
 
   String description = "Release tests passed, merging..."
   gate.updateStatusAndMerge(description, statusContext)
+
+  if (prType == "release"){
+    try {
+      updateDependents(REPO_NAME)
+    } catch (e) {
+      println "Error updateDependents(): unable to perform dep update on dependent components"
+    }
+  }
 }
 
 Boolean skipPullRequestTests(String triggerPhrase){
@@ -1952,6 +1960,52 @@ void createRelease(String component_text, Boolean from_rc_branch){
       ],
     ]
   )
+}
+
+void updateDependents(String componentName){
+  def parallelBuilds = [:]
+  List allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+  venv = "${WORKSPACE}/.componentvenv"
+
+  sh """#!/bin/bash -xe
+    if [ ! -e ${venv} ]; then
+      virtualenv --python python3 ${venv}
+      set +x; . ${venv}/bin/activate; set -x
+      pip install -c '${env.WORKSPACE}/rpc-gating/constraints_rpc_component.txt' rpc_component
+    fi
+  """
+
+  def dependentComponents_text = sh(
+    returnStdout: true,
+    script: """#!/bin/bash
+      set +x; . ${venv}/bin/activate; set -x
+      component --releases-dir ./ dependents --component-name ${componentName} get
+    """
+  )
+
+  def dependentComponents = readYaml text: dependentComponents_text
+  def dependentComponentsToUpdate = dependentComponents["name"]
+
+  for ( dependentComponent in dependentComponentsToUpdate ) {
+    jobs = (allWorkflowJobs.findAll { it.displayName =~ /PM-Dep-Update_${dependentComponent}.*/ })
+    for ( job in jobs ) {
+      parallelBuilds[job.displayName] = {
+        build(
+          job: job.displayName,
+          wait: false,
+          parameters: [
+            [
+              $class: 'StringParameterValue',
+              name: 'third_party_dependencies_update',
+              value: "false"
+            ]
+          ]
+        )
+      }
+    }
+  }
+
+  parallel parallelBuilds
 }
 
 
