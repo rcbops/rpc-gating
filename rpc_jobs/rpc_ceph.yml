@@ -173,3 +173,25 @@
           BRANCH: "master"
     jobs:
       - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: "rpc-ceph-pre-merge-lint"
+
+    repo_name: "rpc-ceph"
+    repo_url: "https://github.com/rcbops/rpc-ceph"
+
+    branches:
+      - "master"
+
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+
+    scenario:
+      - "ansible_lint"
+
+    action:
+      - "test"
+
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
