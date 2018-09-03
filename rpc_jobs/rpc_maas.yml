@@ -226,3 +226,15 @@
           BRANCH: "master"
     jobs:
       - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'rpc-maas-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-maas:
+          repo_url: 'https://github.com/rcbops/rpc-maas'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
