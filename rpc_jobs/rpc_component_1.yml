@@ -1,0 +1,28 @@
+
+- project:
+    name: rpc-component-1-gate-trigger
+    repo_name: rpc-component-1
+    repo_url: https://github.com/mattt416/rpc-component-1
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: rpc-component-1-re-release-pr
+    repo:
+      - rpc-component-1:
+          URL: https://github.com/mattt416/rpc-component-1
+          BRANCH: master
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'rpc-component-1-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-component-1:
+          repo_url: 'https://github.com/mattt416/rpc-component-1'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
