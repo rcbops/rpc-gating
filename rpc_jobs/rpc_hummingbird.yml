@@ -126,3 +126,15 @@
           BRANCH: "master"
     jobs:
       - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'rpc-hummingbird-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-hummingbird:
+          repo_url: 'https://github.com/rcbops/rpc-hummingbird'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
