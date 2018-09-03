@@ -1724,6 +1724,7 @@ void createComponentJobs(String name, String repoUrl, List releases, String jira
 
     createComponentGateTrigger(name, repoUrl, projectsFile)
     createComponentPreRelease(name, repoUrl, releases, projectsFile)
+    createPrWhisperer(name, repoUrl, projectsFile)
 
     withEnv(
       [
@@ -1817,6 +1818,36 @@ void createComponentPreRelease(String name, String repoUrl, List releases, Strin
 
     jjb += """    jobs:
       - 'RE-Release-PR_{repo}-{BRANCH}'"""
+
+    sh """#!/bin/bash -xe
+      echo "${jjb}" >> ${projectsFile}
+    """
+  } // if
+}
+
+void createPrWhisperer(String name, String repoUrl, String projectsFile){
+  String jjb = ""
+
+  Boolean jobNotExists = sh(
+    returnStatus: true,
+    script: """#!/bin/bash -xe
+      grep -s 'Pull-Request-Whisperer_{repo}' ${projectsFile}
+    """
+  ).asBoolean()
+
+  if (jobNotExists) {
+    jjb += """
+- project:
+    name: '${name}-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - ${name}:
+          repo_url: '${repoUrl}'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+"""
 
     sh """#!/bin/bash -xe
       echo "${jjb}" >> ${projectsFile}

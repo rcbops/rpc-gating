@@ -331,3 +331,18 @@
 
     jobs:
       - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'dummy-repo-whisperers'
+    series:
+      - all_branches:
+          branches: ".*"
+    repo:
+      - rpc-product-1:
+          repo_url: 'https://github.com/rcbops/rpc-product-1'
+      - rpc-component-1:
+          repo_url: 'https://github.com/rcbops/rpc-component-1'
+      - rpc-component-2:
+          repo_url: 'https://github.com/rcbops/rpc-component-2'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'

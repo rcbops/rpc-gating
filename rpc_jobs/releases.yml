@@ -21,3 +21,24 @@
 
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'releases-whisperer'
+    series:
+      - all_branches:
+          branches: ".*"
+    repo:
+      - releases:
+          repo_url: "https://github.com/rcbops/releases"
+          run_issue_linker: true
+          comment_body: |
+            Thank you for pull request to `rcbops/releases`!
+
+            Once all `check` jobs have passed and the pull request has received a
+            sufficient number of reviews, the repository's `release` jobs can be triggered by
+            adding a comment of `run_component_release` to this pull request.
+
+            When the `release` jobs have completed successfully and the release itself has been
+            completed, this pull request will get merged automatically.
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
