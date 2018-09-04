@@ -195,3 +195,15 @@
 
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-ceph-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-ceph:
+          repo_url: 'https://github.com/rcbops/rpc-ceph'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
