@@ -14,6 +14,9 @@
       Note that the `CIT/Release` job is not a check job, so it will stay in `Expected`
       state until the release job is started with the `:shipit:` comment. 
 
+      Note that the `CIT/Release` job is not a check job, so it will stay in `Expected`
+      state until the release job is started with the `:shipit:` comment. 
+
       When the `gate` jobs have completed successfully, this pull request will get
       merged automatically.
     triggers:
