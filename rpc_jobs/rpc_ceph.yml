@@ -207,3 +207,24 @@
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
 
+- project:
+    name: "rpc-ceph-pre-merge-releasenotes"
+
+    repo_name: "rpc-ceph"
+    repo_url: "https://github.com/rcbops/rpc-ceph"
+
+    branches:
+      - "master"
+
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+
+    scenario:
+      - "build_releasenotes"
+
+    action:
+      - "test"
+
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
