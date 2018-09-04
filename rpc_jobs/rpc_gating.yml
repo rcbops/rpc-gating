@@ -49,5 +49,6 @@
       - rpc_gating:
           repo_url: "https://github.com/rcbops/rpc-gating"
           run_issue_linker: true
+          run_commenter: false
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
