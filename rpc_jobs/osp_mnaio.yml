@@ -39,3 +39,15 @@
     credentials: "rpc_osp"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'osp-mnaio-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - osp-mnaio:
+          repo_url: 'https://github.com/rcbops/osp-mnaio'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
