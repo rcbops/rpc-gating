@@ -9,7 +9,7 @@
           org-list:
             - rcbops
           github-hooks: true
-          trigger-phrase: '(re)?check_component_gate'
+          trigger-phrase: ":shipit:"
           only-trigger-phrase: true
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: "{status_context}"
