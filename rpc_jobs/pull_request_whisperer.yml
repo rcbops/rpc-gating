@@ -43,7 +43,11 @@
         Boolean run_commenter = "{run_commenter}".toBoolean()
 
         if (run_issue_linker) {{
-          github.add_issue_url_to_pr()
+          try {{
+              github.add_issue_url_to_pr()
+          }} catch (e) {{
+            print "Failure adding an issue link to the pull request: ${{e}}"
+          }}
         }}
         if (run_commenter) {{
           github.add_comment_to_pr(env.COMMENT_BODY)
