@@ -184,7 +184,7 @@ def _publish_release_to_wiki(
     component, version, release_notes_url, comment,
 ):
     current_date = datetime.date.today()
-    meta_release = "{year}.{month}".format(
+    meta_release = "{year}.{month:02d}".format(
         year=current_date.year, month=current_date.month
     )
     space_key = "RE"
