@@ -38,6 +38,10 @@
             sufficient number of reviews, the repository's `release` jobs can be triggered by
             adding a comment of `:shipit:` to this pull request.
 
+            If the requested release has one or more failing tests and there are valid reasons
+            to ignore the failure, a release can be forced through by triggering the process
+            a with comment of `:shipit: skip validation`.
+
             When the `release` jobs have completed successfully and the release itself has been
             completed, this pull request will get merged automatically.
     jobs:

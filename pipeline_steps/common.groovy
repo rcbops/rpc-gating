@@ -1567,7 +1567,7 @@ Boolean isSkippable(String skip_pattern, String credentials) {
   return skipIt
 }
 
-void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String jiraProjectKey, String statusContext){
+void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String jiraProjectKey, String statusContext, String skipTestsTriggerPhrase){
   def (prType, componentText) = getComponentChange(baseBranch, prBranch)
   def componentYaml = readYaml text: componentText
 
@@ -1618,7 +1618,11 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
         }
       }
 
-      testRelease(componentText)
+      if (skipPullRequestTests(skipTestsTriggerPhrase)) {
+        println "Skipping the validation of the project code."
+      } else {
+        testRelease(componentText)
+      }
       createRelease(componentText, has_rc_branch)
     }
   }else if (type == "registration"){
@@ -1629,6 +1633,10 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
 
   String description = "Release tests passed, merging..."
   gate.updateStatusAndMerge(description, statusContext)
+}
+
+Boolean skipPullRequestTests(String triggerPhrase){
+  return ghprbCommentBody == "${triggerPhrase}"
 }
 
 List getComponentChange(String baseBranch, String prBranch){
