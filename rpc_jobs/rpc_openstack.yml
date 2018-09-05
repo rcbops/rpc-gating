@@ -362,29 +362,6 @@
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-queens-rc-aio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "queens-rc"
-    jira_project_key: "RO"
-    # We have an MNAIO equivalent of this PM job, but we need to keep
-    # this for the push triggering for snapshot building.
-    CRON: "@monthly"
-    image:
-      - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    scenario:
-      - "swift"
-    action:
-      - deploy:
-          FLAVOR: "7"
-    # This is the build that will be triggered by the push trigger job
-    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
     name: "rpc-openstack-queens-mnaio-postmerge"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
@@ -392,32 +369,6 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
-    scenario:
-      - ironic
-      - swift
-    action:
-      - system
-      - sdqc
-      - deploy
-    exclude:
-      - action: system
-        scenario: ironic
-      - action: sdqc
-        scenario: ironic
-    # Required by RPC-ASC team to upload test results qTest
-    credentials: "rpc_asc_creds"
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
-    name: "rpc-openstack-queens-rc-mnaio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "queens-rc"
-    jira_project_key: "RO"
-    image:
-       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
     scenario:
       - ironic
@@ -464,52 +415,6 @@
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "pike"
-    jira_project_key: "RO"
-    image:
-      - xenial_mnaio_no_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
-    scenario:
-      - ironic
-      - swift
-    action:
-      - system
-      - deploy
-    exclude:
-      - action: system
-        scenario: ironic
-    # Required by RPC-ASC team to upload test results qTest
-    credentials: "rpc_asc_creds"
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
-    name: "rpc-openstack-pike-rc-aio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "pike-rc"
-    jira_project_key: "RO"
-    # We have an MNAIO equivalent of this PM job, but we need to keep
-    # this for the push triggering for snapshot building.
-    CRON: "@monthly"
-    image:
-      - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    scenario:
-      - "swift"
-    action:
-      - deploy:
-          FLAVOR: "7"
-    # This is the build that will be triggered by the push trigger job
-    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
-    name: "rpc-openstack-pike-rc-mnaio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "pike-rc"
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
@@ -597,75 +502,6 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
-    name: "rpc-openstack-newton-rc-aio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "newton-rc"
-    jira_project_key: "RO"
-    # NOTE(mattt): ORD doesn't have the custom RPC images in it
-    REGIONS: "DFW"
-    FALLBACK_REGIONS: "IAD"
-    image:
-      - xenial:
-          IMAGE: "Ubuntu 16.04.2 LTS prepared for RPC deployment"
-      - trusty:
-          IMAGE: "Ubuntu 14.04.5 LTS prepared for RPC deployment"
-    scenario:
-      - "swift"
-    action:
-      - deploy:
-          FLAVOR: "7"
-    # This is the build that will be triggered by the push trigger job
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-# We create a separate snapshot project since we don't need all newton-rc-aio
-# jobs triggering snapshot builds.
-- project:
-    name: "rpc-openstack-newton-rc-aio-postmerge-snapshot"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "newton-rc"
-    jira_project_key: "RO"
-    image:
-      - xenial_loose_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-          # We have an MNAIO equivalent of this PM job, but we need to keep
-          # this for the push triggering for snapshot building.
-          CRON: "@monthly"
-      - trusty_loose_artifacts:
-          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
-    scenario:
-      - "swift"
-    action:
-      - deploy:
-          FLAVOR: "7"
-    # This is the build that will be triggered by the push trigger job
-    trigger_build: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-      - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
-    name: "rpc-openstack-newton-rc-mnaio-postmerge"
-    repo_name: "rpc-openstack"
-    repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "newton-rc"
-    jira_project_key: "RO"
-    image:
-      - xenial_mnaio_loose_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
-    scenario:
-      - swift
-    action:
-      - system
-      - deploy
-    # Required by RPC-ASC team to upload test results qTest
-    credentials: "rpc_asc_creds"
-    jobs:
-      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
-- project:
     name: 'rpc-openstack-rocky-mnaio-release'
     repo_name: 'rpc-openstack'
     repo_url: 'https://github.com/rcbops/rpc-openstack'
@@ -685,7 +521,7 @@
     name: 'rpc-openstack-queens-mnaio-release'
     repo_name: 'rpc-openstack'
     repo_url: 'https://github.com/rcbops/rpc-openstack'
-    branch: "queens-rc"
+    branch: "queens"
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
@@ -701,7 +537,7 @@
     name: 'rpc-openstack-pike-mnaio-release'
     repo_name: 'rpc-openstack'
     repo_url: 'https://github.com/rcbops/rpc-openstack'
-    branch: "pike-rc"
+    branch: "pike"
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
@@ -717,7 +553,7 @@
     name: "rpc-openstack-newton-mnaio-release"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
-    branch: "newton-rc"
+    branch: "newton"
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
