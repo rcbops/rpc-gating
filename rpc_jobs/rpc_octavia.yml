@@ -54,7 +54,7 @@
     # Use image for RPC-O install
     image:
       - xenial_snapshot:
-          IMAGE: "rpc-r16.2.3-xenial_no_artifacts-swift"
+          IMAGE: "rpc-r16.2.4-xenial_no_artifacts-swift"
           REGIONS: "DFW"
           FALLBACK_REGIONS: ""
           FLAVOR: "7"
@@ -88,7 +88,7 @@
       - "master":
           IMAGE: "rpc-r14.16.0-xenial_loose_artifacts-swift"
       - "pike":
-          IMAGE: "rpc-r16.2.3-xenial_no_artifacts-swift"
+          IMAGE: "rpc-r16.2.4-xenial_no_artifacts-swift"
 
     # Use image for RPC-O install
     image:
