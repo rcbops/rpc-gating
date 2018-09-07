@@ -58,8 +58,10 @@
           num-to-keep: 30
     triggers:
       - timed: "0 12 * * 1"
+    sandbox: false
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
+      import jenkins.model.Jenkins
       common.globalWraps(){
         String jiraIssue
         try {
@@ -71,7 +73,7 @@
           return
         }
         stage("Enable Quiet Down"){
-          jenkins_api.quietDown(false)
+          Jenkins.get().doQuietDown()
         }
         stage("Slack Notification"){
           if (env.SEND_SLACK_NOTIFICATIONS == "true"){
@@ -115,9 +117,6 @@
           println("No maintenance issue found, not ending maintenance window.")
           currentBuild.result = "ABORTED"
           return
-        }
-        stage("Cancel Quiet Down"){
-          jenkins_api.quietDown(true)
         }
         stage("RE Platform Unit Tests"){
           if(env.RUN_UNIT_TESTS == "true"){
