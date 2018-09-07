@@ -400,12 +400,17 @@ def check_timed_trigger(data, in_file):
         "timed_triggers": "triggers[*].timed"
     }
 
+    # Each jmes expression can return one of more schedules
+    # Each schedule can be single or multi-line string.
     schedules = []
     for jmes_expression in jmes_expressions.values():
-        result = jmespath.search(jmes_expression, data) or []
-        if not isinstance(result, list):
-            result = [result]
-        schedules += [r for r in result if r not in ["{CRON}", ""]]
+        results = jmespath.search(jmes_expression, data) or []
+        if not isinstance(results, list):
+            results = [results]
+        for result in results:
+            for line in result.split("\n"):
+                if line not in ["{CRON}", ""]:
+                    schedules.append(line)
 
     for schedule in schedules:
         failures += check_timed_trigger_value(schedule, data)
