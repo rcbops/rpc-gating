@@ -10,6 +10,20 @@ zookeeper-servers:
     port: 2181
 
 labels:
+  # MaaS jobs expect a MaaS entity to be provided for each node. Public cloud provides
+  # entities but phobos does not. Consequently MaaS jobs fail on phobos. (RE-1954)
+  # This was initially solved by disabling phobos. In order to re-enable phobos,
+  # maas specific labels are introduced that draw from all regions except phobos.
+  - name: maas-ubuntu-xenial-g1-8
+    min-ready: 0
+    max-ready-age: 3600
+  - name: maas-ubuntu-trusty-g1-8
+    min-ready: 0
+    max-ready-age: 3600
+  - name: maas-ubuntu-xenial-p2-15
+    min-ready: 0
+    max-ready-age: 3600
+
   #g1-8
   - name: ubuntu-bionic-g1-8
     min-ready: 3
@@ -61,6 +75,8 @@ providers:
         image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: &provider_diskimage_block
+      - name: ubuntu-bionic
+        config-drive: true
       - name: ubuntu-xenial
         config-drive: true
       - name: ubuntu-trusty
@@ -73,9 +89,26 @@ providers:
       - name: main
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
         ignore-provider-quota: true
-        max-servers: 20
+        max-servers: 25
         availability-zones: []
         labels: &provider_pools_main_labels_block
+          #MaaS
+          - name: maas-ubuntu-xenial-g1-8
+            diskimage: ubuntu-xenial
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
+          - name: maas-ubuntu-trusty-g1-8
+            diskimage: ubuntu-trusty
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
+          - name: maas-ubuntu-xenial-p2-15
+            diskimage: ubuntu-xenial
+            flavor-name: performance2-15
+            key-name: jenkins
+            console-log: true
+
           #g1-8
           - name: ubuntu-bionic-g1-8
             diskimage: ubuntu-bionic
@@ -150,7 +183,7 @@ providers:
       - name: main
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
         ignore-provider-quota: true
-        max-servers: 20
+        max-servers: 25
         availability-zones: []
         labels: *provider_pools_main_labels_block
       - name: onmetal
@@ -169,7 +202,7 @@ providers:
     diskimages: *provider_diskimage_block
     pools:
       - name: main
-        max-servers: 20
+        max-servers: 25
         availability-zones: []
         labels: *provider_pools_main_labels_block
 
@@ -180,6 +213,10 @@ providers:
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     image-name-format: nodepool-phobos-{image_name}-{timestamp}
     diskimages:
+      - name: ubuntu-bionic
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
       - name: ubuntu-xenial
         config-drive: true
         meta:
@@ -198,11 +235,17 @@ providers:
           hypervisor_type: qemu
     pools:
       - name: main
-        max-servers: 0
+        max-servers: 5
         availability-zones: []
         networks:
           - rpc-releng-private
         labels:
+          #g1-8
+          - name: ubuntu-bionic-g1-8
+            diskimage: ubuntu-bionic
+            flavor-name: releng-general1-8
+            key-name: jenkins
+            console-log: true
           - name: ubuntu-xenial-g1-8
             diskimage: ubuntu-xenial
             flavor-name: releng-general1-8
@@ -211,6 +254,12 @@ providers:
           - name: ubuntu-trusty-g1-8
             diskimage: ubuntu-trusty
             flavor-name: releng-general1-8
+            key-name: jenkins
+            console-log: true
+          #p2-15
+          - name: ubuntu-bionic-p2-15
+            diskimage: ubuntu-bionic
+            flavor-name: releng-performance2-15
             key-name: jenkins
             console-log: true
           - name: ubuntu-xenial-p2-15
@@ -223,6 +272,7 @@ providers:
             flavor-name: releng-performance2-15
             key-name: jenkins
             console-log: true
+          #rpco-base
           - name: rpco-14.2-xenial-base
             diskimage: rpco-14.2-xenial-artifacts
             flavor-name: releng-7
