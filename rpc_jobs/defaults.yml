@@ -11,6 +11,8 @@
     SLAVE_CONTAINER_DOCKERFILE_REPO: "RE"
     SLAVE_CONTAINER_DOCKERFILE_PATH: "./Dockerfile.standard_job"
     SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "BASE_IMAGE=ubuntu:16.04"
+    # Example values for hold_on_error: 0 (no hold), 40m, 1h, 6h, 3d, 3w, 1M.
+    hold_on_error: "0"
     # Misc
     CRON: "H H(9-21) * * 1-5"
     credentials: ""

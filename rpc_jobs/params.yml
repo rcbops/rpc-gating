@@ -110,6 +110,14 @@
             Standard jobs can be run on different types of slave. The default
             for this parameter is set to "instance" for a compute instances. To
             use a Docker container set this parameter to "container".
+      - string:
+          name: "HOLD_ON_ERROR"
+          default: "{hold_on_error}"
+          description: >
+            Nodepool Slaves can be held for a period of time after a failure has occured
+            to allow manual investigation into the failure. Format: [0-9]{{1,2}}[mhdwM]
+            Valid units [m]inute [h]our [d]ay [w]eek [M]onth
+            Set to "0" for no hold.
         # we used to use choice for this, but choice doesn't take a default
         # parameter, so doesn't work with the way we pass in JJB variables.
       - string:
