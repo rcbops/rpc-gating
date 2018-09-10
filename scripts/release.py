@@ -11,7 +11,8 @@ import confluenceutils
 import ghutils
 from notifications import mail, mailgun, try_context
 
-logger = logging.getLogger("release")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
 
 # release notes
