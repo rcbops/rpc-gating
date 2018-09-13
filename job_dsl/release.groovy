@@ -4,7 +4,27 @@ common.globalWraps(){
     stage("Configure Git"){
       common.configure_git()
     }
-
+    stage("Verify component metadata"){
+      common.clone_with_pr_refs(
+        "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+      )
+      venv = "${WORKSPACE}/.componentvenv"
+      sh """#!/bin/bash -xe
+          virtualenv --python python3 ${venv}
+          set +x; . ${venv}/bin/activate; set -x
+          pip install -c '${env.WORKSPACE}/rpc-gating/constraints_rpc_component.txt' rpc_component
+      """
+      component_text = sh(
+        script: """#!/bin/bash -xe
+          set +x; . ${venv}/bin/activate; set -x
+          cd "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}"
+          component metadata get
+        """,
+        returnStdout: true
+      )
+      println "=== component CLI standard out ==="
+      println component_text
+    }
     stage("Release"){
       // If this is a PR test, then we need to set some
       // of the environment variables automatically as
