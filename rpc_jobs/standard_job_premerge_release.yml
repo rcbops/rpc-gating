@@ -16,6 +16,9 @@
           num-to-keep: 10
       - github:
           url: "{URL}"
+      - inject:
+          properties-content: |
+            RE_JOB_REPO_NAME={repo}
     triggers:
       - github-pull-request:
           org-list:
