@@ -10,7 +10,7 @@
           trigger-phrase: ":shipit:|:shipit: skip validation"
           only-trigger-phrase: true
           auth-id: "github_account_rpc_jenkins_svc"
-          status-context: 'CIT/release'
+          status-context: 'release'
           cancel-builds-on-update: true
     properties:
       - github:

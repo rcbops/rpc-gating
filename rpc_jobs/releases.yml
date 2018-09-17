@@ -18,7 +18,7 @@
       - 'test'
 
     jira_project_key: 'RE'
-
+    status_context_prefix: "check"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -32,17 +32,19 @@
           repo_url: "https://github.com/rcbops/releases"
           run_issue_linker: true
           comment_body: |
-            Thank you for pull request to `rcbops/releases`!
+            Thank you for your pull request to `rcbops/releases`!
 
-            Once all `check` jobs have passed and the pull request has received a
-            sufficient number of reviews, the repository's `release` jobs can be triggered by
-            adding a comment of `:shipit:` to this pull request.
+            Once all required `check` jobs, prefixed with `check/`, have passed and the pull
+            request has received a sufficient number of reviews, the repository's `release` job
+            can be triggered by adding a comment of `:shipit:` to this pull request.
 
-            If the requested release has one or more failing tests and there are valid reasons
-            to ignore the failure, a release can be forced through by triggering the process
-            a with comment of `:shipit: skip validation`.
+            If the requested release has one or more failing project tests and there are valid
+            reasons to ignore the failure(s), a release can be forced through by triggering the
+            process with a comment of `:shipit: skip validation`. This option should only be used
+            in exceptional circumstances. The first course of action should always be to fix the
+            failing job(s).
 
-            When the `release` jobs have completed successfully and the release itself has been
-            completed, this pull request will get merged automatically.
+            When the `release` job has completed successfully the release will have been created
+            and this pull request will get merged automatically.
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
