@@ -36,7 +36,7 @@
           default: "NO"
           description: "Set this to YES if you want to push any changes made in this job to rpc-repo."
     triggers:
-      - timed: "@daily"
+      - timed: "H H * * 2-7" # @daily can't use {CRON_DAILY} as this isn't a template
       - github-pull-request:
           org-list:
             - rcbops

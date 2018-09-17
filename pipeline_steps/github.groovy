@@ -70,12 +70,33 @@ void add_issue_url_to_pr(){
   return null
 }
 
+/**
+ * If called with add_comment_to_pr("comment"), then comment will be added to
+ * the PR that triggered this job (using ghprb env vars to discover the pr).
+ *
+ * To add comments to an alternate pr, supply repo in the form "org/repo" and
+ * pr_id as "id" where id is the pull request number.
+ */
+void add_comment_to_pr(String body,
+                       Boolean allow_duplicates=false,
+                       String org_repo=env.ghprbGhRepository,
+                       String pr_id=env.ghprbPullId){
 
-void add_comment_to_pr(String body){
-  List org_repo = env.ghprbGhRepository.split("/")
-  String org = org_repo[0]
-  String repo = org_repo[1]
-  Integer pull_request_number = env.ghprbPullId as Integer
+  if (org_repo == null || pr_id == null){
+    throw new Exception("Can't add comment to issue as org_repo or pr_id not supplied."
+                        +" These values are read from ghprb env vars for PR triggered jobs"
+                        +" but must be supplied for jobs triggered by other means")
+  }
+  String duplicates_arg
+  if (allow_duplicates){
+    duplicates_arg = "--allow-duplicates"
+  } else {
+    duplicates_arg = "--no-allow-duplicates"
+  }
+  List org_repo_list = org_repo.split("/")
+  String org = org_repo_list[0]
+  String repo = org_repo_list[1]
+  Integer pull_request_number = pr_id as Integer
 
   String safeBody = sh(script: """#!/usr/bin/env python3
 from shlex import quote
@@ -103,7 +124,7 @@ print(quote('''${body}'''))
         --repo '$repo'\
         --pat '$pat'\
         add_comment_to_issue\
-        --issue-number '$pull_request_number'\
+        --issue-number '$pull_request_number' $duplicates_arg\
         --body ${safeBody}
     """
   }

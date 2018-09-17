@@ -25,7 +25,7 @@
     repo_url: "https://github.com/rcbops/rpc-gating"
     branch: "master"
     jira_project_key: "RE"
-    CRON: "@monthly"
+    CRON: "{CRON_DAILY}"
     image:
       - snapshot:
           IMAGE: "rpc-r17.1.0-xenial_no_artifacts-swift"

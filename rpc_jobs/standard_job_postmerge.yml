@@ -44,7 +44,7 @@
     concurrent: true
     FLAVOR: "performance1-1"
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
-    CRON: "@daily"
+    CRON: "{CRON_DAILY}"
     BOOT_TIMEOUT: 900
     properties:
       - build-discarder:

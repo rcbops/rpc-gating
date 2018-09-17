@@ -91,7 +91,7 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
 
 - project:
     name: "rpc-upgrades-aio-newton-head-pm-minor"
@@ -113,7 +113,7 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
 
 - project:
     name: "rpc-upgrades-aio-newton-release-pm"
@@ -155,7 +155,7 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
 
 - project:
     name: "rpc-upgrades-mnaio-newton-head-pm"
@@ -177,7 +177,7 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
 
 - project:
     name: "rpc-upgrades-mnaio-newton-release-pm"
@@ -208,7 +208,7 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
 
 - project:
     name: "rpc-upgrades-aio-newton-head-incremental"
@@ -229,7 +229,7 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
 
 - project:
     name: "rpc-upgrades-mnaio-newton-head-incremental"
@@ -246,7 +246,7 @@
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    CRON: "@weekly"
+    CRON: "{CRON_WEEKLY}"
 
 - project:
     name: "rpc-upgrades"
@@ -275,4 +275,3 @@
           repo_url: 'https://github.com/rcbops/rpc-upgrades'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
-

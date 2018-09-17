@@ -1,0 +1,143 @@
+- job:
+    name: 'RE-Maintenance-Create'
+    project-type: workflow
+    parameters:
+      - rpc_gating_params
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        String jiraIssue = common.getOrCreateIssueForNextMaintenanceWindow()
+        issueLink="https://rpc-openstack.atlassian.net/browse/${jiraIssue}"
+        print("Issue: ${issueLink}")
+        currentBuild.description = "Issue: <a href=\"${issueLink}\">${jiraIssue}</a>"
+      }
+
+- parameter:
+    name: maintenance_params
+    parameters:
+      - bool:
+          name: SEND_SLACK_NOTIFICATIONS
+          default: true
+          description: Enable this to send slack notifications
+      - string:
+          name: SLACK_CHANNEL
+          default: "#rpc-eng-announcements"
+          description: Channel to post slack notifications into.
+      - string:
+          name: JIRA_PROJECT_KEY
+          default: "RE"
+          description: Project to search for Jira Issues
+      - string:
+          name: MAINTENANCE_DATE
+          default: "today"
+          description: |
+            Date of maintenance, used to find the maintenance ticket.
+            Should be "today" or DDDD-MM-YY
+
+# There are still some problems with quietDown and pipeline, such as
+# https://issues.jenkins-ci.org/browse/JENKINS-34256
+# However that should be fixed soon, and there shouldn't be many jobs
+# running at the start of the maintenance period.
+# Also enabling quietDown provides a good visual indicator for users
+# that a maintenance is happening.
+
+# Two separate jobs for start and end as Jenkins may be down/restarted/
+# migrated etc during the window so a pipeline execution may not survive.
+
+- job:
+    name: 'RE-Maintenance-Start'
+    project-type: workflow
+    parameters:
+      - rpc_gating_params
+      - maintenance_params
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    triggers:
+      - timed: "0 12 * * 1"
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        String jiraIssue
+        try {
+          // get today's maintenance issue, will raise if none found
+          jiraIssue = maintenanceIssueForDate(env.MAINTENANCE_DATE, env.JIRA_PROJECT_KEY)
+        } catch (Exception e){
+          println("No maintenance issue found, not starting maintenance window.")
+          currentBuild.result = "ABORTED"
+          return
+        }
+        stage("Enable Quiet Down"){
+          jenkins_api.quietDown(false)
+        }
+        stage("Slack Notification"){
+          if (env.SEND_SLACK_NOTIFICATIONS == "true"){
+            slackSend(channel: env.SLACK_CHANNEL,
+                      message: ":hammer_and_wrench: RE Maintenance Window starting. See ${common.jiraLinkFromIssueKey(jiraIssue)}",
+                      color: "warning")
+          }
+        }
+        println("Maintenance Window Started, go forth and betterate")
+      }
+
+- job:
+    name: 'RE-Maintenance-End'
+    project-type: workflow
+    parameters:
+      - rpc_gating_params
+      - maintenance_params
+      - bool:
+          name: RUN_UNIT_TESTS
+          default: true
+          description: Enable this to run unit the RE platform unit tests
+      - bool:
+          name: RECHECK_PRS
+          default: true
+          description: |
+            Enable this to add "recheck_all" to PRs that had at least one
+            job aborted due to the maintenance.
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    triggers:
+      - timed: "0 12 * * 1"
+    dsl: |
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        String jiraIssue
+        try {
+          // get today's maintenance issue, will raise if none found
+          jiraIssue = maintenanceIssueForDate()
+        } catch (Exception e){
+          println("No maintenance issue found, not ending maintenance window.")
+          currentBuild.result = "ABORTED"
+          return
+        }
+        stage("Cancel Quiet Down"){
+          jenkins_api.quietDown(true)
+        }
+        stage("RE Platform Unit Tests"){
+          if(env.RUN_UNIT_TESTS == "true"){
+            build(
+              job: "RPC-Gating-Unit-Tests",
+              wait: true
+            )
+          }
+        }
+        stage("Restart Aborted PRs"){
+          if(env.RECHECK_PRS == "true"){
+            common.restartAbortedPRBuilds()
+          }
+        }
+        stage("Slack Notification"){
+          if (SEND_SLACK_NOTIFICATIONS == "true"){
+            slackSend(channel: SLACK_CHANNEL,
+                      message: ":hammer_and_wrench: :white_check_mark: RE maintenance complete. See ${common.jiraLinkFromIssueKey(jiraIssue)}",
+                      color: "good")
+          }
+        }
+        println("Maintenance Complete. And Breathe.")
+      }
