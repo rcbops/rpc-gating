@@ -1406,7 +1406,7 @@ void globalWraps(Closure body){
           // This test must be outside a function so that return can be used to abort the job
           // Alternatively we could throw a custom exception and abort when catching it here.
           if (issueExistsForNextMaintenanceWindow() && willOverlapMaintenanceWindow()){
-            common.recordAbortDueToMaintenance()
+            recordAbortDueToMaintenance()
             currentBuild.result == "ABORTED"
             return
           }
