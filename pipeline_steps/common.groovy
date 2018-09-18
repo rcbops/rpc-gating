@@ -1465,6 +1465,7 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
 
         currentBuild.result="SUCCESS"
 
+        runThawIfSnapshot()
         try {
           withRequestedCredentials(credentials) {
 
@@ -2240,4 +2241,21 @@ void restartAbortedPRBuilds(String maint_date="today"){
     github.add_comment_to_pr("recheck_all", true, pr_data['repo'], pr_data['prnum'])
   }
 
+}
+
+/**
+ * Run snapshot thaw file if it exists.
+ */
+void runThawIfSnapshot(){
+  String thawFileName = "/gating/thaw/run"
+  def thawFile = new File(thawFileName)
+  if (thawFile.exists()){
+    stage('Execute snapshot thaw'){
+      sh """#!/bin/bash -xeu
+            ${thawFileName}
+      """
+    }
+  } else{
+    println "No thaw file detected."
+  }
 }

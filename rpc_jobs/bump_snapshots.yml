@@ -112,6 +112,7 @@
             if (release['result'] == "SUCCESS") {
               sh """#!/bin/bash -xe
                 sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" rpc_jobs/*.yml
+                sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" nodepool/files/nodepool.yml
               """
             }
           } // for
