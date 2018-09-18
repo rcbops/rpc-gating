@@ -19,6 +19,8 @@
       - master:
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-p2-15"
           TRIGGER_PR_PHRASE_ONLY: true
+      - queens:
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
       - pike:
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
       - ocata:
@@ -149,6 +151,7 @@
       - "xenial":
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
     scenario:
+      - queens
       - pike
       - newton
       - ceph
@@ -184,6 +187,7 @@
       - "xenial":
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
     scenario:
+      - queens
       - pike
       - newton
       - ceph
