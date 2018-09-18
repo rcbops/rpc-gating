@@ -17,17 +17,17 @@
       - "xenial"
     scenario:
       - master:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-p2-15"
           TRIGGER_PR_PHRASE_ONLY: true
       - pike:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
       - ocata:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
           TRIGGER_PR_PHRASE_ONLY: true
       - newton:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
       - ceph:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -51,7 +51,7 @@
       | ^gating/release/
     image:
       - trusty:
-          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-trusty-g1-8"
     scenario:
       - newton
       - mitaka
@@ -105,7 +105,7 @@
 #      | ^gating/release/
 #    image:
 #      - "xenial":
-#          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+#          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
 #    scenario:
 #      - pike
 #      - newton
@@ -131,7 +131,7 @@
 #      | ^gating/release/
 #    image:
 #      - "trusty":
-#          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+#          SLAVE_TYPE: "nodepool-maas-ubuntu-trusty-g1-8"
 #    scenario:
 #      - newton
 #    action:
@@ -147,7 +147,7 @@
     branch: "master"
     image:
       - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
     scenario:
       - pike
       - newton
@@ -165,7 +165,7 @@
     branch: "master"
     image:
       - "trusty":
-          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-trusty-g1-8"
     scenario:
       - newton
     action:
@@ -182,7 +182,7 @@
     CRON: "{CRON_WEEKLY}"
     image:
       - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
     scenario:
       - pike
       - newton
@@ -201,7 +201,7 @@
     CRON: "{CRON_WEEKLY}"
     image:
       - "trusty":
-          SLAVE_TYPE: "nodepool-ubuntu-trusty-g1-8"
+          SLAVE_TYPE: "nodepool-maas-ubuntu-trusty-g1-8"
     scenario:
       - newton
     action:
