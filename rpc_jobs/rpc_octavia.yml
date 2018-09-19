@@ -18,7 +18,7 @@
       - xenial_snapshot:
           IMAGE: "rpc-r14.17.0-xenial_loose_artifacts-swift"
           REGIONS: "DFW"
-          FALLBACK_REGIONS: ""
+          FALLBACK_REGIONS: "DFW"
           FLAVOR: "7"
           BOOT_TIMEOUT: 1500
 
@@ -56,7 +56,7 @@
       - xenial_snapshot:
           IMAGE: "rpc-r16.2.4-xenial_no_artifacts-swift"
           REGIONS: "DFW"
-          FALLBACK_REGIONS: ""
+          FALLBACK_REGIONS: "DFW"
           FLAVOR: "7"
           BOOT_TIMEOUT: 1500
 
@@ -94,7 +94,7 @@
     image:
       - xenial_snapshot:
           REGIONS: "DFW"
-          FALLBACK_REGIONS: ""
+          FALLBACK_REGIONS: "DFW"
           FLAVOR: "7"
           BOOT_TIMEOUT: 1500
 
