@@ -63,7 +63,7 @@
                   [
                     $class: 'StringParameterValue',
                     name: 'FALLBACK_REGIONS',
-                    value: ""
+                    value: "DFW"
                   ],
                   [
                     $class: 'StringParameterValue',

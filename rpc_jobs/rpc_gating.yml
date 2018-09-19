@@ -30,7 +30,7 @@
       - snapshot:
           IMAGE: "rpc-r17.1.0-xenial_no_artifacts-swift"
           REGIONS: "DFW"
-          FALLBACK_REGIONS: ""
+          FALLBACK_REGIONS: "DFW"
           FLAVOR: "7"
           BOOT_TIMEOUT: 1500
     scenario:
