@@ -59,3 +59,34 @@
     # Link to the standard pre-merge-template
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-appformix-post-merge"
+
+    repo_name: "rpc-appformix"
+    # URL of the rpc-designate repository
+    repo_url: "https://github.com/rcbops/rpc-appformix"
+
+    # Use image for RPC-O install
+    image:
+      - xenial_snapshot:
+          REGIONS: "DFW"
+          FALLBACK_REGIONS: "DFW"
+          FLAVOR: "7"
+          BOOT_TIMEOUT: 1500
+
+    scenario:
+      - newton:
+          IMAGE: "rpc-r14.17.0-xenial_loose_artifacts-swift"
+      - pike:
+          IMAGE: "rpc-r16.2.4-xenial_no_artifacts-swift"
+      - queens:
+          IMAGE: "rpc-r17.1.0-xenial_no_artifacts-swift"
+    action:
+      - "deploy"
+
+    jira_project_key: "RI"
+
+    # Link to the standard post-merge-template
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'

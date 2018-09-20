@@ -527,7 +527,11 @@ String clone_repo(String directory, String ssh_key, String repo, String ref, Str
 
 
 Boolean is_internal_repo_id(String repo_url) {
+  if (repo_url == null) {
+    throw new Exception("repo_url is null in is_internal_repo_id")
+  } else {
     return repo_url.startsWith("internal:")
+  }
 }
 
 
