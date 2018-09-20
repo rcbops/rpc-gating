@@ -29,7 +29,6 @@ def extract_dsl(jjbfile, outdir):
                 item=item[key]['name'])
             with open(outfile, "w") as outf:
                 outf.write(dsl)
-            print("Written {outfile}".format(outfile=outfile))
 
 
 if __name__ == "__main__":
