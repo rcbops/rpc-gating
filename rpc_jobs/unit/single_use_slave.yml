@@ -68,14 +68,28 @@
             if (env.SLAVE_TYPE == "container" && env.SLAVE_CONTAINER_DOCKERFILE_REPO == "RE") {
               if (env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS == "BASE_IMAGE=ubuntu:16.04") {
                 assert distro == "16.04"
-              } else if (env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS == "BASE_IMAGE=ubuntu:17.10") {
-                assert distro == "17.10"
               } else {
-                throw new Exception("Unexpected env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS passed into test")
+                String exceptionString = """
+                  Expected env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS of 'BASE_IMAGE=ubuntu:16.04'
+                  but got '${env.SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}' instead.
+                """
+                throw new Exception(exceptionString)
               }
             } else {
               print 'Skipped as env.SLAVE_TYPE != "container" or env.SLAVE_CONTAINER_DOCKERFILE_REPO != "RE"'
             } // if
+          } // stage
+
+          stage("Ensure that venv is working correctly") {
+            sh """#!/bin/bash -x
+              set +x; . ${env.WORKSPACE}/.venv/bin/activate; set -x
+              if ${env.WORKSPACE}/rpc-gating/scripts/jirautils.py --help; then
+                echo -e "\n### rpc-gating venv is working ###\n"
+              else
+                echo -e "\n### rpc-gating venv is broken ###\n"
+                exit 1
+              fi
+            """
           } // stage
         } // standard_job_slave
       } // globalWraps

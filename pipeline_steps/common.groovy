@@ -62,8 +62,10 @@ void install_ansible(){
         ln -s lib lib64
       popd
     }
+    echo "Venv Unpack Complete"
+    echo "Resetting python for the venv..."
     if which scl; then
-      echo "CentOS node detected, copying in external python interpreter and setting PYTHONPATH in activate script"
+      echo "CentOS node detected, copying in external python2 interpreter and setting PYTHONPATH in activate script"
       # CentOS 6 can take a hike, its glibc isn't new enough for python 2.7.12
       cp /opt/rh/python27/root/usr/bin/python .venv/bin/python
       # hack the selinux module into the venv
@@ -71,8 +73,51 @@ void install_ansible(){
       # I'm not sure why this is needed, but I assume its due to a change in python's
       # default module search paths between 2.7.8 and 2.7.12
       echo "export PYTHONPATH=${env.WORKSPACE}/.venv/lib/python2.7/site-packages" >> .venv/bin/activate
+    else
+      if ! virtualenv --version &>/dev/null; then
+        echo "Virtualenv binary not found. Installing it."
+        # Get the distribution name
+        if [[ -e /etc/lsb-release ]]; then
+          source /etc/lsb-release
+          DISTRO_RELEASE=\${DISTRIB_CODENAME}
+        elif [[ -e /etc/os-release ]]; then
+          source /etc/os-release
+          DISTRO_RELEASE=\${UBUNTU_CODENAME}
+        else
+          echo "Unable to determine distribution due to missing lsb/os-release files."
+          exit 1
+        fi
+        if [[ "\${DISTRO_RELEASE}" == "trusty" ]]; then
+          apt-get install -y python-virtualenv
+        else
+          apt-get install -y python-virtualenv virtualenv
+        fi
+      fi
+      VIRTUALENV_VERSION=\$(virtualenv --version 2>/dev/null)
+      echo "Virtualenv version: \${VIRTUALENV_VERSION}"
+      VIRTUALENV_MAJOR_VERSION=\$(echo \${VIRTUALENV_VERSION} | cut -d. -f1)
+      VIRTUALENV_MINOR_VERSION=\$(echo \${VIRTUALENV_VERSION} | cut -d. -f2)
+      VIRTUALENV_ARGS="--verbose --python=python2 --always-copy"
+      if (( \${VIRTUALENV_MAJOR_VERSION} >= 13 )); then
+        VIRTUALENV_ARGS+=" --no-pip --no-setuptools --no-wheel"
+      fi
+      if (( \${VIRTUALENV_MAJOR_VERSION} < 14 )); then
+         VIRTUALENV_ARGS+=" --never-download"
+      else
+         VIRTUALENV_ARGS+=" --no-download"
+      fi
+      if (( \${VIRTUALENV_MAJOR_VERSION} <= 1 )) && (( \${VIRTUALENV_MINOR_VERSION} <= 7 )); then
+         VIRTUALENV_ARGS+=" --no-site-packages"
+      fi
+      # The pre-built venv has symlinks from 'python2.7' and 'python2' to 'python'.
+      # We need to remove those and the python binary in order for the virtualenv
+      # python binary copy to work.
+      echo "Removing previous python binaries."
+      rm -vf .venv/bin/python .venv/bin/python2*
+      echo "Resetting python binaries in virtualenv with the arguments: \${VIRTUALENV_ARGS}"
+      virtualenv \${VIRTUALENV_ARGS} .venv
     fi
-    echo "Venv Unpack Complete"
+    echo "Venv python reset complete."
   """
 }
 
