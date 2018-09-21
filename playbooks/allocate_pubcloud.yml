@@ -27,13 +27,17 @@
         # upper: convert to upper case
         # select: remove empty strings from the list
         # shuffle: randomise order
-        regions_shuff: "{{ (regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|shuffle }}"
+        regions_shuff: >-
+          {{- (regions | replace(',', ' ')).split() | map('trim') | map('upper') | select | shuffle }}
 
     - name: Create fallback region list
       set_fact:
-        # difference: ensure that the fallback regions list does not include any items from
-        #             the primary regions list
-        fallback_regions_shuff: "{{ (fallback_regions|replace(',', ' ')).split()|map('trim')|map('upper')|select|difference(regions_shuff)|shuffle }}"
+        # if there is only one item in the list, use it - even if it's in the first list
+        # otherwise, use the difference filter to exclude the first item in regions_shuff
+        # because that region has already failed
+        fallback_regions_shuff: >-
+          {%- set region_list = (fallback_regions | replace(',', ' ')).split() | map('trim') | map('upper') | select | shuffle %}
+          {{- (region_list | length == 1) | ternary(region_list, region_list | difference([regions_shuff[0]])) }}
 
     - name: Provision a cloud instance
       block:
