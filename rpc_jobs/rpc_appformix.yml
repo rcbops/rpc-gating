@@ -3,7 +3,7 @@
 
     repo_name: "rpc-appformix"
     # URL of the rpc-appformix repository
-    repo_url: "https://github.com/rcbops/rpc-appformix"
+    repo_url: "git@github.com:rcbops/rpc-appformix"
 
     branches:
       - "master"
@@ -39,7 +39,7 @@
 
     repo_name: "rpc-appformix"
     # URL of the rpc-appformix repository
-    repo_url: "https://github.com/rcbops/rpc-appformix"
+    repo_url: "git@github.com:rcbops/rpc-appformix"
 
     branches:
       - "master"
@@ -65,7 +65,7 @@
 
     repo_name: "rpc-appformix"
     # URL of the rpc-designate repository
-    repo_url: "https://github.com/rcbops/rpc-appformix"
+    repo_url: "git@github.com:rcbops/rpc-appformix"
 
     # Use image for RPC-O install
     image:
