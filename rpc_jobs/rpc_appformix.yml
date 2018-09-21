@@ -83,7 +83,7 @@
       - queens:
           IMAGE: "rpc-r17.1.0-xenial_no_artifacts-swift"
     action:
-      - "deploy"
+      - "functional"
 
     jira_project_key: "RI"
 
