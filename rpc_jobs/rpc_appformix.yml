@@ -90,3 +90,15 @@
     # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-appformix-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-appformix:
+          repo_url: 'git@github.com/rcbops/rpc-appformix'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
