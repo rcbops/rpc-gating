@@ -1409,11 +1409,11 @@ void globalWraps(Closure body){
           setTriggerVars()
           // This test must be outside a function so that return can be used to abort the job
           // Alternatively we could throw a custom exception and abort when catching it here.
-          if (issueExistsForNextMaintenanceWindow() && willOverlapMaintenanceWindow()){
-            recordAbortDueToMaintenance()
-            currentBuild.result == "ABORTED"
-            return
-          }
+          //if (issueExistsForNextMaintenanceWindow() && willOverlapMaintenanceWindow()){
+          //  recordAbortDueToMaintenance()
+          //  currentBuild.result == "ABORTED"
+          //  return
+          //}
           print("common.globalWraps pre body")
           body()
           print("common.globalWraps post body")
