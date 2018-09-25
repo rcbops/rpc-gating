@@ -27,9 +27,36 @@
         src: vpnc.service.j2
         dest: /lib/systemd/system/vpnc.service
 
-    - name: Start vpnc service
-      systemd:
-        enabled: yes
-        service: vpnc.service
-        daemon_reload: yes
-        state: restarted
+    - name: Start VPN
+      block:
+        - name: Start vpnc service
+          systemd:
+            enabled: yes
+            service: vpnc.service
+            daemon_reload: yes
+            state: restarted
+          register: vpnc_restart
+
+      rescue:
+        - name: Output failed task information
+          debug: var=vpnc_restart
+
+        - name: Get vpnc service status
+          command: systemctl status vpnc.service
+          register: vpnc_status
+          failed_when: false
+          changed_when: false
+
+        - name: Output vpnc service status
+          debug: var=vpnc_status
+
+        - name: Get system log
+          command: journalctl -xe
+          register: system_log
+          changed_when: false
+
+        - name: Output system log
+          debug: var=system_log
+
+        - name: Exit with failure
+          fail: msg="vpnc service failed to start"
