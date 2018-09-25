@@ -7,11 +7,22 @@
           num-to-keep: 30
     parameters:
       - rpc_gating_params
+      - standard_job_params:
+          SLAVE_TYPE: "container"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "RE"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "./Dockerfile.standard_job"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "BASE_IMAGE=ubuntu:16.04"
+          hold_on_error: "0"
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
-        // Do something that creates an artifact
-        stage("Build"){
+        // NOTE(mattt): These vars are required in common.standard_job_slave()
+        // when this job is testing a custom dockerfile.
+        env.REPO_URL = "https://github.com/rcbops/rpc-gating"
+        env.BRANCH = "${RPC_GATING_BRANCH}"
+        env.RE_JOB_REPO_NAME = "rpc-gating"
+
+        common.standard_job_slave(env.SLAVE_TYPE){
           // ARA placeholder included to test that an ARA
           // link is added to the sidebar of the index page
           // when an ARA report is present.
@@ -30,9 +41,6 @@
             cp -r artifacts file_artifacts_no_dest
           """
 
-          // Set the RE_JOB_REPO_NAME (normally done by standard jobs)
-          env.RE_JOB_REPO_NAME = "rpc-gating"
-
           // Create a temporary component_metadata file
           def artifacts_data = [
             artifacts: [
@@ -50,6 +58,6 @@
             ]
           ]
           writeYaml file: "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}/component_metadata.yml", data: artifacts_data
-        }
+        } // standard_job_slave
         common.archive_artifacts(artifact_types: "all")
-      }
+      } // globalWraps
