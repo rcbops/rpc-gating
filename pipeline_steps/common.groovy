@@ -955,6 +955,10 @@ void override_inventory(){
   )
 }
 
+Boolean isNodepoolNode(String node){
+  return node =~ /^nodepool-/
+}
+
 // initialisation steps for nodes
 void use_node(String label=null, body){
   node(label){
@@ -972,7 +976,12 @@ void use_node(String label=null, body){
       print "${env.NODE_NAME} preparation complete, now ready for use."
       body()
     } catch (e){
-      print "Caught exception on ${env.NODE_NAME}: ${e}"
+      errString = "Caught exception on ${env.NODE_NAME}: ${e} Build: ${env.BUILD_URL}"
+      print errString
+
+      if (isNodepoolNode(env.NODE_NAME) && env.HOLD_ON_ERROR != "0"){
+        nodePoolHold(duration: env.HOLD_ON_ERROR, reason: errString)
+      }
       throw e
     } finally {
       deleteDir()
