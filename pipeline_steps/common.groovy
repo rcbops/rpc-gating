@@ -1573,6 +1573,8 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
                   gating/${hook_dir}/run
                 """
               }
+            } catch (Exception e){
+              currentBuild.result = "FAILURE"
             } finally {
               stage('Execute Post Script') {
                 // We do not want the 'post' execution to fail the test,
@@ -1581,6 +1583,7 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
                 post_result = sh(
                   returnStatus: true,
                   script: """#!/bin/bash -xeu
+                             export RE_JOB_STATUS=${currentBuild.result}
                              cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
                              if [[ -e gating/${hook_dir}/post ]]; then
                                gating/${hook_dir}/post
