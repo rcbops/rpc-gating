@@ -229,7 +229,7 @@ providers:
             key-name: jenkins
             console-log: true
           - name: rpc-r16-xenial_no_artifacts-swift
-            cloud-image: rpc-r16-xenial_no_artifacts-swift-image-image
+            cloud-image: rpc-r16-xenial_no_artifacts-swift-image
             flavor-name: "15GB Standard Instance"
             key-name: jenkins
             console-log: true
