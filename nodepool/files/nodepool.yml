@@ -16,62 +16,62 @@ labels:
   # maas specific labels are introduced that draw from all regions except phobos.
   - name: maas-ubuntu-xenial-g1-8
     min-ready: 0
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: maas-ubuntu-trusty-g1-8
     min-ready: 0
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: maas-ubuntu-xenial-p2-15
     min-ready: 0
-    max-ready-age: 3600
+    max-ready-age: 86400
 
   # rpco snapshots
   - name: rpc-r14-xenial_loose_artifacts-swift
-    min-ready: 5
+    min-ready: 1
     max-ready-age: 86400
   - name: rpc-r16-xenial_no_artifacts-swift
-    min-ready: 5
+    min-ready: 1
     max-ready-age: 86400
   - name: rpc-r17-xenial_no_artifacts-swift
-    min-ready: 5
+    min-ready: 1
     max-ready-age: 86400
 
   #g1-8
   - name: ubuntu-bionic-g1-8
     min-ready: 3
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: ubuntu-xenial-g1-8
     min-ready: 3
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: ubuntu-trusty-g1-8
     min-ready: 0
-    max-ready-age: 3600
+    max-ready-age: 86400
 
   #p2-15
   - name: ubuntu-bionic-p2-15
     min-ready: 1
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: ubuntu-xenial-p2-15
     min-ready: 1
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: ubuntu-trusty-p2-15
     min-ready: 0
-    max-ready-age: 3600
+    max-ready-age: 86400
 
   # onmetal io2
   - name: ubuntu-bionic-om-io2
     min-ready: 1
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: ubuntu-xenial-om-io2
     min-ready: 2
-    max-ready-age: 3600
+    max-ready-age: 86400
 
   # rpco base images
   - name: rpco-14.2-xenial-base
     min-ready: 1
-    max-ready-age: 3600
+    max-ready-age: 86400
   - name: rpco-14.2-trusty-base
     min-ready: 1
-    max-ready-age: 3600
+    max-ready-age: 86400
 
 providers:
   - name: pubcloud-iad
@@ -100,7 +100,10 @@ providers:
       - name: main
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
         ignore-provider-quota: true
-        max-servers: 25
+        # We run quite a bit of our own infrastructure in IAD, so we need
+        # to ensure that nodepool does not chew up our entire quota. We
+        # therefore use a reduced number here.
+        max-servers: 20
         availability-zones: []
         labels: &provider_pools_main_labels_block
           #MaaS
@@ -208,7 +211,10 @@ providers:
       - name: main
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
         ignore-provider-quota: true
-        max-servers: 25
+        # Some node types (eg: p2-15) use 16GB RAM, so we set this value to ensure
+        # that we do not use more than half that quota to make room for the snapshot
+        # nodes.
+        max-servers: 15
         availability-zones: []
         labels: *provider_pools_main_labels_block
       - name: onmetal
@@ -220,7 +226,11 @@ providers:
       - name: snapshots
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
         ignore-provider-quota: true
-        max-servers: 25
+        # Each server uses 16GB RAM, so we set this value to ensure that
+        # snapshot nodes do not use more than half the quota for DFW.
+        # Quota is 512GB RAM, 16 servers is exactly half that. We use
+        # 15 to leave some headroom.
+        max-servers: 15
         availability-zones: []
         labels:
           - name: rpc-r14-xenial_loose_artifacts-swift
@@ -248,7 +258,7 @@ providers:
     diskimages: *provider_diskimage_block
     pools:
       - name: main
-        max-servers: 25
+        max-servers: 30
         availability-zones: []
         labels: *provider_pools_main_labels_block
 
