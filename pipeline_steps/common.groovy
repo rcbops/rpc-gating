@@ -2306,14 +2306,14 @@ void restartAbortedPRBuilds(String maint_date="today"){
  */
 void runThawIfSnapshot(){
   String thawFileName = "/gating/thaw/run"
-  def thawFile = new File(thawFileName)
-  if (thawFile.exists()){
-    stage('Execute snapshot thaw'){
-      sh """#!/bin/bash -xeu
+  stage("Execute snapshot thaw if ${thawFileName} present"){
+    sh """#!/bin/bash -eu
+          if [[ -f ${thawFileName} ]]; then
+            echo "Executing thaw."
             ${thawFileName}
-      """
-    }
-  } else{
-    println "No thaw file detected."
+          else
+            echo "No thaw file found."
+          fi
+    """
   }
 }
