@@ -16,3 +16,4 @@ RUN /reconfigure_apt_sources.sh
 #   sudo: used commonly by tests
 #   virtualenv: required in order to prepare the rpc-gating virtualenv
 RUN apt-get update && apt-get install -y bzip2 curl git-core libxml2-utils openssh-client python-minimal python-pip python-virtualenv python-yaml sudo virtualenv
+RUN pip install --upgrade pip
