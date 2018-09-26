@@ -196,20 +196,24 @@ dashboard:
           type: graph
           span: 4
           nullPointMode: null as zero
-          leftYAxisLabel: "events / min"
+          yaxes:
+            - format: short
+              label: "Events / Min"
           targets:
-            - target: alias(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-dfw.ready, '1m'), 'DFW')
-            - target: alias(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-iad.ready, '1m'), 'IAD')
-            - target: alias(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-ord.ready, '1m'), 'ORD')
+            - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-dfw.ready, '1m'), 'sum'), 'DFW')
+            - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-iad.ready, '1m'), 'sum'), 'IAD')
+            - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-ord.ready, '1m'), 'sum'), 'ORD')
         - title: Error Node Launch Attempts
           type: graph
           span: 4
           nullPointMode: null as zero
-          leftYAxisLabel: "events / min"
+          yaxes:
+            - format: short
+              label: "Events / Min"
           targets:
-            - target: alias(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-dfw.error.*), '1m'), 'DFW')
-            - target: alias(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-iad.error.*), '1m'), 'IAD')
-            - target: alias(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-ord.error.*), '1m'), 'ORD')
+            - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-dfw.error.*), '1m'), 'sum'), 'DFW')
+            - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-iad.error.*), '1m'), 'sum'), 'IAD')
+            - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-ord.error.*), '1m'), 'sum'), 'ORD')
         - title: Time to Ready
           type: graph
           span: 4
@@ -219,9 +223,9 @@ dashboard:
               label: Time
             - show: True
           targets:
-            - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-dfw.ready.mean, '0.001'), 'DFW')
-            - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-iad.ready.mean, '0.001'), 'IAD')
-            - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-ord.ready.mean, '0.001'), 'ORD')
+            - target: alias(stats.timers.nodepool.launch.provider.pubcloud-dfw.ready.mean, 'DFW')
+            - target: alias(stats.timers.nodepool.launch.provider.pubcloud-iad.ready.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.launch.provider.pubcloud-ord.ready.mean, 'ORD')
         - title: Test Nodes (DFW)
           type: graph
           span: 4
