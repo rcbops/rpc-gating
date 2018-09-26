@@ -241,18 +241,3 @@
           until: _install_packages | success
           retries: 3
           delay: 15
-
-- hosts: singleuseslave
-  tasks:
-    - name: Check for thaw hook
-      stat:
-        path: /gating/thaw/run
-      register: thaw
-
-    - name: Execute thaw hook
-      shell: |
-        set -xeu
-        /gating/thaw/run
-      args:
-        executable: /bin/bash
-      when: thaw.stat.exists|bool

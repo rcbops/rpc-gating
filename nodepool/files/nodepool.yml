@@ -24,6 +24,17 @@ labels:
     min-ready: 0
     max-ready-age: 3600
 
+  # rpco snapshots
+  - name: rpc-r14-xenial_loose_artifacts-swift
+    min-ready: 5
+    max-ready-age: 86400
+  - name: rpc-r16-xenial_no_artifacts-swift
+    min-ready: 5
+    max-ready-age: 86400
+  - name: rpc-r17-xenial_no_artifacts-swift
+    min-ready: 5
+    max-ready-age: 86400
+
   #g1-8
   - name: ubuntu-bionic-g1-8
     min-ready: 3
@@ -174,9 +185,23 @@ providers:
   - name: pubcloud-dfw
     region-name: 'DFW'
     cloud: public_cloud
-    boot-timeout: 600
+    # Higher boot-timeout value that for other providers to support snapshots
+    boot-timeout: 1800
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
-    cloud-images: *provider_cloudimage_block
+    cloud-images:
+      - name: ubuntu-bionic-onmetal
+        image-name: "OnMetal - Ubuntu 18.04 LTS (Bionic Beaver)"
+      - name: ubuntu-xenial-onmetal
+        image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+      - name: rpc-r14-xenial_loose_artifacts-swift-image
+        image-name: rpc-r14.17.0-xenial_loose_artifacts-swift
+        config-drive: true
+      - name: rpc-r16-xenial_no_artifacts-swift-image
+        image-name: rpc-r16.2.4-xenial_no_artifacts-swift
+        config-drive: true
+      - name: rpc-r17-xenial_no_artifacts-swift-image
+        image-name: rpc-r17.1.0-xenial_no_artifacts-swift
+        config-drive: true
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
     pools:
@@ -192,6 +217,27 @@ providers:
         max-servers: 10
         availability-zones: []
         labels: *provider_pools_onmetal_labels_block
+      - name: snapshots
+        # Ignore the quota given by public cloud and only respect what we provide as max-servers
+        ignore-provider-quota: true
+        max-servers: 25
+        availability-zones: []
+        labels:
+          - name: rpc-r14-xenial_loose_artifacts-swift
+            cloud-image: rpc-r14-xenial_loose_artifacts-swift-image
+            flavor-name: "15GB Standard Instance"
+            key-name: jenkins
+            console-log: true
+          - name: rpc-r16-xenial_no_artifacts-swift
+            cloud-image: rpc-r16-xenial_no_artifacts-swift-image-image
+            flavor-name: "15GB Standard Instance"
+            key-name: jenkins
+            console-log: true
+          - name: rpc-r17-xenial_no_artifacts-swift
+            cloud-image: rpc-r17-xenial_no_artifacts-swift-image
+            flavor-name: "15GB Standard Instance"
+            key-name: jenkins
+            console-log: true
 
   - name: pubcloud-ord
     region-name: 'ORD'
