@@ -125,55 +125,65 @@ dashboard:
       panels:
         - title: Create Server
           type: graph
+          lines: true
           span: 4
-          leftYAxisLabel: "time"
-          y_formats:
-            - s
-            - none
+          nullPointMode: connected
+          yaxes:
+            - format: ms
+              label: Time
+            - show: True
           targets:
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputePostServers.mean, '0.001'), 'DFW')
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputePostServers.mean, '0.001'), 'IAD')
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputePostServers.mean, '0.001'), 'ORD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-dfw.ComputePostServers.mean, 'DFW')
+            - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputePostServers.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputePostServers.mean, 'ORD')
         - title: Get Server
           type: graph
+          lines: true
           span: 4
-          leftYAxisLabel: "time"
-          y_formats:
-            - s
-            - none
+          nullPointMode: connected
+          yaxes:
+            - format: ms
+              label: Time
+            - show: True
           targets:
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetServersDetail.mean, '0.001'), 'DFW')
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServersDetail.mean, '0.001'), 'IAD')
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServersDetail.mean, '0.001'), 'ORD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetServersDetail.mean, 'DFW')
+            - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServersDetail.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServersDetail.mean, 'ORD')
         - title: Delete Server
           type: graph
+          lines: true
           span: 4
-          leftYAxisLabel: "time"
-          y_formats:
-            - s
-            - none
+          nullPointMode: connected
+          yaxes:
+            - format: ms
+              label: Time
+            - show: True
           targets:
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeDeleteServers.mean, '0.001'), 'DFW')
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeDeleteServers.mean, '0.001'), 'IAD')
-            - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeDeleteServers.mean, '0.001'), 'ORD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-dfw.ComputeDeleteServers.mean, 'DFW')
+            - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputeDeleteServers.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputeDeleteServers.mean, 'ORD')
         - title: List Servers
           type: graph
+          lines: true
           span: 4
-          leftYAxisLabel: "time"
-          y_formats:
-            - s
-            - none
+          nullPointMode: connected
+          yaxes:
+            - format: ms
+              label: Time
+            - show: True
           targets:
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetServers.mean, '0.001'), 'DFW')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServers.mean, '0.001'), 'IAD')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServers.mean, '0.001'), 'ORD')
         - title: Get Limits
           type: graph
+          lines: true
           span: 4
-          leftYAxisLabel: "time"
-          y_formats:
-            - s
-            - none
+          nullPointMode: connected
+          yaxes:
+            - format: ms
+              label: Time
+            - show: True
           targets:
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetLimits.mean, '0.001'), 'DFW')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetLimits.mean, '0.001'), 'IAD')
@@ -203,10 +213,11 @@ dashboard:
         - title: Time to Ready
           type: graph
           span: 4
-          leftYAxisLabel: "time"
-          y_formats:
-            - s
-            - none
+          nullPointMode: null as zero
+          yaxes:
+            - format: ms
+              label: Time
+            - show: True
           targets:
             - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-dfw.ready.mean, '0.001'), 'DFW')
             - target: alias(scale(stats.timers.nodepool.launch.provider.pubcloud-iad.ready.mean, '0.001'), 'IAD')
