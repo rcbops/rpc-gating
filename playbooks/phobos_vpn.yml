@@ -88,3 +88,14 @@
 
             - name: Exit with failure
               fail: msg="vpnc service failed to start"
+
+    - name: Test Phobos connectivity
+      # NOTE(coreywright): Whether we are in the Phobos environment or not (and
+      # correspondingly just made a VPN connection to it), prove Phobos
+      # connectivity by connecting to its OpenStack Identity API endpoint.
+      uri:
+        url: https://phobos.rpc.rackspace.com:5000/
+        method: GET
+        status_code: 300
+        validate_certs: no
+      changed_when: false
