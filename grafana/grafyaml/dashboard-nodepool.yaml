@@ -199,6 +199,7 @@ dashboard:
           yaxes:
             - format: short
               label: "Events / Min"
+            - show: True
           targets:
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-dfw.ready, '1m'), 'sum'), 'DFW')
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-iad.ready, '1m'), 'sum'), 'IAD')
@@ -210,6 +211,7 @@ dashboard:
           yaxes:
             - format: short
               label: "Events / Min"
+            - show: True
           targets:
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-dfw.error.*), '1m'), 'sum'), 'DFW')
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-iad.error.*), '1m'), 'sum'), 'IAD')
