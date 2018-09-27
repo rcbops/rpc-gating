@@ -16,6 +16,8 @@
           FLAVOR: "7"
           BOOT_TIMEOUT: 1500
 
+    hold_on_error: "4h"
+
     scenario:
       - newton:
           IMAGE: "rpc-r14.17.0-xenial_loose_artifacts-swift"
@@ -47,6 +49,9 @@
           FLAVOR: "7"
           BOOT_TIMEOUT: 1500
 
+    # Add Hold on error incase we have a failure
+    hold_on_error: "4h"
+ 
     scenario:
       - newton:
           IMAGE: "rpc-r14.17.0-xenial_loose_artifacts-swift"
