@@ -41,6 +41,40 @@
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
+    name: "osp-mnaio-periodic-daily"
+    repo_name: "osp-mnaio"
+    repo_url: "https://github.com/rcbops/osp-mnaio"
+    image:
+      - xenial_mnaio:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+    scenario:
+      - "3ctlr_2comp_3ceph"
+    action:
+      - "osp_13_deploy-smoke-tests"
+    jira_project_key: "RLM"
+    credentials: "rpc_osp"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_DAILY}"
+
+- project:
+    name: "osp-mnaio-periodic-weekly"
+    repo_name: "osp-mnaio"
+    repo_url: "https://github.com/rcbops/osp-mnaio"
+    image:
+      - xenial_mnaio:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+    scenario:
+      - "3ctlr_2comp_3ceph"
+    action:
+      - "osp_13_deploy-full-tests"
+    jira_project_key: "RLM"
+    credentials: "rpc_osp"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_WEEKLY}"
+
+- project:
     name: 'osp-mnaio-whisperer'
     series:
       - all_branches:
