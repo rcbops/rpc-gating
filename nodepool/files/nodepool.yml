@@ -37,10 +37,10 @@ labels:
 
   #g1-8
   - name: ubuntu-bionic-g1-8
-    min-ready: 3
+    min-ready: 1
     max-ready-age: 86400
   - name: ubuntu-xenial-g1-8
-    min-ready: 3
+    min-ready: 1
     max-ready-age: 86400
   - name: ubuntu-trusty-g1-8
     min-ready: 0
@@ -48,7 +48,7 @@ labels:
 
   #p2-15
   - name: ubuntu-bionic-p2-15
-    min-ready: 1
+    min-ready: 0
     max-ready-age: 86400
   - name: ubuntu-xenial-p2-15
     min-ready: 1
@@ -211,10 +211,10 @@ providers:
       - name: main
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
         ignore-provider-quota: true
-        # Some node types (eg: p2-15) use 16GB RAM, so we set this value to ensure
-        # that we do not use more than half that quota to make room for the snapshot
-        # nodes.
-        max-servers: 15
+        # This region is used for snapshot building, and snapshot consumption.
+        # To ensure that there is headroom for these build jobs, we reduce this
+        # number to ensure that jenkins has the headroom to run them.
+        max-servers: 10
         availability-zones: []
         labels: *provider_pools_main_labels_block
       - name: onmetal
@@ -291,7 +291,7 @@ providers:
           hypervisor_type: qemu
     pools:
       - name: main
-        max-servers: 5
+        max-servers: 30
         availability-zones: []
         networks:
           - rpc-releng-private
