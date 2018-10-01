@@ -29,7 +29,7 @@
       | ^gating/release/
     image:
       - xenial_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "3ctlr_2comp_3ceph"
     action:
@@ -46,7 +46,7 @@
     repo_url: "https://github.com/rcbops/osp-mnaio"
     image:
       - xenial_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "3ctlr_2comp_3ceph"
     action:
@@ -63,7 +63,7 @@
     repo_url: "https://github.com/rcbops/osp-mnaio"
     image:
       - xenial_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "3ctlr_2comp_3ceph"
     action:
