@@ -164,7 +164,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "swift"
     action:
@@ -186,7 +186,7 @@
     image:
       # in mnaio builds, the OS equals the VMs OS
       - trusty_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "swift"
     action:
@@ -237,7 +237,7 @@
     repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       - xenial_mnaio:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "swift"
     action:
