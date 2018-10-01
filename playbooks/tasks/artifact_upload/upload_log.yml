@@ -210,8 +210,22 @@
       retries: 10
       delay: 30
 
-    # This is used by common.archive_artifacts to put the link into the
-    # build description.
-    - name: "Write public url file"
-      shell: |
-        echo "{{ container_public_url }}/{{ archive_base_name }}/index.html" > ${WORKSPACE}/artifact_public_url
+    - name: "Check if build_artifacts.yml exists"
+      stat:
+        path: "{{ lookup('env', 'WORKSPACE') }}/build_artifacts.yml"
+      register: build_artifacts_stat
+
+    - name: "Load published artefact info for this build"
+      include_vars:
+        file: "{{ lookup('env', 'WORKSPACE') }}/build_artifacts.yml"
+        name: "existing_build_artifacts"
+      when: build_artifacts_stat.stat.exists
+
+    - name: "Update build_artifacts with log artefacts"
+      set_fact:
+        new_build_artifacts: "{{ {'artifacts': {'log': {'public_url': '{{ container_public_url }}/{{ archive_base_name }}/index.html', 'title': 'Build log artifacts'}}} }}"
+
+    - name: "Update published artefacts file"
+      copy:
+        content: "{{ existing_build_artifacts | default({}) | combine(new_build_artifacts, recursive=True) | to_nice_yaml }}"
+        dest: "{{ lookup('env', 'WORKSPACE') }}/build_artifacts.yml"

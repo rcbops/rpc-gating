@@ -94,6 +94,22 @@
       retries: 10
       delay: 30
 
-    - name: Show the public CDN URL for file artifacts
-      debug:
-        msg: "Public CDN URL: {{ container_public_url }}"
+    - name: "Check if build_artifacts.yml exists"
+      stat:
+        path: "{{ lookup('env', 'WORKSPACE') }}/build_artifacts.yml"
+      register: build_artifacts_stat
+
+    - name: "Load published artefact info for this build"
+      include_vars:
+        file: "{{ lookup('env', 'WORKSPACE') }}/build_artifacts.yml"
+        name: "existing_build_artifacts"
+      when: build_artifacts_stat.stat.exists
+
+    - name: "Update build_artifacts with file artefacts"
+      set_fact:
+        new_build_artifacts: "{{ {'artifacts': {'file': {'public_url': '{{ container_public_url }}/{{ artifact_basename }}/', 'title': 'Build file artifacts'}}} }}"
+
+    - name: "Update published artefacts file"
+      copy:
+        content: "{{ existing_build_artifacts | default({}) | combine(new_build_artifacts, recursive=True) | to_nice_yaml }}"
+        dest: "{{ lookup('env', 'WORKSPACE') }}/build_artifacts.yml"

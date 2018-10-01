@@ -372,9 +372,17 @@ def archive_artifacts(Map args = [:]){
       }
 
       pubcloud.uploadArtifacts("artifact_types": artifact_types)
-      if(fileExists(file: "artifact_public_url")){
-        artifact_public_url = readFile(file: "artifact_public_url")
-        currentBuild.description = "<h2><a href='"+artifact_public_url+"'>Build Artifacts</a></h2>"
+      def buildArtifacts
+      if (fileExists("build_artifacts.yml")){
+        buildArtifacts = readYaml file: "build_artifacts.yml"
+      } else{
+        buildArtifacts = ["artifacts": []]
+      }
+      println "Uploaded artefact details:\n${buildArtifacts}"
+      if(buildArtifacts.artifacts){
+        currentBuild.description = buildArtifacts.artifacts.collect{_, v ->
+          "<h2><a href='${v.public_url}'>${v.title}</a></h2>"
+        }.join("")
       }
     } catch (e){
       // This function is called from stdJob, so we must catch exceptions to
