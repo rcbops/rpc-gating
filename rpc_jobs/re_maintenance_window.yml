@@ -57,7 +57,7 @@
       - build-discarder:
           num-to-keep: 30
     triggers:
-      - timed: "0 12 * * 1"
+      - timed: "0 10 * * 1"
     sandbox: false
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
@@ -66,7 +66,7 @@
         String jiraIssue
         try {
           // get today's maintenance issue, will raise if none found
-          jiraIssue = maintenanceIssueForDate(env.MAINTENANCE_DATE, env.JIRA_PROJECT_KEY)
+          jiraIssue = common.maintenanceIssueForDate(env.MAINTENANCE_DATE, env.JIRA_PROJECT_KEY)
         } catch (Exception e){
           println("No maintenance issue found, not starting maintenance window.")
           currentBuild.result = "ABORTED"
@@ -112,7 +112,7 @@
         String jiraIssue
         try {
           // get today's maintenance issue, will raise if none found
-          jiraIssue = maintenanceIssueForDate()
+          jiraIssue = common.maintenanceIssueForDate()
         } catch (Exception e){
           println("No maintenance issue found, not ending maintenance window.")
           currentBuild.result = "ABORTED"

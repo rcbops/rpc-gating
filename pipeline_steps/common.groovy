@@ -3,12 +3,21 @@ import groovy.json.JsonOutput
 import groovy.json.JsonException
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import java.time.LocalTime
 import java.time.LocalDateTime
 import java.time.DayOfWeek
 import java.time.Duration
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.math.MathContext
+import groovy.transform.Field
+
+// Constants Governing the Weekly RE-Maintenance Window
+@Field DayOfWeek maintDay = DayOfWeek.MONDAY
+@Field Integer maintHour = 10
+@Field Duration maintDuration = Duration.ofHours(2)
+@Field Integer daysInWeek = 7
+
 
 void download_venv(){
   sh """#!/bin/bash -xeu
@@ -1451,6 +1460,7 @@ void wrapList(List wrappers, Closure body){
   }
 }
 
+
 // add wrappers that should be used for all jobs.
 // max log size is in MB
 void globalWraps(Closure body){
@@ -1461,13 +1471,11 @@ void globalWraps(Closure body){
       shared_slave(){
         wrap([$class: 'LogfilesizecheckerWrapper', 'maxLogSize': 200, 'failBuild': true, 'setOwn': true]) {
           setTriggerVars()
-          // This test must be outside a function so that return can be used to abort the job
-          // Alternatively we could throw a custom exception and abort when catching it here.
-          //if (issueExistsForNextMaintenanceWindow() && willOverlapMaintenanceWindow()){
-          //  recordAbortDueToMaintenance()
-          //  currentBuild.result == "ABORTED"
-          //  return
-          //}
+          if(shouldAbortForMaintenance()){
+            recordAbortDueToMaintenance()
+            currentBuild.result = "ABORTED"
+            return
+          }
           print("common.globalWraps pre body")
           body()
           print("common.globalWraps post body")
@@ -2136,43 +2144,31 @@ LocalDateTime getPredictedCompletionTime(){
 * Get date object representing the start of the next maintenance window
 */
 LocalDateTime getNextMaintenanceWindowStart(){
-  // set start of maintenance window
-
-  DayOfWeek maintDay = DayOfWeek.MONDAY
-  Integer maintHour = 10
-  Integer maintDuration = 2
-  Integer daysInWeek = 7
-
   // get current time & date
   LocalDateTime now = LocalDateTime.now()
-  LocalDateTime maintStart
+
+  // Initially assume the next maintenance window starts today at maintHour today.
+  LocalDateTime maintStart = now\
+                   .withHour(maintHour)\
+                   .withMinute(0)\
+                   .withSecond(0)\
+                   .withNano(0)
 
   if (now.getDayOfWeek() == maintDay){
-    // its Monday, we either need to return today's maintenance window
+    // its maintenanceDay, we either need to return today's maintenance window
     // or next Monday's.
-    // 1 hour buffer after the maintenance to allow
-    //  maint end jobs to run without this function referring
-    // to next week's maintenance.
-    if (now.getHour() > maintHour + maintDuration + 1){
+    if (now > maintStart + maintDuration){
       // return next week's maintenance window
-      maintStart = now.plusDays(7)
-    } else {
-      maintStart = now
+      maintStart = maintStart.plusDays(7)
     }
   } else {
     // Its not Monday.
     Integer doW = now.getDayOfWeek().getValue()
     Integer mDoW = maintDay.getValue()
     Integer daysTillNextMaint = (daysInWeek -(doW - mDoW)) % daysInWeek
-    maintStart = now.plusDays(daysTillNextMaint)
+    maintStart = maintStart.plusDays(daysTillNextMaint)
   }
-
-  // Maintstart is now a date time with the correct date, fix the time and return it.
-  return maintStart.withHour(maintHour)\
-                   .withMinute(0)\
-                   .withSecond(0)\
-                   .withNano(0)
-
+  return maintStart
 }
 
 /**
@@ -2189,14 +2185,75 @@ Boolean willOverlapMaintenanceWindow(){
   LocalDateTime maintWindowStart = getNextMaintenanceWindowStart()
   LocalDateTime prBufferStart = maintWindowStart.minus(prBuffer)
 
-  return prBufferStart.isBefore(completion)
+  Boolean willOverlap = prBufferStart.isBefore(completion)
+  if(willOverlap){
+    print("This build is predicted to overlap the next maintenance window")
+  }
+  return willOverlap
 }
+
+
 
 Boolean issueExistsForNextMaintenanceWindow(project="RE"){
   LocalDateTime nextWindow = getNextMaintenanceWindowStart()
   String nextWindowDateString = nextWindow.format(DateTimeFormatter.ISO_LOCAL_DATE)
   List issues = jira_query("project=\"${project}\" AND summary ~ '${nextWindowDateString} Maintenance Window'")
-  return issues.size > 0
+  Boolean issueExists = issues.size > 0
+  if (issueExists){
+    print("Issue exists for next maintenance window: ${issues[0]}")
+  }
+  return issueExists
+}
+
+/**
+* Jobs matching the patterns in this function are allowed to run during
+* a maintenance window to facilitate testing. Note this only overrides
+* the abort check in standard jobs, it won't override quietDown mode.
+*/
+@NonCPS
+Boolean allowBuildDuringMaintenanceWindow(){
+  patterns = [
+    /RE-Maintenance/,
+    /RE-unit-test/,
+    /RPC-Gating-Unit-Tests/,
+    /scratchpipeline/
+  ]
+
+  for (pattern in patterns){
+    if (env.JOB_NAME.contains(pattern)){
+      return true
+    }
+  }
+  print("This Job is not allowed to build during maintenance windows")
+  return false
+}
+
+Boolean maintenanceInProgress(){
+  String query
+  List issues
+  String jiraIssue = ""
+  try {
+    jiraIssue = maintenanceIssueForDate("today")
+  } catch (Exception e){
+    // No maintenance issue for today so no maintenance is in progress.
+    return false
+  }
+
+  Boolean afterStartTime =  LocalTime.now() > LocalTime.of(maintHour, 0)
+  query = "key=\"${jiraIssue}\" and STATUS not in (Finished)"
+  issues = jira_query(query)
+  Boolean maintIssueStillOpen = issues.size() > 0
+
+  if (afterStartTime && maintIssueStillOpen){
+    print("Maintenance in progress")
+    return true
+  }
+  return false
+}
+
+Boolean shouldAbortForMaintenance(){
+    Boolean willOverlapFutureMaintenance = issueExistsForNextMaintenanceWindow() && willOverlapMaintenanceWindow();
+    return (willOverlapFutureMaintenance || maintenanceInProgress()) && ! allowBuildDuringMaintenanceWindow()
 }
 
 /*
@@ -2270,9 +2327,9 @@ String maintenanceIssueForDate(String date="today", project="RE"){
   String query = "project=\"${project}\" AND summary ~ '${date} Maintenance Window'"
   List issues = jira_query(query)
   if (issues.size < 1){
-    raise Exception("No maintenance issue found matching ${query}")
+    throw new Exception("No maintenance issue found matching ${query}")
   } else if (issues.size > 1){
-    raise Exception("More than one maintenance issue found matching ${query}: ${issues}")
+    throw new Exception("More than one maintenance issue found matching ${query}: ${issues}")
   }
   return issues[0]
 }
