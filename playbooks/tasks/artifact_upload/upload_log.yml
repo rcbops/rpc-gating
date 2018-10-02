@@ -223,7 +223,7 @@
 
     - name: "Update build_artifacts with log artefacts"
       set_fact:
-        new_build_artifacts: "{{ {'artifacts': {'log': {'public_url': '{{ container_public_url }}/{{ archive_base_name }}/index.html', 'title': 'Build log artifacts'}}} }}"
+        new_build_artifacts: "{{ {'artifacts': {'log': {'name': 'build-logs', 'container_name': '{{ object_store_container_name }}', 'public_url': '{{ container_public_url }}/{{ archive_base_name }}/index.html', 'title': 'Build log artifacts'}}} }}"
 
     - name: "Update published artefacts file"
       copy:

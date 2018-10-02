@@ -107,7 +107,7 @@
 
     - name: "Update build_artifacts with file artefacts"
       set_fact:
-        new_build_artifacts: "{{ {'artifacts': {'file': {'public_url': '{{ container_public_url }}/{{ artifact_basename }}/', 'title': 'Build file artifacts'}}} }}"
+        new_build_artifacts: "{{ {'artifacts': {'file': {'name': 'release-artifacts', 'container_name': '{{ object_store_container_name }}', 'public_url': '{{ container_public_url }}/{{ artifact_basename }}/', 'title': 'Build file artifacts'}}} }}"
 
     - name: "Update published artefacts file"
       copy:
