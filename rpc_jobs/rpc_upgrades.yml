@@ -258,9 +258,9 @@
       - swift
     action:
       - newton_to_queens_incremental:
-          SLAVE_TYPE: "rpc-r14-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
       - pike_to_queens_incremental:
-          SLAVE_TYPE: "rpc-r16-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
