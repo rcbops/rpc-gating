@@ -16,11 +16,7 @@
     # Use image for RPC-O install
     image:
       - xenial_snapshot:
-          IMAGE: "rpc-r14.18.0-xenial_loose_artifacts-swift"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "DFW"
-          FLAVOR: "7"
-          BOOT_TIMEOUT: 1500
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
 
     # Octavia ignores that setting for now
     scenario:
@@ -54,11 +50,7 @@
     # Use image for RPC-O install
     image:
       - xenial_snapshot:
-          IMAGE: "rpc-r16.2.5-xenial_no_artifacts-swift"
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "DFW"
-          FLAVOR: "7"
-          BOOT_TIMEOUT: 1500
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
 
     # Octavia ignores that setting for now
     scenario:
@@ -86,17 +78,13 @@
     # upstream installer
     branch:
       - "master":
-          IMAGE: "rpc-r14.18.0-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
       - "pike":
-          IMAGE: "rpc-r16.2.5-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
 
     # Use image for RPC-O install
     image:
-      - xenial_snapshot:
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "DFW"
-          FLAVOR: "7"
-          BOOT_TIMEOUT: 1500
+      - xenial_snapshot
 
     # Octavia ignores that setting for now
     scenario:
