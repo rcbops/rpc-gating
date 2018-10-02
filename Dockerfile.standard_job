@@ -13,7 +13,11 @@ RUN /reconfigure_apt_sources.sh
 #   python-pip: used commonly by tests
 #   python-virtualenv: required in order to prepare the rpc-gating virtualenv
 #   python-yaml: required by ansible when running rpc-gating playbooks
+#   python-minimal: for replacing the python in the rpc-gating venv
+#   python3-pip: used commonly by tests
+#   python3-virtualenv: required in order to prepare the rpc-gating virtualenv
+#   python3-yaml: required by ansible when running rpc-gating playbooks
 #   sudo: used commonly by tests
 #   virtualenv: required in order to prepare the rpc-gating virtualenv
-RUN apt-get update && apt-get install -y bzip2 curl git-core libxml2-utils openssh-client python-minimal python-pip python-virtualenv python-yaml sudo virtualenv
+RUN apt-get update && apt-get install -y bzip2 curl git-core libxml2-utils openssh-client python-minimal python-pip python-virtualenv python-yaml python3-minimal python3-pip python3-virtualenv python3-yaml sudo virtualenv
 RUN pip install --upgrade pip
