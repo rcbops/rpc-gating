@@ -197,13 +197,13 @@ providers:
       - name: ubuntu-xenial-onmetal
         image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
       - name: rpc-r14-xenial_loose_artifacts-swift-image
-        image-name: rpc-r14.17.0-xenial_loose_artifacts-swift
+        image-name: rpc-r14.18.0-xenial_loose_artifacts-swift
         config-drive: true
       - name: rpc-r16-xenial_no_artifacts-swift-image
-        image-name: rpc-r16.2.4-xenial_no_artifacts-swift
+        image-name: rpc-r16.2.5-xenial_no_artifacts-swift
         config-drive: true
       - name: rpc-r17-xenial_no_artifacts-swift-image
-        image-name: rpc-r17.1.0-xenial_no_artifacts-swift
+        image-name: rpc-r17.1.1-xenial_no_artifacts-swift
         config-drive: true
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
