@@ -249,6 +249,24 @@
     CRON: "{CRON_WEEKLY}"
 
 - project:
+    name: "rpc-upgrades-aio-snapshot-incremental"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - xenial_snapshot
+    scenario:
+      - swift
+    action:
+      - newton_to_queens_incremental:
+          SLAVE_TYPE: "rpc-r14-xenial_loose_artifacts-swift"
+      - pike_to_queens_incremental:
+          SLAVE_TYPE: "rpc-r16-xenial_no_artifacts-swift"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_WEEKLY}"
+
+- project:
     name: "rpc-upgrades"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
