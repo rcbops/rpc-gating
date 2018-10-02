@@ -10,19 +10,15 @@
 
     # Use image for RPC-O install
     image:
-      - xenial_snapshot:
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "DFW"
-          FLAVOR: "7"
-          BOOT_TIMEOUT: 1500
+      - xenial_snapshot
 
     scenario:
       - newton:
-          IMAGE: "rpc-r14.18.0-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
       - pike:
-          IMAGE: "rpc-r16.2.5-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
       - queens:
-          IMAGE: "rpc-r17.1.1-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
     action:
       - "functional"
 
@@ -69,19 +65,15 @@
 
     # Use image for RPC-O install
     image:
-      - xenial_snapshot:
-          REGIONS: "DFW"
-          FALLBACK_REGIONS: "DFW"
-          FLAVOR: "7"
-          BOOT_TIMEOUT: 1500
+      - xenial_snapshot
 
     scenario:
       - newton:
-          IMAGE: "rpc-r14.18.0-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
       - pike:
-          IMAGE: "rpc-r16.2.5-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
       - queens:
-          IMAGE: "rpc-r17.1.1-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
     action:
       - "functional"
 
