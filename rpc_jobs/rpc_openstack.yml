@@ -369,7 +369,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_no_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - ironic
       - swift
