@@ -182,7 +182,7 @@
     repo_name: "rpc-maas"
     repo_url: "https://github.com/rcbops/rpc-maas"
     branch: "master"
-    CRON: "{CRON_WEEKLY}"
+    CRON: "{CRON_DAILY}"
     image:
       - "xenial":
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
