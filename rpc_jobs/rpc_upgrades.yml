@@ -129,17 +129,6 @@
       - "r12.2.5_to_r14.current_leap"
       - "r12.2.8_to_r14.current_leap"
       - "kilo_to_r14.current_leap"
-      - "r11.0.0_to_r14.current_leap"
-      - "r11.0.1_to_r14.current_leap"
-      - "r11.0.4_to_r14.current_leap"
-      - "r11.1.3_to_r14.current_leap"
-      - "r11.1.4_to_r14.current_leap"
-      - "r11.1.5_to_r14.current_leap"
-      - "r11.1.6_to_r14.current_leap"
-      - "r11.1.9_to_r14.current_leap"
-      - "r11.1.10_to_r14.current_leap"
-      - "r11.1.15_to_r14.current_leap"
-      - "r11.1.18_to_r14.current_leap"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
