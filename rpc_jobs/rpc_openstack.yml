@@ -17,6 +17,8 @@
       | ^gating/periodic/
       | ^gating/update_dependencies/
     image:
+      - bionic_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-p2-15"
       - xenial_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
@@ -64,6 +66,8 @@
       | ^gating/periodic/
       | ^gating/update_dependencies/
     image:
+      - bionic_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-p2-15"
       - xenial_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
@@ -247,6 +251,8 @@
     # this for the push triggering for snapshot building.
     CRON: "{CRON_MONTHLY}"
     image:
+      - bionic_no_artifacts:
+          IMAGE: "Ubuntu 18.04 LTS (Bionic Beaver) (PVHVM)"
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
@@ -268,6 +274,8 @@
     branch: "master"
     jira_project_key: "RO"
     image:
+      - bionic_mnaio_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
@@ -297,6 +305,8 @@
     # this for the push triggering for snapshot building.
     CRON: "{CRON_MONTHLY}"
     image:
+      - bionic_no_artifacts:
+          IMAGE: "Ubuntu 18.04 LTS (Bionic Beaver) (PVHVM)"
       - xenial_no_artifacts:
           IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     scenario:
@@ -318,6 +328,8 @@
     branch: "rocky"
     jira_project_key: "RO"
     image:
+      - bionic_mnaio_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
@@ -504,6 +516,8 @@
     branch: "rocky"
     jira_project_key: "RO"
     image:
+      - bionic_mnaio_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
@@ -602,6 +616,8 @@
     CRON: "{CRON_MONTHLY}"
     jira_project_key: ""
     image:
+      - staging_asc_bionic_mnaio_no_artifacts:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
       - staging_asc_xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
