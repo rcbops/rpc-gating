@@ -202,7 +202,7 @@
     repo_name: "rpc-maas"
     repo_url: "https://github.com/rcbops/rpc-maas"
     branch: "master"
-    CRON: "{CRON_WEEKLY}"
+    CRON: "{CRON_DAILY}"
     image:
       - "trusty":
           SLAVE_TYPE: "nodepool-maas-ubuntu-trusty-g1-8"
