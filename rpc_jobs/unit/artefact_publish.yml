@@ -58,6 +58,6 @@
             ]
           ]
           writeYaml file: "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}/component_metadata.yml", data: artifacts_data
+          common.archive_artifacts(artifact_types: "all", jiraProjectKey: null, throwExceptionOnArchiveFailure: true)
         } // standard_job_slave
-        common.archive_artifacts(artifact_types: "all")
       } // globalWraps
