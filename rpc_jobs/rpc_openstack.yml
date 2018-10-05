@@ -616,14 +616,14 @@
     CRON: "{CRON_MONTHLY}"
     jira_project_key: ""
     image:
-      - staging_asc_bionic_mnaio_no_artifacts:
+      - bionic_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
-      - staging_asc_xenial_mnaio_no_artifacts:
+      - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - swift
     action:
-      - system
+      - system_staging
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
