@@ -188,24 +188,25 @@
     CRON: "{CRON_WEEKLY}"
 
 - project:
-    name: "rpc-upgrades-aio-newton-head-incremental"
+    name: "rpc-upgrades-aio-incremental"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
       - xenial_aio:
-          SLAVE_TYPE: "nodepool-rpco-14.2-xenial-base"
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
       - "swift"
     action:
       - "newton_to_queens_incremental"
       - "pike_to_queens_incremental"
     jira_project_key: "RLM"
+    hold_on_error: 4h
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "{CRON_WEEKLY}"
 
 - project:
-    name: "rpc-upgrades-mnaio-newton-head-incremental"
+    name: "rpc-upgrades-mnaio-incremental"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
@@ -217,16 +218,17 @@
       - "newton_to_queens_incremental"
       - "pike_to_queens_incremental"
     jira_project_key: "RLM"
+    hold_on_error: 4h
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "{CRON_WEEKLY}"
 
 - project:
-    name: "rpc-upgrades-aio-snapshot-incremental"
+    name: "rpc-upgrades-aio-snap-incremental"
     repo_name: "rpc-upgrades"
     repo_url: "https://github.com/rcbops/rpc-upgrades"
     image:
-      - xenial_snapshot
+      - xenial_aio-snap
     scenario:
       - swift
     action:
@@ -235,6 +237,25 @@
       - pike_to_queens_incremental:
           SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
     jira_project_key: "RLM"
+    hold_on_error: 4h
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_WEEKLY}"
+
+- project:
+    name: "rpc-upgrades-mnaio-snap-incremental"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - xenial_mnaio-snap:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - swift
+    action:
+      - newton_to_queens_incremental
+      - pike_to_queens_incremental
+    jira_project_key: "RLM"
+    hold_on_error: 4h
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "{CRON_WEEKLY}"
