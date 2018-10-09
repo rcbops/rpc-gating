@@ -67,7 +67,7 @@ def webhooks(){
                 cp \$JENKINS_SSH_PRIVKEY \$keyfile ||:
                 chmod 0400 \$keyfile
                 cat > \$upstart_conf <<EOF
-start on runlevel 2
+start on runlevel [2345]
 # ssh will not daemonize so use the default expect.
 # expect
 respawn
