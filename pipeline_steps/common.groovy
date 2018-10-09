@@ -1100,6 +1100,7 @@ void standard_job_slave(String slave_type, Closure body){
       }
       container.inside {
         configure_git()
+        install_ansible()
         body()
       }
     } else {
