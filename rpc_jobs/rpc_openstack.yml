@@ -600,6 +600,28 @@
       - '{trigger}-Dep-Update_{repo_name}-{branch}'
 
 - project:
+    name: "rpc-openstack-dependency-update-constraints"
+    repo_name: "rpc-openstack"
+    repo_url: "https://github.com/rcbops/rpc-openstack"
+    branch:
+      - "master"
+      - "rocky"
+      - "queens"
+      - "pike"
+      - "newton"
+    jira_project_key: "RO"
+    trigger:
+      - PR:
+          CRON: ""
+          branches: "{branch}"
+          NUM_TO_KEEP: 10
+      - PM:
+          branches: "do_not_build_on_pr"
+          READ_ONLY_TEST: false
+    jobs:
+      - '{trigger}-Constraints-Update_{repo_name}-{branch}'
+
+- project:
     name: "rpc-openstack"
     repo_name: "rpc-openstack"
     repo_url: "https://github.com/rcbops/rpc-openstack"
