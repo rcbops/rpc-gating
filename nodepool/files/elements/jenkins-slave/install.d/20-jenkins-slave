@@ -7,6 +7,22 @@ set -eu
 set -o pipefail
 
 ##
+## Disable systemd-resolved on bionic images
+##
+# We have glean to setup the interfaces and the resolvers
+# from config-drive. We do not want systemd-resolved to
+# interfere with that. It is enabled by default in Bionic,
+# so we need to disable and mask it to prevent it from
+# starting without any resolvers configured and breaking
+# DNS resolution on the host.
+# ref: RI-514
+#
+source /etc/lsb-release
+if [[ "${DISTRIB_CODENAME}" != "trusty" ]] && [[ "${DISTRIB_CODENAME}" != "xenial" ]]; then
+    systemctl disable systemd-resolved
+fi
+
+##
 ## Add jenkins user, group.
 ##
 JENKINS_HOME="/var/lib/jenkins"
