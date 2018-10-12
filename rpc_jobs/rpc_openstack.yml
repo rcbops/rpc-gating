@@ -468,7 +468,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - swift
     action:
@@ -537,7 +537,7 @@
     jira_project_key: "RO"
     image:
       - xenial_mnaio_loose_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - swift
     action:
