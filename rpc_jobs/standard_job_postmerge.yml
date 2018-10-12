@@ -46,6 +46,7 @@
     IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
     CRON: "{CRON_DAILY}"
     BOOT_TIMEOUT: 900
+    hold_on_error: "3h"
     properties:
       - build-discarder:
           num-to-keep: 14
@@ -82,7 +83,7 @@
           SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
           SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
           SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
-          hold_on_error: "3h"
+          hold_on_error: "{hold_on_error}"
     triggers:
       - timed: "{CRON}"
 
