@@ -20,6 +20,14 @@ set -o pipefail
 source /etc/lsb-release
 if [[ "${DISTRIB_CODENAME}" != "trusty" ]] && [[ "${DISTRIB_CODENAME}" != "xenial" ]]; then
     systemctl disable systemd-resolved
+    # Remove the systemd-resolved stub file
+    # symlink. glean will put a normal file
+    # in its place on boot.
+    rm -f /etc/resolv.conf
+    # To allow the image build to complete,
+    # we add a replacement file with a public
+    # resolver.
+    echo 'nameserver 8.8.8.8' > /etc/resolv.conf
 fi
 
 ##
