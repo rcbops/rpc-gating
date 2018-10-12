@@ -22,8 +22,6 @@
       - xenial_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
-      - ironic:
-          TRIGGER_PR_PHRASE_ONLY: true
       - "swift"
     action:
       - "deploy"
@@ -71,8 +69,6 @@
       - xenial_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
-      - ironic:
-          TRIGGER_PR_PHRASE_ONLY: true
       - "swift"
     action:
       - "deploy"
@@ -119,8 +115,6 @@
       - xenial_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
-      - ironic:
-          TRIGGER_PR_PHRASE_ONLY: true
       - "swift"
     action:
       - "deploy"
@@ -166,8 +160,6 @@
       - xenial_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
     scenario:
-      - ironic:
-          TRIGGER_PR_PHRASE_ONLY: true
       - "swift"
     action:
       - "deploy"
@@ -279,17 +271,11 @@
       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
-      - ironic
       - swift
     action:
       - system
       - sdqc
       - deploy
-    exclude:
-      - action: system
-        scenario: ironic
-      - action: sdqc
-        scenario: ironic
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
@@ -333,17 +319,11 @@
       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
-      - ironic
       - swift
     action:
       - system
       - sdqc
       - deploy
-    exclude:
-      - action: system
-        scenario: ironic
-      - action: sdqc
-        scenario: ironic
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
@@ -383,17 +363,11 @@
       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
-      - ironic
       - swift
     action:
       - system
       - sdqc
       - deploy
-    exclude:
-      - action: system
-        scenario: ironic
-      - action: sdqc
-        scenario: ironic
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
@@ -432,14 +406,10 @@
       - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
-      - ironic
       - swift
     action:
       - system
       - deploy
-    exclude:
-      - action: system
-        scenario: ironic
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
