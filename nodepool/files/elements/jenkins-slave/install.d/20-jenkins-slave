@@ -7,27 +7,24 @@ set -eu
 set -o pipefail
 
 ##
-## Disable systemd-resolved on bionic images
+## Configure systemd-resolved on bionic+ images
 ##
 # We have glean to setup the interfaces and the resolvers
-# from config-drive. We do not want systemd-resolved to
-# interfere with that. It is enabled by default in Bionic,
-# so we need to disable and mask it to prevent it from
-# starting without any resolvers configured and breaking
-# DNS resolution on the host.
+# from config-drive. Ideally we'd like glean to configure
+# systemd-resolved properly, but it can't do that right
+# now. So, as a workaround, we implement a static config
+# here with public DNS servers. This is necessary on bionic
+# images because it enables systemd-resolved by default.
+#
 # ref: RI-514
+# TODO(odyssey4me):
+# Once glean is capable of configuring systemd-resolved
+# properly, remove this workaround.
 #
 source /etc/lsb-release
 if [[ "${DISTRIB_CODENAME}" != "trusty" ]] && [[ "${DISTRIB_CODENAME}" != "xenial" ]]; then
-    systemctl disable systemd-resolved
-    # Remove the systemd-resolved stub file
-    # symlink. glean will put a normal file
-    # in its place on boot.
-    rm -f /etc/resolv.conf
-    # To allow the image build to complete,
-    # we add a replacement file with a public
-    # resolver.
-    echo 'nameserver 8.8.8.8' > /etc/resolv.conf
+    sed -i 's/^#DNS=.*/DNS=8.8.8.8/' /etc/systemd/resolved.conf
+    sed -i 's/^#FallbackDNS=.*/FallbackDNS=8.8.4.4/' /etc/systemd/resolved.conf
 fi
 
 ##
