@@ -273,9 +273,10 @@
     scenario:
       - swift
     action:
-      - system
-      - sdqc
       - deploy
+      - elk
+      - sdqc
+      - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
@@ -321,9 +322,10 @@
     scenario:
       - swift
     action:
-      - system
-      - sdqc
       - deploy
+      - elk
+      - sdqc
+      - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
@@ -365,9 +367,10 @@
     scenario:
       - swift
     action:
-      - system
-      - sdqc
       - deploy
+      - elk
+      - sdqc
+      - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
@@ -408,8 +411,9 @@
     scenario:
       - swift
     action:
-      - system
       - deploy
+      - elk
+      - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
     jobs:
