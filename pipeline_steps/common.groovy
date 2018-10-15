@@ -381,9 +381,26 @@ def archive_artifacts(Map args = [:]){
       }
 
       pubcloud.uploadArtifacts("artifact_types": artifact_types)
-      if(fileExists(file: "artifact_public_url")){
-        artifact_public_url = readFile(file: "artifact_public_url")
-        currentBuild.description = "<h2><a href='"+artifact_public_url+"'>Build Artifacts</a></h2>"
+      def buildArtifacts
+      if (fileExists("build_artifacts.yml")){
+        buildArtifacts = readYaml file: "build_artifacts.yml"
+      } else{
+        buildArtifacts = ["artifacts": []]
+      }
+      println "Uploaded artefact details:\n${buildArtifacts}"
+
+      if (env.RE_JOB_TRIGGER != "PULL") {
+        buildArtifacts.artifacts.each {k, v ->
+          // rpc-gating is skipped because it is not a component and so that unit tests can continue
+          if (k == "file" && v.container_name != "rpc-gating"){
+            addArtifactTypeToComponent(v.container_name, v.name, k, v.public_url, "RE")
+          }
+        }
+      }
+      if(buildArtifacts.artifacts){
+        currentBuild.description = buildArtifacts.artifacts.collect{_, v ->
+          "<h2><a href='${v.public_url}'>${v.title}</a></h2>"
+        }.join("")
       }
     } catch (e){
       // This function is called from stdJob, so we must catch exceptions to
@@ -408,6 +425,82 @@ def archive_artifacts(Map args = [:]){
       }
     }// try
   } // stage
+}
+
+void addArtifactTypeToComponent(String componentName, String artifactStoreName, String artifactType, String url, String jiraProjectKey){
+  String gatingVenv = "${WORKSPACE}/.venv"
+  String componentVenv = "${WORKSPACE}/.componentvenv"
+  sh """#!/bin/bash -xe
+      virtualenv --python python3 ${componentVenv}
+      set +x; . ${componentVenv}/bin/activate; set -x
+      pip install -c '${env.WORKSPACE}/rpc-gating/constraints_rpc_component.txt' rpc_component
+  """
+
+  String releasesDir = "${WORKSPACE}/releases"
+
+  clone_with_pr_refs("${releasesDir}", "https://github.com/rcbops/releases", "master")
+
+  withEnv(
+    [
+      "ISSUE_SUMMARY=Add artefact container public URL to releases for ${componentName}",
+      "ISSUE_DESCRIPTION=This issue was generated automatically when artefacts were uploaded to a new container.",
+      "LABELS=component-artifacts jenkins",
+      "JIRA_PROJECT_KEY=${jiraProjectKey}",
+      "TARGET_BRANCH=master",
+      "COMMIT_TITLE=Update ${componentName} with new artifact store ${artifactStoreName}",
+      "COMMIT_MESSAGE=This change adds a new artifact store to the component definition.",
+    ]
+  ){
+    withCredentials(
+      [
+        string(
+          credentialsId: 'rpc-jenkins-svc-github-pat',
+          variable: 'PAT'
+        ),
+        usernamePassword(
+          credentialsId: "jira_user_pass",
+          usernameVariable: "JIRA_USER",
+          passwordVariable: "JIRA_PASS"
+        ),
+      ]
+    ){
+      sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
+        try{
+          sh """#!/bin/bash -xe
+            cd ${releasesDir}
+            set +x; . ${componentVenv}/bin/activate; set -x
+            component \
+              --releases-dir . \
+              artifact-store \
+                --component-name ${componentName} \
+                get \
+                  --name ${artifactStoreName}
+          """
+        } catch (Exception e){
+          println "Failed to find artefact store, ${e}."
+          println "Adding new artefact store."
+          sh """#!/bin/bash -xe
+            cd ${releasesDir}
+            set +x; . ${componentVenv}/bin/activate; set -x
+            component \
+              --no-commit-changes \
+              --releases-dir . \
+              artifact-store \
+                --component-name ${componentName} \
+                add \
+                  --name ${artifactStoreName} \
+                  --type ${artifactType} \
+                  --public-url ${url}
+            deactivate
+            set +x; . ${gatingVenv}/bin/activate; set -x
+            git status
+            git diff
+            ${WORKSPACE}/rpc-gating/scripts/commit_and_pull_request.sh
+          """
+        }
+      }
+    }
+  }
 }
 
 List get_cloud_creds(){
