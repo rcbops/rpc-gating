@@ -1,20 +1,54 @@
 - project:
-    name: "hardening-repo-rpc-openstack-mnaio-postmerge"
+    name: "hardening-rpc-openstack-bionic"
+    repo_name: "hardening"
+    repo_url: "internal:hardening_repo_url"
+    branch: "master"
+    jira_project_key: "RQE"
+    image:
+      - bionic_mnaio:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - "swift"
+    action:
+      - "hardening_master"
+      - "hardening_rocky"
+    CRON: "{CRON_WEEKLY}"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "hardening-rpc-openstack-xenial"
+    repo_name: "hardening"
+    repo_url: "internal:hardening_repo_url"
+    branch: "master"
+    jira_project_key: "RQE"
+    image:
+      - xenial_mnaio:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - "swift"
+    action:
+      - "hardening_master"
+      - "hardening_rocky"
+      - "hardening_queens"
+      - "hardening_pike"
+    CRON: "{CRON_WEEKLY}"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "hardening-rpc-openstack-xenial-newton"
     repo_name: "hardening"
     repo_url: "internal:hardening_repo_url"
     branch: "master"
     jira_project_key: "RQE"
     image:
       - xenial_mnaio_loose_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-om-io2"
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "swift"
     action:
-      - "deploy_master"
-      - "deploy_rocky"
-      - "deploy_queens"
-      - "deploy_pike"
-      - "deploy_newton"
+      - "hardening_newton"
     CRON: "{CRON_WEEKLY}"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
