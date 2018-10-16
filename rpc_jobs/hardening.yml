@@ -5,7 +5,7 @@
     branch: "master"
     jira_project_key: "RQE"
     image:
-      - bionic_mnaio:
+      - bionic_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "swift"
@@ -23,7 +23,7 @@
     branch: "master"
     jira_project_key: "RQE"
     image:
-      - xenial_mnaio:
+      - xenial_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - "swift"
