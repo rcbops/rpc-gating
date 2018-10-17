@@ -4,6 +4,8 @@
     repo_name: "rpc-ceph"
     repo_url: "https://github.com/rcbops/rpc-ceph"
 
+    hold_on_error: "12h"
+
     branches:
       - "master"
 
@@ -72,6 +74,8 @@
 
     repo_name: "rpc-ceph"
     repo_url: "https://github.com/rcbops/rpc-ceph"
+
+    hold_on_error: "12h"
 
     image:
       - "xenial"
@@ -172,4 +176,3 @@
           repo_url: 'https://github.com/rcbops/rpc-ceph'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
-
