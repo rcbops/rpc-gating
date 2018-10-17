@@ -1688,22 +1688,26 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
             } catch (Exception e){
               currentBuild.result = "FAILURE"
             } finally {
-              stage('Execute Post Script') {
-                // We do not want the 'post' execution to fail the test,
-                // but we do want to know if it fails so we make it only
-                // return status.
-                post_result = sh(
-                  returnStatus: true,
-                  script: """#!/bin/bash -xeu
-                             export RE_JOB_STATUS=${currentBuild.result}
-                             cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
-                             if [[ -e gating/${hook_dir}/post ]]; then
-                               gating/${hook_dir}/post
-                             fi"""
-                )
-                if (post_result != 0) {
-                  print("Build failed with return code ${post_result}")
+              try {
+                stage('Execute Post Script') {
+                  // We do not want the 'post' execution to fail the test,
+                  // but we do want to know if it fails so we make it only
+                  // return status.
+                  post_result = sh(
+                    returnStatus: true,
+                    script: """#!/bin/bash -xeu
+                              export RE_JOB_STATUS=${currentBuild.result}
+                              cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
+                              if [[ -e gating/${hook_dir}/post ]]; then
+                                gating/${hook_dir}/post
+                              fi"""
+                  )
+                  if (post_result != 0) {
+                    print("Post stage failed with return code ${post_result}")
+                  }
                 }
+              } catch (Exception e){
+                print("Caught exception during post stage, swallowing so it doesn't cause the build to fail: "+e)
               }
             }
           }
