@@ -22,8 +22,8 @@
 
     # rpc-ceph ignores that setting for now
     scenario:
-      - "functional"
       - "bluestore"
+      - "functional"
       - "keystone_rgw"
 
     # rpc-ceph ignores that setting for now
@@ -38,46 +38,6 @@
     # Link to the standard pre-merge-template
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
-
-# NOTE(mattt): the rpc-ceph team would rather run all functional
-#              tests on PR (`check`), rather than `gate`. Leaving these
-#              all commented for now.
-#- project:
-#    name: "rpc-ceph-gate"
-#
-#    repo_name: "rpc-ceph"
-#    repo_url: "https://github.com/rcbops/rpc-ceph"
-#
-#    branch: "master"
-#
-#    skip_pattern: |
-#      \.md$
-#      | \.rst$
-#      | ^releasenotes/
-#      | ^docs/
-#      | ^gating/generate_release_notes/
-#      | ^gating/periodic/
-#      | ^gating/release/
-#
-#    image:
-#      - "xenial":
-#          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
-#
-#    scenario:
-#      - "functional"
-#      - "bluestore"
-#      - "keystone_rgw"
-#
-#    jira_project_key: "CEPHSTORA"
-#
-#    # Required to properly test deployment of rpc-maas
-#    credentials: "cloud_creds"
-#
-#    action:
-#      - "test"
-#
-#    jobs:
-#      - 'GATE_{repo_name}-{series}-{image}-{scenario}-{action}'
 
 - project:
     name: 'rpc-ceph-release'
@@ -117,7 +77,11 @@
       - "xenial"
 
     scenario:
+      - bluestore:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
       - functional:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+      - keystone_rgw:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
       - rpco_newton:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-p2-15"
