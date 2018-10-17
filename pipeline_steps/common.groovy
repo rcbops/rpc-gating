@@ -1112,6 +1112,10 @@ Boolean isNodepoolNode(String node){
   return node =~ /^nodepool-/
 }
 
+Boolean isNodepoolHoldRequired(String holdOnError){
+  return holdOnError && holdOnError != "0"
+}
+
 // initialisation steps for nodes
 void use_node(String label=null, body){
   node(label){
@@ -1132,7 +1136,7 @@ void use_node(String label=null, body){
       errString = "Caught exception on ${env.NODE_NAME}: ${e} Build: ${env.BUILD_URL}"
       print errString
 
-      if (isNodepoolNode(env.NODE_NAME) && env.HOLD_ON_ERROR != "0"){
+      if (isNodepoolNode(env.NODE_NAME) && isNodepoolHoldRequired(env.HOLD_ON_ERROR)){
         nodePoolHold(duration: env.HOLD_ON_ERROR, reason: errString)
       }
       throw e
