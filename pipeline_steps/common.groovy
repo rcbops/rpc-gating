@@ -390,10 +390,11 @@ def archive_artifacts(Map args = [:]){
       println "Uploaded artefact details:\n${buildArtifacts}"
 
       if (env.RE_JOB_TRIGGER != "PULL") {
-        buildArtifacts.artifacts.each {k, v ->
+        buildArtifacts.artifacts.find {k, v ->
           // rpc-gating is skipped because it is not a component and so that unit tests can continue
-          if (k == "file" && v.container_name != "rpc-gating"){
-            addArtifactTypeToComponent(v.container_name, v.name, k, v.public_url, "RE")
+          if (k == "file" && v.container_name == env.RE_JOB_REPO_NAME && v.container_name != "rpc-gating"){
+            addArtifactTypeToComponent(v.container_name, v.name, k, v.container_public_url, "RE")
+            return true
           }
         }
       }
