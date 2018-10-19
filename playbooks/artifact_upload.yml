@@ -4,7 +4,7 @@
   connection: local
   gather_facts: False
   vars:
-    region: "DFW"
+    region: "IAD"
     cloud_name: "public_cloud"
     component_metadata_file_path: "{{ lookup('env', 'WORKSPACE') }}/{{ lookup('env', 'RE_JOB_REPO_NAME') }}/component_metadata.yml"
     legacy_artifact_log_type:
