@@ -44,7 +44,7 @@
 
 - project:
     name: "rpc-jenkins-etl-master-periodic"
-    epo_name: "rpc-jenkins-etl"
+    repo_name: "rpc-jenkins-etl"
     repo_url: "https://github.com/rcbops/rpc-jenkins-etl"
     branch: "master"
     image: "xenial"
