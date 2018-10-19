@@ -1818,6 +1818,9 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
     }
   }else if (type == "registration"){
     registerComponent(componentText, jiraProjectKey)
+  }else if (type == "artifact-store"){
+    // Adding an artefact store does not activate any additional workflow and
+    // so this block only needs skipping so the pull request can be merged.
   }else{
     throw new Exception("The pull request type ${prType} is unsupported.")
   }
@@ -1845,7 +1848,7 @@ List getComponentChange(String baseBranch, String prBranch){
       set +x; . ${venv}/bin/activate; set -x
       pip install -c '${env.WORKSPACE}/rpc-gating/constraints_rpc_component.txt' rpc_component
   """
-  types = ["release", "registration"]
+  types = ["release", "registration", "artifact-store"]
   for (i=0; i < types.size(); i++){
     type = types[i]
     try{
