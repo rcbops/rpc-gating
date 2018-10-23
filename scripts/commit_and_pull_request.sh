@@ -26,7 +26,7 @@ git commit -m "${COMMIT_TITLE}" -m "${message}"
 
 echo "Pushing changes to repo branch"
 ssh_url="$(git remote get-url --push origin | sed 's|https://github.com/|git@github.com:|')"
-git push "$ssh_url" "${pr_branch}"
+git push -f "$ssh_url" "${pr_branch}"
 
 git checkout "${orig_branch}"
 
