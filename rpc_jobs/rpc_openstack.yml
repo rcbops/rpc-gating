@@ -598,6 +598,7 @@
       - swift
     action:
       - system_staging
+      - system_maas
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
