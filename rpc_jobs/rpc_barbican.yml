@@ -1,0 +1,44 @@
+---     # Job definitions for Barbican integrated with Vault
+
+################################################################################################
+
+- project:
+    name: "rpc-barbican-pre-merge"
+    repo_name: "rpc-barbican"
+    repo_url: "https://github.com/rcbops/rpc-barbican"
+    branches:
+      - "rocky.*"
+    image:    # Use image for RPC-O install
+      - xenial_snapshot
+    hold_on_error: "4h"
+    scenario:
+      - rocky:
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+    action:
+      - "deploy"
+    jira_project_key: "RI"
+    CRON: "{CRON_DAILY}"
+    jobs:     # Link to the standard pre-merge-template
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+
+################################################################################################
+
+- project:
+    name: "rpc-barbican-post-merge-snapshot"
+    repo_name: "rpc-barbican"
+    repo_url: "https://github.com/rcbops/rpc-barbican"
+    branches:
+      - "rocky.*"
+    image:
+      - xenial_snapshot
+    hold_on_error: "4h"
+    scenario:
+      - rocky:
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+    action:
+      - "deploy"
+    jira_project_key: "RI"
+    CRON: "{CRON_DAILY}"
+    jobs:     # Link to the standard post-merge-template
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
