@@ -34,6 +34,12 @@ labels:
   - name: rpc-r17-xenial_no_artifacts-swift
     min-ready: 1
     max-ready-age: 86400
+  - name: rpc-r18-xenial_no_artifacts-swift
+    min-ready: 1
+    max-ready-age: 86400
+  - name: rpc-r18-bionic_no_artifacts-swift
+    min-ready: 1
+    max-ready-age: 86400
 
   #g1-8
   - name: ubuntu-bionic-g1-8
@@ -205,6 +211,12 @@ providers:
       - name: rpc-r17-xenial_no_artifacts-swift-image
         image-name: rpc-r17.1.1-xenial_no_artifacts-swift
         config-drive: true
+      - name: rpc-r18-xenial_no_artifacts-swift-image
+        image-name: rpc-r18.0.0-xenial_no_artifacts-swift
+        config-drive: true
+      - name: rpc-r18-bionic_no_artifacts-swift-image
+        image-name: rpc-r18.0.0-xenial_no_artifacts-swift
+        config-drive: true
     image-name-format: nodepool-{image_name}-{timestamp}
     diskimages: *provider_diskimage_block
     pools:
@@ -245,6 +257,16 @@ providers:
             console-log: true
           - name: rpc-r17-xenial_no_artifacts-swift
             cloud-image: rpc-r17-xenial_no_artifacts-swift-image
+            flavor-name: "15GB Standard Instance"
+            key-name: jenkins
+            console-log: true
+          - name: rpc-r18-xenial_no_artifacts-swift
+            cloud-image: rpc-r18-xenial_no_artifacts-swift-image
+            flavor-name: "15GB Standard Instance"
+            key-name: jenkins
+            console-log: true
+          - name: rpc-r18-bionic_no_artifacts-swift
+            cloud-image: rpc-r18-bionic_no_artifacts-swift-image
             flavor-name: "15GB Standard Instance"
             key-name: jenkins
             console-log: true
