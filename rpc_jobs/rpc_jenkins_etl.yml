@@ -1,0 +1,28 @@
+
+- project:
+    name: rpc-jenkins-etl-gate-trigger
+    repo_name: rpc-jenkins-etl
+    repo_url: git@github.com:rcbops/rpc-jenkins-etl.git
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: rpc-jenkins-etl-re-release-pr
+    repo:
+      - rpc-jenkins-etl:
+          URL: git@github.com:rcbops/rpc-jenkins-etl.git
+          BRANCH: master
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'rpc-jenkins-etl-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-jenkins-etl:
+          repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
