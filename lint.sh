@@ -4,6 +4,8 @@ rc=0
 venv=.lintvenv
 # exclude venv and git dir from linting
 fargs=(. -not -path \*${venv}\* -not -path \*.git\*)
+current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+JJB_PATHS_OVERRIDE=${JJB_PATHS_OVERRIDE:-}
 
 trap cleanup EXIT
 cleanup(){
@@ -32,6 +34,12 @@ install(){
 create_jjb_ini(){
   # work around for ip6 issues in docker image used for gating UG-652
   echo -e "[jenkins]\nurl=http://127.0.0.1:8080" > lint_jjb.ini
+  if [[ ${JJB_PATHS_OVERRIDE} == "" ]]; then
+    job_sources_from_defaults=$(python -c 'import yaml; defaults = yaml.load(open("rpc_jobs/defaults.yml")); print(" ".join("--job-source {r};{c}".format(r=s["repo"], c=s["commitish"]) for s in yaml.load(defaults[0]["defaults"]["JOB_SOURCES"])))')
+    jjb_paths=$(scripts/jjb-path-setup.py ${job_sources_from_defaults} --job-source=${current_dir})
+  else
+    jjb_paths=${JJB_PATHS_OVERRIDE}
+  fi
 }
 
 # Check JJB for syntax
@@ -40,7 +48,7 @@ check_jjb(){
     || { echo "jenkins-jobs unavailble, please install jenkins-job-builder from pip"
          return
        }
-  jenkins-jobs --conf lint_jjb.ini test -r rpc_jobs >/dev/null \
+  jenkins-jobs --conf lint_jjb.ini test -r "${jjb_paths}" >/dev/null \
     && echo "JJB Syntax ok" \
     || { echo "JJB Syntax fail"; rc=1; }
 }
@@ -162,7 +170,7 @@ check_jenkins_name_lengths(){
     || { echo "jenkins-jobs unavailble, please install jenkins-job-builder from pip"
          return
        }
-  jobs=$(jenkins-jobs --conf lint_jjb.ini test -r rpc_jobs 2>&1 | grep "INFO:jenkins_jobs.builder:Job name:" | awk '{print $NF}')
+  jobs=$(jenkins-jobs --conf lint_jjb.ini test -r "${jjb_paths}" 2>&1 | grep "INFO:jenkins_jobs.builder:Job name:" | awk '{print $NF}')
 
   echo -e "\n\n** Scanning for job names for those that are longer than ${max_chars} characters ... **"
 
@@ -190,15 +198,22 @@ install python2.7
 create_jjb_ini
 
 # run the checks
-check_jjb
-check_jenkins_name_lengths
-check_groovy
-check_ansible
-check_bash
-check_jjb_lint
-check_webhooktranslator
-check_python python3
-check_python python2.7
+if [[ "${CHECK_JENKINS_ONLY:-false}" == "true" ]]; then
+  check_jjb
+  check_jenkins_name_lengths
+  check_groovy
+  check_jjb_lint
+else
+  check_jjb
+  check_jenkins_name_lengths
+  check_groovy
+  check_ansible
+  check_bash
+  check_jjb_lint
+  check_webhooktranslator
+  check_python python3
+  check_python python2.7
+fi
 
 if [[ $rc == 0 ]]
 then

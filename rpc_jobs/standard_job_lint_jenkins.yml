@@ -1,0 +1,58 @@
+- job-template:
+    CRON: "{CRON_WEEKLY}"
+    RPC_GATING_BRANCH: master
+    NUM_TO_KEEP: 30
+    SLAVE_TYPE: "container"
+    name: 'Lint-Jenkins_{repo_name}-{branch}'
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${{RPC_GATING_BRANCH}}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/standard_job_lint_jenkins.groovy
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: "{NUM_TO_KEEP}"
+      - github:
+          url: "{repo_url}"
+      - inject:
+          properties-content: |
+            BOOT_TIMEOUT=900
+            JIRA_PROJECT_KEY={jira_project_key}
+            RE_JOB_NAME={name}
+            RE_JOB_REPO_NAME={repo_name}
+            STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
+    triggers:
+      - timed: "{CRON}"
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_all.*|.*recheck_lint_jenkins.*'
+          only-trigger-phrase: false
+          white-list-target-branches:
+            - "{branches}"
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/lint_jenkins'
+          cancel-builds-on-update: true
+    parameters:
+      - rpc_gating_params
+      - jjb_params
+      - string:
+          name: "REPO_URL"
+          description: URL of the repo to be updated
+          default: "{repo_url}"
+      - string:
+          name: "BRANCH"
+          description: Branch of the repo to be updated
+          default: "{branch}"
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+          hold_on_error: "{hold_on_error}"
