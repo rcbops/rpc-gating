@@ -16,6 +16,9 @@ labels:
   # entities but phobos does not. Consequently MaaS jobs fail on phobos. (RE-1954)
   # This was initially solved by disabling phobos. In order to re-enable phobos,
   # maas specific labels are introduced that draw from all regions except phobos.
+  - name: maas-ubuntu-bionic-g1-8
+    min-ready: 0
+    max-ready-age: 86400
   - name: maas-ubuntu-xenial-g1-8
     min-ready: 0
     max-ready-age: 86400
@@ -222,6 +225,11 @@ providers:
         availability-zones: []
         labels: &provider_pools_main_labels_block
           #MaaS
+          - name: maas-ubuntu-bionic-g1-8
+            diskimage: ubuntu-bionic
+            flavor-name: general1-8
+            key-name: jenkins
+            console-log: true
           - name: maas-ubuntu-xenial-g1-8
             diskimage: ubuntu-xenial
             flavor-name: general1-8

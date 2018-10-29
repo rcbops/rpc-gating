@@ -1,4 +1,30 @@
 - project:
+    name: "rpc-maas-master-bionic-premerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    series: "master"
+    branches:
+      - "master.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^doc/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+    image:
+      - "bionic"
+    scenario:
+      - rocky:
+          SLAVE_TYPE: "nodepool-maas-ubuntu-bionic-g1-8"
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-maas-master-xenial-premerge"
     repo_name: "rpc-maas"
     repo_url: "https://github.com/rcbops/rpc-maas"
@@ -19,6 +45,8 @@
       - master:
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-p2-15"
           TRIGGER_PR_PHRASE_ONLY: true
+      - rocky:
+          SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
       - queens:
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
       - pike:
@@ -151,6 +179,7 @@
       - "xenial":
           SLAVE_TYPE: "nodepool-maas-ubuntu-xenial-g1-8"
     scenario:
+      - rocky
       - queens
       - pike
       - newton
