@@ -1,4 +1,30 @@
 - project:
+    name: "rpc-maas-master-osp-mnaio-bionic-premerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    series: "master"
+    branches:
+      - "master.*"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^doc/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+    image:
+      - bionic_mnaio:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - "3ctlr_2comp_3ceph"
+    action:
+      - "osp_13_deploy"
+    credentials: "rpc_osp"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-maas-master-bionic-premerge"
     repo_name: "rpc-maas"
     repo_url: "https://github.com/rcbops/rpc-maas"
