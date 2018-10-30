@@ -29,11 +29,13 @@
 - project:
     name: "rpc-jenkins-etl-dev-premerge"
     repo_name: "rpc-jenkins-etl"
-    repo_url: "https://github.com/rcbops/rpc-jenkins-etl"
+    repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
     series: "dev"
     branches:
       - "dev"
-    image: "xenial"
+    image:
+      - xenial:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
     scenario: "basic"
     action:
       - "lint"
@@ -45,9 +47,11 @@
 - project:
     name: "rpc-jenkins-etl-master-periodic"
     repo_name: "rpc-jenkins-etl"
-    repo_url: "https://github.com/rcbops/rpc-jenkins-etl"
+    repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
     branch: "master"
-    image: "xenial"
+    image:
+      - xenial:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
     scenario: "basic"
     action: "integration"
     jobs:
