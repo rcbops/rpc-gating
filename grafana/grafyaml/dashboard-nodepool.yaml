@@ -135,6 +135,7 @@ dashboard:
           targets:
             - target: alias(stats.timers.nodepool.task.pubcloud-dfw.ComputePostServers.mean, 'DFW')
             - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputePostServers.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-lon.ComputePostServers.mean, 'LON')
             - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputePostServers.mean, 'ORD')
         - title: Get Server
           type: graph
@@ -148,6 +149,7 @@ dashboard:
           targets:
             - target: alias(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetServersDetail.mean, 'DFW')
             - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServersDetail.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-lon.ComputeGetServersDetail.mean, 'LON')
             - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServersDetail.mean, 'ORD')
         - title: Delete Server
           type: graph
@@ -161,6 +163,7 @@ dashboard:
           targets:
             - target: alias(stats.timers.nodepool.task.pubcloud-dfw.ComputeDeleteServers.mean, 'DFW')
             - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputeDeleteServers.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.task.pubcloud-lon.ComputeDeleteServers.mean, 'LON')
             - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputeDeleteServers.mean, 'ORD')
         - title: List Servers
           type: graph
@@ -174,6 +177,7 @@ dashboard:
           targets:
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetServers.mean, '0.001'), 'DFW')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServers.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-lon.ComputeGetServers.mean, '0.001'), 'LON')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServers.mean, '0.001'), 'ORD')
         - title: Get Limits
           type: graph
@@ -187,6 +191,7 @@ dashboard:
           targets:
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-dfw.ComputeGetLimits.mean, '0.001'), 'DFW')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetLimits.mean, '0.001'), 'IAD')
+            - target: alias(scale(stats.timers.nodepool.task.pubcloud-lon.ComputeGetLimits.mean, '0.001'), 'LON')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetLimits.mean, '0.001'), 'ORD')
     - title: Node Launches
       showTitle: true
@@ -203,6 +208,7 @@ dashboard:
           targets:
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-dfw.ready, '1m'), 'sum'), 'DFW')
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-iad.ready, '1m'), 'sum'), 'IAD')
+            - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-lon.ready, '1m'), 'sum'), 'LON')
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-ord.ready, '1m'), 'sum'), 'ORD')
         - title: Error Node Launch Attempts
           type: graph
@@ -215,6 +221,7 @@ dashboard:
           targets:
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-dfw.error.*), '1m'), 'sum'), 'DFW')
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-iad.error.*), '1m'), 'sum'), 'IAD')
+            - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-lon.error.*), '1m'), 'sum'), 'LON')
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-ord.error.*), '1m'), 'sum'), 'ORD')
         - title: Time to Ready
           type: graph
@@ -227,10 +234,11 @@ dashboard:
           targets:
             - target: alias(stats.timers.nodepool.launch.provider.pubcloud-dfw.ready.mean, 'DFW')
             - target: alias(stats.timers.nodepool.launch.provider.pubcloud-iad.ready.mean, 'IAD')
+            - target: alias(stats.timers.nodepool.launch.provider.pubcloud-lon.ready.mean, 'LON')
             - target: alias(stats.timers.nodepool.launch.provider.pubcloud-ord.ready.mean, 'ORD')
         - title: Test Nodes (DFW)
           type: graph
-          span: 4
+          span: 3
           stack: true
           tooltip:
             value_type: individual
@@ -247,7 +255,7 @@ dashboard:
               stack: False
         - title: Test Nodes (IAD)
           type: graph
-          span: 4
+          span: 3
           stack: true
           tooltip:
             value_type: individual
@@ -262,9 +270,26 @@ dashboard:
           seriesOverrides:
             - alias: Max
               stack: False
+        - title: Test Nodes (LON)
+          type: graph
+          span: 3
+          stack: true
+          tooltip:
+            value_type: individual
+          leftYAxisLabel: "nodes"
+          targets:
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-lon.nodes.building, 'Building')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-lon.nodes.ready, 'Available')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-lon.nodes.in-use, 'In Use')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-lon.nodes.used, 'Used')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-lon.nodes.deleting, 'Deleting')
+            - target: alias(stats.gauges.nodepool.provider.pubcloud-lon.max_servers, 'Max')
+          seriesOverrides:
+            - alias: Max
+              stack: False
         - title: Test Nodes (ORD)
           type: graph
-          span: 4
+          span: 3
           stack: true
           tooltip:
             value_type: individual

@@ -549,6 +549,16 @@ clouds:
       - HKG
       - SYD
 
+  pubcloud_uk:
+    profile: rackspace
+    auth_type: rackspace_apikey
+    regions:
+      - LON
+    auth:
+      auth_url: "https://lon.identity.api.rackspacecloud.com/v2.0/"
+      username: ${env.PUBCLOUD_UK_USERNAME}
+      api_key: ${env.PUBCLOUD_UK_API_KEY}
+
   phobos_nodepool:
     identity_api_version: 3
     verify: False
@@ -1243,6 +1253,8 @@ List build_creds_array(String list_of_cred_ids){
         'dev_pubcloud_username',
         'dev_pubcloud_api_key',
         'dev_pubcloud_tenant_id',
+        'PUBCLOUD_UK_USERNAME',
+        'PUBCLOUD_UK_API_KEY',
         'phobos_nodepool_auth_url',
         'phobos_nodepool_project_name',
         'phobos_nodepool_project_id',
@@ -1301,6 +1313,14 @@ List build_creds_array(String list_of_cred_ids){
       "dev_pubcloud_tenant_id": string(
         credentialsId: "dev_pubcloud_tenant_id",
         variable: "PUBCLOUD_TENANT_ID"
+      ),
+      "PUBCLOUD_UK_USERNAME": string(
+        credentialsId: "PUBCLOUD_UK_USERNAME",
+        variable: "PUBCLOUD_UK_USERNAME"
+      ),
+      "PUBCLOUD_UK_API_KEY": string(
+        credentialsId: "PUBCLOUD_UK_API_KEY",
+        variable: "PUBCLOUD_UK_API_KEY"
       ),
       "RE_GRAFANA_ADMIN_PASSWORD": string(
         credentialsId: "RE_GRAFANA_ADMIN_PASSWORD",
