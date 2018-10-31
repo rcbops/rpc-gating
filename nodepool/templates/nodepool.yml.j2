@@ -6,8 +6,10 @@ elements-dir: /opt/nodepool/elements
 images-dir: /opt/nodepool/images
 
 zookeeper-servers:
-  - host: localhost
+{% for zk_host in groups['nodepool_server'] | sort %}
+  - host: "{{ hostvars[zk_host].ansible_default_ipv4.address }}"
     port: 2181
+{% endfor %}
 
 labels:
   # MaaS jobs expect a MaaS entity to be provided for each node. Public cloud provides

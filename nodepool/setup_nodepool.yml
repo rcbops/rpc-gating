@@ -17,7 +17,7 @@
       setup:
         gather_subset: "!facter,!ohai"
 
-- name: Setup nodepool servers serially
+- name: Setup zookeeper servers serially
   hosts: "nodepool_server"
   gather_facts: no
   user: root
@@ -28,38 +28,11 @@
   # serial so that the cluster always retains its quorum.
   serial: 1
   vars:
-    nodepool_file_nodepool_yaml_src: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/nodepool/files/nodepool.yml"
-    nodepool_git_version: 67824d8e64250ede0cb4a3ebe344412f5cba2218 # HEAD of 'master' as of 25 July 2018
-    nodepool_pip_executable: pip3
-    nodepool_file_nodepool_builder_service_config_src: systemd-service-override.conf.j2
-    nodepool_file_nodepool_launcher_service_config_src: systemd-service-override.conf.j2
-
-    diskimage_builder_git_version: "2.12.1" # Current release as of 22 Mar 2018
-    diskimage_builder_elements_src: "elements"
-
     zookeeper_debian_apt_install: yes
     zookeeper_hosts: "{{ groups['nodepool_server'] }}"
-
     zookeeper_access_list:
       - 74.205.74.100 # CIT Jenkins master (NAT)
-
     logrotate_configs:
-      - name: nodepool-builder
-        log: /var/log/nodepool/builder-debug.log /var/log/nodepool/nodepool-builder.log
-        options:
-          - compress
-          - missingok
-          - rotate 7
-          - daily
-          - notifempty
-      - name: nodepool-launcher
-        log: /var/log/nodepool/launcher-debug.log /var/log/nodepool/nodepool-launcher.log
-        options:
-          - compress
-          - missingok
-          - rotate 7
-          - daily
-          - notifempty
       - name: zookeeper
         log: /var/log/zookeeper/zookeeper.log
         options:
@@ -68,57 +41,17 @@
           - rotate 7
           - daily
           - notifempty
-
   handlers:
     - name: Restart zookeeper
       service:
         name: zookeeper
         daemon_reload: yes
         state: restarted
-      listen: Restart all services
-
-    - name: Restart nodepool-builder
-      service:
-        name: nodepool-builder
-        daemon_reload: yes
-        state: restarted
-      listen: Restart all services
-
-    - name: Restart nodepool-launcher
-      service:
-        name: nodepool-launcher
-        daemon_reload: yes
-        state: restarted
-      listen: Restart all services
-
-    - name: Trigger new diskimage build
-      shell: |
-        nodepool dib-image-list |awk '/+|Image/{next}; {a[$4]=$4} END{for (i in a){ print i}}'|while read i; do
-          nodepool image-build $i
-        done
-      become: yes
-      become_user: nodepool
-      # We only need to run this once, and need the nodepool
-      # services running where it runs. Given that, we run it
-      # when it's the last node, but delegate it to the first
-      # node.
-      when:
-        - inventory_hostname == groups['nodepool_server'][-1]
-      delegate_to: "{{ groups['nodepool_server'][0] }}"
 
   tasks:
     - name: Install prerequisite distro packages
       apt:
         name:
-          # requirement for cloning the repos
-          # we install from
-          - git
-          # requirements for pip installs
-          - gcc
-          - libffi-dev
-          - libssl-dev
-          - python-pip
-          - python-virtualenv
           # requirement for zookeeper
           - openjdk-8-jre-headless
           # requirements for ansible
@@ -129,51 +62,7 @@
           - python3-apt
           - python-minimal
           - python3-minimal
-          - python3-pip
         update_cache: yes
-      notify:
-        - Restart all services
-
-    - name: Install prerequisite pip packages
-      pip:
-        name:
-          - rackspaceauth
-        executable: pip3
-      notify:
-        - Restart nodepool-launcher
-        - Restart nodepool-builder
-
-    - name: Ensure nodepool is not installed under python2.x
-      pip:
-        name: nodepool
-        state: absent
-        executable: pip2
-      notify:
-        - Restart nodepool-launcher
-        - Restart nodepool-builder
-
-    # install extra packages for diskimage-builder
-    # The native xenial package which provides vhd-utils (blktap-utils) does not support
-    # the 'convert' command which is required in order to properly prepare VHD images for
-    # the Xen hosts used by Rackspace Public Cloud. We therefore make use of the same PPA
-    # used by openstack-infra which has the modified version available.
-    # https://launchpad.net/~openstack-ci-core/+archive/ubuntu/vhd-util
-    # built from: https://github.com/emonty/vhd-util
-    # deployed by: https://github.com/openstack-infra/puppet-diskimage_builder/blob/339340409823927bb987f0195c6cedfdace05f4a/manifests/init.pp#L26
-
-    - name: Add vhd-util PPA
-      apt_repository:
-        filename: "vhd-util"
-        repo: "ppa:openstack-ci-core/vhd-util"
-        update_cache: yes
-      notify:
-        - Restart nodepool-builder
-
-    - name: Install vhd-util
-      apt:
-        name: "vhd-util"
-      notify:
-        - Restart nodepool-builder
 
     # the default /etc/hosts file results in the name of the instance
     # resolving to its own private address first, causing zookeeper
@@ -225,6 +114,130 @@
     - name: Setup zookeeper
       include_role:
         name: AnsibleShipyard.zookeeper
+
+    - name: Setup log rotation
+      include_role:
+        name: openstack.logrotate
+
+- name: Setup nodepool on the first server in the group
+  hosts: "nodepool_server[0]"
+  gather_facts: no
+  user: root
+  vars:
+    nodepool_file_nodepool_yaml_src: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/nodepool/templates/nodepool.yml.j2"
+    nodepool_git_version: 67824d8e64250ede0cb4a3ebe344412f5cba2218 # HEAD of 'master' as of 25 July 2018
+    nodepool_pip_executable: pip3
+    nodepool_file_nodepool_builder_service_config_src: systemd-service-override.conf.j2
+    nodepool_file_nodepool_launcher_service_config_src: systemd-service-override.conf.j2
+
+    diskimage_builder_git_version: "2.12.1" # Current release as of 22 Mar 2018
+    diskimage_builder_elements_src: "elements"
+
+    logrotate_configs:
+      - name: nodepool-builder
+        log: /var/log/nodepool/builder-debug.log /var/log/nodepool/nodepool-builder.log
+        options:
+          - compress
+          - missingok
+          - rotate 7
+          - daily
+          - notifempty
+      - name: nodepool-launcher
+        log: /var/log/nodepool/launcher-debug.log /var/log/nodepool/nodepool-launcher.log
+        options:
+          - compress
+          - missingok
+          - rotate 7
+          - daily
+          - notifempty
+
+  handlers:
+    - name: Restart nodepool-builder
+      service:
+        name: nodepool-builder
+        daemon_reload: yes
+        state: restarted
+      listen: Restart all services
+
+    - name: Restart nodepool-launcher
+      service:
+        name: nodepool-launcher
+        daemon_reload: yes
+        state: restarted
+      listen: Restart all services
+
+    - name: Trigger new diskimage build
+      shell: |
+        nodepool dib-image-list |awk '/+|Image/{next}; {a[$4]=$4} END{for (i in a){ print i}}'|while read i; do
+          nodepool image-build $i
+        done
+      become: yes
+      become_user: nodepool
+
+  tasks:
+    - name: Install prerequisite distro packages
+      apt:
+        name:
+          # requirement for cloning the repos
+          # we install from
+          - git
+          # requirements for pip installs
+          - gcc
+          - libffi-dev
+          - libssl-dev
+          - python-pip
+          - python-virtualenv
+          # requirements for ansible
+          # TODO(odyssey4me):
+          # Remove aptitude when we shift to using
+          # ansible 2.4
+          - aptitude
+          - python3-apt
+          - python-minimal
+          - python3-minimal
+          - python3-pip
+        update_cache: yes
+
+    - name: Install prerequisite pip packages
+      pip:
+        name:
+          - rackspaceauth
+        executable: pip3
+      notify:
+        - Restart nodepool-launcher
+        - Restart nodepool-builder
+
+    - name: Ensure nodepool is not installed under python2.x
+      pip:
+        name: nodepool
+        state: absent
+        executable: pip2
+      notify:
+        - Restart nodepool-launcher
+        - Restart nodepool-builder
+
+    # install extra packages for diskimage-builder
+    # The native xenial package which provides vhd-utils (blktap-utils) does not support
+    # the 'convert' command which is required in order to properly prepare VHD images for
+    # the Xen hosts used by Rackspace Public Cloud. We therefore make use of the same PPA
+    # used by openstack-infra which has the modified version available.
+    # https://launchpad.net/~openstack-ci-core/+archive/ubuntu/vhd-util
+    # built from: https://github.com/emonty/vhd-util
+    # deployed by: https://github.com/openstack-infra/puppet-diskimage_builder/blob/339340409823927bb987f0195c6cedfdace05f4a/manifests/init.pp#L26
+
+    - name: Add vhd-util PPA
+      apt_repository:
+        filename: "vhd-util"
+        repo: "ppa:openstack-ci-core/vhd-util"
+        update_cache: yes
+      notify:
+        - Restart nodepool-builder
+
+    - name: Install vhd-util
+      apt:
+        name: "vhd-util"
+      notify:
+        - Restart nodepool-builder
 
     - name: Setup diskimage-builder
       include_role:
