@@ -68,7 +68,7 @@ labels:
     min-ready: 1
     max-ready-age: 86400
   - name: ubuntu-xenial-om-io2
-    min-ready: 2
+    min-ready: 0
     max-ready-age: 86400
 
   # rpco base images
@@ -283,6 +283,21 @@ providers:
         max-servers: 30
         availability-zones: []
         labels: *provider_pools_main_labels_block
+
+  - name: pubcloud-lon
+    region-name: 'LON'
+    cloud: pubcloud_uk
+    boot-timeout: 600
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    cloud-images: *provider_cloudimage_block
+    image-name-format: nodepool-{image_name}-{timestamp}
+    pools:
+      - name: onmetal
+        # Ignore the quota given by public cloud and only respect what we provide as max-servers
+        ignore-provider-quota: true
+        max-servers: 10
+        availability-zones: []
+        labels: *provider_pools_onmetal_labels_block
 
   - name: phobos-nodepool
     region-name: "RegionOne"
