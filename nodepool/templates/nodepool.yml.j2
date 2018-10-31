@@ -82,9 +82,87 @@ labels:
     max-ready-age: 86400
 
 providers:
-  - name: pubcloud-iad
-    region-name: 'IAD'
-    cloud: public_cloud
+  - name: phobos-nodepool
+    region-name: "RegionOne"
+    cloud: phobos_nodepool
+    boot-timeout: 120
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    image-name-format: nodepool-phobos-{image_name}-{timestamp}
+    diskimages:
+      - name: ubuntu-bionic
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+      - name: ubuntu-xenial
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+      - name: ubuntu-trusty
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+      - name: rpco-14.2-xenial-artifacts
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+      - name: rpco-14.2-trusty-artifacts
+        config-drive: true
+        meta:
+          hypervisor_type: qemu
+    pools:
+      - name: main
+        max-servers: 30
+        availability-zones: []
+        networks:
+          - rpc-releng-private
+        labels:
+          #g1-8
+          - name: ubuntu-bionic-g1-8
+            diskimage: ubuntu-bionic
+            flavor-name: releng-general1-8
+            key-name: jenkins
+            console-log: true
+          - name: ubuntu-xenial-g1-8
+            diskimage: ubuntu-xenial
+            flavor-name: releng-general1-8
+            key-name: jenkins
+            console-log: true
+          - name: ubuntu-trusty-g1-8
+            diskimage: ubuntu-trusty
+            flavor-name: releng-general1-8
+            key-name: jenkins
+            console-log: true
+          #p2-15
+          - name: ubuntu-bionic-p2-15
+            diskimage: ubuntu-bionic
+            flavor-name: releng-performance2-15
+            key-name: jenkins
+            console-log: true
+          - name: ubuntu-xenial-p2-15
+            diskimage: ubuntu-xenial
+            flavor-name: releng-performance2-15
+            key-name: jenkins
+            console-log: true
+          - name: ubuntu-trusty-p2-15
+            diskimage: ubuntu-trusty
+            flavor-name: releng-performance2-15
+            key-name: jenkins
+            console-log: true
+          #rpco-base
+          - name: rpco-14.2-xenial-base
+            diskimage: rpco-14.2-xenial-artifacts
+            flavor-name: releng-7
+            key-name: jenkins
+            console-log: true
+          - name: rpco-14.2-trusty-base
+            diskimage: rpco-14.2-trusty-artifacts
+            flavor-name: releng-7
+            key-name: jenkins
+            console-log: true
+
+  - name: pubcloud-lon
+    region-name: 'LON'
+    cloud: pubcloud_uk
     boot-timeout: 600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
     cloud-images: &provider_cloudimage_block
@@ -176,6 +254,7 @@ providers:
             flavor-name: "15GB Standard Instance"
             key-name: jenkins
             console-log: true
+
       - name: onmetal
         # Ignore the quota given by public cloud and only respect what we provide as max-servers
         ignore-provider-quota: true
@@ -192,6 +271,45 @@ providers:
             flavor-name: onmetal-io2
             key-name: jenkins
             console-log: true
+
+  - name: pubcloud-ord
+    region-name: 'ORD'
+    cloud: public_cloud
+    boot-timeout: 120
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    image-name-format: nodepool-{image_name}-{timestamp}
+    diskimages: *provider_diskimage_block
+    pools:
+      - name: main
+        max-servers: 30
+        availability-zones: []
+        labels: *provider_pools_main_labels_block
+
+  - name: pubcloud-iad
+    region-name: 'IAD'
+    cloud: public_cloud
+    boot-timeout: 600
+    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    cloud-images: *provider_cloudimage_block
+    image-name-format: nodepool-{image_name}-{timestamp}
+    diskimages: *provider_diskimage_block
+    pools:
+      - name: main
+        # Ignore the quota given by public cloud and only respect what we provide as max-servers
+        ignore-provider-quota: true
+        # We run quite a bit of our own infrastructure in IAD, so we need
+        # to ensure that nodepool does not chew up our entire quota. We
+        # therefore use a reduced number here.
+        max-servers: 20
+        availability-zones: []
+        labels: *provider_pools_main_labels_block
+
+      - name: onmetal
+        # Ignore the quota given by public cloud and only respect what we provide as max-servers
+        ignore-provider-quota: true
+        max-servers: 10
+        availability-zones: []
+        labels: *provider_pools_onmetal_labels_block
 
   - name: pubcloud-dfw
     region-name: 'DFW'
@@ -270,112 +388,6 @@ providers:
           - name: rpc-r18-bionic_no_artifacts-swift
             cloud-image: rpc-r18-bionic_no_artifacts-swift-image
             flavor-name: "15GB Standard Instance"
-            key-name: jenkins
-            console-log: true
-
-  - name: pubcloud-ord
-    region-name: 'ORD'
-    cloud: public_cloud
-    boot-timeout: 120
-    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
-    image-name-format: nodepool-{image_name}-{timestamp}
-    diskimages: *provider_diskimage_block
-    pools:
-      - name: main
-        max-servers: 30
-        availability-zones: []
-        labels: *provider_pools_main_labels_block
-
-  - name: pubcloud-lon
-    region-name: 'LON'
-    cloud: pubcloud_uk
-    boot-timeout: 600
-    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
-    cloud-images: *provider_cloudimage_block
-    image-name-format: nodepool-{image_name}-{timestamp}
-    pools:
-      - name: onmetal
-        # Ignore the quota given by public cloud and only respect what we provide as max-servers
-        ignore-provider-quota: true
-        max-servers: 10
-        availability-zones: []
-        labels: *provider_pools_onmetal_labels_block
-
-  - name: phobos-nodepool
-    region-name: "RegionOne"
-    cloud: phobos_nodepool
-    boot-timeout: 120
-    hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
-    image-name-format: nodepool-phobos-{image_name}-{timestamp}
-    diskimages:
-      - name: ubuntu-bionic
-        config-drive: true
-        meta:
-          hypervisor_type: qemu
-      - name: ubuntu-xenial
-        config-drive: true
-        meta:
-          hypervisor_type: qemu
-      - name: ubuntu-trusty
-        config-drive: true
-        meta:
-          hypervisor_type: qemu
-      - name: rpco-14.2-xenial-artifacts
-        config-drive: true
-        meta:
-          hypervisor_type: qemu
-      - name: rpco-14.2-trusty-artifacts
-        config-drive: true
-        meta:
-          hypervisor_type: qemu
-    pools:
-      - name: main
-        max-servers: 30
-        availability-zones: []
-        networks:
-          - rpc-releng-private
-        labels:
-          #g1-8
-          - name: ubuntu-bionic-g1-8
-            diskimage: ubuntu-bionic
-            flavor-name: releng-general1-8
-            key-name: jenkins
-            console-log: true
-          - name: ubuntu-xenial-g1-8
-            diskimage: ubuntu-xenial
-            flavor-name: releng-general1-8
-            key-name: jenkins
-            console-log: true
-          - name: ubuntu-trusty-g1-8
-            diskimage: ubuntu-trusty
-            flavor-name: releng-general1-8
-            key-name: jenkins
-            console-log: true
-          #p2-15
-          - name: ubuntu-bionic-p2-15
-            diskimage: ubuntu-bionic
-            flavor-name: releng-performance2-15
-            key-name: jenkins
-            console-log: true
-          - name: ubuntu-xenial-p2-15
-            diskimage: ubuntu-xenial
-            flavor-name: releng-performance2-15
-            key-name: jenkins
-            console-log: true
-          - name: ubuntu-trusty-p2-15
-            diskimage: ubuntu-trusty
-            flavor-name: releng-performance2-15
-            key-name: jenkins
-            console-log: true
-          #rpco-base
-          - name: rpco-14.2-xenial-base
-            diskimage: rpco-14.2-xenial-artifacts
-            flavor-name: releng-7
-            key-name: jenkins
-            console-log: true
-          - name: rpco-14.2-trusty-base
-            diskimage: rpco-14.2-trusty-artifacts
-            flavor-name: releng-7
             key-name: jenkins
             console-log: true
 
