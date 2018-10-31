@@ -279,6 +279,7 @@
       - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
+    CRON: "{CRON_WEEKLY}"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -328,6 +329,7 @@
       - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
+    CRON: "{CRON_WEEKLY}"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -368,7 +370,8 @@
       - swift
     action:
       - deploy
-      - elk
+      - elk:
+          CRON: "{CRON_WEEKLY}"
       - sdqc
       - system
     # Required by RPC-ASC team to upload test results qTest
@@ -412,7 +415,8 @@
       - swift
     action:
       - deploy
-      - elk
+      - elk:
+          CRON: "{CRON_WEEKLY}"
       - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
