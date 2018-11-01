@@ -81,12 +81,25 @@ labels:
     min-ready: 1
     max-ready-age: 86400
 
+  # onmetal io2
+  - name: diag-ubuntu-bionic-om-io2
+    min-ready: 0
+    max-ready-age: 86400
+  - name: diag-ubuntu-xenial-om-io2
+    min-ready: 0
+    max-ready-age: 86400
+
 providers:
   - name: phobos-nodepool
     region-name: "RegionOne"
     cloud: phobos_nodepool
-    boot-timeout: 120
+    boot-timeout: 600
     hostname-format: nodepool-{label.name}-{provider.name}-{node.id}
+    cloud-images:
+      - name: baremetal-ubuntu-bionic
+        image-name: baremetal-ubuntu-bionic
+      - name: baremetal-ubuntu-bionic
+        image-name: baremetal-ubuntu-bionic
     image-name-format: nodepool-phobos-{image_name}-{timestamp}
     diskimages:
       - name: ubuntu-bionic
@@ -157,6 +170,22 @@ providers:
           - name: rpco-14.2-trusty-base
             diskimage: rpco-14.2-trusty-artifacts
             flavor-name: releng-7
+            key-name: jenkins
+            console-log: true
+      - name: onmetal
+        max-servers: 10
+        availability-zones: []
+        networks:
+          - rpc-releng-private
+        labels:
+          - name: diag-ubuntu-bionic-om-io2
+            cloud-image: baremetal-ubuntu-bionic
+            flavor-name: ironic-storage-perf
+            key-name: jenkins
+            console-log: true
+          - name: diag-ubuntu-xenial-om-io2
+            cloud-image: baremetal-ubuntu-xenial
+            flavor-name: ironic-storage-perf
             key-name: jenkins
             console-log: true
 
