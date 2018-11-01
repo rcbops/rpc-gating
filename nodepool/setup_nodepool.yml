@@ -41,6 +41,14 @@
           - rotate 7
           - daily
           - notifempty
+      - name: zookeeper_cron_cleanup
+        log: /var/log/zookeeper/zookeeper_cron_cleanup.log
+        options:
+          - compress
+          - missingok
+          - rotate 7
+          - weekly
+          - notifempty
   handlers:
     - name: Restart zookeeper
       service:
@@ -118,6 +126,15 @@
     - name: Setup log rotation
       include_role:
         name: openstack.logrotate
+
+    - name: Zookeeper TX Log Cleanup Cron
+      cron:
+        name: "zookeeper cleanup"
+        minute: 0
+        hour: 0
+        user: root
+        job: "/usr/share/zookeeper/bin/zkCleanup.sh -n 3 >> /var/log/zookeeper/zookeeper_cron_cleanup.log 2>&1"
+        cron_file: "zookeeper_cleanup"
 
 - name: Setup nodepool on the first server in the group
   hosts: "nodepool_server[0]"
