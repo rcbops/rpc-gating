@@ -94,6 +94,7 @@ requests-oauthlib==0.8.0
 requests-toolbelt==0.8.0
 rfc3986==0.4.1
 setuptools==33.1.1
+sh==1.12.14
 shade==1.24.0
 simplejson==3.10.0
 six==1.10.0

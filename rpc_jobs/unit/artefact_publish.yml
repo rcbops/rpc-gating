@@ -57,7 +57,10 @@
               ]
             ]
           ]
-          writeYaml file: "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}/component_metadata.yml", data: artifacts_data
+          String componentMetadataFilename = "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}/component_metadata.yml"
+          // writeYaml will fail if the file already exists
+          sh "rm -f ${componentMetadataFilename}"
+          writeYaml file: componentMetadataFilename, data: artifacts_data
           common.archive_artifacts(artifact_types: "all", jiraProjectKey: null, throwExceptionOnArchiveFailure: true)
         } // standard_job_slave
       } // globalWraps

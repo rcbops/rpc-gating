@@ -23,6 +23,7 @@ rackspace-monitoring
 rackspace-monitoring-cli
 rackspaceauth
 requests
+sh
 shade
 six
 urllib3

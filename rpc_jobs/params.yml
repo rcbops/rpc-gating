@@ -166,3 +166,12 @@
           help: |
             Host that is only accessible via Phobos vpn, used to verify
             connectivity
+
+- parameter:
+    name: jjb_params
+    parameters:
+      - text:
+          name: JOB_SOURCES
+          default: "{JOB_SOURCES}"
+          description: >
+            The locations of files to include in job update. Text should be a valid YAML list.

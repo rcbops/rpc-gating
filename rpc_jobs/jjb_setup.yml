@@ -1,38 +1,62 @@
-# Node CentOS to ensure the CIT slave is used. If a pub cloud ubuntu slave is used,
-# the Jenkins API won't be reachable.
-- job:
-    name: 'Jenkins-Job-Builder'
+- project:
+    name: "Jenkins-Job-Builder"
+    branch: "master"
+    jobs:
+      - "Jenkins-Job-Builder-{branch}"
+
+# A template is required to allow rpc_jobs/defaults.yml to be used.
+- job-template:
+    name: "Jenkins-Job-Builder-{branch}"
     project-type: workflow
     description: Creates and updates jobs with Jenkins Job Builder.
     properties:
       - build-discarder:
           days-to-keep: 20
     parameters:
+        - rpc_gating_params
+        - jjb_params:
+            JOB_SOURCES: "{JOB_SOURCES}"
         - string:
             name: JOBS
-            description: "Which jobs to update and with what options."
-            default: -r rpc_jobs
-        - rpc_gating_params
+            description: "A space separated list of jobs to update, if left empty all jobs are updated."
+            default: ""
+        - bool:
+            name: MANUALLY_DELETE_OLD_JOBS
+            description: >
+              When run manually, generally a specific job or jobs is being targeted for update.
+              This parameter allows old jobs to be deleted when triggered by a user.
+            default: false
     concurrent: true
     dsl: |
-      library "rpc-gating@${RPC_GATING_BRANCH}"
-      common.globalWraps(){
-        common.internal_slave(){
-          try {
-            dir("rpc-gating"){
-              stage('Run JJB'){
-                withCredentials([
-                  usernamePassword(
-                    credentialsId: "service_account_jenkins_api_creds",
-                    usernameVariable: "JENKINS_USER",
-                    passwordVariable: "JENKINS_API_PASSWORD"
-                  )
-                ]){
-                  lock('jjb'){
-                  sh """#!/bin/bash -xe
-                    source ../.venv/bin/activate
+      library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      common.globalWraps(){{
+        def jobSources = readYaml text: JOB_SOURCES
+        Boolean isBuildTriggeredByMergeToProduction = env.RE_JOB_TRIGGER == "PUSH" && env.RPC_GATING_BRANCH == "master"
+        Boolean deleteOldJobs = isBuildTriggeredByMergeToProduction || env.MANUALLY_DELETE_OLD_JOBS.toBoolean()
+        String updateArgs = '-r '
+        if (deleteOldJobs){{
+          updateArgs += '--delete-old'
+        }}
+        String sourcesArgs = jobSources.collect {{"--job-source '${{it.repo}};${{it.commitish}}'"}}.join(' ')
+        // Node CentOS to ensure the CIT slave is used. If a pub cloud ubuntu slave is used,
+        // the Jenkins API won't be reachable.
+        common.internal_slave(){{
+          try {{
+            stage('Run JJB'){{
+              withCredentials([
+                usernamePassword(
+                  credentialsId: "service_account_jenkins_api_creds",
+                  usernameVariable: "JENKINS_USER",
+                  passwordVariable: "JENKINS_API_PASSWORD"
+                )
+              ]){{
+                sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){{
+                  lock('jjb'){{
+                    dir("jenkins_jobs"){{
+                      sh """#!/bin/bash -xe
+                        source ../.venv/bin/activate
 
-                    cat > jenkins_jobs.ini << EOF
+                        cat > jenkins_jobs.ini << EOF
       [job-builder]
       ignore_cache=False
       keep_descriptions=False
@@ -42,32 +66,29 @@
       allow_deplicates=False
 
       [jenkins]
-      url=${JENKINS_URL}
+      url=${{JENKINS_URL}}
       EOF
 
-                    if [[ "$RPC_GATING_BRANCH" == "master" ]] && [[ "$JOBS" == "-r rpc_jobs" ]]; then
-                        echo "Setting --delete-old as RPC_GATING_BRANCH=master and JOBS='-r rpc_jobs'"
-                        UPDATE_ARGS="--delete-old"
-                    fi
+                        jjb_paths=\$(../rpc-gating/scripts/jjb-path-setup.py ${{sourcesArgs}})
 
-                    jenkins-jobs --conf jenkins_jobs.ini \
-                                 --user $JENKINS_USER \
-                                 --password $JENKINS_API_PASSWORD \
-                                 --ignore-cache \
-                                 \$JJB_ARGS update \$UPDATE_ARGS $JOBS
-                  """
-                  } // lock
-                } // with credentials
-              } // stage
-            } // dir
-          } catch(e) {
+                        jenkins-jobs --conf jenkins_jobs.ini \
+                                     --user $JENKINS_USER \
+                                     --password $JENKINS_API_PASSWORD \
+                                     --ignore-cache \
+                                   \$JJB_ARGS update ${{updateArgs}} \$jjb_paths $JOBS
+
+                      """
+                    }}
+                  }} // lock
+                }}
+              }} // with credentials
+            }} // stage
+          }} catch(e) {{
             print(e)
-            // Here we only create a JIRA issue when we are not running the job
-            // against a testing branch or against a specific job
-            if (env.RPC_GATING_BRANCH == "master" && env.JOBS == "-r rpc_jobs") {
+            if (isBuildTriggeredByMergeToProduction) {{
               common.build_failure_issue("RE")
-            }
+            }}
             throw e
-          } // catch
-        } // internal_slave
-      } // globalWraps
+          }} // catch
+        }} // internal_slave
+      }} // globalWraps
