@@ -1141,7 +1141,14 @@ void use_node(String label=null, body){
       }
       throw e
     } finally {
-      deleteDir()
+      try {
+        // This may fail if node has gone offline
+        // We've had a few jobs where the node goes offline during the post stage
+        // but that must not fail the job. RE-2087
+        deleteDir()
+      } catch (Exception e){
+        print("Failed to clean workspace on ${env.NODE_NAME}: ${e}")
+      }
     }
   }
 }
