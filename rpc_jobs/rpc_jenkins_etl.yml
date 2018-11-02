@@ -26,3 +26,33 @@
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
 
+- project:
+    name: "rpc-jenkins-etl-dev-premerge"
+    repo_name: "rpc-jenkins-etl"
+    repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
+    series: "dev"
+    branches:
+      - "dev"
+    image:
+      - xenial:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+    scenario: "basic"
+    action:
+      - "lint"
+      - "unit"
+      - "integration"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-jenkins-etl-master-periodic"
+    repo_name: "rpc-jenkins-etl"
+    repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
+    branch: "master"
+    image:
+      - xenial:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+    scenario: "basic"
+    action: "integration"
+    jobs:
+      - "PM_{repo_name}-{branch}-{image}-{scenario}-{action}"
