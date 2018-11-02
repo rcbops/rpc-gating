@@ -72,9 +72,6 @@
           currentBuild.result = "ABORTED"
           return
         }
-        stage("Enable Quiet Down"){
-          Jenkins.get().doQuietDown()
-        }
         stage("Slack Notification"){
           if (env.SEND_SLACK_NOTIFICATIONS == "true"){
             slackSend(channel: env.SLACK_CHANNEL,
@@ -83,6 +80,9 @@
           }
         }
         println("Maintenance Window Started, go forth and betterate")
+        stage("Enable Quiet Down"){
+          Jenkins.get().doQuietDown()
+        }
       }
 
 - job:
