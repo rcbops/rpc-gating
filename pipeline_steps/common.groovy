@@ -2353,7 +2353,7 @@ Boolean issueExistsForNextMaintenanceWindow(project="RE"){
 Boolean allowBuildDuringMaintenanceWindow(){
   patterns = [
     /RE-Maintenance/,
-    /RE-unit-test/,
+    /RE-unit/,
     /RPC-Gating-Unit-Tests/,
     /scratchpipeline/
   ]
