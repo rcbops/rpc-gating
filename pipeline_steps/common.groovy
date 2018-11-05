@@ -3,6 +3,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonException
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.ghprb.extensions.build.GhprbCancelBuildsOnUpdate
 import java.time.LocalTime
 import java.time.LocalDateTime
 import java.time.DayOfWeek
@@ -409,10 +410,8 @@ def archive_artifacts(Map args = [:]){
       // the build result to be set to failure.
       // try-catch placed here because this function is used in multiple places.
       String jiraProjectKey = args.get("jiraProjectKey", "RE")
-      if (jiraProjectKey){
+      if (jiraProjectKey && !isAbortedBuild()){
         try {
-          print "Error while archiving artifacts, swallowing this exception to prevent "\
-                +"archive errors from failing the build: ${e}"
           create_jira_issue(jiraProjectKey,
                             "Artifact Archival Failure: ${env.BUILD_TAG}",
                             "[${env.BUILD_TAG}|${env.BUILD_URL}]",
@@ -423,6 +422,9 @@ def archive_artifacts(Map args = [:]){
       }
       if (args.get("throwExceptionOnArchiveFailure", false)){
         throw e
+      } else {
+        print "Error while archiving artifacts, swallowing this exception to prevent "\
+              +"archive errors from failing the build: ${e}"
       }
     }// try
   } // stage
@@ -1626,6 +1628,19 @@ Boolean isUserAbortedBuild() {
   return userAborted
 }
 
+Boolean isPrUpdateAbortedBuild(){
+  if (currentBuild.rawBuild.getAction(GhprbCancelBuildsOnUpdate.class)) {
+    prAborted = true
+  } else {
+    prAborted = false
+  }
+  return prAborted
+}
+
+Boolean isAbortedBuild(){
+  return isUserAbortedBuild() || isPrUpdateAbortedBuild()
+}
+
 String genDockerBuildArgs() {
   return sh(script: """#!/usr/bin/env python3
 from os import environ
@@ -1742,7 +1757,7 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
         } catch (e) {
           print(e)
           currentBuild.result="FAILURE"
-          if (env.ghprbPullId == null && ! isUserAbortedBuild() && jira_project_key != '') {
+          if (env.ghprbPullId == null && ! isAbortedBuild() && jira_project_key != '') {
             print("Creating build failure issue.")
             def labels = ['post-merge-test-failure', 'jenkins', env.JOB_NAME]
             build_failure_issue(jira_project_key, labels)
