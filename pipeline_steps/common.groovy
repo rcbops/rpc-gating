@@ -2336,7 +2336,7 @@ Boolean willOverlapMaintenanceWindow(){
 Boolean issueExistsForNextMaintenanceWindow(project="RE"){
   LocalDateTime nextWindow = getNextMaintenanceWindowStart()
   String nextWindowDateString = nextWindow.format(DateTimeFormatter.ISO_LOCAL_DATE)
-  List issues = jira_query("project=\"${project}\" AND summary ~ '${nextWindowDateString} Maintenance Window'")
+  List issues = jira_query("project=\"${project}\" AND summary ~ '${nextWindowDateString} Maintenance Window' and STATUS not in (Finished)")
   Boolean issueExists = issues.size > 0
   if (issueExists){
     print("Issue exists for next maintenance window: ${issues[0]}")
