@@ -270,7 +270,7 @@
     scenario:
       - swift
     action:
-      - r13.1.3_to.r14.current_snapcap
+      - r13.1.3_to_r14.current_snapcap
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
