@@ -84,14 +84,6 @@ labels:
     min-ready: 1
     max-ready-age: 86400
 
-  # onmetal io2
-  - name: diag-ubuntu-bionic-om-io2
-    min-ready: 0
-    max-ready-age: 86400
-  - name: diag-ubuntu-xenial-om-io2
-    min-ready: 0
-    max-ready-age: 86400
-
 providers:
   - name: phobos-nodepool
     region-name: "RegionOne"
@@ -181,12 +173,12 @@ providers:
         networks:
           - ironic
         labels:
-          - name: diag-ubuntu-bionic-om-io2
+          - name: ubuntu-bionic-om-io2
             cloud-image: baremetal-ubuntu-bionic
             flavor-name: ironic-storage-perf
             key-name: jenkins
             console-log: true
-          - name: diag-ubuntu-xenial-om-io2
+          - name: ubuntu-xenial-om-io2
             cloud-image: baremetal-ubuntu-xenial
             flavor-name: ironic-storage-perf
             key-name: jenkins
