@@ -270,8 +270,38 @@
     scenario:
       - swift
     action:
+      - mitaka_to_r14.current_snapcap
+      - r13.0.0_to_r14.current_snapcap
+      - r13.0.2_to_r14.current_snapcap
+      - r13.1.2_to_r14.current_snapcap
       - r13.1.3_to_r14.current_snapcap
+      - r13.1.4_to.r14.current_snapcap
+      - liberty_to_r14.current_snapcap
+      - r12.2.8_to_r14.current_snapcap
+      - r12.2.5_to_r14.current_snapcap
+      - r12.2.2_to_r14.current_snapcap
+      - r12.1.2_to_r14.current_snapcap
+      - kilo_to_r14.current_snapcap
     jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: ""
+
+- project:
+    name: "rpc-upgrades-mnaio-snap-newton-release-pm"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      # in mnaio builds, the OS equals the VMs OS
+      - trusty_mnaio-snap:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - "swift"
+    action:
+      - r13.1.3_to_r14.current_leap
+    jira_project_key: "RLM"
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "{CRON_WEEKLY}"
