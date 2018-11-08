@@ -2502,7 +2502,9 @@ void restartAbortedPRBuilds(String maint_date="today"){
   for (comment in comments){
     try {
       Map pr_data = _parse_json_string(json_text: comment)
-      prsWithFailures[pr_data['link']] = pr_data
+      if (pr_data['link'] != null){
+        prsWithFailures[pr_data['link']] = pr_data
+      }
     } catch (groovy.json.JsonException e){
       print("Ignoring non-json comment: ${comment}")
     }
