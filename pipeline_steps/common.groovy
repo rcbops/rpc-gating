@@ -1186,6 +1186,10 @@ void standard_job_slave(String slave_type, Closure body){
       use_node(slave_type){
         body();
       }
+    }else if (slave_type == "shared"){
+      // don't need to wrap body in shared_slave here
+      // as globalWraps will have already allocated a shared slave executor
+      body();
     } else if (slave_type == "container"){
       String image_name = env.BUILD_TAG.toLowerCase()
       String dockerfile_repo_dir = "${env.WORKSPACE}/"
@@ -1977,6 +1981,7 @@ void createComponentJobs(String name, String repoUrl, List releases, String jira
     createComponentGateTrigger(name, repoUrl, projectsFile)
     createComponentPreRelease(name, repoUrl, releases, projectsFile)
     createPrWhisperer(name, repoUrl, projectsFile)
+    createCheckmarx(name, repoUrl, projectsFile, jiraProjectKey)
 
     withEnv(
       [
@@ -2105,6 +2110,40 @@ void createPrWhisperer(String name, String repoUrl, String projectsFile){
       echo "${jjb}" >> ${projectsFile}
     """
   } // if
+}
+
+/**
+* Create a Checkmarx code scan job when a new Repo is added.
+*/
+void createCheckmarx(String repoName, String repoUrl, String projectsFile, String jiraProjectKey){
+  String jjb = ""
+  Boolean jobNotExists = sh(
+    returnStatus: true,
+    script: """#!/bin/bash -xe
+      grep -s '{repoName}-checkmarx' ${projectsFile}
+    """
+  ).asBoolean()
+  if (jobNotExists){
+    jjb += """
+- project:
+    name: '${repoName}-checkmarx'
+    scan_type:
+      - default
+      - pci
+    jira_project_key: "${jiraProjectKey}"
+    trigger:
+      - PM
+    repo_name:
+      - ${repoName}:
+          repo_url: "${repoUrl}"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
+    """
+    sh """#!/bin/bash -xe
+      echo "${jjb}" >> ${projectsFile}
+    """
+  }
 }
 
 WorkflowRun findExistingSuccessfulBuild(WorkflowJob job, String sha) {

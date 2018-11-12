@@ -52,3 +52,21 @@
           run_commenter: false
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
+
+- project:
+    name: 'rpc-gating-checkmarx'
+    jira_project_key: "RE"
+    scan_type:
+      - all
+      - pci
+    trigger:
+      - PM
+    repo_name:
+      - rpc-gating:
+          repo_url: "https://github.com/rcbops/rpc-gating"
+          branch: master
+      - nodepool-agents-plugin:
+          repo_url: "https://github.com/jenkinsci/nodepool-agents-plugin"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'

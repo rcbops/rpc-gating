@@ -1,0 +1,55 @@
+- job-template:
+    CRON: "{CRON_WEEKLY}"
+    RPC_GATING_BRANCH: master
+    NUM_TO_KEEP: 30
+    SLAVE_TYPE: "shared"
+    name: '{trigger}-Checkmarx_{scan_type}-{repo_name}'
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${{RPC_GATING_BRANCH}}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/standard_job_checkmarx.groovy
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: "{NUM_TO_KEEP}"
+      - github:
+          url: "{repo_url}"
+      - inject:
+          properties-content: |
+            JIRA_PROJECT_KEY={jira_project_key}
+            RE_JOB_NAME={name}
+            RE_JOB_REPO_NAME={repo_name}
+    triggers:
+      - timed: "{CRON}"
+    parameters:
+      - rpc_gating_params
+      - standard_job_params:
+          SLAVE_TYPE: "{SLAVE_TYPE}"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+          hold_on_error: "{hold_on_error}"
+      - string:
+          name: "repo_name"
+          default: "{repo_name}"
+          description: "Name of repo to scan - also the name of the Checkmarx project to use/create"
+      - string:
+          name: "repo_url"
+          default: "{repo_url}"
+          description: "Url of repo to scan"
+      - string:
+          name: "branch"
+          default: "{branch}"
+          description: "Branch of repo to checkout before scanning"
+      - string:
+          name: "SCAN_TYPE"
+          default: "{scan_type}"
+          description: |
+            default or pci
+            Note that default includes pci, but pci is useful for showing just pci related vulnerability
+            status for a repo.
