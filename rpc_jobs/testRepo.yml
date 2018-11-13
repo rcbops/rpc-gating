@@ -1,0 +1,28 @@
+
+- project:
+    name: testRepo-gate-trigger
+    repo_name: testRepo
+    repo_url: https://github.com/rcbops/testRepo
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: testRepo-re-release-pr
+    repo:
+      - testRepo:
+          URL: https://github.com/rcbops/testRepo
+          BRANCH: master
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'testRepo-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - testRepo:
+          repo_url: 'https://github.com/rcbops/testRepo'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
