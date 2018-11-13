@@ -962,7 +962,8 @@ String get_or_create_jira_issue(String project,
                                 String status = "BACKLOG",
                                 String summary,
                                 String description,
-                                List labels = []){
+                                List labels = [],
+                                Boolean debug=false){
   withCredentials([
     usernamePassword(
       credentialsId: "jira_user_pass",
@@ -970,12 +971,13 @@ String get_or_create_jira_issue(String project,
       passwordVariable: "JIRA_PASS"
     )
   ]){
+    String debugString = debug ? "--debug" : ""
     return sh (script: """#!/bin/bash -xe
       cd ${env.WORKSPACE}
       set +x; . .venv/bin/activate; set -x
       python rpc-gating/scripts/jirautils.py \
         --user '$JIRA_USER' \
-        --password '$JIRA_PASS' \
+        --password '$JIRA_PASS' ${debugString} \
         get_or_create_issue \
           --status "${status}" \
           --summary "${summary}" \
