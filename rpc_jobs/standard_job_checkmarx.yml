@@ -47,7 +47,7 @@
           default: "{branch}"
           description: "Branch of repo to checkout before scanning"
       - string:
-          name: "SCAN_TYPE"
+          name: "scan_type"
           default: "{scan_type}"
           description: |
             default or pci
