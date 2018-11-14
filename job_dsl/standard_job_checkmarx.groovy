@@ -75,10 +75,10 @@ common.globalWraps(){
                   sourceEncoding: '1',
                   username: '',
                   vulnerabilityThresholdEnabled: true,
-                  highThreshold: 1,
+                  highThreshold: 0,
                   includeOpenSourceFolders: '',
-                  lowThreshold: 1,
-                  mediumThreshold: 1,
+                  lowThreshold: 0,
+                  mediumThreshold: 0,
                   vulnerabilityThresholdResult: 'FAILURE',
                   waitForResultsEnabled: true])
           } // dir
