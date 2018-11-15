@@ -176,3 +176,18 @@
           repo_url: 'https://github.com/rcbops/rpc-ceph'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
+
+- project:
+    name: 'rpc-ceph-checkmarx'
+    jira_project_key: "CEPHSTORA"
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - rpc-ceph:
+          repo_url: "git@github.com:rcbops/rpc-ceph"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
