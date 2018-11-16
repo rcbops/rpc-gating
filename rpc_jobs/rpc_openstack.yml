@@ -634,3 +634,18 @@
           run_issue_linker: true
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
+
+- project:
+    name: 'rpc-openstack-master-checkmarx'
+    jira_project_key: ""
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - rpc-openstack:
+          repo_url: "https://github.com/rcbops/rpc-openstack"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
