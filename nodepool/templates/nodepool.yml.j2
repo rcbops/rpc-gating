@@ -12,23 +12,6 @@ zookeeper-servers:
 {% endfor %}
 
 labels:
-  # MaaS jobs expect a MaaS entity to be provided for each node. Public cloud provides
-  # entities but phobos does not. Consequently MaaS jobs fail on phobos. (RE-1954)
-  # This was initially solved by disabling phobos. In order to re-enable phobos,
-  # maas specific labels are introduced that draw from all regions except phobos.
-  - name: maas-ubuntu-bionic-g1-8
-    min-ready: 0
-    max-ready-age: 86400
-  - name: maas-ubuntu-xenial-g1-8
-    min-ready: 0
-    max-ready-age: 86400
-  - name: maas-ubuntu-trusty-g1-8
-    min-ready: 0
-    max-ready-age: 86400
-  - name: maas-ubuntu-xenial-p2-15
-    min-ready: 0
-    max-ready-age: 86400
-
   # rpco snapshots
   - name: rpc-r14-xenial_loose_artifacts-swift
     min-ready: 1
@@ -216,28 +199,6 @@ providers:
         max-servers: 20
         availability-zones: []
         labels: &provider_pools_main_labels_block
-          #MaaS
-          - name: maas-ubuntu-bionic-g1-8
-            diskimage: ubuntu-bionic
-            flavor-name: general1-8
-            key-name: jenkins
-            console-log: true
-          - name: maas-ubuntu-xenial-g1-8
-            diskimage: ubuntu-xenial
-            flavor-name: general1-8
-            key-name: jenkins
-            console-log: true
-          - name: maas-ubuntu-trusty-g1-8
-            diskimage: ubuntu-trusty
-            flavor-name: general1-8
-            key-name: jenkins
-            console-log: true
-          - name: maas-ubuntu-xenial-p2-15
-            diskimage: ubuntu-xenial
-            flavor-name: performance2-15
-            key-name: jenkins
-            console-log: true
-
           #g1-8
           - name: ubuntu-bionic-g1-8
             diskimage: ubuntu-bionic
