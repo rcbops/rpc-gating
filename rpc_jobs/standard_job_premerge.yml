@@ -9,10 +9,12 @@
     branches:
       - "master"
     image:
-      - "xenial":
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+      - "xenial"
     scenario:
-      - "lint"
+      - "lint":
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+      - "standard_job_pre_merge":
+          SLAVE_TYPE: "container"
     action:
       - "test"
     jobs:
@@ -39,6 +41,7 @@
             STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
             BOOT_TIMEOUT={BOOT_TIMEOUT}
             RE_JOB_NAME={name}
+            RE_JOB_PROJECT_NAME={name}
             RE_JOB_IMAGE={image}
             RE_JOB_SCENARIO={scenario}
             RE_JOB_ACTION={action}
