@@ -1,0 +1,15 @@
+### test checkmarx against UAM
+- project:
+    name: 'rpc-uam-checkmarx'
+    jira_project_key: "FLEEK"
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - rpc-uam:
+          repo_url: "git@github.com:rcbops/rpc-uam"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
