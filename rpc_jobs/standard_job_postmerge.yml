@@ -63,6 +63,7 @@
             RE_JOB_FLAVOR={FLAVOR}
             RE_JOB_REPO_NAME={repo_name}
             RE_JOB_BRANCH={branch}
+            RE_JOB_PROJECT_NAME={name}
     parameters:
       - rpc_gating_params
       - instance_params:
