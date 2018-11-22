@@ -29,3 +29,6 @@
     CRON_DAILY: "H H * * 2-7"
     CRON_WEEKLY: "H H * * H(2-7)"
     CRON_MONTHLY: "H H H * 2-7"
+    JOB_SOURCES: |
+      - repo: git@github.com:rcbops/rpc-gating.git
+        commitish: master
