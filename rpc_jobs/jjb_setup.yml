@@ -1,12 +1,11 @@
 - project:
     name: "Jenkins-Job-Builder"
-    branch: "master"
     jobs:
-      - "Jenkins-Job-Builder-{branch}"
+      - "Jenkins-Job-Builder"
 
 # A template is required to allow rpc_jobs/defaults.yml to be used.
 - job-template:
-    name: "Jenkins-Job-Builder-{branch}"
+    name: "Jenkins-Job-Builder"
     project-type: workflow
     description: Creates and updates jobs with Jenkins Job Builder.
     properties:
