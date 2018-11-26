@@ -333,3 +333,18 @@
           repo_url: 'https://github.com/rcbops/rpc-upgrades'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
+
+- project:
+    name: 'rpc-upgrades-checkmarx'
+    jira_project_key: ""
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - rpc-upgrades:
+          repo_url: "https://github.com/rcbops/rpc-upgrades"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
