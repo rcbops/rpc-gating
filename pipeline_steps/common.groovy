@@ -759,7 +759,7 @@ void merge_pr_chain(String directory='./', List pullRequestIDs=null){
 
 
 void configure_git(){
-  print "Configuring Git"
+  print "Configuring Git PR Lib Special Edition"
   // credentials store created to ensure that non public repos
   // can be cloned when specified as https:// urls.
   // Ssh auth is handled in clone_with_pr_refs
