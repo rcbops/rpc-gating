@@ -94,3 +94,17 @@
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
 
+- project:
+    name: 'rpc-appformix-checkmarx'
+    jira_project_key: ""
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - rpc-appformix:
+          repo_url: "git@github.com:rcbops/rpc-appformix.git"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
