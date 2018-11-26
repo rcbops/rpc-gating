@@ -644,8 +644,11 @@
       - all
       - pci
     repo_name:
-      - rpc-openstack:
+      - rpc-openstack-master:
           repo_url: "https://github.com/rcbops/rpc-openstack"
           branch: master
+      - rpc-openstack-rocky:
+          repo_url: "https://github.com/rcbops/rpc-openstack"
+          branch: rocky
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
