@@ -56,8 +56,6 @@
     properties:
       - build-discarder:
           num-to-keep: 30
-    triggers:
-      - timed: "0 10 * * 1"
     sandbox: false
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
@@ -104,8 +102,6 @@
     properties:
       - build-discarder:
           num-to-keep: 30
-    triggers:
-      - timed: "0 12 * * 1"
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
