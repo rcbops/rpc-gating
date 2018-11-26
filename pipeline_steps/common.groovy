@@ -1727,15 +1727,19 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
               }
             }
 
-            try{
+            try {
+              // Any errors will be propagated to the outer catch clause
               stage('Execute Run Script') {
                 sh """#!/bin/bash -xeu
                   cd ${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}
                   gating/${hook_dir}/run
                 """
               }
-            } catch (Exception e){
-              currentBuild.result = "FAILURE"
+            } catch (e) {
+              // Set the build failure flag so the finally clause can report the job status
+              currentBuild.result="FAILURE"
+              // Need to re-throw the same exception so the outer try/catch can deal with it
+              throw e
             } finally {
               try {
                 stage('Execute Post Script') {
@@ -1761,8 +1765,10 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
             }
           }
         } catch (e) {
-          print(e)
           currentBuild.result="FAILURE"
+          errString = "Caught exception on ${env.NODE_NAME}: ${e} Build: ${env.BUILD_URL}"
+          print errString
+
           if (env.ghprbPullId == null && ! isAbortedBuild() && jira_project_key != '') {
             print("Creating build failure issue.")
             def labels = ['post-merge-test-failure', 'jenkins', env.JOB_NAME]
