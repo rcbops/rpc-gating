@@ -51,6 +51,7 @@
       - "3ctlr_2comp_3ceph"
     action:
       - "osp_13_deploy-smoke-tests"
+      - "osp_13_deploy-system"
     jira_project_key: "RLM"
     credentials: "rpc_osp"
     jobs:
