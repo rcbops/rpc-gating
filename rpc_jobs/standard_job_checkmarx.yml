@@ -22,7 +22,7 @@
       - inject:
           properties-content: |
             JIRA_PROJECT_KEY={jira_project_key}
-            RE_JOB_NAME={name}
+            RE_JOB_NAME=${{JOB_NAME}}
             RE_JOB_REPO_NAME={repo_name}
     triggers:
       - timed: "{CRON}"

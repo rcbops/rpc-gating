@@ -10,7 +10,9 @@ class TestREJobEnv(unittest.TestCase):
             "RE_JOB_ACTION": "test",
             "RE_JOB_FLAVOR": "performance1-1",
             "RE_JOB_IMAGE": "xenial",
-            "RE_JOB_NAME": "gating-pre-merge",
+            "RE_JOB_NAME": (
+                "PR_rpc-gating-master-xenial-standard_job_pre_merge-test"
+            ),
             "RE_JOB_PROJECT_NAME": "gating-pre-merge",
             "RE_JOB_REPO_NAME": "rpc-gating",
             "RE_JOB_SCENARIO": "standard_job_pre_merge",
