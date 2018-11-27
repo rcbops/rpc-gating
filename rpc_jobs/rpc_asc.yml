@@ -1,0 +1,35 @@
+- project:
+    name: 'asc-checkmarx'
+    jira_project_key: "ASC"
+    scan_type:
+      - all
+      - pci
+    trigger:
+      - PM
+    repo_name:
+      - zigzag:
+          repo_url: "git@github.com:rcbops/zigzag"
+          branch: master
+      - pytest-zigzag:
+          repo_url: "git@github.com:rcbops/pytest-zigzag"
+          branch: master
+      - pytest-rpc:
+          repo_url: "git@github.com:rcbops/pytest-rpc"
+          branch: master
+      - molecule-rpc-openstack-post-deploy:
+          repo_url: "git@github.com:rcbops/molecule-rpc-openstack-post-deploy"
+          branch: master
+      - magic-marker:
+          repo_url: "git@github.com:rcbops/magic-marker"
+          branch: master
+      - flake8-pytest-mark:
+          repo_url: "git@github.com:rcbops/flake8-pytest-mark"
+          branch: master
+      - flake8-filename:
+          repo_url: "git@github.com:rcbops/flake8-filename"
+          branch: master
+      - moleculerize:
+          repo_url: "git@github.com:rcbops/moleculerize"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
