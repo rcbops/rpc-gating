@@ -10,7 +10,7 @@
     description: Creates and updates jobs with Jenkins Job Builder.
     properties:
       - build-discarder:
-          days-to-keep: 20
+          days-to-keep: 7
     parameters:
         - rpc_gating_params
         - jjb_params:

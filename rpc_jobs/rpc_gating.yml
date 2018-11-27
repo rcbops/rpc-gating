@@ -5,7 +5,7 @@
     properties:
       - rpc-gating-github
       - build-discarder:
-          num-to-keep: 30
+          num-to-keep: 10
     triggers:
         - github
     parameters:

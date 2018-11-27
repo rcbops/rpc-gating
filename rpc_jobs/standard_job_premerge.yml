@@ -33,7 +33,7 @@
     status_context_prefix: "CIT"
     properties:
       - build-discarder:
-          num-to-keep: "30"
+          num-to-keep: 14
       - github:
           url: "{repo_url}"
       - inject:

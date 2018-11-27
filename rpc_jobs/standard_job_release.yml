@@ -16,7 +16,7 @@
       - github:
           url: "https://github.com/rcbops/releases"
       - build-discarder:
-          days-to-keep: 30
+          days-to-keep: 14
     parameters:
       - rpc_gating_params
     dsl: |
@@ -40,7 +40,7 @@
     concurrent: false
     properties:
       - build-discarder:
-          days-to-keep: 30
+          days-to-keep: 14
     parameters:
       - rpc_gating_params
       - text:

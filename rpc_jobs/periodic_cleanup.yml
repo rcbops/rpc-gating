@@ -109,7 +109,10 @@
             // Note that already compressed logs will be skipped as they
             // get renamed .gz .
             // Logs newer than 1 day are skipped to prevent compressing
-            // the logs from running builds.
+            // the logs from running builds. Unfortunately the core code
+            // which enables jenkins to read compressed logs has a bug,
+            // so we've had to set compression to only happen after 5
+            // days. ref RE-2215
             sh """#!/bin/bash
               cd /var/lib/jenkins/jobs
               while read stagelog; do
@@ -126,7 +129,7 @@
                     echo "gzip file \$stagelog failed with a non-zero response code of: \$_rc. Setting job stage response code to: \$_rc. This will fail the stage."
                     rc=\$_rc
                   fi
-              done < <(find . -regex '.+/builds/[0-9]+/\\([0-9]+\\.\\)?log' -mtime +1)
+              done < <(find . -regex '.+/builds/[0-9]+/\\([0-9]+\\.\\)?log' -mtime +5)
               exit \${rc:-0}
             """
           }

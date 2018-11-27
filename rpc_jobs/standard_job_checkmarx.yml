@@ -1,7 +1,7 @@
 - job-template:
     CRON: "{CRON_WEEKLY}"
     RPC_GATING_BRANCH: master
-    NUM_TO_KEEP: 30
+    NUM_TO_KEEP: 14
     SLAVE_TYPE: "shared"
     name: '{trigger}-Checkmarx_{scan_type}-{repo_name}'
     project-type: pipeline

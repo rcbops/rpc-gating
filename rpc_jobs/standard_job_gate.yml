@@ -18,7 +18,7 @@
       - github:
           url: "{repo_url}"
       - build-discarder:
-          days-to-keep: 30
+          days-to-keep: 14
     parameters:
       - rpc_gating_params
     dsl: |
@@ -47,7 +47,7 @@
     skip_pattern: ""
     properties:
       - build-discarder:
-          num-to-keep: "30"
+          num-to-keep: 14
       - github:
           url: "{repo_url}"
       - inject:

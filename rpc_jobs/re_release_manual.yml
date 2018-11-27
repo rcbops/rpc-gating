@@ -12,7 +12,7 @@
     concurrent: false
     properties:
       - build-discarder:
-          num-to-keep: 30
+          num-to-keep: 10
     parameters:
       - rpc_gating_params
       - standard_job_params:

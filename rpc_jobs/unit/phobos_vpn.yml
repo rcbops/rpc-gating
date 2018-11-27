@@ -4,7 +4,7 @@
     concurrent: true
     properties:
       - build-discarder:
-          num-to-keep: 30
+          num-to-keep: 10
     parameters:
       # Default params are provided by macro, add any extra params, or
       # params you want to override the defaults for.

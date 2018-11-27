@@ -15,7 +15,7 @@
     properties:
       - rpc-gating-github
       - build-discarder:
-          days-to-keep: 30
+          num-to-keep: 10
     parameters:
       - rpc_gating_params
     dsl: |

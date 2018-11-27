@@ -25,7 +25,7 @@
            - "{branch}"
     properties:
       - build-discarder:
-          num-to-keep: 30
+          num-to-keep: 14
     triggers:
         - github
     builders:

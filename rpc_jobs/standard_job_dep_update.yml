@@ -1,7 +1,7 @@
 - job-template:
     CRON: "{CRON_WEEKLY}"
     RPC_GATING_BRANCH: master
-    NUM_TO_KEEP: 30
+    NUM_TO_KEEP: 14
     READ_ONLY_TEST: true
     SLAVE_TYPE: "container"
     component_dependencies_update: "false"

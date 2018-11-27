@@ -11,7 +11,7 @@
       - rpc_gating_params
     properties:
       - build-discarder:
-          days-to-keep: 30
+          days-to-keep: 10
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){

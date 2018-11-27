@@ -12,7 +12,7 @@
     concurrent: true
     properties:
       - build-discarder:
-          num-to-keep: "30"
+          num-to-keep: 10
       - rpc-openstack-github
     parameters:
       # See params.yml
