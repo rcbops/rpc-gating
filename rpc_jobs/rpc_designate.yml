@@ -59,3 +59,18 @@
     # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+ - project:
+     name: 'rpc-designate-checkmarx'
+     jira_project_key: ""
+     trigger:
+       - PM
+     scan_type:
+       - all
+       - pci
+     repo_name:
+       - rpc-designate:
+           repo_url: "https://github.com/rcbops/rpc-designate"
+           branch: master
+     jobs:
+       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
