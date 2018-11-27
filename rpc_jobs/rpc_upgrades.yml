@@ -12,6 +12,7 @@
       | ^gating/generate_release_notes/
       | ^gating/periodic/
       | ^gating/release/
+      | ^incremental/
     image:
       - trusty_aio:
           SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
@@ -21,6 +22,31 @@
       - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "kilo_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-mnaio-queens-incremental-pr"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+      | ^scripts/
+    image:
+      - xenial_mnaio-snap:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - "swift"
+    action:
+      - "pike_to_queens_incremental"
     jira_project_key: "RLM"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
