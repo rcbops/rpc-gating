@@ -1,4 +1,5 @@
 - job:
+    disabled: true
     name: 'Periodic-Cleanup'
     project-type: workflow
     parameters:
