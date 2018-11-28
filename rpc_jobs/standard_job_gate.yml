@@ -54,7 +54,7 @@
           properties-content: |
             STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
             BOOT_TIMEOUT={BOOT_TIMEOUT}
-            RE_JOB_NAME={name}
+            RE_JOB_NAME=${{JOB_NAME}}
             RE_JOB_IMAGE={image}
             RE_JOB_SCENARIO={scenario}
             RE_JOB_ACTION={action}

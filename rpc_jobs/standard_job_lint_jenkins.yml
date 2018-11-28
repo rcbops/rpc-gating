@@ -23,7 +23,7 @@
           properties-content: |
             BOOT_TIMEOUT=900
             JIRA_PROJECT_KEY={jira_project_key}
-            RE_JOB_NAME={name}
+            RE_JOB_NAME=${{JOB_NAME}}
             RE_JOB_REPO_NAME={repo_name}
             STAGES="Allocate Resources, Connect Slave, Cleanup, Destroy Slave"
     triggers:
