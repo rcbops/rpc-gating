@@ -20,7 +20,7 @@
       - "3ctlr_2comp_3ceph"
     action:
       - "osp_13_deploy"
-    credentials: "rpc_osp"
+    credentials: "rpc_osp cloud_creds"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
