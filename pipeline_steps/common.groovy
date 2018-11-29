@@ -871,24 +871,6 @@ No JIRA Issue key were found in commits ${repo_path}:${ghprbSourceBranch}""")
   }
 }
 
-/* Attempt to add a jira comment, but don't fail if ghprb env vars are missing
- * or no Jira issue key is present in commit titles
- */
-def safe_jira_comment(body, String repo_path="rpc-openstack"){
-  if (env.ghprbTargetBranch == null){
-    print ("Not a PR job, so not attempting to add a Jira comment")
-    return
-  }
-  try{
-    String key = get_jira_issue_key(repo_path)
-    jiraComment(issueKey: key,
-                body: body)
-    print "Jira Comment Added: [${key}] ${body}"
-  } catch (e){
-    print ("Error while attempting to add a build result comment to a JIRA issue: ${e}")
-  }
-}
-
 // This function creates or updates issues related to build failures.
 // Should be used to report build failures by calling:
 //    common.build_failure_issue(project, labels)
