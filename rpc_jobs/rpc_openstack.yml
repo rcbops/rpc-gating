@@ -653,5 +653,8 @@
       - rpc-openstack-queens:
           repo_url: "https://github.com/rcbops/rpc-openstack"
           branch: queens
+      - rpc-openstack-pike:
+          repo_url: "https://github.com/rcbops/rpc-openstack"
+          branch: pike
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
