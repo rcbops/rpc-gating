@@ -650,5 +650,8 @@
       - rpc-openstack-rocky:
           repo_url: "https://github.com/rcbops/rpc-openstack"
           branch: rocky
+      - rpc-openstack-queens:
+          repo_url: "https://github.com/rcbops/rpc-openstack"
+          branch: queens
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
