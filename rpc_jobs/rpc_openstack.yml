@@ -656,5 +656,8 @@
       - rpc-openstack-pike:
           repo_url: "https://github.com/rcbops/rpc-openstack"
           branch: pike
+      - rpc-openstack-newton:
+          repo_url: "https://github.com/rcbops/rpc-openstack"
+          branch: newton
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
