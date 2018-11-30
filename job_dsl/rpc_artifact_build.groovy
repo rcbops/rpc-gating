@@ -93,7 +93,5 @@ common.globalWraps(){
     print e
     currentBuild.result = "FAILURE"
     throw e
-  } finally {
-    common.safe_jira_comment("${currentBuild.result}: [${env.BUILD_TAG}|${env.BUILD_URL}]")
   }
 } // globalWraps
