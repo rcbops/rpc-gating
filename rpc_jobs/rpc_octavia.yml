@@ -79,8 +79,8 @@
     branch:
       - "master":
           SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
-      - "pike":
-          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
+#      - "pike":
+#          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
 
     # Use image for RPC-O install
     image:
