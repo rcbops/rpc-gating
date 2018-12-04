@@ -79,6 +79,8 @@
 
     jira_project_key: "RI"
 
+    credentials: "rpc_ri_creds"
+    
     # Link to the standard post-merge-template
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
