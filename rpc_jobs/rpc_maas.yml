@@ -296,3 +296,18 @@
           repo_url: 'https://github.com/rcbops/rpc-maas'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
+
+- project:
+    name: 'rpc-maas-checkmarx'
+    jira_project_key: ""
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - rpc-maas:
+          repo_url: "https://github.com/rcbops/rpc-maas"
+          branch: "master"
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
