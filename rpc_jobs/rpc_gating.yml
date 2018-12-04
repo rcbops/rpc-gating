@@ -28,7 +28,7 @@
     CRON: "{CRON_DAILY}"
     image:
       - snapshot:
-          IMAGE: "rpc-r17.1.1-xenial_no_artifacts-swift"
+          IMAGE: "rpc-r17.1.3-xenial_no_artifacts-swift"
           REGIONS: "DFW"
           FALLBACK_REGIONS: "DFW"
           FLAVOR: "7"
