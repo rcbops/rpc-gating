@@ -68,5 +68,20 @@
       - nodepool-agents-plugin:
           repo_url: "https://github.com/jenkinsci/nodepool-agents-plugin"
           branch: master
+      - osa-differ:
+          repo_url: "https://github.com/rcbops/osa_differ"
+          branch: master
+      - rpc-differ:
+          repo_url: "https://github.com/rcbops/rpc_differ"
+          branch: master
+      - re-platform:
+          repo_url: "https://github.com/rcbops/re-platform"
+          branch: master
+      - rpc-component:
+          repo_url: "https://github.com/rcbops/rpc_component"
+          branch: master
+      - releases:
+          repo_url: "https://github.com/rcbops/releases"
+          branch: master
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
