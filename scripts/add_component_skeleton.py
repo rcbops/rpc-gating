@@ -92,6 +92,11 @@ rel_notes_env_vars = (
     "https://github.com/rcbops/rpc-openstack.git."
 )
 
+rel_notes_not_implemented = (
+    'echo "Release notes generation has not been implemented for '
+    '${RE_HOOK_REPO_HTTP_URL}" > $RE_HOOK_RELEASE_NOTES'
+)
+
 hooks = {
     "gating/check": [
         {"name": "pre", "docs": [check, std_pre, std_env_vars]},
@@ -120,7 +125,8 @@ hooks = {
     ],
     "gating/generate_release_notes": [
         {"name": "pre", "docs": [rel_notes, std_pre, rel_notes_env_vars]},
-        {"name": "run", "docs": [rel_notes, std_run, rel_notes_env_vars]},
+        {"name": "run", "docs": [rel_notes, std_run, rel_notes_env_vars],
+            "commands": [rel_notes_not_implemented]},
         {"name": "post", "docs": [rel_notes, std_post, rel_notes_env_vars]},
     ],
 }
@@ -133,6 +139,8 @@ def add_std_hooks(repo_root):
             makedirs(directory)
             for file_ in files:
                 file_bits = ["#!/bin/bash"] + map(to_sh_comment, file_["docs"])
+                if "commands" in file_:
+                    file_bits.extend(file_["commands"])
                 path = os.path.join(directory, file_["name"])
                 with open(path, "w") as f:
                     f.write("\n\n".join(file_bits))
