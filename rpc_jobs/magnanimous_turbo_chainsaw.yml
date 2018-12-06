@@ -1,0 +1,43 @@
+
+- project:
+    name: magnanimous-turbo-chainsaw-gate-trigger
+    repo_name: magnanimous-turbo-chainsaw
+    repo_url: https://github.com/rcbops/magnanimous-turbo-chainsaw
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: magnanimous-turbo-chainsaw-re-release-pr
+    repo:
+      - magnanimous-turbo-chainsaw:
+          URL: https://github.com/rcbops/magnanimous-turbo-chainsaw
+          BRANCH: master
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'magnanimous-turbo-chainsaw-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - magnanimous-turbo-chainsaw:
+          repo_url: 'https://github.com/rcbops/magnanimous-turbo-chainsaw'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
+
+- project:
+    name: 'magnanimous-turbo-chainsaw-checkmarx'
+    scan_type:
+      - default
+      - pci
+    jira_project_key: INSIGHTS
+    trigger:
+      - PM
+    repo_name:
+      - magnanimous-turbo-chainsaw:
+          repo_url: https://github.com/rcbops/magnanimous-turbo-chainsaw
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
