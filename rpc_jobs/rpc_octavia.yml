@@ -32,40 +32,6 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
-#- project:
-#    name: "rpc-octavia-pike-pre-merge"
-#
-#    repo_name: "rpc-octavia"
-#    # URL of the rpc-octavia repository
-#    repo_url: "https://github.com/rcbops/rpc-octavia"
-#
-#    series: "pike"
-#
-#    # currently we only do master and pike. Once RPC-O switches
-#    # to Queens we will retire rpc-octavia and use the
-#    # upstream installer
-#    branches:
-#      - "pike.*"
-#
-#    # Use image for RPC-O install
-#    image:
-#      - xenial_snapshot:
-#          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
-#
-#    # Octavia ignores that setting for now
-#    scenario:
-#      - "functional"
-#
-#    # Octavia ignores that setting for now
-#    action:
-#      - "test"
-#
-#    jira_project_key: "K8S"
-#
-#    # Link to the standard pre-merge-template
-#    jobs:
-#      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
-
 - project:
     name: "rpc-octavia-post-merge"
 
@@ -79,8 +45,6 @@
     branch:
       - "master":
           SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
-#      - "pike":
-#          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
 
     # Use image for RPC-O install
     image:
