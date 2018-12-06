@@ -767,11 +767,26 @@ void configure_git(){
       // can be cloned when specified as https:// urls.
       // Ssh auth is handled in clone_with_pr_refs
       try {
-        sh """#!/bin/bash -xe
+        sh """#!/bin/bash -e
           mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          git config --global user.email "rpc-jenkins-svc@github.com"
-          git config --global user.name "rpc.jenkins.cit.rackspace.net"
+          i_git_set(){
+            k="\$1"
+            v="\$2"
+            if [[ "\$(git config --global \$k)" == "\$v" ]]; then
+              echo "Git config key \$k already set to \$v"
+            else
+              echo "Setting git config value \$k: \$v"
+              git config --global "\$k" "\$v"
+            fi
+          }
+          if grep -q github.com ~/.ssh/known_hosts; then
+            echo "Github.com key already in known hosts"
+          else
+            echo "Adding github.com key to known hosts"
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+          fi
+          i_git_set user.email "rpc-jenkins-svc@github.com"
+          i_git_set user.name "rpc.jenkins.cit.rackspace.net"
         """
       } catch (Exception e){
         sleep(5)
