@@ -205,7 +205,6 @@
       - "xenial":
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
     scenario:
-      - rocky
       - queens
       - pike
       - newton
