@@ -757,18 +757,28 @@ void merge_pr_chain(String directory='./', List pullRequestIDs=null){
   println("Finished merging the pull requests onto the base branch.")
 }
 
-
+// This function is potentially racy as it runs on shared slaves
+// and modifies files outside the workspace which require a lock.
 void configure_git(){
   print "Configuring Git"
-  // credentials store created to ensure that non public repos
-  // can be cloned when specified as https:// urls.
-  // Ssh auth is handled in clone_with_pr_refs
-  sh """#!/bin/bash -xe
-    mkdir -p ~/.ssh
-    ssh-keyscan github.com >> ~/.ssh/known_hosts
-    git config --global user.email "rpc-jenkins-svc@github.com"
-    git config --global user.name "rpc.jenkins.cit.rackspace.net"
-  """
+  lock("configure_git"){
+    retry(3){
+      // credentials store created to ensure that non public repos
+      // can be cloned when specified as https:// urls.
+      // Ssh auth is handled in clone_with_pr_refs
+      try {
+        sh """#!/bin/bash -xe
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.email "rpc-jenkins-svc@github.com"
+          git config --global user.name "rpc.jenkins.cit.rackspace.net"
+        """
+      } catch (Exception e){
+        sleep(5)
+        throw e
+      }
+    }
+  }
   print "Git Configuration Complete"
 }
 
