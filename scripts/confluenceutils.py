@@ -90,10 +90,16 @@ class Confluence(object):
             "type": "page",
             "title": title,
             "space": {"key": space_key},
-            "body": {"storage": {"value": body, "representation": "storage"}},
+            "body": {
+                "storage": {
+                    "value": body.encode('ascii', 'xmlcharrefreplace'),
+                    "representation": "storage"
+                }
+            },
             "version": {"number": page_version_id},
         }
         url = "{base}/{page_id}".format(base=self.content_url, page_id=page_id)
+        logger.debug("PUT to {}: {}".format(url, content))
         resp = self.session.put(url, json=content)
         resp.raise_for_status()
         resp_data = resp.json()
