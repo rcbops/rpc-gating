@@ -9,7 +9,7 @@
       - pci
     repo_name:
       - rpc-uam:
-          repo_url: "git@github.com:rcbops/rpc-uam"
+          repo_url: "https://github.com/rcbops/rpc-uam"
           branch: master
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'

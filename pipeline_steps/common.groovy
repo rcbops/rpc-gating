@@ -670,6 +670,13 @@ String clone_with_pr_refs(
 
 
 String clone_repo(String directory, String ssh_key, String repo, String ref, String refspec) {
+  // Need to clone/fetch with ssh@ protocol
+  if (ref.startsWith("https://")) {
+    beforeConversion = ref
+    ref = ref.replaceAll("https://", "git@")
+    ref = ref.replaceAll("github.com:", "github.com/")
+    println("Updated repo from ${beforeConversion} to ${ref}")
+  }
   print "Cloning Repo: ${repo}@${ref}"
   sshagent (credentials:[ssh_key]){
     sh """#!/bin/bash -xe

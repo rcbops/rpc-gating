@@ -187,7 +187,7 @@
       - pci
     repo_name:
       - rpc-ceph:
-          repo_url: "git@github.com:rcbops/rpc-ceph"
+          repo_url: "https://github.com/rcbops/rpc-ceph"
           branch: master
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'

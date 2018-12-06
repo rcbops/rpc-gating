@@ -2,7 +2,7 @@
 - project:
     name: rpc-jenkins-etl-gate-trigger
     repo_name: rpc-jenkins-etl
-    repo_url: git@github.com:rcbops/rpc-jenkins-etl.git
+    repo_url: https://github.com/rcbops/rpc-jenkins-etl.git
     jobs:
       - 'Component-Gate-Trigger_{repo_name}'
 
@@ -10,7 +10,7 @@
     name: rpc-jenkins-etl-re-release-pr
     repo:
       - rpc-jenkins-etl:
-          URL: git@github.com:rcbops/rpc-jenkins-etl.git
+          URL: https://github.com/rcbops/rpc-jenkins-etl.git
           BRANCH: master
     jobs:
       - 'RE-Release-PR_{repo}-{BRANCH}'
@@ -22,14 +22,14 @@
           branches: '.*'
     repo:
       - rpc-jenkins-etl:
-          repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
+          repo_url: 'https://github.com/rcbops/rpc-jenkins-etl'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
 
 - project:
     name: "rpc-jenkins-etl-dev-premerge"
     repo_name: "rpc-jenkins-etl"
-    repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
+    repo_url: 'https://github.com/rcbops/rpc-jenkins-etl'
     series: "dev"
     branches:
       - "dev"
@@ -47,7 +47,7 @@
 - project:
     name: "rpc-jenkins-etl-master-periodic"
     repo_name: "rpc-jenkins-etl"
-    repo_url: 'git@github.com:rcbops/rpc-jenkins-etl.git'
+    repo_url: 'https://github.com/rcbops/rpc-jenkins-etl'
     branch: "master"
     image:
       - xenial:
