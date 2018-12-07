@@ -11,162 +11,184 @@
       - timed: "H H * * 2-7" # @daily can't use {CRON_DAILY} as this isn't a template
     dsl: |
       import org.jenkinsci.plugins.workflow.job.WorkflowJob
+      class ImageTestException extends Exception{
+        public ImageTestException(String message){
+          super(message)
+        }
+      }
 
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
+        // Outer try ensures that a Jira issue is created for unexpected failure
+        List releases = []
+        Boolean sendFailure = false
+        def parallelBuilds = [:]
         try {
-          dir("releases") {
-            git branch: 'master', url: 'https://github.com/rcbops/releases'
+          stage("Checkout Releases"){
+            dir("releases") {
+              git branch: 'master', url: 'https://github.com/rcbops/releases'
+            }
           }
           // NOTE(mattt): We re-clone rpc-gating here because the existing clone
           // has cruft in it which we don't want to have committed in our
           // subsequent PR
           dir("rpc-gating-master") {
-            git branch: 'master', url: 'https://github.com/rcbops/rpc-gating'
+            stage("Checkout Rpc-Gating"){
+              git branch: 'master', url: 'https://github.com/rcbops/rpc-gating'
+            }
+            stage("Prepare Builds"){
+              def componentData = readFile "${env.WORKSPACE}/releases/components/rpc-openstack.yml"
+              def rpcoReleases = readYaml text: componentData
 
-            def componentData = readFile "${env.WORKSPACE}/releases/components/rpc-openstack.yml"
-            def rpcoReleases = readYaml text: componentData
-
-            List releases = []
-            Boolean sendFailure = false
-
-            for ( r in rpcoReleases['releases'] ) {
-              if (r['series'] == 'newton') {
-                for ( s in ['trusty', 'xenial'] ) {
-                  def image = "${s}_loose_artifacts-swift"
+              for ( r in rpcoReleases['releases'] ) {
+                if (r['series'] == 'newton') {
+                  for ( s in ['trusty', 'xenial'] ) {
+                    def image = "${s}_loose_artifacts-swift"
+                    releases << [series: r['series'],
+                                latest: r['versions'][0]['version'],
+                                previous: r['versions'][1]['version'],
+                                image: image,
+                                consecutiveFailures: 0]
+                  } // for
+                } else {
                   releases << [series: r['series'],
                               latest: r['versions'][0]['version'],
                               previous: r['versions'][1]['version'],
-                              image: image,
+                              image: 'xenial_no_artifacts-swift',
                               consecutiveFailures: 0]
-                } // for
-              } else {
-                releases << [series: r['series'],
-                            latest: r['versions'][0]['version'],
-                            previous: r['versions'][1]['version'],
-                            image: 'xenial_no_artifacts-swift',
-                            consecutiveFailures: 0]
-              } // if
-            } // for
-
-            def allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
-            def job = (allWorkflowJobs.find {it.displayName =~ /PM_rpc-gating-master-snapshot-snapshot-test/})
-
-            // NOTE(mattt): We reverse job.getBuilds() so we operate on oldest to newest jobs
-            for ( build in job.getBuilds().reverse() ) {
-              for ( r in releases ) {
-                def image = build.getAction(ParametersAction).getParameter("IMAGE").getValue()
-                if (image == "rpc-${r['latest']}-${r['image']}") {
-                  if (build.getResult().isWorseThan(Result.fromString("SUCCESS"))) {
-                    r['consecutiveFailures'] += 1
-                  } else {
-                    r['consecutiveFailures'] = 0
-                  }
                 } // if
               } // for
-            } // for
 
-            def parallelBuilds = [:]
+              def allWorkflowJobs = Hudson.instance.getAllItems(WorkflowJob)
+              def job = (allWorkflowJobs.find {it.displayName =~ /PM_rpc-gating-master-snapshot-snapshot-test/})
 
-            for ( r in releases ) {
-              def release = r
-              println release
-
-              if (release['consecutiveFailures'] < 7) {
-                parallelBuilds["${release['series']}-${release['image']}"] = {
-                  def buildResult = build(
-                    job: 'PM_rpc-gating-master-snapshot-snapshot-test',
-                    wait: true,
-                    propagate: false,
-                    parameters: [
-                      [
-                        $class: "StringParameterValue",
-                        name: "RPC_GATING_BRANCH",
-                        value: env.RPC_GATING_BRANCH,
-                      ],
-                      [
-                        $class: "StringParameterValue",
-                        name: "BRANCH",
-                        value: env.RPC_GATING_BRANCH,
-                      ],
-                      [
-                        $class: "StringParameterValue",
-                        name: "IMAGE",
-                        value: "rpc-${release['latest']}-${release['image']}",
-                      ]
-                    ]
-                  )
-                  if (buildResult.result != "SUCCESS") {
-                    println "Build failed, no updates will take place for image rpc-${release['latest']}-${release['image']}"
-                  }
-                  release['result'] = buildResult.result
-                } // parallelBuilds
-              } else {
-                println "rpc-${release['latest']}-${release['image']} has failed 7 times consecutively, creating RE issue for follow-up"
-                sendFailure = true
-              } // if
-            } // for
-
-            parallel parallelBuilds
-
-            for ( release in releases ) {
-              if (release['result'] == "SUCCESS") {
-                sh """#!/bin/bash -xe
-                  sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" rpc_jobs/*.yml
-                  sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" nodepool/templates/nodepool.yml.j2
-                """
-              }
-            } // for
-
-            withEnv(
-              [
-                "ISSUE_SUMMARY=Bump snapshot versions",
-                "ISSUE_DESCRIPTION=This change was triggered by the jenkins job Bump-Snapshot-Images.",
-                "LABELS=snapshot-bump jenkins",
-                "JIRA_PROJECT_KEY=RE",
-                "TARGET_BRANCH=master",
-                "COMMIT_TITLE=Bump snapshot versions",
-                "COMMIT_MESSAGE=This change was triggered by the jenkins job Bump-Snapshot-Images.",
-              ]
-            ) {
-              withCredentials(
-                [
-                  string(
-                    credentialsId: 'rpc-jenkins-svc-github-pat',
-                    variable: 'PAT'
-                  ),
-                  usernamePassword(
-                    credentialsId: "jira_user_pass",
-                    usernameVariable: "JIRA_USER",
-                    passwordVariable: "JIRA_PASS"
-                  ),
-                ]
-              ) {
-                sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']) {
-                  String git_status = sh(
-                    returnStdout: true,
-                    script: """#!/bin/bash -xe
-                      git status -s
-                    """
-                  ).trim()
-
-                  if (git_status) {
-                    sh """#!/bin/bash -xe
-                      set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
-                      ${WORKSPACE}/rpc-gating/scripts/commit_and_pull_request.sh
-                    """
+              // NOTE(mattt): We reverse job.getBuilds() so we operate on oldest to newest jobs
+              for ( build in job.getBuilds().reverse() ) {
+                for ( r in releases ) {
+                  def image = build.getAction(ParametersAction).getParameter("IMAGE").getValue()
+                  if (image == "rpc-${r['latest']}-${r['image']}") {
+                    if (build.getResult().isWorseThan(Result.fromString("SUCCESS"))) {
+                      r['consecutiveFailures'] += 1
+                    } else {
+                      r['consecutiveFailures'] = 0
+                    }
                   } // if
-                } // sshagent
-              } // withCredentials
-            } // withEnv
+                } // for
+              } // for
 
-            if (sendFailure) {
-              common.create_jira_issue("RE",
-                                      "Bump Snapshots Failure: ${env.BUILD_TAG}",
-                                      "[${env.BUILD_TAG}|${env.BUILD_URL}]",
-                                      ["jenkins", "bump_snapshots_fail"])
-            } // if
+
+
+              for ( r in releases ) {
+                def release = r
+                println release
+
+                if (release['consecutiveFailures'] < 7) {
+                  parallelBuilds["${release['series']}-${release['image']}"] = {
+                    def buildResult = build(
+                      job: 'PM_rpc-gating-master-snapshot-snapshot-test',
+                      wait: true,
+                      propagate: false,
+                      parameters: [
+                        [
+                          $class: "StringParameterValue",
+                          name: "RPC_GATING_BRANCH",
+                          value: env.RPC_GATING_BRANCH,
+                        ],
+                        [
+                          $class: "StringParameterValue",
+                          name: "BRANCH",
+                          value: env.RPC_GATING_BRANCH,
+                        ],
+                        [
+                          $class: "StringParameterValue",
+                          name: "IMAGE",
+                          value: "rpc-${release['latest']}-${release['image']}",
+                        ]
+                      ]
+                    )
+                    release['result'] = buildResult.result
+                    if (buildResult.result != "SUCCESS") {
+                      throw new ImageTestException("Build failed, no updates will take place for image rpc-${release['latest']}-${release['image']}")
+                    }
+                  } // parallelBuilds
+                } else {
+                  sendFailure = true
+                  throw new ImageTestException("rpc-${release['latest']}-${release['image']} has failed 7 times consecutively, creating RE issue for follow-up")
+                } // if
+              } // for
+            } // stage prepare builds
+
+            // Inner try ensures 'update configs' and 'create PR' happen when even if one of the parallel branches fails
+            try {
+              parallel parallelBuilds
+              // no catch implies re-throw
+            } finally {
+              stage("Update Configs"){
+                for ( release in releases ) {
+                  if (release['result'] == "SUCCESS") {
+                    sh """#!/bin/bash -xe
+                      sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" rpc_jobs/*.yml
+                      sed -i "s/rpc-${release['previous']}-${release['image']}/rpc-${release['latest']}-${release['image']}/g" nodepool/templates/nodepool.yml.j2
+                    """
+                  }
+                } // for
+              } // stage update configs
+              stage("Create PR"){
+                withEnv(
+                  [
+                    "ISSUE_SUMMARY=Bump snapshot versions",
+                    "ISSUE_DESCRIPTION=This change was triggered by the jenkins job Bump-Snapshot-Images.",
+                    "LABELS=snapshot-bump jenkins",
+                    "JIRA_PROJECT_KEY=RE",
+                    "TARGET_BRANCH=master",
+                    "COMMIT_TITLE=Bump snapshot versions",
+                    "COMMIT_MESSAGE=This change was triggered by the jenkins job Bump-Snapshot-Images.",
+                  ]
+                ) {
+                  withCredentials(
+                    [
+                      string(
+                        credentialsId: 'rpc-jenkins-svc-github-pat',
+                        variable: 'PAT'
+                      ),
+                      usernamePassword(
+                        credentialsId: "jira_user_pass",
+                        usernameVariable: "JIRA_USER",
+                        passwordVariable: "JIRA_PASS"
+                      ),
+                    ]
+                  ) {
+                    sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']) {
+                      String git_status = sh(
+                        returnStdout: true,
+                        script: """#!/bin/bash -xe
+                          git status -s
+                        """
+                      ).trim()
+
+                      if (git_status) {
+                        sh """#!/bin/bash -xe
+                          set +x; . ${WORKSPACE}/.venv/bin/activate; set -x
+                          ${WORKSPACE}/rpc-gating/scripts/commit_and_pull_request.sh
+                        """
+                      } // if
+                    } // sshagent
+                  } // withCredentials
+                } // withEnv
+              } // stage create pr
+
+              if (sendFailure) {
+                common.create_jira_issue("RE",
+                                        "Bump Snapshots Failure: ${env.BUILD_TAG}",
+                                        "[${env.BUILD_TAG}|${env.BUILD_URL}]",
+                                        ["jenkins", "bump_snapshots_fail"])
+              } // if
+            } // finally
           } // dir
+        } catch (ImageTestException e){
+          // Don't create an issue, thats already handled above, with logic to avoid creating an
+          // issue for every image failure.
+          throw e
         } catch (Exception e){
           common.create_jira_issue("RE",
                                   "Bump Snapshots Failure: ${env.BUILD_TAG}",
