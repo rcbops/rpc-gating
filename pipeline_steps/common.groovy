@@ -779,12 +779,14 @@ void configure_git(){
               git config --global "\$k" "\$v"
             fi
           }
-          if grep -q github.com ~/.ssh/known_hosts; then
-            echo "Github.com key already in known hosts"
-          else
-            echo "Adding github.com key to known hosts"
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-          fi
+          ssh-keyscan github.com 2>/dev/null | while read ssh_key; do
+            if grep -q "\${ssh_key}" ~/.ssh/known_hosts; then
+              echo "Github.com key already in known hosts: \${ssh_key}"
+            else
+              echo "Adding github.com key to known hosts: \${ssh_key}"
+              echo "\${ssh_key}" >> ~/.ssh/known_hosts
+            fi
+          done
           i_git_set user.email "rpc-jenkins-svc@github.com"
           i_git_set user.name "rpc.jenkins.cit.rackspace.net"
         """
