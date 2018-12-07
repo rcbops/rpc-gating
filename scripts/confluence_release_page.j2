@@ -6,7 +6,7 @@
 <tbody>
 <tr><th>Product</th><th>Version</th><th>Release Notes</th><th>Comments</th></tr>
 {% for row in rows %}
-<tr><td>{{ row.product }}</td><td>{{ row.version }}</td><td>{{ row.release_notes | urlize }}</td><td>{{ row.comments | wordwrap(width=79, break_long_words=False, wrapstring="<br/>") }}</td></tr>
+<tr><td>{{ row.product }}</td><td>{{ row.version }}</td><td>{{ row.release_notes | urlize }}</td><td>{{ row.comments | urlize}}</td></tr>
 {% endfor %}
 </tbody>
 </table>
