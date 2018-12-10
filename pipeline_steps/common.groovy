@@ -11,6 +11,7 @@ import java.time.Duration
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.math.MathContext
+import java.security.SecureRandom
 import groovy.transform.Field
 
 // Constants Governing the Weekly RE-Maintenance Window
@@ -310,7 +311,7 @@ def String acronym(Map args){
 }
 
 def String rand_int_str(int max=0xFFFF, int base=16){
-  return Integer.toString(Math.abs((new Random()).nextInt(max)), base)
+  return Integer.toString(Math.abs((new SecureRandom()).nextInt(max)), base)
 }
 
 def String gen_instance_name(String prefix="AUTO"){
