@@ -32,3 +32,5 @@
     JOB_SOURCES: |
       - repo: git@github.com:rcbops/rpc-gating.git
         commitish: master
+      - repo: git@github.com:rcbops/mk8s.git
+        commitish: master
