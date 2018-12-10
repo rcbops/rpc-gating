@@ -25,6 +25,9 @@
       - "swift"
     action:
       - "deploy"
+      - sdqc
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -72,6 +75,9 @@
       - "swift"
     action:
       - "deploy"
+      - sdqc
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
@@ -118,6 +124,9 @@
       - "swift"
     action:
       - "deploy"
+      - sdqc
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
