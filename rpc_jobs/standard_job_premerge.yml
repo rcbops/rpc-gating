@@ -13,6 +13,7 @@
     scenario:
       - "lint":
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          credentials: "rpc_jenkins_svc_github_key_file"
       - "standard_job_pre_merge":
           SLAVE_TYPE: "container"
     action:
