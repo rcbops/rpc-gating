@@ -2,6 +2,7 @@
 from itertools import chain
 import os.path
 import re
+import sys
 
 import click
 from sh import git, ErrorReturnCode_128
@@ -36,7 +37,7 @@ def setup(job_sources):
             name = match.group(1)
             js = {"commitish": commitish, "directory": name, "url": url}
         job_sources_by_name[name] = js
-
+    sys.stderr.write("Job Sources: {} \n".format(job_sources_by_name))
     paths_by_source = {}
     for name, job_source in job_sources_by_name.items():
         directory = job_source["directory"]
@@ -48,7 +49,10 @@ def setup(job_sources):
                     job_source["url"],
                     directory
                 )
-            except ErrorReturnCode_128:
+            except ErrorReturnCode_128 as e:
+                sys.stderr.write(
+                    "Clone Failure: {}, "
+                    "retrying checkout.\n".format(e))
                 git.checkout(
                     job_source["commitish"],
                     _env={"GIT_DIR": directory + "/.git"}

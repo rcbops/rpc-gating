@@ -18,4 +18,5 @@ export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 ssh-add -l &>/dev/null || eval $(ssh-agent)
 # Safe to re-add keys that are in the agent.
 ssh-add $JENKINS_GITHUB_SSH_PRIVKEY
+ssh-add -l
 ./lint.sh
