@@ -284,7 +284,6 @@
     action:
       - deploy
       - elk
-      - sdqc
       - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
@@ -333,7 +332,6 @@
     action:
       - deploy
       - elk
-      - sdqc
       - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
@@ -378,7 +376,6 @@
     action:
       - deploy
       - elk
-      - sdqc
       - system
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
