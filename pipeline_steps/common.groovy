@@ -1373,6 +1373,10 @@ List build_creds_array(String list_of_cred_ids){
         credentialsId: 'id_rsa_cloud10_jenkins_file',
         variable: 'JENKINS_SSH_PRIVKEY'
       ),
+      "rpc_jenkins_svc_github_key_file": sshUserPrivateKey(
+        credentialsId: 'rpc-jenkins-svc-github-key',
+        keyFileVariable: 'JENKINS_GITHUB_SSH_PRIVKEY'
+      ),
       "RPC_REPO_IP": string(
         credentialsId: "RPC_REPO_IP",
         variable: "REPO_HOST"
