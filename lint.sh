@@ -42,6 +42,19 @@ create_jjb_ini(){
   fi
 }
 
+# Remove repos that were cloned because they contain jjb job defintions.
+# This ensures that those repos are not scanned for other issues
+# (eg python lint) RE-2263
+clean_jjb_clones(){
+  tr ':' \\n <<<$jjb_paths \
+    |egrep -v '^/|rpc-gating' \
+    |cut -d '/' -f1 \
+    |while read d; do
+      echo "Removing repo that was cloned to check job definitions: $d"
+      rm -rf $d
+    done
+}
+
 # Check JJB for syntax
 check_jjb(){
   which jenkins-jobs >/dev/null \
@@ -207,9 +220,10 @@ else
   check_jjb
   check_jenkins_name_lengths
   check_groovy
+  check_jjb_lint
+  clean_jjb_clones
   check_ansible
   check_bash
-  check_jjb_lint
   check_webhooktranslator
   check_python python3
   check_python python2.7
