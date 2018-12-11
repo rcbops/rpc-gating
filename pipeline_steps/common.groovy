@@ -674,7 +674,7 @@ String clone_repo(String directory, String ssh_key, String repo, String ref, Str
   if (ref.startsWith("https://")) {
     beforeConversion = ref
     ref = ref.replaceAll("https://", "git@")
-    ref = ref.replaceAll("github.com:", "github.com/")
+    ref = ref.replaceAll("github.com/", "github.com:")
     println("Updated repo from ${beforeConversion} to ${ref}")
   }
   print "Cloning Repo: ${repo}@${ref}"
