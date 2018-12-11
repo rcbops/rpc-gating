@@ -13,6 +13,7 @@ runjenkins.yml
 # Ignore IDE project files
 *.iml
 .idea/
+.vscode/
 
 # Ignore Visual Studio Code project files
 .venv/

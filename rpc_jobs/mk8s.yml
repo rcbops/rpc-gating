@@ -8,13 +8,13 @@
       - PM
     repo_name:
       - mk8s:
-          repo_url: "git@github.com:rcbops/mk8s"
+          repo_url: "https://github.com/rcbops/mk8s"
           branch: master
       - kubernetes-harbor:
-          repo_url: "git@github.com:rcbops/kubernetes-harbor"
+          repo_url: "https://github.com/rcbops/kubernetes-harbor"
           branch: master
       - rackspace-monitoring-agent-coreos:
-          repo_url: "git@github.com:rcbops/rackspace-monitoring-agent-coreos"
+          repo_url: "https://github.com/rcbops/rackspace-monitoring-agent-coreos"
           branch: master
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'

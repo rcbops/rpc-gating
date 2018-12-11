@@ -1,7 +1,7 @@
 - project:
     name: "rpc-eng-ops-jobs"
     repo_name:  "rpc-eng-ops"
-    repo_url:   "git@github.com:rcbops/rpc-eng-ops"
+    repo_url:   "https://github.com/rcbops/rpc-eng-ops"
     branch: "master"
     image:
       - "xenial":

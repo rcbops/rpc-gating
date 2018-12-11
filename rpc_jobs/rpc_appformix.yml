@@ -3,7 +3,7 @@
 
     repo_name: "rpc-appformix"
     # URL of the rpc-appformix repository
-    repo_url: "git@github.com:rcbops/rpc-appformix"
+    repo_url: "https://github.com/rcbops/rpc-appformix"
 
     branches:
       - "master"
@@ -35,7 +35,7 @@
 
     repo_name: "rpc-appformix"
     # URL of the rpc-appformix repository
-    repo_url: "git@github.com:rcbops/rpc-appformix"
+    repo_url: "https://github.com/rcbops/rpc-appformix"
 
     branches:
       - "master"
@@ -61,7 +61,7 @@
 
     repo_name: "rpc-appformix"
     # URL of the rpc-designate repository
-    repo_url: "git@github.com:rcbops/rpc-appformix"
+    repo_url: "https://github.com/rcbops/rpc-appformix"
 
     # Use image for RPC-O install
     image:
@@ -92,7 +92,7 @@
           branches: '.*'
     repo:
       - rpc-appformix:
-          repo_url: 'git@github.com/rcbops/rpc-appformix'
+          repo_url: 'https://github.com/rcbops/rpc-appformix'
     jobs:
       - 'Pull-Request-Whisperer_{repo}'
 
@@ -106,7 +106,7 @@
       - pci
     repo_name:
       - rpc-appformix:
-          repo_url: "git@github.com:rcbops/rpc-appformix.git"
+          repo_url: "https://github.com/rcbops/rpc-appformix"
           branch: master
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'

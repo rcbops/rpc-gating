@@ -89,6 +89,10 @@ def parse_jjb_file(in_dir, in_file):
                 _rc = 1
             if check_timed_trigger(item['job'], filename):
                 _rc = 1
+
+        if invalid_protocol(item, filename):
+            _rc = 1
+
     return _rc
 
 
@@ -223,6 +227,57 @@ def check_timed_trigger_value(schedule, data):
         return_value = 1
 
     return return_value
+
+
+# Routine to flatten lists, for example:
+# [[0, 1, 2],[[3, 4],[5, 6]], 7, 8] => [0,1,2,3,4,5,6,7,8]
+def flatten(s):
+    if s == []:
+        return s
+    if isinstance(s[0], list):
+        return flatten(s[0]) + flatten(s[1:])
+    return s[:1] + flatten(s[1:])
+
+
+# Tests project, job-templates, and jobs for invalid protocols
+# If an invalid protocol is discovered, this method will return True
+# Otherwise, will return False
+def invalid_protocol(job, file_name):
+    ret_val = False
+
+    # Grab the name from the project, job-template, or job
+    name = jmespath.search('[*.name] | [0]', job)
+
+    # Common error message
+    error_message = ("{f}/{n}: Invalid protocol -"
+                     " only 'https' protocol is allowed."
+                     " Expected value similar to"
+                     " 'https://github.com/...'"
+                     " but received:"
+                     .format(f=file_name, n=name))
+
+    search_path = '[project.repo_url,' \
+                  'project.repo_name[].*.repo_url,' \
+                  'project.repo[].*.URL,' \
+                  'project.repo[].*.repo_url,' \
+                  '"job-template".repo.repo_url,' \
+                  '"job-template".properties[].*.url,' \
+                  'job.properties[].github.url,' \
+                  'job."pipeline-scm".scm[].git.url]'
+    values = jmespath.search(search_path, job)
+    # filter out None values and flatten any lists
+    values = flatten([x for x in values if x is not None])
+    # DEBUG
+    # sys.stderr.write("File: {}, Item: {}, values: {}\n".format(
+    # file_name, name, values))
+    # For each url discovered...
+    for url in values:
+        # sys.stderr.write("Testing: {}\n".format(url))
+        if not re.search('^(https://|internal:|{[^}]+}$)', url):
+            sys.stderr.write("{} {}\n".format(error_message, url))
+            ret_val = True
+
+    return ret_val
 
 
 def translate_hash(schedule, rep_mode="all"):
