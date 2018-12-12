@@ -41,7 +41,8 @@
           cancel-builds-on-update: true
     parameters:
       - rpc_gating_params
-      - jjb_params
+      - jjb_params:
+          JOB_SOURCES: "{JOB_SOURCES}"
       - string:
           name: "REPO_URL"
           description: URL of the repo to be updated
