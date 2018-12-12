@@ -669,15 +669,23 @@ String clone_with_pr_refs(
   return sha
 }
 
+// Convert a https:// github url to an git@ github url
+String https_to_ssh_github_url(String https_url){
+  if (https_url.startsWith("https://")) {
+    git_url = https_url.replaceAll("https://", "git@")
+                       .replaceAll("github.com/", "github.com:")
+    println("Updated repo from ${https_url} to ${git_url}")
+    return git_url
+  } else {
+    println("Not a https url, so not converting to a git url: ${https_url}")
+    return https_url
+  }
+}
+
 
 String clone_repo(String directory, String ssh_key, String repo, String ref, String refspec) {
   // Need to clone/fetch with ssh@ protocol
-  if (ref.startsWith("https://")) {
-    beforeConversion = ref
-    ref = ref.replaceAll("https://", "git@")
-    ref = ref.replaceAll("github.com/", "github.com:")
-    println("Updated repo from ${beforeConversion} to ${ref}")
-  }
+  repo = https_to_ssh_github_url(repo)
   print "Cloning Repo: ${repo}@${ref}"
   sshagent (credentials:[ssh_key]){
     sh """#!/bin/bash -xe
