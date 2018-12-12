@@ -61,7 +61,7 @@
       common.globalWraps(){
         dir("${env.WORKSPACE}/releases"){
           common.clone_with_pr_refs(
-            ".", "git@github.com:${pr_repo}.git", "origin/pr/${pr_number}/merge",
+            ".", "git@github.com:${pr_repo}", "origin/pr/${pr_number}/merge",
           )
           sh """#!/bin/bash -xe
             virtualenv --python python3 .venv3

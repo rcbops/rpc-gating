@@ -59,10 +59,12 @@ def setup(job_sources):
                 )
 
         try:
-            with open("{d}/component_metadata.yml".format(d=directory)) as f:
+            metadata_file = "{d}/component_metadata.yml".format(d=directory)
+            with open(metadata_file) as f:
                 metadata = yaml.load(f)
-        except IOError:
-            pass
+        except IOError as e:
+            sys.stderr.write("Failed to load component metadata file: "
+                             "{}, error: {}".format(metadata_file, e))
         else:
             paths = metadata.get("jenkins", {}).get("jjb_paths", [])
             paths_by_source[name] = [
