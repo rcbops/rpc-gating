@@ -17,7 +17,7 @@ install(){
   which virtualenv >/dev/null \
     || { echo "virtualenv not available, please install via pip"; return; }
   if [ ! -d ${venv}_${python} ]; then
-    $python -m virtualenv ${venv}_${python}
+    $python -m virtualenv --python-${python} ${venv}_${python}
   fi
   . ${venv}_${python}/bin/activate
 

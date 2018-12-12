@@ -2,11 +2,11 @@ library "rpc-gating-master"
 common.globalWraps(){
   common.standard_job_slave(env.SLAVE_TYPE) {
     try {
-      stage("Configure Git"){
-        common.configure_git()
-      }
-
-      String repoDir = "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}"
+      // Use a subdir so we don't clash with the rpc-gating dir in the root of the workspace
+      // when rpc-gating is cloned.
+      String jjbDir ="${env.WORKSPACE}/jjb"
+      sh "mkdir ${jjbDir}"
+      String repoDir = "${jjbDir}/${env.RE_JOB_REPO_NAME}"
       String repoURL
       String repoBranch
       stage("Checkout"){
@@ -21,9 +21,12 @@ common.globalWraps(){
         print("Repo: ${repoURL} Branch: ${repoBranch}")
         common.clone_with_pr_refs(repoDir, repoURL, repoBranch)
       }
-
       def jobSources = readYaml text: JOB_SOURCES
-      String sourcesArgs = jobSources.collect {"--job-source ${it.repo};${it.commitish}"}.join(' ')
+      // Remove the repo being tested, because it will be added as a local source, so doesn't need to be cloned
+      // by path setup
+      String git_repo_url = common.https_to_ssh_github_url(env.REPO_URL)
+      jobSources.removeAll { it.repo == git_repo_url }
+      String sourcesArgs = jobSources.collect {"--job-source \"${it.repo};${it.commitish}\""}.join(' ')
       stage("Lint Jenkins"){
         withCredentials([
           string(
@@ -38,8 +41,12 @@ common.globalWraps(){
           ){
             sshagent (credentials:['rpc-jenkins-svc-github-ssh-key']){
               sh """#!/bin/bash -xe
-                export JJB_PATHS_OVERRIDE=\$(rpc-gating/scripts/jjb-path-setup.py ${sourcesArgs} ---job-source '${repoDir}')
-                rpc-gating/lint.sh
+                source .venv/bin/activate
+                pushd jjb
+                export JJB_PATHS_OVERRIDE=\$(../rpc-gating/scripts/jjb-path-setup.py ${sourcesArgs} --job-source '${repoDir}')
+                deactivate
+                # Run the lint script from rpc-gating in the root of the workspace
+                ${WORKSPACE}/rpc-gating/lint.sh
               """
             }
           }
