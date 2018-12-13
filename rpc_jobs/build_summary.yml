@@ -85,12 +85,11 @@
               # This directory was created manually on the repo servers
               REPO_PATH="/var/www/repo/rpcgating/buildsummary"
 
-              # Upload HTML ui and JSON data.
-              page="${WORKSPACE}/rpc-gating/scripts/build_summary/index.html"
+              # Copy over the JSON data file
               data="${HOME}/buildsummary/out/data.json"
-              js="${WORKSPACE}/rpc-gating/scripts/build_summary/*.js"
-              css="${WORKSPACE}/rpc-gating/scripts/build_summary/*.css"
-              scp -i \$REPO_USER_KEY \$page \$data \$js \$css \$REPO_USER@\$REPO_HOST:\$REPO_PATH
+              scp -i \$REPO_USER_KEY \${HOME}/buildsummary/out/data.jsona \$REPO_USER@\$REPO_HOST:\$REPO_PATH
+              # Recursive copy the contents of web folder to the repo path
+              scp -i \$REPO_USER_KEY -r \${WORKSPACE}/rpc-gating/scripts/build_summary/web/* \$REPO_USER@\$REPO_HOST:\$REPO_PATH
             """
           } // creds
         } // stage
