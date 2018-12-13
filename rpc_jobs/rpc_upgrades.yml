@@ -174,7 +174,6 @@
       - "mitaka_to_newton_leap"
       - "liberty_to_newton_leap"
       - "kilo_to_newton_leap"
-      - "liberty_to_newton_leap_system"
     jira_project_key: "RLM"
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
@@ -205,7 +204,6 @@
       - "r12.2.2_to_r14.current_leap"
       - "r12.1.2_to_r14.current_leap"
       - "kilo_to_r14.current_leap"
-      - "liberty_to_r14.current_leap_system"
     jira_project_key: "RLM"
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
