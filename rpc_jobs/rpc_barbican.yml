@@ -28,8 +28,7 @@
     name: "rpc-barbican-post-merge-snapshot"
     repo_name: "rpc-barbican"
     repo_url: "https://github.com/rcbops/rpc-barbican"
-    branches:
-      - "rocky.*"
+    branch: "rocky"
     image:
       - xenial_snapshot
     hold_on_error: "4h"
