@@ -47,7 +47,6 @@ def addJenkinsCred = { cred_type, cred_id, secret ->
 
         } else {
             println "invalid credential type specified"
-            System.exit(1)
         }
 
         if (result) {
