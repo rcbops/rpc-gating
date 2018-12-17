@@ -375,7 +375,6 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-    hold_on_error: "6h"
 
 - project:
     name: "rpc-openstack-pike-aio-postmerge"
