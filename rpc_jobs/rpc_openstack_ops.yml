@@ -1,0 +1,15 @@
+### test checkmarx against openstack-ops
+- project:
+    name: 'openstack-ops-checkmarx'
+    jira_project_key: "FLEEK"
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - openstack-ops:
+          repo_url: "https://github.com/rcbops/openstack-ops"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
