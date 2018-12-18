@@ -243,7 +243,7 @@
       - "pike_to_queens_inc"
       - "pike_to_rocky_inc"
       - "queens_to_rocky_inc"
-      - "r16.0.0-beta.1_to_queens_inc"
+      - "r14.6.0_to_queens_inc"
     jira_project_key: "RLM"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
