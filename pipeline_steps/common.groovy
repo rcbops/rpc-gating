@@ -319,6 +319,33 @@ def String acronym(String s){
   return acronym
 }
 
+/**
+ * A test routine for the acronym function.
+ */
+def testAcronym() {
+
+  List testStrings = [
+    "The Quick Brown Fox",
+    "The-Quick-Brown-Fox",
+    "The_Quick_Brown_Fox",
+    "The Quick-Brown_Fox",
+    "The  Quick--Brown__Fox"
+  ]
+
+  List testEmptyStrings = [
+    "",
+    null
+  ]
+
+  for (def i=0; i<testStrings.size(); i++) {
+    assert "TQBF" == acronym(testStrings[i])
+  }
+
+  for (def i=0; i<testEmptyStrings.size(); i++) {
+    assert "" == acronym(testEmptyStrings[i])
+  }
+}
+
 def String rand_int_str(int max=0xFFFF, int base=16){
   return Integer.toString(Math.abs((new SecureRandom()).nextInt(max)), base)
 }
