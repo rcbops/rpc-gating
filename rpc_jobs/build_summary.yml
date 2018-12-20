@@ -86,8 +86,7 @@
               REPO_PATH="/var/www/repo/rpcgating/buildsummary"
 
               # Copy over the JSON data file
-              data="${HOME}/buildsummary/out/data.json"
-              scp -i \$REPO_USER_KEY \${HOME}/buildsummary/out/data.jsona \$REPO_USER@\$REPO_HOST:\$REPO_PATH
+              scp -i \$REPO_USER_KEY \${HOME}/buildsummary/out/data.json \$REPO_USER@\$REPO_HOST:\$REPO_PATH
               # Recursive copy the contents of web folder to the repo path
               scp -i \$REPO_USER_KEY -r \${WORKSPACE}/rpc-gating/scripts/build_summary/web/* \$REPO_USER@\$REPO_HOST:\$REPO_PATH
             """
