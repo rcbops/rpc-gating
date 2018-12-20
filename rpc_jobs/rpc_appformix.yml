@@ -19,6 +19,8 @@
           SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
       - queens:
           SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
+      - rocky:
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
     action:
       - "functional"
 
@@ -74,6 +76,8 @@
           SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
       - queens:
           SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
+      - rocky:
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
     action:
       - "functional"
 
