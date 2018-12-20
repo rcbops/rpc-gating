@@ -296,18 +296,54 @@ def conditionalStep(Map args){
   }
 }
 
-/* Create acronym
+/**
+ * Creates an acronym from a string
  * quick brown fox --> qbf
  * Arguments:
  *  string: the string to process
+ * Returns:
+ *  a string containing the acronym, or empty string if null or empty
  */
-def String acronym(Map args){
+def String acronym(String s){
   String acronym=""
-  List words=args.string.split("[-_ ]")
-  for (def i=0; i<words.size(); i++){
-    acronym += words[i][0]
+
+  if (s != null) {
+    List words = s.split("[-_ ]")
+    for (def i=0; i<words.size(); i++) {
+      if (words[i].size() > 0) {
+        acronym += words[i][0]
+      }
+    }
   }
+
   return acronym
+}
+
+/**
+ * A test routine for the acronym function.
+ */
+def testAcronym() {
+
+  List testStrings = [
+    "The Quick Brown Fox",
+    "The-Quick-Brown-Fox",
+    "The_Quick_Brown_Fox",
+    "The Quick-Brown_Fox",
+    "The  Quick--Brown__Fox"
+  ]
+
+  List testEmptyStrings = [
+    "",
+    null
+  ]
+
+  for (def i=0; i<testStrings.size(); i++) {
+    assert "TQBF" == acronym(testStrings[i])
+  }
+
+  for (def i=0; i<testEmptyStrings.size(); i++) {
+    assert "" == acronym(testEmptyStrings[i])
+  }
 }
 
 def String rand_int_str(int max=0xFFFF, int base=16){
@@ -318,7 +354,7 @@ def String gen_instance_name(String prefix="AUTO"){
   String instance_name = ""
   if (env.INSTANCE_NAME == "AUTO"){
     if (prefix == "AUTO"){
-      prefix = acronym(string: env.JOB_NAME)
+      prefix = acronym(env.JOB_NAME)
     }
     //4 digit hex string to avoid name colisions
     instance_name = "${prefix}-${env.BUILD_NUMBER}-${rand_int_str()}"
