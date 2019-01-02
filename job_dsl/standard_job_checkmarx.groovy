@@ -21,7 +21,7 @@ common.globalWraps(){
       stage("Checkmarx Scan"){
         // Switch to scan repo dir to avoid sending the gating venv to checkmarx
         dir("repo"){
-          checkmarx.scan(scan_type, repo_name)
+          checkmarx.scan(scan_type, repo_name, exclude_folders)
         } // dir
       } // stage
 
