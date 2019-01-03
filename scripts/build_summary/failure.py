@@ -377,7 +377,11 @@ class BuildTimeoutFailure(Failure):
 
     def scan(self):
         match_re = ('Build timed out \(after [0-9]* minutes\). '
-                    'Marking the build as aborted.')
+                    'Marking the build as aborted.'
+                    '|Timeout has been exceeded'
+                    '|Cancelling nested steps due to timeout'
+                    '|Timeout waiting for NodePool ZNode '
+                    '/requests/.* to reach state fulfilled')
         pattern = re.compile(match_re)
         for i, line in enumerate(self.build.log_lines):
             if pattern.search(line):
