@@ -83,5 +83,6 @@
       - releases:
           repo_url: "https://github.com/rcbops/releases"
           branch: master
+    exclude_folders: "scripts/build_summary/web/js/vendor"
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
