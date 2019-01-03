@@ -53,3 +53,8 @@
             default or pci
             Note that default includes pci, but pci is useful for showing just pci related vulnerability
             status for a repo.
+      - string:
+          name: "exclude_folders"
+          default: ""
+          description: |
+            An optional comma separated list of folders to exclude from the scan.

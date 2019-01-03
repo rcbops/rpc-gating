@@ -1,6 +1,6 @@
 // Upload all folders in the current working directory to checkmarx and scan for vulnerabilities.
 // If you wish to scan a subdir of the working dir, call this function within dir("subdir"){}
-def scan(String scan_type, String repo_name){
+def scan(String scan_type, String repo_name, String exclude_folders){
     withCredentials([
         string(
             credentialsId: 'CHECKMARX_RE_TEAM_ID',
@@ -23,7 +23,7 @@ def scan(String scan_type, String repo_name){
         if (!presets.keySet().contains(scan_type)){
             throw new Exception("Invalid scan type: ${scan_type}, should be default or pci")
         }
-        // This step has a habbit of throwing NPEs, retry it. RE
+        // This step has a habit of throwing NPEs, retry it. RE
         retry(3) {
             // Try within retry so that sleep can be added on failure.
             // This may help if the issue is at the remote end.
@@ -32,7 +32,7 @@ def scan(String scan_type, String repo_name){
                     avoidDuplicateProjectScans: false, // duplicate detection isn't great and kills scans of the same project with different parameters
                     comment: '',
                     credentialsId: '',
-                    excludeFolders: '',
+                    excludeFolders: exclude_folders,
                     excludeOpenSourceFolders: '',
                     exclusionsSetting: 'global',
                     failBuildOnNewResults: true,
@@ -61,7 +61,6 @@ def scan(String scan_type, String repo_name){
                     username: '',
                     vulnerabilityThresholdEnabled: true,
                     highThreshold: 0,
-                    includeOpenSourceFolders: '',
                     lowThreshold: 0,
                     mediumThreshold: 0,
                     vulnerabilityThresholdResult: 'FAILURE',
