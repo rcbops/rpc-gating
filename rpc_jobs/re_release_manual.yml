@@ -162,7 +162,7 @@
                 --username TEXT                Confluence username.  [required]<br>
                 --password TEXT                Confluence password.  [required]<br>
                 --base-url TEXT                Confluence instance.<br>
-                --scheduled-release-page TEXT<br>
+                --product-release-page TEXT<br>
                 --async-release-page TEXT<br>
                 --component TEXT               Component name, e.g. rpc-foo.  [required]<br>
                 --version TEXT                 Component release version, e.g. 1.0.4.<br>
