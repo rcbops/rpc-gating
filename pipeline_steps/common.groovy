@@ -1957,7 +1957,7 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
 }
 
 Boolean skipPullRequestTests(String triggerPhrase){
-  return ghprbCommentBody == "${triggerPhrase}"
+  return (ghprbCommentBody =~ /\s*${triggerPhrase}\s*/).matches()
 }
 
 List getComponentChange(String baseBranch, String prBranch){
