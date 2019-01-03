@@ -34,3 +34,4 @@
         commitish: master
       - repo: git@github.com:rcbops/mk8s
         commitish: master
+    checkmarx_exclude_folders: ""

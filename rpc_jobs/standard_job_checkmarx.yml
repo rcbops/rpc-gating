@@ -55,6 +55,6 @@
             status for a repo.
       - string:
           name: "exclude_folders"
-          default: ""
+          default: "{checkmarx_exclude_folders}"
           description: |
             An optional comma separated list of folders to exclude from the scan.
