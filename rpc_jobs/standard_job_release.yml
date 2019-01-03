@@ -7,7 +7,7 @@
           org-list:
             - rcbops
           github-hooks: true
-          trigger-phrase: ":shipit:|:shipit: skip validation"
+          trigger-phrase: '\s*:shipit:( skip validation)?\s*'
           only-trigger-phrase: true
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'release'
