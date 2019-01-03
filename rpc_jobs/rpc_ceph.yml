@@ -49,6 +49,8 @@
 
     branch: 'master'
 
+    hold_on_error: "4h"
+
     image:
       - xenial:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
