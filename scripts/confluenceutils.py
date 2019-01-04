@@ -4,13 +4,14 @@ import logging
 from operator import itemgetter
 import os.path
 import sys
+import uuid
 
 from bs4 import BeautifulSoup, NavigableString
 import click
 from jinja2 import Template
 import requests
 
-
+logging.basicConfig()
 logger = logging.getLogger("confluenceutils")
 
 
@@ -84,6 +85,13 @@ class Confluence(object):
                 url=resp_data["_links"]["base"] + resp_data["_links"]["webui"],
             )
         )
+        return resp_data["id"]
+
+    def get_or_create_page(self, title, body, space_key, parent):
+        try:
+            return self.get_page(title, space_key, parent)["id"]
+        except PageNotFound:
+            return self.create_page(title, body, space_key, parent)
 
     def update_page(self, page_id, page_version_id, space_key, title, body):
         content = {
@@ -104,19 +112,13 @@ class Confluence(object):
         )
 
 
-def generate_release_page_html(meta_version, date, rows):
+def render_template(template_relative_path, **vars):
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(script_dir, "confluence_release_page.j2")) as tf:
+    with open(os.path.join(script_dir, template_relative_path)) as tf:
         page_template = tf.read()
 
     template = Template(page_template)
-    body = template.render(
-        date=date,
-        meta_version=meta_version,
-        rows=rows,
-    )
-
-    return body
+    return template.render(**vars)
 
 
 def extract_string(element):
@@ -179,8 +181,27 @@ def is_async_release(date, scheduled_window_days=7):
     return is_async
 
 
+def get_annual_release_page(c, space_key, year, product_release_page_id):
+    """ The wiki is organised in a hierarchy:
+        Product Releases
+            {year} Monthly Releases
+                {version}
+            Patch and Async Releases
+                {version}
+        This function gets or creates the "{year} Monthly Releases" page.
+    """
+    annual_page_title = "{year} Monthly Releases".format(year=year)
+    annual_page_body = render_template("confluence_annual_page.j2",
+                                       uuid=uuid.uuid4())
+    return c.get_or_create_page(
+        annual_page_title,
+        annual_page_body,
+        space_key,
+        product_release_page_id)
+
+
 def _publish_release_to_wiki(
-    username, password, base_url, scheduled_release_page, async_release_page,
+    username, password, base_url, product_release_page, async_release_page,
     component, version, release_notes_url, comment,
 ):
     current_date = datetime.date.today()
@@ -192,7 +213,7 @@ def _publish_release_to_wiki(
     c = Confluence(username, password, base_url)
 
     product_releases_page_id = c.get_page(
-        scheduled_release_page, space_key,
+        product_release_page, space_key,
     )["id"]
 
     if is_async_release(current_date):
@@ -208,7 +229,8 @@ def _publish_release_to_wiki(
             version=version,
         )
     else:
-        parent_page_id = product_releases_page_id
+        parent_page_id = get_annual_release_page(
+            c, space_key, current_date.year, product_releases_page_id)
         page_title = meta_release
 
     try:
@@ -246,7 +268,10 @@ def _publish_release_to_wiki(
     rows.sort(key=itemgetter("version"))
     rows.sort(key=itemgetter("product"))
 
-    page_body = generate_release_page_html(meta_release, date, rows)
+    page_body = render_template("confluence_release_page.j2",
+                                meta_version=meta_release,
+                                date=date,
+                                rows=rows)
     if page_id:
         c.update_page(
             page_id, page_version_id, space_key, page_title, page_body
@@ -275,7 +300,7 @@ def _publish_release_to_wiki(
     help="Confluence instance.",
 )
 @click.option(
-    "--scheduled-release-page",
+    "--product-release-page",
     default="Product Releases",
 )
 @click.option(
@@ -305,7 +330,7 @@ def _publish_release_to_wiki(
     help="Additional information to add against release in wiki.",
 )
 def publish_release_to_wiki(
-    username, password, base_url, scheduled_release_page, async_release_page,
+    username, password, base_url, product_release_page, async_release_page,
     component, version, release_notes_url, comment,
 ):
     if not release_notes_url:
