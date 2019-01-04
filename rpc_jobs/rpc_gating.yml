@@ -65,6 +65,7 @@
       - rpc-gating:
           repo_url: "https://github.com/rcbops/rpc-gating"
           branch: master
+          checkmarx_exclude_folders: "scripts/build_summary/web/js/vendor"
       - nodepool-agents-plugin:
           repo_url: "https://github.com/jenkinsci/nodepool-agents-plugin"
           branch: master
@@ -83,6 +84,5 @@
       - releases:
           repo_url: "https://github.com/rcbops/releases"
           branch: master
-    exclude_folders: "scripts/build_summary/web/js/vendor"
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
