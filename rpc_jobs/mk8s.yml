@@ -10,6 +10,7 @@
       - mk8s:
           repo_url: "https://github.com/rcbops/mk8s"
           branch: master
+          checkmarx_exclude_folders: "vendor"
       - kubernetes-harbor:
           repo_url: "https://github.com/rcbops/kubernetes-harbor"
           branch: master
