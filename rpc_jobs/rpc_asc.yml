@@ -10,6 +10,7 @@
       - zigzag:
           repo_url: "https://github.com/rcbops/zigzag"
           branch: master
+          checkmarx_exclude_folders: "tests"
       - pytest-zigzag:
           repo_url: "https://github.com/rcbops/pytest-zigzag"
           branch: master
