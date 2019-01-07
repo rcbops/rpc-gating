@@ -34,7 +34,7 @@ def scan(String scan_type, String repo_name, String exclude_folders){
                     credentialsId: '',
                     excludeFolders: exclude_folders,
                     excludeOpenSourceFolders: '',
-                    exclusionsSetting: 'global',
+                    exclusionsSetting: 'job',
                     failBuildOnNewResults: true,
                     failBuildOnNewSeverity: 'LOW',
                     filterPattern: '''!**/_cvs/**/*, !**/.svn/**/*,   !**/.hg/**/*,   !**/.git/**/*,  !**/.bzr/**/*, !**/bin/**/*,
