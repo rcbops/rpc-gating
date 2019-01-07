@@ -121,7 +121,7 @@ def summary(jobsdir, newerthan, jsonfile):
                        for root, dirs, files
                        in os.walk(jobsdir)
                        if "build.xml" in files
-                       and ("PM_" in root or "PR_" in root)]))
+                       and re.match("(P[MR]|RE(LEASE)?|Pull)[-_]", root)]))
     for count, build in build_files:
         path_groups_match = re.search(
             ('^(?P<build_folder>.*/(?P<job_name>[^/]+)/'

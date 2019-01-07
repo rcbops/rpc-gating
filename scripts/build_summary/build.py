@@ -90,7 +90,7 @@ class Build(object):
         }
 
     def get_stage(self):
-        for candidate in ['PM', 'PR']:
+        for candidate in ['PM', 'PR', 'RELEASE', 'Pull', 'RE']:
             if self.job_name.startswith(candidate + "_"):
                 return candidate
         else:
@@ -108,10 +108,11 @@ class Build(object):
 
         PM = post merge, PR = pull request.
         """
-        if self.get_stage() == "PM":
-            return self.tree.xpath(pmpath)[0].text
-        elif self.get_stage() == "PR":
+        if self.get_stage() == "PR":
             return self.tree.xpath(prpath)[0].text
+        else:
+            # use PM path for PM and others (eg RELEASE)
+            return self.tree.xpath(pmpath)[0].text
 
     def normalise_failure(self, failure_string):
         """Remove identifiers from failures.
