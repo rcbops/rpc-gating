@@ -1240,19 +1240,19 @@ void internal_slave(Closure body){
 }
 
 void standard_job_slave(String slave_type, Closure body){
-  timeout(time: 8, unit: 'HOURS'){
+  timeout(time: env.NODE_TIMEOUT_HR, unit: 'HOURS'){
     if (slave_type == "instance"){
       pubcloud.runonpubcloud(){
         body()
       }
     } else if (slave_type.startsWith("nodepool-")){
       use_node(slave_type){
-        body();
+        body()
       }
     }else if (slave_type == "shared"){
       // don't need to wrap body in shared_slave here
       // as globalWraps will have already allocated a shared slave executor
-      body();
+      body()
     } else if (slave_type == "container"){
       String image_name = env.BUILD_TAG.toLowerCase()
       String dockerfile_repo_dir = "${env.WORKSPACE}/"
@@ -1672,7 +1672,7 @@ void globalWraps(Closure body){
   // global timeout is long, so individual jobs can set shorter timeouts and
   // still have to cleanup, archive atefacts etc.
   timestamps{
-    timeout(time: 10, unit: 'HOURS'){
+    timeout(time: env.JOB_TIMEOUT_HR, unit: 'HOURS'){
       shared_slave(){
         wrap([$class: 'LogfilesizecheckerWrapper', 'maxLogSize': 200, 'failBuild': true, 'setOwn': true]) {
           setTriggerVars()

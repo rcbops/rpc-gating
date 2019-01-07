@@ -111,6 +111,18 @@
             for this parameter is set to "instance" for a compute instances. To
             use a Docker container set this parameter to "container".
       - string:
+          name: "JOB_TIMEOUT_HR"
+          default: "{JOB_TIMEOUT_HR}"
+          description: >
+            Maximum time a standard job can run. The timeout is expressed in
+            hours and must be a positive integer value.
+      - string:
+          name: "NODE_TIMEOUT_HR"
+          default: "{NODE_TIMEOUT_HR}"
+          description: >
+            Maximum time we can leverage a single node. Timeout is expressed in
+            hours and must be a positive integer value.
+      - string:
           name: "HOLD_ON_ERROR"
           default: "{hold_on_error}"
           description: >

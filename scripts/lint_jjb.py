@@ -93,6 +93,9 @@ def parse_jjb_file(in_dir, in_file):
         if invalid_protocol(item, filename):
             _rc = 1
 
+        if invalid_timeout(item, filename):
+            _rc = 1
+
     return _rc
 
 
@@ -275,6 +278,40 @@ def invalid_protocol(job, file_name):
         # sys.stderr.write("Testing: {}\n".format(url))
         if not re.search('^(https://|internal:|{[^}]+}$)', url):
             sys.stderr.write("{} {}\n".format(error_message, url))
+            ret_val = True
+
+    return ret_val
+
+
+# Tests project, job-templates, and jobs for invalid timeout values.
+# If an invalid timeout is discovered, this method will return True
+# Otherwise, will return False
+def invalid_timeout(job, file_name):
+    # default return value
+    ret_val = False
+
+    # Grab the name from the project, job-template, or job
+    name = jmespath.search('[*.name] | [0]', job)
+
+    # Common error message
+    error_message = ("{f}/{n}: Invalid timeout value -"
+                     " Expecting a positive integer values only"
+                     " but received:"
+                     .format(f=file_name, n=name))
+
+    search_path = '[*.JOB_TIMEOUT_HRS,' \
+                  '*.NODE_TIMEOUT_HRS]'
+    values = jmespath.search(search_path, job)
+    # filter out None values and flatten any lists
+    values = flatten([x for x in values if x is not None])
+
+    # We'll use a regex rather than the python type system to check for valid
+    # values
+    pattern = re.compile("^[1-9][0-9]*$")
+
+    for value in values:
+        if not pattern.search(str(value)):
+            sys.stderr.write("{} {}\n".format(error_message, value))
             ret_val = True
 
     return ret_val
