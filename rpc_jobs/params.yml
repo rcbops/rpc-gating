@@ -111,6 +111,13 @@
             for this parameter is set to "instance" for a compute instances. To
             use a Docker container set this parameter to "container".
       - string:
+          name: "BUILD_TIMEOUT_HRS"
+          default: "{BUILD_TIMEOUT_HRS}"
+          description: >
+            Maximum build time a standard job can run. The timeout is expressed in
+            hours and must be a positive integer value but no more than 24 hours
+            (values of 1-24).
+      - string:
           name: "HOLD_ON_ERROR"
           default: "{hold_on_error}"
           description: >
