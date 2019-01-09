@@ -93,6 +93,9 @@ def parse_jjb_file(in_dir, in_file):
         if invalid_protocol(item, filename):
             _rc = 1
 
+        if invalid_timeout(item, filename):
+            _rc = 1
+
     return _rc
 
 
@@ -275,6 +278,48 @@ def invalid_protocol(job, file_name):
         # sys.stderr.write("Testing: {}\n".format(url))
         if not re.search('^(https://|internal:|{[^}]+}$)', url):
             sys.stderr.write("{} {}\n".format(error_message, url))
+            ret_val = True
+
+    return ret_val
+
+
+# Tests project, job-templates, and jobs for invalid timeout values.
+# If an invalid timeout is discovered, this method will return True
+# Otherwise, will return False
+def invalid_timeout(job, file_name):
+    # default return value
+    ret_val = False
+
+    # Grab the name from the project, job-template, or job
+    name = jmespath.search('[*.name] | [0]', job)
+
+    # Common error message
+    error_message = ("{f}/{n}: Invalid timeout value -"
+                     " Expecting a positive integer values [1-24 inclusive],"
+                     " but received:"
+                     .format(f=file_name, n=name))
+
+    search_path = '[*.BUILD_TIMEOUT_HRS,' \
+                  '*.parameters[].standard_job_params.BUILD_TIMEOUT_HRS]'
+    values = jmespath.search(search_path, job)
+    # filter out None values and flatten any lists
+    values = flatten([x for x in values if x is not None])
+
+    # Macro/Template regex - eg. {BUILD_TIMEOUT_HRS}
+    macro_pattern = re.compile("^{.*}$")
+
+    for value in values:
+        # A bit tricky here:
+        # - Can't test macros with this static lint test, so skip
+        # - Range outside of [1-24] inclusive
+        try:
+            if not macro_pattern.search(str(value)) and \
+                    (int(value) < 1 or int(value) > 24):
+                sys.stderr.write("{} {}\n".format(error_message, value))
+                ret_val = True
+        except ValueError:
+            # Catch any integer parse errors - must be bad
+            sys.stderr.write("{} {}\n".format(error_message, value))
             ret_val = True
 
     return ret_val

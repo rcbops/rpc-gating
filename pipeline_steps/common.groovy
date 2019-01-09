@@ -1240,56 +1240,53 @@ void internal_slave(Closure body){
 }
 
 void standard_job_slave(String slave_type, Closure body){
-  timeout(time: 8, unit: 'HOURS'){
-    if (slave_type == "instance"){
-      pubcloud.runonpubcloud(){
+  if (slave_type == "instance") {
+    pubcloud.runonpubcloud() {
+      body()
+    }
+  } else if (slave_type.startsWith("nodepool-")) {
+      use_node(slave_type){
         body()
       }
-    } else if (slave_type.startsWith("nodepool-")){
-      use_node(slave_type){
-        body();
-      }
-    }else if (slave_type == "shared"){
+  } else if (slave_type == "shared") {
       // don't need to wrap body in shared_slave here
       // as globalWraps will have already allocated a shared slave executor
-      body();
-    } else if (slave_type == "container"){
-      String image_name = env.BUILD_TAG.toLowerCase()
-      String dockerfile_repo_dir = "${env.WORKSPACE}/"
+      body()
+  } else if (slave_type == "container") {
+    String image_name = env.BUILD_TAG.toLowerCase()
+    String dockerfile_repo_dir = "${env.WORKSPACE}/"
 
-      if (env.SLAVE_CONTAINER_DOCKERFILE_REPO == "PROJECT") {
-        if ( env.ghprbPullId != null ) {
-          clone_with_pr_refs(
-            "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
-          )
-        } else {
-          clone_with_pr_refs(
-            "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
-            env.REPO_URL,
-            env.BRANCH,
-          )
-        }
-
-        dockerfile_repo_dir += env.RE_JOB_REPO_NAME
-      } else if (env.SLAVE_CONTAINER_DOCKERFILE_REPO == "RE") {
-        dockerfile_repo_dir += "rpc-gating"
+    if (env.SLAVE_CONTAINER_DOCKERFILE_REPO == "PROJECT") {
+      if ( env.ghprbPullId != null ) {
+        clone_with_pr_refs( "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}", )
       } else {
-        throw new Exception(
-          "SLAVE_CONTAINER_DOCKERFILE_REPO '${env.SLAVE_CONTAINER_DOCKERFILE_REPO}' is not supported."
+        clone_with_pr_refs(
+          "${env.WORKSPACE}/${env.RE_JOB_REPO_NAME}",
+          env.REPO_URL,
+          env.BRANCH,
         )
       }
 
-      dir(dockerfile_repo_dir){
-        container = docker.build(image_name, genDockerBuildArgs())
-      }
-      container.inside {
-        configure_git()
-        install_ansible()
-        body()
-      }
+      dockerfile_repo_dir += env.RE_JOB_REPO_NAME
+    } else if (env.SLAVE_CONTAINER_DOCKERFILE_REPO == "RE") {
+      dockerfile_repo_dir += "rpc-gating"
     } else {
-      throw new Exception("slave_type '$slave_type' is not supported.")
+      throw new Exception(
+        "SLAVE_CONTAINER_DOCKERFILE_REPO '${env.SLAVE_CONTAINER_DOCKERFILE_REPO}' is not supported."
+      )
     }
+
+    dir(dockerfile_repo_dir) {
+      container = docker.build(image_name, genDockerBuildArgs())
+    }
+
+    container.inside {
+      configure_git()
+      install_ansible()
+      body()
+    }
+  } else {
+    throw new Exception("slave_type '$slave_type' is not supported.")
   }
 }
 
@@ -1672,7 +1669,7 @@ void globalWraps(Closure body){
   // global timeout is long, so individual jobs can set shorter timeouts and
   // still have to cleanup, archive atefacts etc.
   timestamps{
-    timeout(time: 10, unit: 'HOURS'){
+    timeout(time: env.BUILD_TIMEOUT_HRS, unit: 'HOURS'){
       shared_slave(){
         wrap([$class: 'LogfilesizecheckerWrapper', 'maxLogSize': 200, 'failBuild': true, 'setOwn': true]) {
           setTriggerVars()
