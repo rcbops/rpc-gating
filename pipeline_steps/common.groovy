@@ -1669,7 +1669,7 @@ void globalWraps(Closure body){
   // global timeout is long, so individual jobs can set shorter timeouts and
   // still have to cleanup, archive atefacts etc.
   timestamps{
-    timeout(time: env.BUILD_TIMEOUT_HRS, unit: 'HOURS'){
+    timeout(time: env.BUILD_TIMEOUT_HRS ?: 3, unit: 'HOURS'){
       shared_slave(){
         wrap([$class: 'LogfilesizecheckerWrapper', 'maxLogSize': 200, 'failBuild': true, 'setOwn': true]) {
           setTriggerVars()
