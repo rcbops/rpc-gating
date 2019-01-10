@@ -1,3 +1,5 @@
+import java.security.SecureRandom
+
 // Upload all folders in the current working directory to checkmarx and scan for vulnerabilities.
 // If you wish to scan a subdir of the working dir, call this function within dir("subdir"){}
 def scan(String scan_type, String repo_name, String exclude_folders){
@@ -25,7 +27,9 @@ def scan(String scan_type, String repo_name, String exclude_folders){
         }
         // This step has a habit of throwing NPEs, retry it. RE
         waitTime = 8
-        retry(10) {
+        // Initialize a secure random object
+        SecureRandom random = new SecureRandom()
+        retry(7) {
             // Try within retry so that sleep can be added on failure.
             // This may help if the issue is at the remote end.
             try {
@@ -70,8 +74,9 @@ def scan(String scan_type, String repo_name, String exclude_folders){
             } catch (Exception e){
                 print ("Caught exception while running checkmarx scan: "+e)
                 sleep(time: waitTime, unit: "SECONDS")
-                // Exponential backoff - double the wait for each retry
-                waitTime *= 2
+                // Exponential backoff - double the wait for each retry with a
+                // bit of additional random skew, range is [1, 12]
+                waitTime = waitTime * 2 + random.nextInt(12) + 1
                 // exception must propagate back to the retry call
                 throw e
             } //try
