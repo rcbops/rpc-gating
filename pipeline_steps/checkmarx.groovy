@@ -24,7 +24,8 @@ def scan(String scan_type, String repo_name, String exclude_folders){
             throw new Exception("Invalid scan type: ${scan_type}, should be default or pci")
         }
         // This step has a habit of throwing NPEs, retry it. RE
-        retry(3) {
+        waitTime = 30
+        retry(10) {
             // Try within retry so that sleep can be added on failure.
             // This may help if the issue is at the remote end.
             try {
@@ -68,7 +69,9 @@ def scan(String scan_type, String repo_name, String exclude_folders){
                 )
             } catch (Exception e){
                 print ("Caught exception while running checkmarx scan: "+e)
-                sleep(time: 30, unit: "SECONDS")
+                sleep(time: waitTime, unit: "SECONDS")
+                // Exponential backoff - double the wait for each retry
+                waitTime *= 2
                 // exception must propagate back to the retry call
                 throw e
             } //try
