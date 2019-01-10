@@ -24,7 +24,7 @@ def scan(String scan_type, String repo_name, String exclude_folders){
             throw new Exception("Invalid scan type: ${scan_type}, should be default or pci")
         }
         // This step has a habit of throwing NPEs, retry it. RE
-        waitTime = 30
+        waitTime = 8
         retry(10) {
             // Try within retry so that sleep can be added on failure.
             // This may help if the issue is at the remote end.
