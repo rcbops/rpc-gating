@@ -66,13 +66,17 @@ check_jjb(){
     || { echo "JJB Syntax fail"; rc=1; }
 }
 
-# This pulls job.dsl from jjb templates so they can be checked for groovy syntax
+# Renders jjb templates to xml, then extracts the groovy blocks.
 extract_groovy_from_jjb(){
-  mkdir -p tmp_groovy
-  for jjbfile in $(find rpc_jobs -iname \*.yml)
-  do
-    scripts/extract_dsl.py --jjbfile "${jjbfile}" --outdir tmp_groovy
-  done
+  mkdir -p tmp_groovy tmp_xml
+  # generate xml from jjb yaml
+  jenkins-jobs test rpc_jobs -o tmp_xml
+  pushd tmp_xml
+    for xmljob in *
+    do
+      ../scripts/extract_dsl.py extract_dsl_from_xml --xmljob "${xmljob}" --outdir ../tmp_groovy
+    done
+  popd
 }
 
 check_groovy(){
@@ -95,7 +99,7 @@ check_groovy(){
     echo "Groovy syntax fail"
     rc=1
   fi
-  rm -rf tmp_groovy
+  rm -rf tmp_groovy tmp_xml
 }
 
 check_ansible(){
