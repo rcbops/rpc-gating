@@ -244,9 +244,9 @@
     CRON: "{CRON_MONTHLY}"
     image:
       - bionic_no_artifacts:
-          IMAGE: "Ubuntu 18.04 LTS (Bionic Beaver) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-bionic-"
       - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-xenial-"
     scenario:
       - "swift"
     action:
@@ -293,9 +293,9 @@
     CRON: "{CRON_MONTHLY}"
     image:
       - bionic_no_artifacts:
-          IMAGE: "Ubuntu 18.04 LTS (Bionic Beaver) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-bionic-"
       - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-xenial-"
     scenario:
       - "swift"
     action:
@@ -343,7 +343,7 @@
     CRON: "{CRON_MONTHLY}"
     image:
       - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-xenial-"
     scenario:
       - "swift"
     action:
@@ -387,7 +387,7 @@
     CRON: "{CRON_MONTHLY}"
     image:
       - xenial_no_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-xenial-"
     scenario:
       - "swift"
     action:
@@ -447,12 +447,12 @@
     jira_project_key: "RO"
     image:
       - xenial_loose_artifacts:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-xenial-"
           # We have an MNAIO equivalent of this PM job, but we need to keep
           # this for the push triggering for snapshot building.
           CRON: "{CRON_MONTHLY}"
       - trusty_loose_artifacts:
-          IMAGE: "Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)"
+          IMAGE: "nodepool-ubuntu-trusty-"
     scenario:
       - "swift"
     action:
