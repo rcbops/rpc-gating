@@ -1610,7 +1610,7 @@ void setTriggerVars(){
 // into a list of functions for use with wrapList
 List stdJobWrappers(String wrappers){
   Map availableWrappers = [
-    "phobos_vpn": {body -> connect_phobos_vpn(); body()}
+    "phobos_vpn": {body -> connect_phobos_vpn(); body()},
     "rpco_deploy_artifact_build": {body -> buildRpcNewtonArtifacts(); body()}
   ]
   // Convert csv list of strings to list of wrapper functions
