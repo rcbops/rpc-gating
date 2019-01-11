@@ -1316,6 +1316,22 @@ void connect_phobos_vpn(String gateway=null){
   } // withRequestedCredentials
 }
 
+// This is a global wrapper to kick off the RPC-O Newton deployment
+// artifact build job which is a special case for RPC-O's newton branch.
+void buildRpcNewtonArtifacts() {
+  build(
+    job: "PM-rpc-openstack-newton-artifact-build",
+    wait: true,
+    parameters: [
+      [
+        $class: 'StringParameterValue',
+        name: 'RPC_GATING_BRANCH',
+        value: env.RPC_GATING_BRANCH
+      ]
+    ]
+  )
+}
+
 // Build an array suitable for passing to withCredentials
 // from a space or comma separated list of credential IDs.
 @NonCPS
@@ -1595,6 +1611,7 @@ void setTriggerVars(){
 List stdJobWrappers(String wrappers){
   Map availableWrappers = [
     "phobos_vpn": {body -> connect_phobos_vpn(); body()}
+    "rpco_deploy_artifact_build": {body -> buildRpcNewtonArtifacts(); body()}
   ]
   // Convert csv list of strings to list of wrapper functions
   // via the above map
