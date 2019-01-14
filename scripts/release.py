@@ -9,9 +9,8 @@ import git
 
 import confluenceutils
 import ghutils
+from reexceptions import ReleaseFailureException
 from notifications import mail, mailgun, try_context
-
-logger = logging.getLogger("release")
 
 
 # release notes
@@ -61,7 +60,7 @@ def generate_release_notes(scripts, rnfile, text, version, prev_version,
     os.system("mkdir -p {}".format(os.path.dirname(dst_file)))
     if scripts:
         version = try_context(ctx_obj, version, "version", "version")
-        logger.debug(
+        logging.debug(
             "Generating release notes from scripts: {}".format(scripts)
         )
         sub_env = os.environ.copy()
@@ -73,8 +72,8 @@ def generate_release_notes(scripts, rnfile, text, version, prev_version,
             cwd=os.getcwd(),
             clone_dir=clone_dir
         )
-        logger.debug("script work dir: {}".format(script_work_dir))
-        logger.debug("script env: {}".format(sub_env))
+        logging.debug("script work dir: {}".format(script_work_dir))
+        logging.debug("script env: {}".format(sub_env))
         for script in scripts:
             try:
                 optional = False
@@ -86,58 +85,58 @@ def generate_release_notes(scripts, rnfile, text, version, prev_version,
                     script=script
                 )
                 if os.path.exists(script_path):
-                    logger.debug("Executing script: {}".format(script_path))
+                    logging.debug("Executing script: {}".format(script_path))
                     proc = subprocess.Popen(
                         script_path,
                         env=sub_env,
                         cwd=script_work_dir
                     )
                     proc.communicate()
-                    logger.debug("Script Execution Complete: {}"
-                                 .format(script_path))
+                    logging.debug("Script Execution Complete: {}"
+                                  .format(script_path))
                     if proc.returncode != 0:
-                        logger.error(
+                        logging.error(
                             "Script {s} failed. (Return Code: {rc})".format(
                                 s=script_path, rc=proc.returncode
                             ))
                         click.get_current_context().exit(-1)
                 else:
                     if not optional:
-                        logger.error(
+                        logging.error(
                             "Aborting as required hook script not found: {}"
                             .format(script_path))
                         click.get_current_context().exit(-1)
                     else:
-                        logger.info(
+                        logging.info(
                             "Optional hook script not found: {}"
                             .format(script_path))
 
             except Exception as e:
-                logger.error(traceback.format_exc())
-                logger.error("Failed to generate release notes: {}".format(e))
+                logging.error(traceback.format_exc())
+                logging.error("Failed to generate release notes: {}".format(e))
                 click.get_current_context().exit(-1)
         if not os.path.exists(dst_file):
-            logger.error("Scripts did not generate release notes or did not"
-                         " place them in"
-                         " $WORKSPACE/{df}".format(df=dst_file))
+            logging.error("Scripts did not generate release notes or did not"
+                          " place them in"
+                          " $WORKSPACE/{df}".format(df=dst_file))
             click.get_current_context().exit(-1)
     elif rnfile:
         # Release notes are already in a file, just copy them to where
         # they need to be
-        logger.debug("Reading release notes from file: {}".format(rnfile))
+        logging.debug("Reading release notes from file: {}".format(rnfile))
         return_code = subprocess.check_call(
             ["cp", pipes.quote(rnfile), dst_file])
         if return_code != 0:
-            logger.error(
+            logging.error(
                 "Failed to read release notes file: {}".format(rnfile))
             click.get_current_context().exit(-1)
     elif text:
-        logger.debug("Release notes supplied inline: {}".format(text))
+        logging.debug("Release notes supplied inline: {}".format(text))
         with open(dst_file, "w") as out:
             out.write(text)
     else:
-        logger.error("One of script, text or file must be specified. "
-                     "No release notes generated")
+        logging.error("One of script, text or file must be specified. "
+                      "No release notes generated")
         click.get_current_context().exit(-1)
 
 
@@ -164,10 +163,51 @@ def publish_tag(version, ref, clone_dir):
     clone_dir = try_context(ctx_obj, clone_dir, "clone_dir", "clone_dir")
 
     repo = git.Repo(clone_dir)
+    refsha = repo.rev_parse(ref).hexsha
+    tagsha = None
+    try:
+        tagsha = repo.tags[version].commit.hexsha
+    except IndexError:
+        pass
+    if tagsha is not None:
+        # tag exists
+        if tagsha == refsha:
+            # Existing tag SHA matches ref
+            logging.info(
+                "Tag '{tag}' already exists and the ref matches,"
+                "nothing to do.".format(tag=version)
+            )
+        else:
+            # Existing tag SHA doesn't not match ref
+            if ctx_obj.re_release:
+                # Overwrite flag is set so we remove the existing tag
+                # and recreate it pointing to ref
+                repo.delete_tag(version)
+                repo.remote().push(":{tag}".format(tag=version))
+                logging.info(
+                    "Tag '{tag}@{tagsha}' removed."
+                    .format(tag=version, tagsha=tagsha)
+                )
+                _publish_tag(repo, version, ref)
+            else:
+                # Tag exists, doesn't match and overwrite flag not set, bail.
+                raise ReleaseFailureException(
+                    "Trying to create tag {tag}@{refsha}"
+                    " but {tag}@{tagsha} already exists."
+                    "Failing because re release was not specified."
+                    .format(tag=version, refsha=refsha, tagsha=tagsha)
+                )
+    else:
+        # Tag doesn't exist, create it.
+        _publish_tag(repo, version, ref)
+
+
+def _publish_tag(repo, version, ref):
     repo.create_tag(version, ref, message=version)
     repo.remotes.origin.push(version)
-    logger.info(
-        "Tag '{tag}' successfully pushed to repository.".format(tag=version)
+    logging.info(
+        "New tag '{tag}' successfully pushed to repository."
+        .format(tag=version)
     )
 
 

@@ -44,6 +44,10 @@
             in exceptional circumstances. The first course of action should always be to fix the
             failing job(s).
 
+            If a release artifact already exists but is incorrect (eg tag pointing at the wrong SHA)
+            then a release can be performed using `:shipit: re release`. This will cause existing
+            tags and releases to be deleted and recreated if they don't match the current release.
+
             When the `release` job has completed successfully the release will have been created
             and this pull request will get merged automatically.
     jobs:

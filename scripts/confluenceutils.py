@@ -11,16 +11,13 @@ import click
 from jinja2 import Template
 import requests
 
-logging.basicConfig()
-logger = logging.getLogger("confluenceutils")
-
 
 class PageNotFound(Exception):
     pass
 
 
 class Confluence(object):
-    """https://developer.atlassian.com/cloud/confluence/rest/"""
+    """https://developer.atlassian.com/cloud/confluence/rest/ ."""
 
     def __init__(self, username, password, base_url):
         self.session = requests.Session()
@@ -53,7 +50,7 @@ class Confluence(object):
         if resp_data["size"] == 0:
             raise PageNotFound
         elif resp_data["size"] > 1:
-            logger.error(
+            logging.error(
                 json.dumps(
                     resp_data,
                     sort_keys=True,
@@ -80,7 +77,7 @@ class Confluence(object):
         resp = self.session.post(self.content_url, json=content)
         resp.raise_for_status()
         resp_data = resp.json()
-        logger.info(
+        logging.info(
             "The following page has been created: {url}".format(
                 url=resp_data["_links"]["base"] + resp_data["_links"]["webui"],
             )
@@ -105,7 +102,7 @@ class Confluence(object):
         resp = self.session.put(url, json=content)
         resp.raise_for_status()
         resp_data = resp.json()
-        logger.info(
+        logging.info(
             "The following page has been updated: {url}".format(
                 url=resp_data["_links"]["base"] + resp_data["_links"]["webui"],
             )
@@ -173,7 +170,7 @@ def is_async_release(date, scheduled_window_days=7):
     else:
         is_async = True
 
-    logger.info(
+    logging.info(
         "This release has been classified as {release_type}.".format(
             release_type=("asynchronous" if is_async else "scheduled"),
         )
@@ -182,7 +179,9 @@ def is_async_release(date, scheduled_window_days=7):
 
 
 def get_annual_release_page(c, space_key, year, product_release_page_id):
-    """ The wiki is organised in a hierarchy:
+    """Get annual release page.
+
+    The wiki is organised in a hierarchy:
         Product Releases
             {year} Monthly Releases
                 {version}
@@ -348,4 +347,5 @@ def publish_release_to_wiki(
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     publish_release_to_wiki()

@@ -10,9 +10,6 @@ import click
 
 from jira import JIRA, JIRAError
 
-# Logging config
-logging.basicConfig()
-LOGGER = logging.getLogger("jirautils")
 
 # Cache of done transitions per project, saves looking this up for
 # every issue
@@ -27,17 +24,17 @@ transitions = {}
 def issues_for_query(query):
     ctx = click.get_current_context()
     authed_jira = ctx.obj
-    LOGGER.debug("Looking for issues matching query: {q}".format(q=query))
+    logging.debug("Looking for issues matching query: {q}".format(q=query))
     try:
         issues = sorted(authed_jira.search_issues(query),
                         key=lambda i: int(i.id))
-        LOGGER.debug("Issues returned by query: {}".format(
+        logging.debug("Issues returned by query: {}".format(
             [i.key for i in issues]))
         return issues
     except JIRAError as e:
-        LOGGER.critical("Error querying for issues, bad JQL?"
-                        " Query: {q}, Error: {e}"
-                        .format(q=query, e=e))
+        logging.critical("Error querying for issues, bad JQL?"
+                         " Query: {q}, Error: {e}"
+                         .format(q=query, e=e))
         ctx.exit(1)
 
 
@@ -60,18 +57,18 @@ def _get_or_create_issue(project, status, labels, description, summary):
 
     if len(issues) == 1:
         issue = issues[0]
-        LOGGER.debug("Found existing issue: {ik}".format(ik=issue.key))
+        logging.debug("Found existing issue: {ik}".format(ik=issue.key))
     elif len(issues) > 1:
         issue = issues[0]
-        LOGGER.debug("Query: {q} Returned >1 issues: {il}. "
-                     "Will use the oldest issue {i}"
-                     .format(
-                         q=query,
-                         il=",".join(i.key for i in issues),
-                         i=issue))
+        logging.debug("Query: {q} Returned >1 issues: {il}. "
+                      "Will use the oldest issue {i}"
+                      .format(
+                          q=query,
+                          il=",".join(i.key for i in issues),
+                          i=issue))
     else:
-        LOGGER.debug("Query: {q} Returned 0 issues. "
-                     .format(q=query))
+        logging.debug("Query: {q} Returned 0 issues. "
+                      .format(q=query))
 
         issue = _create_issue(
             summary=summary,
@@ -86,7 +83,7 @@ def _create_issue(summary, description, project, labels, issue_type="Task"):
     ctx = click.get_current_context()
     authed_jira = ctx.obj
 
-    LOGGER.debug("Creating new issue")
+    logging.debug("Creating new issue")
     return authed_jira.create_issue(
         project=project,
         summary=summary,
@@ -150,7 +147,10 @@ def cli(user, password, jira_instance, debug):
     click.get_current_context().obj = \
         JIRA(jira_instance, basic_auth=(user, password))
     if debug:
-        LOGGER.setLevel(logging.DEBUG)
+        level = logging.DEBUG
+    else:
+        level = logging.WARNING
+    logging.basicConfig(level=level)
 
 
 @cli.command()
@@ -226,7 +226,7 @@ def build_failure_issue(
         bu=build_url
     )
     authed_jira.add_comment(issue.key, comment)
-    LOGGER.debug("Added comment to {ik}: \"{c}\"".format(
+    logging.debug("Added comment to {ik}: \"{c}\"".format(
         ik=issue.key, c=comment))
     click.echo(issue.key)
 

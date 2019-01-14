@@ -5,8 +5,6 @@ from subprocess import Popen, PIPE
 import click
 import requests
 
-logger = logging.getLogger("notifications")
-
 
 def try_context(ctx_obj, var, var_name, context_attr):
     """Try and get a value from context.
@@ -20,7 +18,7 @@ def try_context(ctx_obj, var, var_name, context_attr):
          var_name: Name of the option
          context_attr: attribute to attempt to read from the context object.
     """
-    logger.debug("Try context: {var_name}:{var}, {c_attr}".format(
+    logging.debug("Try context: {var_name}:{var}, {c_attr}".format(
         var_name=var_name, var=var, c_attr=context_attr
     ))
     if var is None:
@@ -30,7 +28,7 @@ def try_context(ctx_obj, var, var_name, context_attr):
             raise ValueError("No value found for {var_name} ({e})".format(
                 var_name=var_name, e=e))
 
-    logger.debug("Try context Result: {var_name} --> {result}".format(
+    logging.debug("Try context Result: {var_name} --> {result}".format(
         var_name=var_name, result=var
     ))
     return var
@@ -47,7 +45,7 @@ def generate_message_data(subject, body):
         try:
             version = ctx_obj.version
         except AttributeError:
-            logger.error(
+            logging.error(
                 "`version` is missing from the Click context object, if "
                 "this notification is not being sent at the same time as the "
                 "release is created, `--subject` must be supplied."
@@ -63,7 +61,7 @@ def generate_message_data(subject, body):
         try:
             url = ctx_obj.release_url
         except AttributeError:
-            logger.error(
+            logging.error(
                 "`release_url` is missing from the Click context object, if "
                 "this notification is not being sent at the same time as the "
                 "release is created, `--body` must be supplied."
@@ -73,8 +71,8 @@ def generate_message_data(subject, body):
             "The release notes for this new release can be found on "
             "{link}\n\nRegards,\nRelease Engineering"
         ).format(link=url)
-    logger.debug("E-mail subject: {subject}".format(subject=subject))
-    logger.debug("E-mail body:\n{body}".format(body=body))
+    logging.debug("E-mail subject: {subject}".format(subject=subject))
+    logging.debug("E-mail body:\n{body}".format(body=body))
     return {
         "from": "RPC-Jenkins@mailgun.rpc.jenkins.cit.rackspace.net",
         "subject": subject,
@@ -85,7 +83,7 @@ def generate_message_data(subject, body):
 @click.group()
 @click.option("--debug/--no-debug")
 def cli(debug):
-    level = logging.WARNING
+    level = logging.INFO
     if debug:
         level = logging.DEBUG
     logging.basicConfig(level=level)
@@ -108,7 +106,7 @@ def mail(to, subject, body):
     msg["From"] = data["from"]
     msg["To"] = to
     msg["Subject"] = data["subject"]
-    logger.debug("Sending notification mail To: {to} Subject:{s}".format(
+    logging.debug("Sending notification mail To: {to} Subject:{s}".format(
         to=to, s=subject
     ))
     p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
@@ -139,13 +137,13 @@ def mailgun(to, subject, body, mailgun_api_key, mailgun_endpoint):
                  "subject": msg["subject"],
                  "text": msg["body"],
                  }
-    logger.debug("Mailgun post data: {}".format(post_data))
+    logging.debug("Mailgun post data: {}".format(post_data))
     response = requests.post(
         "{endpoint}/messages".format(endpoint=mailgun_endpoint),
         auth=("api", mailgun_api_key),
         data=post_data
     )
-    logger.debug("Mailgun response: {}".format(response.text))
+    logging.debug("Mailgun response: {}".format(response.text))
     response.raise_for_status()
     return response
 
