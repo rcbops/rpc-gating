@@ -30,7 +30,7 @@
       until: install_packages | success
       retries: 5
       delay: 2
-      with_items:
+      loop:
         - git-core
         - default-jre-headless
       become: true

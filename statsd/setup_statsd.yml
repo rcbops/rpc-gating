@@ -61,7 +61,7 @@
       ufw:
         rule: allow
         from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
-      with_items: "{{ groups['nodepool_server'] }}"
+      loop: "{{ groups['nodepool_server'] }}"
 
     - name: Setup statsd
       include_role:

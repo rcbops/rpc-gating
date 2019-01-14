@@ -66,6 +66,6 @@
         - include_tasks: "tasks/artifact_upload/upload_{{ artifact.type }}.yml"
           when:
             - "(artifact_type_include == 'all') or (artifact.type == artifact_type_include)"
-          with_items: "{{ component_artifacts }}"
+          loop: "{{ component_artifacts | flatten(levels=1) }}"
           loop_control:
             loop_var: artifact

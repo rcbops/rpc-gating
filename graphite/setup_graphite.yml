@@ -62,13 +62,13 @@
       ufw:
         rule: allow
         from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
-      with_items: "{{ groups['statsd_server'] }}"
+      loop: "{{ groups['statsd_server'] }}"
 
     - name: Configure firewall to allow grafana traffic (ipv4)
       ufw:
         rule: allow
         from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
-      with_items: "{{ groups['grafana_server'] }}"
+      loop: "{{ groups['grafana_server'] }}"
 
     - name: Setup graphite
       include_role:

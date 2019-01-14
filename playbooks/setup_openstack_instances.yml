@@ -53,7 +53,7 @@
       when:
         - instance['name'] in groups['all']
         - (instance['state'] | default('present') == 'absent' or (instance['state'] | default('present') == 'present' and 'volumes' in instance))
-      with_items: "{{ instance_list | default([]) }}"
+      loop: "{{ (instance_list | default([])) | flatten(levels=1) }}"
       loop_control:
         loop_var: instance
 
@@ -74,7 +74,7 @@
         meta: "{{ default_metadata | combine(instance['metadata'] | default({})) }}"
         wait: yes
         timeout: 900
-      with_items: "{{ instance_list | default([]) }}"
+      loop: "{{ (instance_list | default([])) | flatten(levels=1) }}"
       loop_control:
         loop_var: instance
 
@@ -90,10 +90,7 @@
         timeout: 900
       when:
         - item[0]['state'] | default('present') != 'absent'
-      with_subelements:
-        - "{{ instance_list | default([]) }}"
-        - volumes
-        - skip_missing: True
+      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True }}"
 
     - name: Delete data volumes on deleted instances
       os_volume:
@@ -108,10 +105,7 @@
       when:
         - item[0]['state'] | default('present') == 'absent'
         - item[1]['state'] | default('present') == 'absent'
-      with_subelements:
-        - "{{ instance_list | default([]) }}"
-        - volumes
-        - skip_missing: True
+      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True }}"
 
     # NOTE(mattt):
     # At present we do not support detaching / deleting volumes attached to a
@@ -130,10 +124,7 @@
         timeout: 900
       when:
         - item[0]['state'] | default('present') != 'absent' and item[1]['state'] | default('present') != 'absent'
-      with_subelements:
-        - "{{ instance_list | default([]) }}"
-        - volumes
-        - skip_missing: True
+      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True }}"
 
     - name: Refresh dynamic inventory for any changes made
       meta: refresh_inventory
@@ -148,6 +139,6 @@
         timeout: 900
       when:
         - instance['name'] in groups['all']
-      with_items: "{{ instance_list | default([]) }}"
+      loop: "{{ (instance_list | default([])) | flatten(levels=1) }}"
       loop_control:
         loop_var: instance
