@@ -15,7 +15,7 @@
     region_name: "{{ region }}"
     cloud: "{{ cloud_name }}"
   register: _create_container
-  until: _create_container | success
+  until: _create_container is success
   retries: 10
   delay: 30
 
@@ -48,7 +48,7 @@
     # 204 (No Content): The container was CDN-enabled as requested, but has no content.
     status_code: "201, 202, 204"
   register: _enable_cdn
-  until: (_enable_cdn | success) and ('x_cdn_ssl_uri' in _enable_cdn)
+  until: (_enable_cdn is success) and ('x_cdn_ssl_uri' in _enable_cdn)
   retries: 10
   delay: 30
 
@@ -71,6 +71,6 @@
     # 204 (No Content): The container was enabled as requested.
     status_code: 204
   register: _enable_static_hosting
-  until: _enable_static_hosting | success
+  until: _enable_static_hosting is success
   retries: 10
   delay: 30

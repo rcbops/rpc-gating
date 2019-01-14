@@ -48,7 +48,7 @@
         repo: ppa:openjdk-r/ppa
         update_cache: no
       register: install_ppa
-      until: install_ppa | success
+      until: install_ppa is success
       retries: 3
       delay: 15
       when: ansible_distribution_release | lower == 'trusty'
@@ -65,7 +65,7 @@
         executable: /bin/bash
         warn: no
       register: _update_cache
-      until: _update_cache | success
+      until: _update_cache is success
       retries: 3
       delay: 15
 
@@ -81,7 +81,7 @@
         executable: /bin/bash
         warn: no
       register: _install_packages
-      until: _install_packages | success
+      until: _install_packages is success
       retries: 3
       delay: 15
 
@@ -124,7 +124,7 @@
             dest: "/opt/get-pip.py"
             force: "yes"
           register: get_pip
-          until: get_pip | success
+          until: get_pip is success
           retries: 5
           delay: 2
           tags:
@@ -136,9 +136,8 @@
             url: "https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py"
             dest: "/opt/get-pip.py"
             force: "yes"
-          when: get_pip | failed
           register: get_pip_fallback
-          until: get_pip_fallback | success
+          until: get_pip_fallback is success
           retries: 5
           delay: 2
           tags:
@@ -149,7 +148,7 @@
           shell: |
             python /opt/get-pip.py -c /opt/rpc_gating_constraints.txt
           register: pip_install
-          until: pip_install | success
+          until: pip_install is success
           retries: 3
           delay: 2
 
@@ -158,7 +157,7 @@
           shell: |
             python /opt/get-pip.py --isolated -c /opt/rpc_gating_constraints.txt
           register: pip_install_fall_back
-          until: pip_install_fall_back | success
+          until: pip_install_fall_back is success
           retries: 3
           delay: 2
 
@@ -179,6 +178,6 @@
           --port "{{ jenkins_ssh_port }}" \
           {% if jenkins_node_exclusive %}--exclusive{% endif %}
       register: jenkins_response
-      until: jenkins_response|success
+      until: jenkins_response is success
       retries: 5
       delay: 10

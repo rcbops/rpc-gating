@@ -230,7 +230,7 @@
           args:
             executable: /bin/bash
           register: _update_cache
-          until: _update_cache | success
+          until: _update_cache is success
           retries: 3
           delay: 15
 
@@ -252,6 +252,6 @@
           args:
             executable: /bin/bash
           register: _install_packages
-          until: _install_packages | success
+          until: _install_packages is success
           retries: 3
           delay: 15

@@ -13,7 +13,7 @@
     region_name: "{{ region }}"
   no_log: true
   register: _auth
-  until: (_auth | success) and
+  until: (_auth is success) and
          (auth_token is defined) and
          (auth_token is not none) and
          (auth_token | trim != '') and

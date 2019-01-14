@@ -8,7 +8,7 @@
         apt-get update
         apt-get install -y iputils-ping
       register: install_ping
-      until: install_ping | success
+      until: install_ping is success
       retries: 5
       delay: 2
       tags:
@@ -27,7 +27,7 @@
       # NOTE(coreywright): If we are not in the Phobos environment, ie we can
       # ping the Phobos VPN server, then we need to connect to it by way of
       # VPN.
-      when: ping_vpn | succeeded
+      when: ping_vpn is success
       block:
         # Use shell because python-apt isn't available so the apt module fails.
         # I don't want to add python-apt to one of the more general slave setup
@@ -38,7 +38,7 @@
             apt-get update
             apt-get install -y vpnc
           register: install_packages
-          until: install_packages | success
+          until: install_packages is success
           retries: 5
           delay: 2
           tags:

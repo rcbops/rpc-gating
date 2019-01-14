@@ -181,7 +181,7 @@
         OS_AUTH_TOKEN: "{{ auth_token }}"
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
       register: upload_data
-      until: upload_data | success
+      until: upload_data is success
       retries: 10
       delay: 30
 
@@ -206,7 +206,7 @@
         OS_AUTH_TOKEN: "{{ auth_token }}"
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
       register: upload_archive
-      until: upload_archive | success
+      until: upload_archive is success
       retries: 10
       delay: 30
 
