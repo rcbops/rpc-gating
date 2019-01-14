@@ -39,8 +39,8 @@
               // Tell ansible where to find roles
               env.ANSIBLE_ROLES_PATH = "${{env.WORKSPACE}}/roles"
 
-              // Tell ansible where the dynamic inventory is
-              env.ANSIBLE_INVENTORY = "${{env.WORKSPACE}}/rpc-gating/scripts/ansible_v2_3_2_0_1_contrib_inventory_openstack.py"
+              // Tell ansible where the inventory is
+              env.ANSIBLE_INVENTORY = "${{env.WORKSPACE}}/rpc-gating/playbooks/inventory"
 
               // Tell the dynamic inventory script to only use the 'public_cloud' cloud
               env.OS_CLOUD = "public_cloud"
