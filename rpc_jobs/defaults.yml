@@ -17,8 +17,6 @@
     BUILD_TIMEOUT_HRS: "10"
     # Example values for hold_on_error: 0 (no hold), 40m, 1h, 6h, 3d, 3w, 1M.
     hold_on_error: "0"
-    # Misc
-    CRON: "H H(9-21) * * 1-5"
     credentials: ""
     # wrappers to apply to standard Jobs (see common.stdJobWrappers)
     wrappers: ""
@@ -30,6 +28,8 @@
     JENKINS_NODE_EXECUTORS: "2"
     jenkins_node_exclusive: true
     allow_jenkins_sudo: true
+    # CRON Times are UTC
+    CRON: "H H(9-21) * * 1-5"
     CRON_DAILY: "H H * * 2-7"
     CRON_WEEKLY: "H H * * H(2-7)"
     CRON_MONTHLY: "H H H * 2-7"

@@ -8,7 +8,7 @@
     parameters:
       - rpc_gating_params
     triggers:
-      - timed: "H H * * 2-7" # @daily can't use {CRON_DAILY} as this isn't a template
+      - timed: "H H * * 2-7" # @daily can't use {CRON_DAILY} as this isn't a template UTC
     dsl: |
       import org.jenkinsci.plugins.workflow.job.WorkflowJob
       class ImageTestException extends Exception{

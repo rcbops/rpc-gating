@@ -16,7 +16,7 @@ import groovy.transform.Field
 
 // Constants Governing the Weekly RE-Maintenance Window
 @Field DayOfWeek maintDay = DayOfWeek.MONDAY
-@Field Integer maintHour = 10
+@Field Integer maintHour = 10 // UTC
 @Field Duration maintDuration = Duration.ofHours(2)
 @Field Integer daysInWeek = 7
 
@@ -2392,7 +2392,7 @@ Duration getPredictedDuration(){
 
 /**
 * Get the predicted end time for this build, based on the time it moved out of the queue
-* and its predicted duration.
+* and its predicted duration (UTC).
 * NonCPS because build is not serialisable
 */
 @NonCPS
@@ -2404,7 +2404,7 @@ LocalDateTime getPredictedCompletionTime(){
 }
 
 /**
-* Get date object representing the start of the next maintenance window
+* Get date object representing the start of the next maintenance window UTC
 */
 LocalDateTime getNextMaintenanceWindowStart(){
   // get current time & date
