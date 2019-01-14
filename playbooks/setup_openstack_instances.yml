@@ -69,6 +69,7 @@
         region_name: "{{ instance['region'] | default('IAD') }}"
         image: "{{ instance['image'] | default('Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)') }}"
         key_name: "{{ keyname | default('jenkins') }}"
+        security_groups: []
         userdata: "{{ instance['userdata'] | default(omit) }}"
         config_drive: yes
         meta: "{{ default_metadata | combine(instance['metadata'] | default({})) }}"

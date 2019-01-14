@@ -74,6 +74,7 @@
             region_name: "{{ regions_shuff[0] }}"
             image: "{{ _image | default(image) }}"
             key_name: "{{ keyname }}"
+            security_groups: []
             userdata: "{{ lookup('file', user_data_path) }}"
             config_drive: yes
             meta:
@@ -129,6 +130,7 @@
             region_name: "{{ fallback_regions_shuff[0] }}"
             image: "{{ _image | default(image) }}"
             key_name: "{{ keyname }}"
+            security_groups: []
             userdata: "{{ lookup('file', user_data_path) }}"
             config_drive: yes
             meta:
