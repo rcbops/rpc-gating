@@ -87,7 +87,7 @@
       tags:
         - skip_ansible_lint
 
-    - include: cloudfiles_create_container.yml
+    - import_tasks: cloudfiles_create_container.yml
 
     # Do this before generating index.html, styles.css and data.json
     # So they don't show up on the final page.

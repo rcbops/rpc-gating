@@ -61,11 +61,9 @@
       when:
         - "((component_artifacts | json_query('[*].type') | list) | intersect(['file', 'log'])) | length > 0"
       block:
-        - include: tasks/artifact_upload/cloudfiles_authenticate.yml
-          static: no
+        - import_tasks: tasks/artifact_upload/cloudfiles_authenticate.yml
 
-        - include: "tasks/artifact_upload/upload_{{ artifact.type }}.yml"
-          static: no
+        - include_tasks: "tasks/artifact_upload/upload_{{ artifact.type }}.yml"
           when:
             - "(artifact_type_include == 'all') or (artifact.type == artifact_type_include)"
           with_items: "{{ component_artifacts }}"
