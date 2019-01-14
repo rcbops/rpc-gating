@@ -27,12 +27,13 @@
       - libxml2-utils
   roles:
     - role: willshersystems.sshd
-      sshd:
-        PasswordAuthentication: "no"
-        X11Forwarding: "no"
-        PrintLastLog: "no"
-        GatewayPorts: "yes"
-        Compression: "yes"
+      vars:
+        sshd:
+          PasswordAuthentication: "no"
+          X11Forwarding: "no"
+          PrintLastLog: "no"
+          GatewayPorts: "yes"
+          Compression: "yes"
   tasks:
     - meta: flush_handlers
 
