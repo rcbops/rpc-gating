@@ -39,6 +39,20 @@
           {%- set region_list = (fallback_regions | replace(',', ' ')).split() | map('trim') | map('upper') | select | shuffle %}
           {{- (region_list | length == 1) | ternary(region_list, region_list | difference([regions_shuff[0]])) }}
 
+    - name: Determine the latest image name when required
+      when:
+        - image | match('^nodepool-.*')
+      block:
+        - name: Get the list of images
+          os_image_facts:
+            cloud: "{{ cloud_name }}"
+            region_name: "{{ regions_shuff[0] }}"
+          register: _images
+
+        - name: Set the image name fact
+          set_fact:
+            _image: "{{ _images.ansible_facts.openstack_image | json_query('[*].name') | select('match', image ~ '*') | list | sort | last }}"
+
     - name: Provision a cloud instance
       block:
         - name: Output the primary region list
@@ -58,7 +72,7 @@
             state: present
             cloud: "{{ cloud_name }}"
             region_name: "{{ regions_shuff[0] }}"
-            image: "{{ image }}"
+            image: "{{ _image | default(image) }}"
             key_name: "{{ keyname }}"
             userdata: "{{ lookup('file', user_data_path) }}"
             config_drive: yes
@@ -113,7 +127,7 @@
             state: present
             cloud: "{{ cloud_name }}"
             region_name: "{{ fallback_regions_shuff[0] }}"
-            image: "{{ image }}"
+            image: "{{ _image | default(image) }}"
             key_name: "{{ keyname }}"
             userdata: "{{ lookup('file', user_data_path) }}"
             config_drive: yes
