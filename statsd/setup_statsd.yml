@@ -1,25 +1,7 @@
 ---
-# We need to target all hosts in the group first to gather facts,
-# otherwise any tasks using the group host_vars will fail.
-- name: Gather facts from required server groups
-  hosts: "nodepool_server:statsd_server"
-  gather_facts: no
-  user: root
-  tasks:
-    - name: Wait for a successful connection
-      wait_for_connection:
-        connect_timeout: 2
-        delay: 5
-        sleep: 5
-        timeout: 60
-
-    - name: Gather facts
-      setup:
-        gather_subset: "!facter,!ohai"
-
 - name: Setup statsd servers
   hosts: "statsd_server"
-  gather_facts: no
+  gather_facts: yes
   user: root
   vars:
     statsd_file_config_js_src: config.js.j2
@@ -60,7 +42,7 @@
     - name: Configure firewall to allow nodepool cluster traffic (ipv4)
       ufw:
         rule: allow
-        from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
+        from_ip: "{{ hostvars[item].openstack.accessIPv4 }}"
       loop: "{{ groups['nodepool_server'] }}"
 
     - name: Setup statsd

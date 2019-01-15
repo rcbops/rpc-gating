@@ -1,25 +1,7 @@
 ---
-# We need to target all hosts in the group first to gather facts,
-# otherwise any tasks using the group host_vars will fail.
-- name: Gather facts from required server groups
-  hosts: "grafana_server:graphite_server:statsd_server"
-  gather_facts: no
-  user: root
-  tasks:
-    - name: Wait for a successful connection
-      wait_for_connection:
-        connect_timeout: 2
-        delay: 5
-        sleep: 5
-        timeout: 60
-
-    - name: Gather facts
-      setup:
-        gather_subset: "!facter,!ohai"
-
 - name: Setup graphite servers
   hosts: "graphite_server"
-  gather_facts: no
+  gather_facts: yes
   user: root
   vars:
     graphite_secret_key: "{{ lookup('env', 'RE_GRAPHITE_SECRET_KEY') }}"
@@ -61,13 +43,13 @@
     - name: Configure firewall to allow statsd traffic (ipv4)
       ufw:
         rule: allow
-        from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
+        from_ip: "{{ hostvars[item].openstack.accessIPv4 }}"
       loop: "{{ groups['statsd_server'] }}"
 
     - name: Configure firewall to allow grafana traffic (ipv4)
       ufw:
         rule: allow
-        from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
+        from_ip: "{{ hostvars[item].openstack.accessIPv4 }}"
       loop: "{{ groups['grafana_server'] }}"
 
     - name: Setup graphite

@@ -1,6 +1,7 @@
 ---
 - name: Secure Slave
   hosts: "{{ target_hosts | default('job_nodes') }}"
+  gather_facts: yes
   user: root
   vars:
     ip_address_whitelist: "{{ lookup('env', 'SSH_IP_ADDRESS_WHITELIST') }}"

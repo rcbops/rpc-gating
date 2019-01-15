@@ -7,7 +7,7 @@ images-dir: /opt/nodepool/images
 
 zookeeper-servers:
 {% for zk_host in groups['nodepool_server'] | sort %}
-  - host: "{{ hostvars[zk_host].ansible_default_ipv4.address }}"
+  - host: "{{ hostvars[zk_host].openstack.accessIPv4 }}"
     port: 2181
 {% endfor %}
 
