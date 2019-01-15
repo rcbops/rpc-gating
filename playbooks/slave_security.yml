@@ -25,7 +25,7 @@
         rule: allow
         port: 22
         src: "{{ item }}"
-      loop: "{{ ip_address_whitelist }}"
+      loop: "{{ ip_address_whitelist | list }}"
       when: ip_address_whitelist != ""
 
     - name: Allow ssh from all
