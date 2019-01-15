@@ -91,7 +91,7 @@
         timeout: 900
       when:
         - item[0]['state'] | default('present') != 'absent'
-      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True }}"
+      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True) }}"
 
     - name: Delete data volumes on deleted instances
       os_volume:
@@ -106,7 +106,7 @@
       when:
         - item[0]['state'] | default('present') == 'absent'
         - item[1]['state'] | default('present') == 'absent'
-      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True }}"
+      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True) }}"
 
     # NOTE(mattt):
     # At present we do not support detaching / deleting volumes attached to a
@@ -125,7 +125,7 @@
         timeout: 900
       when:
         - item[0]['state'] | default('present') != 'absent' and item[1]['state'] | default('present') != 'absent'
-      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True }}"
+      loop: "{{ (instance_list | default([])) | subelements('volumes', skip_missing=True) }}"
 
     - name: Refresh dynamic inventory for any changes made
       meta: refresh_inventory
