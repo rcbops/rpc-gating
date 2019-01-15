@@ -24,7 +24,7 @@ fixtures==3.0.0
 flake8==3.4.1
 futures==3.2.0
 gitdb2==2.0.5
-github3.py==1.2.0
+github3.py==0.9.6
 GitPython==2.1.11
 idna==2.8
 influxdb==5.2.1
@@ -37,7 +37,6 @@ jira==1.0.10
 jmespath==0.9.3
 jsonpatch==1.23
 jsonpointer==2.0
-jwcrypto==0.6.0
 keystoneauth1==3.11.2
 linecache2==1.0.0
 MarkupSafe==1.1.0
@@ -90,6 +89,7 @@ tox==3.7.0
 traceback2==1.4.0
 unittest2==1.1.0
 uritemplate==3.0.0
+uritemplate.py==3.0.2
 urllib3==1.24.1
 virtualenv==16.2.0
 wheel==0.32.3
