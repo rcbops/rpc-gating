@@ -480,6 +480,7 @@
       - deploy
     # Required by RPC-ASC team to upload test results qTest
     credentials: "rpc_asc_creds"
+    wrappers: "rpco_deploy_artifact_build"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
@@ -661,3 +662,53 @@
           branch: newton
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
+
+- job:
+    name: 'PM-rpc-openstack-newton-artifact-build'
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${RPC_GATING_BRANCH}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/rpc_artifact_build.groovy
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: "30"
+      - rpc-openstack-github
+    parameters:
+      # See params.yml
+      - rpc_repo_params:
+         RPC_BRANCH: "newton"
+      - rpc_gating_params
+      - string:
+          name: ANSIBLE_PARAMETERS
+          default: "-v"
+          description: "Change the Ansible parameters for the playbook execution."
+      - string:
+          name: PULL_FROM_MIRROR
+          default: "YES"
+          description: "Set this to NO to skip downloading existing data from rpc-repo. This may cause the loss of existing artifacts on rpc-repo. USE WITH CAUTION!"
+      - string:
+          name: REPLACE_ARTIFACTS
+          default: "NO"
+          description: "Set this to YES if you want to replace any existing artifacts for the current release with those built in this job."
+      - string:
+          name: PUSH_TO_MIRROR
+          default: "NO"
+          description: "Set this to YES if you want to push any changes made in this job to rpc-repo."
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_all.*|.*recheck_artifact.*'
+          only-trigger-phrase: false
+          white-list-target-branches:
+            - "newton.*"
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/artifact'
+          cancel-builds-on-update: true
