@@ -42,7 +42,7 @@
     - "object_store_container_name != ''"
   block:
 
-    - include: cloudfiles_create_container.yml
+    - import_tasks: cloudfiles_create_container.yml
 
     - name: Create the destination path and move the source file(s) into it
       shell: |
@@ -90,7 +90,7 @@
         OS_AUTH_TOKEN: "{{ auth_token }}"
         OS_STORAGE_URL: "{{ (object_store['endpoints'] | selectattr('region', 'equalto', region) | first)['publicURL'] }}"
       register: upload_archive
-      until: upload_archive | success
+      until: upload_archive is success
       retries: 10
       delay: 30
 

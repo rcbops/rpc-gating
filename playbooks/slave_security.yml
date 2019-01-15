@@ -25,7 +25,7 @@
         rule: allow
         port: 22
         src: "{{ item }}"
-      with_items: "{{ ip_address_whitelist }}"
+      loop: "{{ ip_address_whitelist }}"
       when: ip_address_whitelist != ""
 
     - name: Allow ssh from all
@@ -38,7 +38,7 @@
       ufw:
         rule: allow
         port: "{{ item }}"
-      with_items: "[ {{ ports_whitelist }} ]"
+      loop: "[ {{ ports_whitelist }} ]"
 
     - name: Enable firewall
       ufw:

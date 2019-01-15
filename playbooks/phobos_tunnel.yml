@@ -27,10 +27,10 @@
         state: installed
         update_cache: yes
       register: install_packages
-      until: install_packages | success
+      until: install_packages is success
       retries: 5
       delay: 2
-      with_items:
+      loop:
         - git-core
         - default-jre-headless
       become: true

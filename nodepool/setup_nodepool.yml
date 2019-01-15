@@ -99,7 +99,7 @@
       ufw:
         rule: allow
         from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
-      with_items: "{{ zookeeper_hosts }}"
+      loop: "{{ zookeeper_hosts }}"
       notify:
         - Restart zookeeper
 
@@ -107,7 +107,7 @@
       ufw:
         rule: allow
         from_ip: "{{ item }}"
-      with_items: "{{ zookeeper_access_list }}"
+      loop: "{{ zookeeper_access_list }}"
       notify:
         - Restart zookeeper
 
@@ -115,7 +115,7 @@
       ufw:
         rule: allow
         from_ip: "{{ hostvars[item].ansible_default_ipv6.address }}"
-      with_items: "{{ zookeeper_hosts }}"
+      loop: "{{ zookeeper_hosts }}"
       notify:
         - Restart zookeeper
 

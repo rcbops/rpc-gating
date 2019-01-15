@@ -14,7 +14,6 @@ jmespath
 openstacksdk
 packaging
 python-dateutil
-python-novaclient
 python-swiftclient
 python-subunit
 pytz
@@ -22,8 +21,7 @@ PyYAML
 rackspace-monitoring
 rackspace-monitoring-cli
 rackspaceauth
-requests
+requests[security]
 sh
-shade
 six
 urllib3

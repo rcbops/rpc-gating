@@ -1,0 +1,3 @@
+---
+plugin: openstack
+fail_on_errors: no

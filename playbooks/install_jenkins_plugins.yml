@@ -22,7 +22,7 @@
         params: "{{ jenkins_credentials }}"
       notify:
         - Safely restart jenkins
-      with_items:
+      loop:
         - nodelabelparameter
         - shiningpanda
         - categorized-view

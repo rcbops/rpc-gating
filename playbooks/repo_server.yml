@@ -11,7 +11,7 @@
       set_fact:
         repo_server_volumes: "{{ item['volumes'] }}"
       when: "item['name'] == inventory_hostname"
-      with_items: "{{ instance_list | default([]) }}"
+      loop: "{{ (instance_list | default([])) | flatten(levels=1) }}"
 
     - name: Create vg0 volume group
       lvg:

@@ -74,6 +74,7 @@
             region_name: "{{ regions_shuff[0] }}"
             image: "{{ _image | default(image) }}"
             key_name: "{{ keyname }}"
+            security_groups: []
             userdata: "{{ lookup('file', user_data_path) }}"
             config_drive: yes
             meta:
@@ -129,6 +130,7 @@
             region_name: "{{ fallback_regions_shuff[0] }}"
             image: "{{ _image | default(image) }}"
             key_name: "{{ keyname }}"
+            security_groups: []
             userdata: "{{ lookup('file', user_data_path) }}"
             config_drive: yes
             meta:
@@ -230,7 +232,7 @@
           args:
             executable: /bin/bash
           register: _update_cache
-          until: _update_cache | success
+          until: _update_cache is success
           retries: 3
           delay: 15
 
@@ -252,6 +254,6 @@
           args:
             executable: /bin/bash
           register: _install_packages
-          until: _install_packages | success
+          until: _install_packages is success
           retries: 3
           delay: 15
