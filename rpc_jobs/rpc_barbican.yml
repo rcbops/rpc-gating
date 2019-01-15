@@ -31,7 +31,6 @@
     branch: "rocky"
     image:
       - xenial_snapshot
-    hold_on_error: "4h"
     scenario:
       - rocky:
           SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
