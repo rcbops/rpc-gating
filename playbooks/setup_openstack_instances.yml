@@ -43,7 +43,7 @@
       build_config: core
   tasks:
     - name: Unlock instances scheduled to be deleted or where volumes may need to be added
-      os_server_actions:
+      os_server_action:
         action: unlock
         server: "{{ instance['name'] | lower }}"
         cloud: "{{ cloud_name | default('public_cloud') }}"
@@ -131,7 +131,7 @@
       meta: refresh_inventory
 
     - name: Lock instances to prevent accidental deletion
-      os_server_actions:
+      os_server_action:
         action: lock
         server: "{{ instance['name'] | lower }}"
         cloud: "{{ cloud_name | default('public_cloud') }}"
