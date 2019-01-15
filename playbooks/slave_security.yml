@@ -16,8 +16,8 @@
 
     - name: Install firewall package
       apt:
-        pkg: "ufw"
-        state: installed
+        name: "ufw"
+        state: present
         update_cache: yes
 
     - name: Allow ssh from whitelist

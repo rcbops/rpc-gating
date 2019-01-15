@@ -23,16 +23,15 @@
   pre_tasks:
     - name: Install apt packages
       apt:
-        pkg: "{{ item }}"
-        state: installed
+        name:
+          - git-core
+          - default-jre-headless
+        state: present
         update_cache: yes
       register: install_packages
       until: install_packages is success
       retries: 5
       delay: 2
-      loop:
-        - git-core
-        - default-jre-headless
       become: true
 
     - name: Read local key file

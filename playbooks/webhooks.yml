@@ -106,8 +106,8 @@
 
     - name: Install apt packages
       apt:
-        pkg: "apache2-utils"
-        state: installed
+        name: "apache2-utils"
+        state: present
         update_cache: yes
 
     - name: Create htpasswd file
