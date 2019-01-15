@@ -41,7 +41,7 @@
 
     - name: Determine the latest image name when required
       when:
-        - image | match('^nodepool-.*')
+        - image is match('^nodepool-.*')
       block:
         - name: Get the list of images
           os_image_facts:
