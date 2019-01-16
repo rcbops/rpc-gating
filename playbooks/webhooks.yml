@@ -14,6 +14,7 @@
 
 - name: Configure Webhook Proxy Node
   hosts: job_nodes
+  gather_facts: yes
   user: root
   vars:
     GITHUB_CIDR: "192.30.252.0/22"
@@ -41,8 +42,8 @@
     - name: Write ip file
       delegate_to: localhost
       copy:
-        dest: "{{WORKSPACE}}/instance_address"
-        content: "{{ansible_default_ipv4.address}}"
+        dest: "{{ WORKSPACE }}/instance_address"
+        content: "{{ ansible_facts.default_ipv4.address }}"
 
     # Setup webhook translator
 
@@ -100,14 +101,14 @@
       ufw:
         rule: allow
         port: "{{ GITHUB_HOOK_PORT }}"
-        src: "{{GITHUB_CIDR }}"
+        src: "{{ GITHUB_CIDR }}"
 
     # Configure Nginx. (apache2-utils only used to create htpasswd file)
 
     - name: Install apt packages
       apt:
-        pkg: "apache2-utils"
-        state: installed
+        name: "apache2-utils"
+        state: present
         update_cache: yes
 
     - name: Create htpasswd file
@@ -127,7 +128,7 @@
     - name: Add phobos user Authorised key
       authorized_key:
         user: phobos
-        key: "{{lookup('file', phobostunnel_ssh_pubkey)}}"
+        key: "{{ lookup('file', phobostunnel_ssh_pubkey) }}"
 
     - name: Allow access to phobos deploy host
       ufw:

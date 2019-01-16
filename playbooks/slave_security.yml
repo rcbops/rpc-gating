@@ -1,6 +1,7 @@
 ---
 - name: Secure Slave
   hosts: "{{ target_hosts | default('job_nodes') }}"
+  gather_facts: yes
   user: root
   vars:
     ip_address_whitelist: "{{ lookup('env', 'SSH_IP_ADDRESS_WHITELIST') }}"
@@ -16,8 +17,8 @@
 
     - name: Install firewall package
       apt:
-        pkg: "ufw"
-        state: installed
+        name: "ufw"
+        state: present
         update_cache: yes
 
     - name: Allow ssh from whitelist
@@ -25,7 +26,7 @@
         rule: allow
         port: 22
         src: "{{ item }}"
-      loop: "{{ ip_address_whitelist }}"
+      loop: "{{ ip_address_whitelist | list }}"
       when: ip_address_whitelist != ""
 
     - name: Allow ssh from all

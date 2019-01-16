@@ -1,25 +1,7 @@
 ---
-# We need to target all hosts in the group first to gather facts,
-# otherwise any tasks using the group host_vars will fail.
-- name: Gather facts from nodepool_server group
-  hosts: "nodepool_server"
-  gather_facts: no
-  user: root
-  tasks:
-    - name: Wait for a successful connection
-      wait_for_connection:
-        connect_timeout: 2
-        delay: 5
-        sleep: 5
-        timeout: 60
-
-    - name: Gather facts
-      setup:
-        gather_subset: "!facter,!ohai"
-
 - name: Setup zookeeper servers serially
   hosts: "nodepool_server"
-  gather_facts: no
+  gather_facts: yes
   user: root
   # NOTE(odyssey4me):
   # The zookeeper service loses all its data when it restarts,
@@ -88,8 +70,8 @@
           ff02::3 ip6-allhosts
           # zookeeper hosts
           {% for host in zookeeper_hosts | sort %}
-          {{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
-          {{ hostvars[host].ansible_default_ipv6.address }} {{ host }}
+          {{ hostvars[host].openstack.accessIPv4 }} {{ host }}
+          {{ hostvars[host].openstack.accessIPv6 }} {{ host }}
           {% endfor %}
         dest: "/etc/hosts"
       notify:
@@ -98,7 +80,7 @@
     - name: Configure firewall to allow cluster traffic (ipv4)
       ufw:
         rule: allow
-        from_ip: "{{ hostvars[item].ansible_default_ipv4.address }}"
+        from_ip: "{{ hostvars[item].openstack.accessIPv4 }}"
       loop: "{{ zookeeper_hosts }}"
       notify:
         - Restart zookeeper
@@ -114,7 +96,7 @@
     - name: Configure firewall to allow cluster traffic (ipv6)
       ufw:
         rule: allow
-        from_ip: "{{ hostvars[item].ansible_default_ipv6.address }}"
+        from_ip: "{{ hostvars[item].openstack.accessIPv6 }}"
       loop: "{{ zookeeper_hosts }}"
       notify:
         - Restart zookeeper

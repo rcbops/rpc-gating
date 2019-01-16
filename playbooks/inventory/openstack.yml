@@ -1,3 +1,9 @@
 ---
 plugin: openstack
 fail_on_errors: no
+only_clouds:
+  - public_cloud
+# the cache is only required until https://github.com/ansible/ansible/commit/8490588afa246f32d7e697df4a3e37f1c8761baf
+# or https://github.com/ansible/ansible/commit/a47671aad12f3527902424a81075ca31a43fef6a is in the current release
+cache: yes
+cache_plugin: yaml
