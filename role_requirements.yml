@@ -10,7 +10,7 @@
 - name: "willshersystems.sshd"
   scm: "git"
   src: "https://github.com/willshersystems/ansible-sshd"
-  version: "v0.5"
+  version: "v0.7.2"
 - name: "mongrelion.docker"
   scm: "git"
   src: "https://github.com/mongrelion/ansible-role-docker"
