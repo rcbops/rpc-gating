@@ -88,8 +88,8 @@ class Cleanup:
         self.region = region
         self.conn = openstack.connection.from_config(
             cloud_name="public_cloud",
+            region_name=self.region
         )
-        self.conn.profile.set_region("compute", self.region)
 
     @log
     def cache_servers(self):
