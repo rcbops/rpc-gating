@@ -600,6 +600,7 @@
     action:
       - system_staging
       - system_maas
+    credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
