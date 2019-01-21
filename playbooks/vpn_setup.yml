@@ -1,33 +1,7 @@
-- name: Configure Phobos VPN Tunnel (should only be run on single use slaves)
+- name: Configure VPN Tunnel (should only be run on single use slaves)
   hosts: "{{ target_hosts | default('localhost') }}"
   tasks:
-    - name: Install ping
-      # Don't use Ansible's apt module, but instead apt-get "manually", because
-      # its dependencies, ie python-apt and Python, are probably not installed.
-      shell: |
-        apt-get update
-        apt-get install -y iputils-ping
-      register: install_ping
-      until: install_ping is success
-      retries: 5
-      delay: 2
-      tags:
-        - skip_ansible_lint
-
-    - name: Test connectivity to VPN server
-      # NOTE(coreywright): The Phobos VPN server cannot be pinged from within
-      # the Phobos environment, so use this task as a method of determining
-      # whether we are in the Phobos environment or not.
-      command: ping -c 3 {{ gateway }}
-      ignore_errors: true
-      changed_when: false
-      register: ping_vpn
-
     - name: Configure and start VPN client
-      # NOTE(coreywright): If we are not in the Phobos environment, ie we can
-      # ping the Phobos VPN server, then we need to connect to it by way of
-      # VPN.
-      when: ping_vpn is success
       block:
         # Use shell because python-apt isn't available so the apt module fails.
         # I don't want to add python-apt to one of the more general slave setup
@@ -48,29 +22,32 @@
         - name: Template vpnc config
           template:
             src: vpnc.conf.j2
-            dest: /etc/vpnc/phobos.conf
+            dest: /etc/vpnc/{{ vpn_name }}.conf
 
         - name: Template vpnc systemd service
           template:
             src: vpnc.service.j2
-            dest: /lib/systemd/system/vpnc.service
+            dest: /lib/systemd/system/vpnc.{{ vpn_name }}.service
 
         - name: Start VPN
           block:
             - name: Start vpnc service
               systemd:
                 enabled: yes
-                service: vpnc.service
+                service: vpnc.{{ vpn_name }}.service
                 daemon_reload: yes
                 state: restarted
               register: vpnc_restart
+              until: vpnc_restart is success
+              retries: 5
+              delay: 2
 
           rescue:
             - name: Output failed task information
               debug: var=vpnc_restart
 
             - name: Get vpnc service status
-              command: systemctl status vpnc.service
+              command: systemctl status vpnc.{{ vpn_name}}.service
               register: vpnc_status
               failed_when: false
               changed_when: false
@@ -89,13 +66,16 @@
             - name: Exit with failure
               fail: msg="vpnc service failed to start"
 
-    - name: Test Phobos connectivity
-      # NOTE(coreywright): Whether we are in the Phobos environment or not (and
-      # correspondingly just made a VPN connection to it), prove Phobos
-      # connectivity by connecting to its OpenStack Identity API endpoint.
+    - name: Test connectivity
       uri:
-        url: https://phobos.rpc.rackspace.com:5000/
+        url: "{{ connectivity_test_url }}"
         method: GET
-        status_code: 300
+        status_code:
+          - 300
+          - 200
         validate_certs: no
       changed_when: false
+      register: connectivity_test
+      until: connectivity_test is success
+      retries: 5
+      delay: 2
