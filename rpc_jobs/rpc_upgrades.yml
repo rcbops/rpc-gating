@@ -46,6 +46,7 @@
     scenario:
       - "swift"
     action:
+      - "newton_to_pike_inc"
       - "pike_to_queens_inc"
     jira_project_key: "RLM"
     jobs:
