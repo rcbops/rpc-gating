@@ -4,8 +4,8 @@
     project-type: workflow
     parameters:
       - string:
-          name: "DOCKER_IMAGE"
-          default: "rcbops/buildsummary"
+          name: "IMAGE_NAME"
+          default: "buildsummary"
           description: |
             Name of docker image to publish
       - rpc_gating_params
@@ -15,23 +15,17 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
-        dir("rpc-gating/scripts/build_summary"){
-          withCredentials([
-            usernamePassword(
-              credentialsId: "dockerhubrpcjirasvc",
-              usernameVariable: "DOCKERHUB_USER",
-              passwordVariable: "DOCKERHUB_PASSWORD"
-            )
-          ]){
-            sh """#!/bin/bash -xeu
-              # add docker registry creds.
-              # using creds in jenkins global config along with image.push()
-              # doesn't seem to work :(
-              # ok to use single quotes as the \$ is interpreted by groovy not bash
-              docker login --password '${env.DOCKERHUB_PASSWORD}' --username '${env.DOCKERHUB_USER}'
-              docker build . -t "${DOCKER_IMAGE}"
-              docker push "${DOCKER_IMAGE}"
-            """
+        env.RE_JOB_REPO_NAME = "rpc-gating"
+        common.standard_job_slave("nodepool-ubuntu-bionic-g1-8"){
+          dir("rpc-gating/scripts/build_summary"){
+            String sha = sh(script: "git rev-parse --verify HEAD", returnStdout: true).trim()
+            String shaName = docker_utils.toInternalRegistryName(env.IMAGE_NAME, sha, "re", env.RE_JOB_REPO_NAME, "-")
+            image = docker_utils.pullOrBuild(shaName, null)
+            if (env.RPC_GATING_BRANCH == "master"){
+              String latestName = docker_utils.toInternalRegistryName(env.IMAGE_NAME, "latest", "re", env.RE_JOB_REPO_NAME, "-")
+              image.tag(latestName)
+              docker_utils.withInternalRegistry({image.push(latestName)}, 3)
+            }
           }
         }
       }
@@ -43,8 +37,8 @@
     project-type: workflow
     parameters:
       - string:
-          name: "DOCKER_IMAGE"
-          default: "rcbops/buildsummary"
+          name: "IMAGE_NAME"
+          default: "buildsummary"
           description: |
             Hours. Instances older than this will be removed.
       - rpc_gating_params
@@ -58,17 +52,34 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.use_node("master"){
+        env.RE_JOB_REPO_NAME = "rpc-gating"
+        if (! common.isKronosVPNConnected()){
+          sh "sudo restart vpnc-kronos"
+        }
         stage("Generate Summary Page"){
+          name = docker_utils.toInternalRegistryName(env.IMAGE_NAME, "latest", "re", env.RE_JOB_REPO_NAME, "-")
           // jenkins docker plugin stuff does not work
           // with jenkins only having access to the docker
           // socket via sudo (as is the case on CIT nodes)
-          sh """
-            mkdir -p \${HOME}/buildsummary/out
-            mkdir -p \${HOME}/buildsummary/cache
-            # pull because run may not update if the image is already cached
-            sudo docker pull "\${DOCKER_IMAGE}"
-            sudo docker run -v \${HOME}/buildsummary/cache:/cache -v \${HOME}/jobs:/in:ro -v \${HOME}/buildsummary/out:/out "\${DOCKER_IMAGE}"
-          """
+          withCredentials([
+            usernamePassword(
+              credentialsId: "kronos_mk8s_jenkins_account",
+              usernameVariable: "registryUser",
+              passwordVariable: "registryPassword"
+            ),
+            string(
+              credentialsId: 'kronos_docker_registry_domain_name',
+              variable: 'registryDomainName'
+            )
+          ]){
+            sh """
+              mkdir -p \${HOME}/buildsummary/out
+              mkdir -p \${HOME}/buildsummary/cache
+              sudo docker login --password '${registryPassword}' --username '${registryUser}' --email 'jenkins@localhost' '${registryDomainName}'
+              sudo docker pull '${name}'
+              sudo docker run -v \${HOME}/buildsummary/cache:/cache -v \${HOME}/jobs:/in:ro -v \${HOME}/buildsummary/out:/out '${name}'
+            """
+          }
         } // stage
         stage("Upload Page to Repo"){
           common.withRequestedCredentials("rpc_repo"){

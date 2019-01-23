@@ -48,6 +48,7 @@
       // end of functions
 
       common.globalWraps(){
+        env.RE_JOB_REPO_NAME = "rpc-gating"
         // run node cleanups on all nodes
         def nodes = getLongRunningNodes()
         def parallel_steps = [:]
@@ -73,13 +74,18 @@
         }
         parallel parallel_steps
 
-        // run the pubcloud and jenkins node cleanup only on an internal slave
-        common.internal_slave(){
+        common.use_node("master"){
           try {
             dir("rpc-gating") {
               stage("Docker Build"){
-                  common.docker_cache_workaround()
-                  container = docker.build env.BUILD_TAG.toLowerCase()
+                if (! common.isKronosVPNConnected()){
+                  sh "sudo restart vpnc-kronos"
+                }
+                common.docker_cache_workaround()
+                String sha = sh(script: "git rev-parse --verify HEAD", returnStdout: true).trim()
+                // Docker version on master doesn't like '/' in the name, using '-' as the separator
+                name = docker_utils.toInternalRegistryName("periodic_cleanup", sha, "re", env.RE_JOB_REPO_NAME, "-")
+                container = docker_utils.pullOrBuild(name, null)
               }
               // container.inside is a docker function that does
               // not run the same initialisaiton steps as
