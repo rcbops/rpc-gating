@@ -4,8 +4,7 @@
   gather_facts: False
   vars:
     keyname: "jenkins"
-    inventory_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/playbooks/inventory"
-    user_data_path: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/scripts/user_data_pubcloud.sh"
+    inventory_path: "{{ playbook_dir }}/inventory"
     cloud_name: "public_cloud"
     boot_timeout: "{{ lookup('env', 'BOOT_TIMEOUT') | default(900, true) }}"
   tasks:
@@ -75,7 +74,7 @@
             image: "{{ _image | default(image) }}"
             key_name: "{{ keyname }}"
             security_groups: []
-            userdata: "{{ lookup('file', user_data_path) }}"
+            userdata: "{{ lookup('file', playbook_dir ~ '/../scripts/user_data_pubcloud.sh') }}"
             config_drive: yes
             meta:
               build_config: core
@@ -173,87 +172,3 @@
     - name: Wait for host preparation to complete
       pause:
         minutes: 5
-
-# Note(odyssey4me):
-# We use the raw module for this Ansible play because
-# we do not know if python and python-yaml are on the
-# system yet, and Ansible requires those installed to
-# use any modules other than raw.
-- hosts: singleuseslave
-  remote_user: root
-  gather_facts: False
-  tasks:
-    # To assist with debugging any problems if there
-    # is an apt failure, we set enable debugging.
-    - name: Add apt debug configuration
-      raw: echo 'Debug::Acquire::http "true";' > /etc/apt/apt.conf.d/99debug
-      args:
-        executable: /bin/bash
-
-    - name: Check whether python is present on the host
-      raw: |
-        if [[ -e /usr/bin/python ]]; then
-          echo -n yes
-        else
-          echo -n no
-        fi
-      register: _python_check
-
-    - name: Show the results of the python check
-      debug:
-        var: _python_check
-
-    - name: Install python onto the host if it is not already present
-      when:
-        - "not (_python_check.stdout | trim) | bool"
-      block:
-        # The apt sources in the OnMetal builds uses
-        # archive.ubuntu.com which has turned out to
-        # be a bit unreliable in providing complete
-        # data back when doing apt updates/installs.
-        # We prefer our local mirror which provides
-        # us with reliable and quick responses.
-        # ref: RE-1758
-        - name: Reconfigure the host to use Rackspace Mirrors
-          script: "{{ playbook_dir }}/../scripts/reconfigure_apt_sources.sh"
-
-        - name: Check the resulting apt sources file
-          raw: cat /etc/apt/sources.list
-          args:
-            executable: /bin/bash
-          register: _apt_sources_result
-
-        - name: Show the resulting apt sources file
-          debug:
-            var: _apt_sources_result
-
-        - name: Update apt cache
-          raw: apt-get update
-          args:
-            executable: /bin/bash
-          register: _update_cache
-          until: _update_cache is success
-          retries: 3
-          delay: 15
-
-        # We check to see whether the packages are available
-        # and where they will come from.
-        # ref: RE-1758
-        - name: Check the package candidates
-          raw: apt-cache policy python-minimal python-yaml
-          args:
-            executable: /bin/bash
-          register: _package_candidates
-
-        - name: Show the package candidates
-          debug:
-            var: _package_candidates
-
-        - name: Install minimal Ansible requirements so that Ansible can be used to setup the slave
-          raw: apt-get install -y python-minimal python-yaml
-          args:
-            executable: /bin/bash
-          register: _install_packages
-          until: _install_packages is success
-          retries: 3
-          delay: 15

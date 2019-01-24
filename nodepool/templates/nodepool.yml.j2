@@ -161,11 +161,17 @@ providers:
             flavor-name: ironic-storage-perf
             key-name: jenkins
             console-log: true
+            userdata: |
+              #!/bin/bash
+              {{ user_data_command }}
           - name: ubuntu-xenial-om-io2
             cloud-image: baremetal-ubuntu-xenial
             flavor-name: ironic-storage-perf
             key-name: jenkins
             console-log: true
+            userdata: |
+              #!/bin/bash
+              {{ user_data_command }}
 
   - name: pubcloud-lon
     region-name: 'LON'
@@ -256,11 +262,17 @@ providers:
             flavor-name: onmetal-io2
             key-name: jenkins
             console-log: true
+            userdata: |
+              #!/bin/bash
+              {{ user_data_command }}
           - name: ubuntu-xenial-om-io2
             cloud-image: ubuntu-xenial-onmetal
             flavor-name: onmetal-io2
             key-name: jenkins
             console-log: true
+            userdata: |
+              #!/bin/bash
+              {{ user_data_command }}
 
   - name: pubcloud-ord
     region-name: 'ORD'
