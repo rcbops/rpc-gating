@@ -124,13 +124,17 @@
   user: root
   vars:
     nodepool_file_nodepool_yaml_src: "{{ lookup('env', 'WORKSPACE') }}/rpc-gating/nodepool/templates/nodepool.yml.j2"
-    nodepool_git_version: 67824d8e64250ede0cb4a3ebe344412f5cba2218 # HEAD of 'master' as of 25 July 2018
+    nodepool_git_version: 44ae87c3105b44e3c21aa6c4077e4792d9bcb2a0 # HEAD of 'master' as of 23 Jan 2019
     nodepool_pip_executable: pip3
     nodepool_file_nodepool_builder_service_config_src: systemd-service-override.conf.j2
     nodepool_file_nodepool_launcher_service_config_src: systemd-service-override.conf.j2
 
     diskimage_builder_git_version: "2.12.1" # Current release as of 22 Mar 2018
     diskimage_builder_elements_src: "elements"
+
+    rpc_gating_git_sha: "{{ lookup('pipe', 'cd ' ~ playbook_dir ~ '; git log --pretty=format:\"%H\" -n 1') }}"
+    user_data_script_url: "https://raw.githubusercontent.com/rcbops/rpc-gating/{{ rpc_gating_git_sha }}/scripts/user_data_pubcloud.sh"
+    user_data_command: "curl --silent --show-error --fail --connect-timeout 5 --retry 3 {{ user_data_script_url }} | /bin/bash -e"
 
     logrotate_configs:
       - name: nodepool-builder

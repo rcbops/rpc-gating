@@ -70,7 +70,7 @@
         image: "{{ instance['image'] | default('Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)') }}"
         key_name: "{{ keyname | default('jenkins') }}"
         security_groups: []
-        userdata: "{{ instance['userdata'] | default(omit) }}"
+        userdata: "{{ instance['userdata'] | default(lookup('file', playbook_dir ~ '/../scripts/user_data_pubcloud.sh')) }}"
         config_drive: yes
         meta: "{{ default_metadata | combine(instance['metadata'] | default({})) }}"
         wait: yes
@@ -143,40 +143,3 @@
       loop: "{{ (instance_list | default([])) | flatten(levels=1) }}"
       loop_control:
         loop_var: instance
-
-    - name: Add new hosts to bootstrap group
-      add_host:
-        name: "{{ item }}"
-        groups: new_hosts_to_bootstrap
-      loop: >-
-        {{
-          (instance_list | selectattr('state', 'defined') | selectattr('state', 'equalto', 'present') | map(attribute='name') | list) +
-          (instance_list | selectattr('state', 'undefined') | map(attribute='name') | list)
-        }}
-
-# Note(odyssey4me):
-# At this stage, Ansible may not be able to gather facts
-# because python is not present on the target host. We
-# therefore do not gather facts and have to use the raw
-# or script module only to get the pre-requisites installed.
-- name: Install Ansible prerequisites
-  hosts: new_hosts_to_bootstrap
-  gather_facts: no
-  user: root
-  tasks:
-    - name: Ensure python is installed
-      raw: |
-        set -e
-        if which apt-get >/dev/null && ! which python >/dev/null ; then
-          apt-get update
-          apt-get -y install python
-          exit 2
-        else
-          exit 0
-        fi
-      args:
-        executable: /bin/bash
-        warn: no
-      register: result
-      changed_when: "result.rc == 2"
-      failed_when: "result.rc not in [0, 2]"
