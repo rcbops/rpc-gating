@@ -252,6 +252,108 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
 - project:
+    name: "rpc-maas-master-trusty-newton-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "{CRON_DAILY}"
+    image:
+      - "rpc-r14-trusty_loose_artifacts-swift":
+          SLAVE_TYPE: "nodepool-rpc-r14-trusty_no_artifacts-swift"
+    scenario:
+      - newton
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-xenial-newton-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "{CRON_DAILY}"
+    image:
+      - "rpc-r14-xenial_loose_artifacts-swift":
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial_no_artifacts-swift"
+    scenario:
+      - newton
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-xenial-pike-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "{CRON_DAILY}"
+    image:
+      - "rpc-r16-xenial_loose_artifacts-swift":
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
+    scenario:
+      - pike
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-xenial-queens-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "{CRON_DAILY}"
+    image:
+      - "rpc-r17-xenial_loose_artifacts-swift":
+          SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
+    scenario:
+      - queens
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-xenial-rocky-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "{CRON_DAILY}"
+    image:
+      - "rpc-r18-xenial_loose_artifacts-swift":
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+    scenario:
+      - rocky
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-bionic-rocky-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "{CRON_DAILY}"
+    image:
+      - "rpc-r18-bionic_loose_artifacts-swift":
+          SLAVE_TYPE: "nodepool-rpc-r18-bionic_no_artifacts-swift"
+    scenario:
+      - rocky
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
     name: "rpc-maas-master-trusty-postmerge"
     repo_name: "rpc-maas"
     repo_url: "https://github.com/rcbops/rpc-maas"
