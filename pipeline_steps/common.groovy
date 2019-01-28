@@ -1891,7 +1891,8 @@ Boolean isSkippable(String skip_pattern, String credentials) {
   return skipIt
 }
 
-void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String jiraProjectKey, String statusContext, String skipTestsTriggerPhrase){
+void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String jiraProjectKey,
+    String statusContext, String skipTestsTriggerPhrase, String reReleaseTriggerPhrase){
   def (prType, componentText) = getComponentChange(baseBranch, prBranch)
   def componentYaml = readYaml text: componentText
 
@@ -1947,7 +1948,7 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
       } else {
         testRelease(componentText)
       }
-      createRelease(componentText, has_rc_branch)
+      createRelease(componentText, has_rc_branch, shouldReRelease(reReleaseTriggerPhrase))
     }
   }else if (type == "registration"){
     registerComponent(componentText, jiraProjectKey)
@@ -1972,6 +1973,16 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
 
 Boolean skipPullRequestTests(String triggerPhrase){
   return (ghprbCommentBody =~ /\s*${triggerPhrase}\s*/).matches()
+}
+
+/**
+* Test the comment that triggered this build,
+* if it contains "re release", then any conflicting
+* release artifacts (eg tags or github releases)
+* will be removed in order for the release to proceed
+*/
+Boolean shouldReRelease(String reReleaseTriggerPhrase){
+  return (ghprbCommentBody =~ /\s*${reReleaseTriggerPhrase}\s*/).matches()
 }
 
 List getComponentChange(String baseBranch, String prBranch){
@@ -2290,7 +2301,7 @@ void testRelease(component_text){
   parallel parallelBuilds
 }
 
-void createRelease(String component_text, Boolean from_rc_branch){
+void createRelease(String component_text, Boolean from_rc_branch, Boolean re_release){
   build(
     job: "Component-Release",
     wait: true,
@@ -2319,6 +2330,11 @@ void createRelease(String component_text, Boolean from_rc_branch){
         $class: "BooleanParameterValue",
         name: "from_rc_branch",
         value: from_rc_branch,
+      ],
+      [
+        $class: "BooleanParameterValue",
+        name: "",
+        value: re_release,
       ],
     ]
   )

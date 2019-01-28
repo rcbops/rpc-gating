@@ -1,0 +1,2 @@
+class ReleaseFailureException(Exception):
+    pass

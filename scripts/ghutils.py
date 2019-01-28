@@ -16,8 +16,7 @@ import jmespath
 import requests
 
 from notifications import try_context
-
-logger = logging.getLogger("ghutils")
+from reexceptions import ReleaseFailureException
 
 
 @click.group(chain=True)
@@ -41,7 +40,13 @@ logger = logging.getLogger("ghutils")
 @click.option(
     '--debug/--no-debug'
 )
-def cli(ctxt, org, repo, pat, debug):
+@click.option(
+    '--re-release/--no-re-release',
+    help="Enable re-release to allow a release to overwite"
+    " parts of a previous release (eg recreate existing tags",
+    default=False
+)
+def cli(ctxt, org, repo, pat, debug, re_release):
     level = logging.WARNING
     if debug:
         level = logging.DEBUG
@@ -67,18 +72,19 @@ def cli(ctxt, org, repo, pat, debug):
         v4_query, partial(session.post, "https://api.github.com/graphql")
     )
 
+    repo_.re_release = re_release
     ctxt.obj = repo_
 
 
 def v4_query(post, query, variables=None):
-    logger.debug(query)
-    logger.debug(variables)
+    logging.debug(query)
+    logging.debug(variables)
     resp = post(json={"query": query, "variables": variables})
-    logger.debug(resp)
+    logging.debug(resp)
     resp.raise_for_status()
 
     data = resp.json()
-    logger.debug(json.dumps(data, indent=4))
+    logging.debug(json.dumps(data, indent=4))
     return data
 
 
@@ -335,20 +341,20 @@ def update_rc_branch(ctx, mainline, rc):
 
     # check if branch exists
     if rc in (b.name for b in repo.iter_branches()):
-        logger.debug("Branch {} exists".format(rc))
+        logging.debug("Branch {} exists".format(rc))
         # rc branch exists
         branch_protection_response = branch_api_request(repo, rc, 'GET')
         if branch_protection_response.status_code == 200:
             # rc branch exists and protection enabled
-            logger.debug("Branch {branch} has protection enabled,"
-                         " config: {bp_config}".format(
-                             branch=rc,
-                             bp_config=branch_protection_response.json()))
+            logging.debug("Branch {branch} has protection enabled,"
+                          " config: {bp_config}"
+                          .format(branch=rc,
+                                  bp_config=branch_protection_response.json()))
             branch_protection_enabled = True
             # disable branch protection
             r = branch_api_request(repo, rc, 'DELETE')
             r.raise_for_status()
-            logger.debug("Branch protection disabled")
+            logging.debug("Branch protection disabled")
         elif branch_protection_response.status_code == 404:
             # rc branch exists without protection, so it doesn't need
             # to be disabled
@@ -363,14 +369,14 @@ def update_rc_branch(ctx, mainline, rc):
             'DELETE',
             repo.git_refs_urlt.expand(sha="heads/{}".format(rc)))
         r.raise_for_status()
-        logger.debug("Branch {} deleted".format(rc))
+        logging.debug("Branch {} deleted".format(rc))
 
     mainline_sha = repo.branch(mainline).commit.sha
-    logger.debug("Mainline SHA: {}".format(mainline_sha))
+    logging.debug("Mainline SHA: {}".format(mainline_sha))
 
     # create rc branch pointing at head of mainline
     repo.create_ref("refs/heads/{}".format(rc), mainline_sha)
-    logger.debug("Branch {} created".format(rc))
+    logging.debug("Branch {} created".format(rc))
 
     # Skeleton branch protection data, used to protect a new branch.
     protection_data = {
@@ -398,17 +404,16 @@ def update_rc_branch(ctx, mainline, rc):
     r = branch_api_request(repo, rc, 'PUT',
                            data=json.dumps(protection_data))
     r.raise_for_status()
-    logger.debug("Branch Protection enabled for branch {}".format(rc))
+    logging.debug("Branch Protection enabled for branch {}".format(rc))
 
     # Ensure the rc branch was not updated to anything else while it was
     # unprotected. Stored mainline_sha is used incase mainline has
     # moved on since the SHA was acquired.
     assert mainline_sha == repo.branch(rc).commit.sha
-    logger.debug("rc branch update complete")
+    logging.debug("rc branch update complete")
 
 
 @cli.command()
-@click.pass_obj
 @click.option(
     '--version',
     help="Symbolic name of Release (eg r14.1.99)"
@@ -419,41 +424,69 @@ def update_rc_branch(ctx, mainline, rc):
     required=True
     # Can't use type=click.File because the file may not exist on startup
 )
+@click.pass_obj
 def create_release(repo, version, bodyfile):
-    ctx_obj = click.get_current_context().obj
     # Attempt to read release_notes from context
     # They may have been set by release.generate_release_notes
     try:
         with open(bodyfile, "r") as bodyfile_open:
             release_notes = bodyfile_open.read()
     except IOError as e:
-        logger.error("Failed to open release notes file: {f} {e}".format(
+        logging.error("Failed to open release notes file: {f} {e}".format(
             f=bodyfile, e=e
         ))
         click.get_current_context().exit(-1)
 
-    version = try_context(ctx_obj, version, "version", "version")
+    version = try_context(repo, version, "version", "version")
     # Store version in context for use in notifications
-    ctx_obj.version = version
+    repo.version = version
+    try:
+        release = [r for r in repo.iter_releases() if r.name == version][0]
+        repo.release_url = release.html_url
+    except IndexError:
+        release = _create_release(repo, version, release_notes)
+    else:
+        if release.body != release_notes:
+            if repo.re_release:
+                release.delete()  # doesn't remove tag
+                # (but tag should have been recreated if necessary by now)
+                logging.info("Release {} removed."
+                             .format(version))
+                release = _create_release(repo, version, release_notes)
+            else:
+                raise ReleaseFailureException(
+                    "Release failed. Github release {version}"
+                    " already exists but its release notes"
+                    " don't match the release notes"
+                    " currently being supplied."
+                    .format(version=version)
+                )
+        else:
+            logging.info("Release {} already exists, not creating."
+                         .format(version))
+
+
+def _create_release(repo, version, release_notes):
     try:
         release = repo.create_release(
             tag_name=version,
             name=version,
             body=release_notes,
         )
-        logger.info("Release {} created.".format(version))
+        logging.info("Release {} created.".format(version))
+        repo.release_url = release.html_url
+        return release
     except github3.models.GitHubError as e:
-        logger.error("Error creating release: {}".format(e))
+        logging.error("Error creating release: {}".format(e))
         if e.code == 422:
-            logger.error("Failed to create release, tag already exists?")
+            logging.error("Failed to create release, tag already exists?")
             raise SystemExit(5)
         if e.code == 404:
-            logger.error("Failed to create release, Jenkins lacks repo perms?")
+            logging.error(
+                "Failed to create release, Jenkins lacks repo perms?")
             raise SystemExit(6)
         else:
             raise e
-    else:
-        ctx_obj.release_url = release.html_url
 
 
 @cli.command()
@@ -477,7 +510,7 @@ def clone(url, ref, refspec):
         r=ctx_obj.name
     )
     ctx_obj.clone_dir = clone_dir
-    logger.debug("Cloning {url}@{ref} to {dir}".format(
+    logging.debug("Cloning {url}@{ref} to {dir}".format(
         url=url, ref=ref, dir=clone_dir))
     repo = git.Repo.init(clone_dir)
     try:
@@ -489,12 +522,12 @@ def clone(url, ref, refspec):
     try:
         getattr(origin.refs, ref).checkout()
     except AttributeError as e:
-        logger.error("Ref {ref} not found in {url}".format(
+        logging.error("Ref {ref} not found in {url}".format(
             ref=ref,
             url=url
         ))
         raise e
-    logger.debug("Clone complete, current ref: {sha}/{message}".format(
+    logging.debug("Clone complete, current ref: {sha}/{message}".format(
         sha=repo.head.commit.hexsha, message=repo.head.commit.message
     ))
 
