@@ -265,6 +265,7 @@
     repo_url: "https://github.com/rcbops/rpc-openstack"
     branch: "master"
     jira_project_key: "RO"
+    CRON: "{CRON_WEEKLY}"
     image:
       - bionic_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
