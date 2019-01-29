@@ -258,10 +258,10 @@
     branch: "master"
     CRON: "{CRON_DAILY}"
     image:
-      - "rpc-r14-trusty_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r14-trusty_no_artifacts-swift"
+      - "rpc-r14-trusty-swift":
+          SLAVE_TYPE: "nodepool-rpc-r14-trusty_loose_artifacts-swift"
     scenario:
-      - newton
+      - newton-snap
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -275,10 +275,10 @@
     branch: "master"
     CRON: "{CRON_DAILY}"
     image:
-      - "rpc-r14-xenial_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r14-xenial_no_artifacts-swift"
+      - "rpc-r14-xenial-swift":
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
     scenario:
-      - newton
+      - newton-snap
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -292,10 +292,10 @@
     branch: "master"
     CRON: "{CRON_DAILY}"
     image:
-      - "rpc-r16-xenial_loose_artifacts-swift":
+      - "rpc-r16-xenial-swift":
           SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
     scenario:
-      - pike
+      - pike-snap
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -309,10 +309,10 @@
     branch: "master"
     CRON: "{CRON_DAILY}"
     image:
-      - "rpc-r17-xenial_loose_artifacts-swift":
+      - "rpc-r17-xenial-swift":
           SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
     scenario:
-      - queens
+      - queens-snap
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -326,10 +326,10 @@
     branch: "master"
     CRON: "{CRON_DAILY}"
     image:
-      - "rpc-r18-xenial_loose_artifacts-swift":
+      - "rpc-r18-xenial-swift":
           SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
     scenario:
-      - rocky
+      - rocky-snap
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -343,10 +343,10 @@
     branch: "master"
     CRON: "{CRON_DAILY}"
     image:
-      - "rpc-r18-bionic_loose_artifacts-swift":
+      - "rpc-r18-bionic-swift":
           SLAVE_TYPE: "nodepool-rpc-r18-bionic_no_artifacts-swift"
     scenario:
-      - rocky
+      - rocky-snap
     action:
       - "deploy"
     credentials: "cloud_creds"
