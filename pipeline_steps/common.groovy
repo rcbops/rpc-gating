@@ -2333,7 +2333,7 @@ void createRelease(String component_text, Boolean from_rc_branch, Boolean re_rel
       ],
       [
         $class: "BooleanParameterValue",
-        name: "",
+        name: "re_release",
         value: re_release,
       ],
     ]
