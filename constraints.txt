@@ -52,6 +52,7 @@ ordereddict==1.1
 os-service-types==1.4.0
 packaging==18.0
 paramiko==2.4.2
+passlib==1.7.1
 pbr==5.1.1
 pip==18.1
 pluggy==0.8.1

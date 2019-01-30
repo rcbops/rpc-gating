@@ -1534,6 +1534,10 @@ List build_creds_array(String list_of_cred_ids){
       "RPC_OSP_REDHAT_USERNAME": string(
         credentialsId: "RPC_OSP_REDHAT_USERNAME",
         variable: "RPC_OSP_REDHAT_USERNAME"
+      ),
+      "IMAGE_JENKINS_PASSWORD": string(
+        credentialsId: "IMAGE_JENKINS_PASSWORD",
+        variable: "IMAGE_JENKINS_PASSWORD"
       )
     ]
 
