@@ -1976,7 +1976,7 @@ void runReleasesPullRequestWorkflow(String baseBranch, String prBranch, String j
 }
 
 Boolean skipPullRequestTests(String triggerPhrase){
-  return (ghprbCommentBody =~ /\s*${triggerPhrase}\s*/).matches()
+  return (ghprbCommentBody ==~ /.*${triggerPhrase}.*/)
 }
 
 /**
@@ -1986,7 +1986,7 @@ Boolean skipPullRequestTests(String triggerPhrase){
 * will be removed in order for the release to proceed
 */
 Boolean shouldReRelease(String reReleaseTriggerPhrase){
-  return (ghprbCommentBody =~ /\s*${reReleaseTriggerPhrase}\s*/).matches()
+  return (ghprbCommentBody ==~ /.*${reReleaseTriggerPhrase}.*/)
 }
 
 List getComponentChange(String baseBranch, String prBranch){
