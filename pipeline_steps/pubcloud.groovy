@@ -46,7 +46,7 @@ def savePubCloudSlave(Map args){
     clouds_cfg = common.writeCloudsCfg()
     env.OS_CLIENT_CONFIG_FILE = clouds_cfg
     env.SAVE_IMAGE_NAME = args.image
-    common.withRequestedCredentials("jenkins_ssh_privkey") {
+    common.withRequestedCredentials("jenkins_ssh_privkey IMAGE_JENKINS_PASSWORD") {
       common.venvPlaybook(
         playbooks: ['save_pubcloud.yml'],
         args: [

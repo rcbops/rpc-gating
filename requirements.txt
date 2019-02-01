@@ -13,6 +13,7 @@ jira
 jmespath
 openstacksdk
 packaging
+passlib
 python-dateutil
 python-swiftclient
 python-subunit
