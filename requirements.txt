@@ -25,4 +25,5 @@ rackspaceauth
 requests[security]
 sh
 six
+tenacity
 urllib3

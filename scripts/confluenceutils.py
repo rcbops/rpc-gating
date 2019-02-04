@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup, NavigableString
 import click
 from jinja2 import Template
 import requests
+from tenacity import retry, stop_after_delay, wait_random_exponential
 
 
 class PageNotFound(Exception):
@@ -91,6 +92,13 @@ class Confluence(object):
             return self.create_page(title, body, space_key, parent)
 
     def update_page(self, page_id, page_version_id, space_key, title, body):
+        """Update and existing Confluence page.
+
+           page_version_id: must be equal to the value of the current page
+                            version plus one otherwise 409 error returned by
+                            Confluence. This prevents unknowingly overwriting
+                            changes.
+        """
         content = {
             "type": "page",
             "title": title,
@@ -199,6 +207,10 @@ def get_annual_release_page(c, space_key, year, product_release_page_id):
         product_release_page_id)
 
 
+@retry(
+    wait=wait_random_exponential(multiplier=1, max=60),
+    stop=stop_after_delay(300),
+)
 def _publish_release_to_wiki(
     username, password, base_url, product_release_page, async_release_page,
     component, version, release_notes_url, comment,
