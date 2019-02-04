@@ -1416,7 +1416,8 @@ List build_creds_array(String list_of_cred_ids){
         'phobos_nodepool_user_domain_name'
       ],
       "rpc_asc_creds": [
-        'RPC_ASC_QTEST_API_TOKEN'
+        'RPC_ASC_QTEST_API_TOKEN',
+        'ASC_OPS_FABRIC_GOOGLE_VAULT'
       ],
       "rpc_ri_creds": [
         'RPC_RI_APPFORMIX_CF_ACCOUNT'
@@ -1621,6 +1622,10 @@ List build_creds_array(String list_of_cred_ids){
       "IMAGE_JENKINS_PASSWORD": string(
         credentialsId: "IMAGE_JENKINS_PASSWORD",
         variable: "IMAGE_JENKINS_PASSWORD"
+      ),
+      "ASC_OPS_FABRIC_GOOGLE_VAULT": string(
+        credentialsId: "ASC_OPS_FABRIC_GOOGLE_VAULT",
+        variable: "ASC_OPS_FABRIC_GOOGLE_VAULT"
       )
     ]
 
