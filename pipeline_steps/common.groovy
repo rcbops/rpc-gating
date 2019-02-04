@@ -1297,23 +1297,87 @@ void connect_phobos_vpn(String gateway=null){
       if (gateway == null){
         gateway = env.gw_from_creds
       }
-      venvPlaybook(
-        playbooks: [
-          "phobos_vpn.yml"
-        ],
-        args: [
-          "-u root"
-        ],
-        vars: [
-          ipsec_id: env.ipsec_id,
-          ipsec_secret: env.ipsec_secret,
-          xauth_user: env.xauth_user,
-          xauth_pass: env.xauth_pass,
-          gateway: gateway
-        ]
-      ) //venvPlaybook
+      Boolean isPhobosVPNServerPingable = ! sh(
+        script: """#!/bin/bash
+          apt-get update
+          apt-get install -y iputils-ping
+          ping -c 3 ${gateway}
+        """,
+        returnStatus: true
+      ).asBoolean()
+      if (isPhobosVPNServerPingable){
+        venvPlaybook(
+          playbooks: [
+            "vpn_setup.yml"
+          ],
+          args: [
+            "-u root"
+          ],
+          vars: [
+            ipsec_id: env.ipsec_id,
+            ipsec_secret: env.ipsec_secret,
+            xauth_user: env.xauth_user,
+            xauth_pass: env.xauth_pass,
+            gateway: gateway,
+            vpn_name: "phobos",
+            connectivity_test_url: "https://phobos.rpc.rackspace.com:5000/"
+          ]
+        ) //venvPlaybook
+      }
     } // dir
   } // withRequestedCredentials
+}
+
+
+Boolean isKronosVPNConnected(){
+    withCredentials(
+      [
+        string(
+          credentialsId: 'kronos_docker_registry_url',
+          variable: 'registryURL'
+        )
+      ]
+    ){
+      return ! sh (
+        script: """curl --connect-timeout 10 --insecure '$registryURL' """,
+        returnStatus: true
+      ).asBoolean()
+    }
+}
+
+void connect_kronos_vpn(){
+  if (! isKronosVPNConnected()){
+    withRequestedCredentials("kronos_vpn_auth_creds"){
+      withCredentials(
+        [
+          string(
+            credentialsId: 'kronos_docker_registry_url',
+            variable: 'registryURL'
+          )
+        ]
+      ){
+        dir("${WORKSPACE}/rpc-gating/playbooks"){
+          venvPlaybook(
+            playbooks: [
+              "vpn_setup.yml"
+            ],
+            args: [
+              "-u root"
+            ],
+            vars: [
+              ipsec_id: env.KRONOS_IPSEC_ID,
+              ipsec_secret: env.KRONOS_IPSEC_SECRET,
+              xauth_user: env.KRONOS_XAUTH_USER,
+              xauth_pass: env.KRONOS_XAUTH_PASS,
+              gateway: env.KRONOS_GW_FROM_CREDS,
+              vpn_name: "kronos",
+              connectivity_test_url: registryURL
+            ]
+          )
+        }
+      }
+    }
+  }
 }
 
 // This is a global wrapper to kick off the RPC-O Newton deployment
@@ -1369,6 +1433,11 @@ List build_creds_array(String list_of_cred_ids){
         'phobos_clouds_rpc_jenkins_user',
         'id_rsa_cloud10_jenkins_file',
         'rackspace_ca_crt'
+      ],
+      "kronos_vpn_auth_creds": [
+        "kronos_vpn_ipsec",
+        "kronos_vpn_xauth",
+        "kronos_vpn_gateway"
       ],
       "phobos_vpn_auth_creds": [
         "phobos_vpn_ipsec",
@@ -1475,6 +1544,20 @@ List build_creds_array(String list_of_cred_ids){
       "rackspace_ca_crt": file(
         credentialsId: "rackspace_ca_crt",
         variable: "rackspace_ca_crt"
+      ),
+      "kronos_vpn_ipsec": usernamePassword(
+        credentialsId: "kronos_vpn_ipsec",
+        usernameVariable: "KRONOS_IPSEC_ID",
+        passwordVariable: "KRONOS_IPSEC_SECRET"
+      ),
+      "kronos_vpn_xauth": usernamePassword(
+        credentialsId: "kronos_vpn_xauth",
+        usernameVariable: "KRONOS_XAUTH_USER",
+        passwordVariable: "KRONOS_XAUTH_PASS"
+      ),
+      "kronos_vpn_gateway": string(
+        credentialsId: 'kronos_vpn_gateway',
+        variable: 'KRONOS_GW_FROM_CREDS'
       ),
       "phobos_vpn_ipsec": usernamePassword(
         credentialsId: "phobos_vpn_ipsec",
@@ -1615,6 +1698,7 @@ void setTriggerVars(){
 List stdJobWrappers(String wrappers){
   Map availableWrappers = [
     "phobos_vpn": {body -> connect_phobos_vpn(); body()},
+    "kronos_vpn": {body -> connect_kronos_vpn(); body()},
     "rpco_deploy_artifact_build": {body -> buildRpcNewtonArtifacts(); body()}
   ]
   // Convert csv list of strings to list of wrapper functions

@@ -296,6 +296,19 @@
             ]
           )
         },
+        "Kronos VPN Check": {
+          build(
+            job: "RE-unit-test-kronos-vpn",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
         "Phobos VPN Check": {
           build(
             job: "RE-unit-test-phobos-vpn",

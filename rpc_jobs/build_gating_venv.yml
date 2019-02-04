@@ -28,6 +28,8 @@
                                           env.RPC_GATING_BRANCH)
                 dir('rpc-gating'){
                   // run in docker to ensure all the required apt packages are available
+                  // This does not use the internal registry because the VPN setup requires
+                  // ansible-playbook to be installed.
                   container = docker.build(env.BUILD_TAG.toLowerCase())
                 }
 
