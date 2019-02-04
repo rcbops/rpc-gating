@@ -24,6 +24,16 @@ common.globalWraps(){
       String git_repo_url = common.https_to_ssh_github_url(env.REPO_URL)
       jobSources.removeAll { it.repo == git_repo_url || it.repo == "git@github.com:rcbops/rpc-gating"}
       String sourcesArgs = jobSources.collect {"--job-source \"${it.repo};${it.commitish}\""}.join(' ')
+      stage("Install Apt Packages"){
+        sh """#!/bin/bash -xe
+          # Groovy must be installed or the lint script will skip the groovy syntax checks.
+          # Package list lifted from gating/common/run_lint.sh
+          # OK to install packages as this job uses a single use instance.
+          sudo apt-get update && sudo apt-get install -y \
+            groovy2 python-pip build-essential python-dev libssl-dev \
+            curl libffi-dev sudo git-core
+        """
+      }
       stage("Lint Jenkins"){
         withCredentials([
           string(
