@@ -30,7 +30,7 @@
       common.shared_slave(){
         pubcloud.runonpubcloud {
           stage("Ensure Kronos not reachable before connecting"){
-            assert common.isKronosVPNConnected == false
+            assert common.isKronosVPNConnected() == false
           }
 
           stage("Connect Kronos VPN"){
@@ -38,7 +38,7 @@
           }
 
           stage("Ensure Kronos reachable after connecting"){
-            assert common.isKronosVPNConnected == true
+            assert common.isKronosVPNConnected() == true
           }
         }
       }
