@@ -54,5 +54,6 @@
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
     scenario: "basic"
     action: "integration"
+    credentials: "rpc_asc_creds"
     jobs:
       - "PM_{repo_name}-{branch}-{image}-{scenario}-{action}"
