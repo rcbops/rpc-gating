@@ -41,6 +41,11 @@
               def rpcoReleases = readYaml text: componentData
 
               for ( r in rpcoReleases['releases'] ) {
+                if (r['versions'].size < 2){
+                  // If theres only one version in a series, there can be no previous
+                  // version, so we have no string to match in order to do the replacement.
+                  continue
+                }
                 if (r['series'] == 'newton') {
                   for ( s in ['trusty', 'xenial'] ) {
                     def image = "${s}_loose_artifacts-swift"
