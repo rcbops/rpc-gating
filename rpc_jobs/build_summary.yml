@@ -22,9 +22,8 @@
             String shaName = docker_utils.toInternalRegistryName(env.IMAGE_NAME, sha, "re", env.RE_JOB_REPO_NAME, "-")
             image = docker_utils.pullOrBuild(shaName, null)
             if (env.RPC_GATING_BRANCH == "master"){
-              String latestName = docker_utils.toInternalRegistryName(env.IMAGE_NAME, "latest", "re", env.RE_JOB_REPO_NAME, "-")
-              image.tag(latestName)
-              docker_utils.withInternalRegistry({image.push(latestName)}, 3)
+              image.tag("latest")
+              docker_utils.withInternalRegistry({image.push("latest")}, 3)
             }
           }
         }
