@@ -13,6 +13,9 @@ zookeeper-servers:
 
 labels:
   # rpco snapshots
+  - name: rpc-r14-trusty_loose_artifacts-swift
+    min-ready: 1
+    max-ready-age: 86400
   - name: rpc-r14-xenial_loose_artifacts-swift
     min-ready: 1
     max-ready-age: 86400
@@ -324,6 +327,9 @@ providers:
         image-name: "OnMetal - Ubuntu 18.04 LTS (Bionic Beaver)"
       - name: ubuntu-xenial-onmetal
         image-name: "OnMetal - Ubuntu 16.04 LTS (Xenial Xerus)"
+      - name: rpc-r14-trusty_loose_artifacts-swift
+        image-name: rpc-r14.23.0-trusty_loose_artifacts-swift
+        config-drive: true
       - name: rpc-r14-xenial_loose_artifacts-swift-image
         image-name: rpc-r14.20.0-xenial_loose_artifacts-swift
         config-drive: true
