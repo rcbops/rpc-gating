@@ -50,8 +50,8 @@
     repo_url: 'https://github.com/rcbops/rpc-jenkins-etl'
     branch: "master"
     image:
-      - xenial:
-          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+      - centos:
+          SLAVE_TYPE: "internal"
     scenario: "basic"
     action: "integration"
     credentials: "rpc_asc_creds"
