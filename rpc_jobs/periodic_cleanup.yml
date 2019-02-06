@@ -82,10 +82,28 @@
                   sh "sudo restart vpnc-kronos"
                 }
                 common.docker_cache_workaround()
-                String sha = sh(script: "git rev-parse --verify HEAD", returnStdout: true).trim()
                 // Docker version on master doesn't like '/' in the name, using '-' as the separator
-                name = docker_utils.toInternalRegistryName("periodic_cleanup", sha, "re", env.RE_JOB_REPO_NAME, "-")
-                container = docker_utils.pullOrBuild(name, null)
+                name = docker_utils.toInternalRegistryName("periodic-cleanup", "latest", "re", env.RE_JOB_REPO_NAME, "-")
+                // jenkins docker plugin stuff does not work
+                // with jenkins only having access to the docker
+                // socket via sudo (as is the case on CIT nodes)
+                withCredentials([
+                  usernamePassword(
+                    credentialsId: "kronos_mk8s_jenkins_account",
+                    usernameVariable: "registryUser",
+                    passwordVariable: "registryPassword"
+                  ),
+                  string(
+                    credentialsId: 'kronos_docker_registry_domain_name',
+                    variable: 'registryDomainName'
+                  )
+                ]){
+                  sh """
+                    sudo docker login --password '${registryPassword}' --username '${registryUser}' --email 'jenkins@localhost' '${registryDomainName}'
+                    sudo docker pull '${name}'
+                  """
+                }
+                container = docker.image(name)
               }
               // container.inside is a docker function that does
               // not run the same initialisaiton steps as
@@ -109,7 +127,7 @@
             common.build_failure_issue("RE")
             throw e
           }
-        } // internal_slave
+        }
         stage("Master Log Compression"){
           node("master"){
             // Note that already compressed logs will be skipped as they
