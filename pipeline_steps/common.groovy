@@ -1245,9 +1245,13 @@ void standard_job_slave(String slave_type, Closure body){
       body()
     }
   } else if (slave_type.startsWith("nodepool-")) {
-      use_node(slave_type){
-        body()
-      }
+    use_node(slave_type){
+      body()
+    }
+  } else if (slave_type == "internal"){
+    internal_slave(){
+      body()
+    }
   } else if (slave_type == "shared") {
       // don't need to wrap body in shared_slave here
       // as globalWraps will have already allocated a shared slave executor
