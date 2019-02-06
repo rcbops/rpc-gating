@@ -12,13 +12,17 @@ RUN apt-get update \
       git-core \
       python3-lxml \
       python-dev \
-      python-pip
+      python-pip \
+ && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt /requirements.txt
 COPY constraints.txt /constraints.txt
 RUN pip3 install \
+      --no-cache-dir \
       -c /constraints.txt \
       -r /requirements.txt
-RUN pip3 install lxml
+RUN pip3 install \
+      --no-cache-dir \
+      lxml
 RUN useradd jenkins --shell /bin/bash --create-home --uid 500
 RUN echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 VOLUME /in
