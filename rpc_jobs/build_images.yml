@@ -1,6 +1,16 @@
 - job:
     name: 'Build-Docker-Images-For-Master'
     project-type: workflow
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_all.*|.*recheck_build_images.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/build_images'
+          cancel-builds-on-update: true
     parameters:
       - text:
           name: "IMAGES"
@@ -16,6 +26,9 @@
       - build-discarder:
           days-to-keep: 30
     dsl: |
+      if (env.ghprbPullId){
+        env.RPC_GATING_BRANCH = "origin/pr/${env.ghprbPullId}/merge"
+      }
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
         env.RE_JOB_REPO_NAME = "rpc-gating"
