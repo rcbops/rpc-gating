@@ -93,16 +93,21 @@ void withInternalRegistry(Closure body, Integer tries=1){
       )
     ]
   ){
+    Integer currentTry = 0
     while (tries > 0){
       tries -= 1
+      currentTry += 1
       try{
         docker.withRegistry(registryURL, "kronos_mk8s_jenkins_account"){
           body()
         }
-        return
       } catch (e){
-        println e
-        if (common.isKronosVPNConnected()){
+        println "withInternalRegistry try ${currentTry}: the following exception has been caught:\n${e}"
+        if (tries == 0){
+          throw new REException(
+            "withInternalRegistry Failure: Retries exhausted, review logs above for the cause of each failure."
+          )
+        } else if (common.isKronosVPNConnected()){
           println "Kronos VPN is up."
         } else{
           println "Kronos VPN connection appears down."
@@ -117,7 +122,6 @@ void withInternalRegistry(Closure body, Integer tries=1){
         }
       }
     }
-    throw new REException("Unrecoverable failure when using Docker.")
   }
 }
 
@@ -137,7 +141,9 @@ def pullOrBuild(String name, String tag=env.BUILD_TAG, Boolean uploadOnBuild=tru
       println e
       image = docker.build imageName
       if (uploadOnBuild){
-        image.push()
+        timeout(time: 10, unit: 'MINUTES'){
+          image.push()
+        }
       }
     }
   }
