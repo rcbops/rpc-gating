@@ -10,14 +10,17 @@ RUN apt-get update \
       libffi-dev \
       sudo \
       git-core \
-      libxml2-utils
+      libxml2-utils \
+ && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt /requirements.txt
 COPY test-requirements.txt /test-requirements.txt
 COPY constraints.txt /constraints.txt
 RUN pip install \
+      --no-cache-dir \
       -c /constraints.txt \
       -r /requirements.txt
 RUN pip install \
+      --no-cache-dir \
       -c /constraints.txt \
       -r /test-requirements.txt
 RUN useradd jenkins --shell /bin/bash --create-home --uid 500
