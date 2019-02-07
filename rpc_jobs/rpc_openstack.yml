@@ -2,6 +2,10 @@
 #              gate, but this will be done after rpc-openstack has been
 #              successfully added to the release pipeline.
 
+# RPC-Openstack pre-merge gating check, including 'tox'(lint) and 'deploy' two
+# types of jobs for each supporting branch. They usually were performed before
+# commit merging.
+
 - project:
     name: "rpc-openstack-master-premerge"
     repo_name: "rpc-openstack"
@@ -95,7 +99,6 @@
       - "tox-test"
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
-
 
 - project:
     name: "rpc-openstack-queens-premerge"
@@ -233,6 +236,10 @@
     jobs:
       - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
 
+# RPC-Openstack post-merge gating check, including 'aio' and 'mnaio' two
+# types of jobs. 'aio' job usually will be triggered by pushing commit.
+# Rest jobs are running on certain schedule.
+ 
 - project:
     name: "rpc-openstack-master-aio-postmerge"
     repo_name: "rpc-openstack"
@@ -257,7 +264,6 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
 
 - project:
     name: "rpc-openstack-master-mnaio-postmerge"
@@ -307,7 +313,6 @@
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
       - 'PM-push-trigger_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
-
 - project:
     name: "rpc-openstack-rocky-mnaio-postmerge"
     repo_name: "rpc-openstack"
@@ -330,7 +335,6 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
-
 
 - project:
     name: "rpc-openstack-queens-aio-postmerge"
@@ -484,6 +488,10 @@
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
 
+# RPC-Openstack release gating check. These mnaio jobs are triggered when a new
+# release pull request created. Release tag will be created after this check 
+# cleared.
+
 - project:
     name: 'rpc-openstack-rocky-mnaio-release'
     repo_name: 'rpc-openstack'
@@ -551,6 +559,9 @@
     credentials: "rpc_asc_creds"
     jobs:
       - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+# RPC-Openstack additional gating check. These jobs are not release pipe-line
+# but important due to security or detail concern.
 
 - project:
     name: "rpc-openstack-dependency-update"
