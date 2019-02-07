@@ -23,6 +23,8 @@
             Name of Docker images to publish
       - rpc_gating_params
     properties:
+      - github:
+          url: "https://github.com/rcbops/rpc-gating"
       - build-discarder:
           days-to-keep: 30
     dsl: |
