@@ -611,6 +611,7 @@
     action:
       - system_staging
       - system_maas
+      - health_check
     credentials: "rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
