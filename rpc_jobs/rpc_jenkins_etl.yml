@@ -54,6 +54,6 @@
           SLAVE_TYPE: "internal"
     scenario: "basic"
     action: "integration"
-    credentials: "rpc_asc_creds"
+    credentials: "rpc_asc_creds, kronos_docker_registry"
     jobs:
       - "PM_{repo_name}-{branch}-{image}-{scenario}-{action}"

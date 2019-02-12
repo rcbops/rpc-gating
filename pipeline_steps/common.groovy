@@ -1460,11 +1460,24 @@ List build_creds_array(String list_of_cred_ids){
         "RPC_OSP_REDHAT_POOL_ID",
         "RPC_OSP_REDHAT_PASSWORD",
         "RPC_OSP_REDHAT_USERNAME"
+      ],
+      "kronos_docker_registry": [
+       "kronos_docker_registry_domain_name",
+       "kronos_mk8s_jenkins_account"
       ]
     ]
     // only needs to contain creds that should be exposed.
     // every cred added should also be documented in RE for Projects
     Map available_creds = [
+      "kronos_docker_registry_domain_name": string(
+        credentialsId: 'kronos_docker_registry_domain_name',
+        variable: 'kronos_docker_registry_domain_name'
+      ),
+      "kronos_mk8s_jenkins_account": usernamePassword(
+        credentialsId: "kronos_mk8s_jenkins_account",
+        usernameVariable: "kronos_mk8s_jenkins_username",
+        passwordVariable: "kronos_mk8s_jenkins_password"
+      ),
       "dev_pubcloud_username": string(
         credentialsId: "dev_pubcloud_username",
         variable: "PUBCLOUD_USERNAME"
