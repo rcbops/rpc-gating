@@ -1,0 +1,53 @@
+- job:
+    name: 'Build-Docker-Images-For-Master'
+    project-type: workflow
+    triggers:
+      - github-pull-request:
+          org-list:
+            - rcbops
+          github-hooks: true
+          trigger-phrase: '.*recheck_all.*|.*recheck_build_images.*'
+          only-trigger-phrase: false
+          auth-id: "github_account_rpc_jenkins_svc"
+          status-context: 'CIT/build_images'
+          cancel-builds-on-update: true
+    parameters:
+      - text:
+          name: "IMAGES"
+          default: |
+            - name: "build-summary"
+              dir: "rpc-gating/scripts/build_summary"
+            - name: "periodic-cleanup"
+              dir: "rpc-gating"
+          description: |
+            Name of Docker images to publish
+      - rpc_gating_params
+    properties:
+      - github:
+          url: "https://github.com/rcbops/rpc-gating"
+      - build-discarder:
+          days-to-keep: 30
+    dsl: |
+      if (env.ghprbPullId){
+        env.RPC_GATING_BRANCH = "origin/pr/${env.ghprbPullId}/merge"
+      }
+      library "rpc-gating@${RPC_GATING_BRANCH}"
+      common.globalWraps(){
+        env.RE_JOB_REPO_NAME = "rpc-gating"
+        def imagesArgs = readYaml text: IMAGES
+        common.standard_job_slave("nodepool-ubuntu-bionic-g1-8"){
+          for (args in imagesArgs){
+            dir(args.dir){
+              String sha = sh(script: "git rev-parse --verify HEAD", returnStdout: true).trim()
+              String shaName = docker_utils.toInternalRegistryName(args.name, sha, "re", env.RE_JOB_REPO_NAME, "-")
+              image = docker_utils.pullOrBuild(shaName, null)
+              if (env.RPC_GATING_BRANCH == "master"){
+                image.tag("latest")
+                docker_utils.withInternalRegistry({image.push("latest")}, 3)
+              }
+            }
+          }
+        }
+      }
+
+
