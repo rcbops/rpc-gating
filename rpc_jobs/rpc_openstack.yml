@@ -713,3 +713,25 @@
           auth-id: "github_account_rpc_jenkins_svc"
           status-context: 'CIT/artifact'
           cancel-builds-on-update: true
+
+- job:
+    name: 'rpc-repo-verify'
+    description: 'Verify all the package shas in rpc-repo and report failures.'
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - git:
+            url: https://github.com/rcbops/rpc-gating
+            branches:
+              - "${RPC_GATING_BRANCH}"
+            credentials-id: "github_account_rpc_jenkins_svc"
+      script-path: job_dsl/rpc_repo_verify.groovy
+    concurrent: false
+    properties:
+      - build-discarder:
+          num-to-keep: "30"
+    parameters:
+      - rpc_gating_params
+    triggers:
+      # CRON_WEEKLY
+      - timed: "H H * * H(2-7)"
