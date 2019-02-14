@@ -58,9 +58,15 @@ fi
 
 # Ensure that rc.local executes on startup
 # This is only required for SystemD and is
-# therefore only applied to Xenial.
-if [[ "${DISTRIB_CODENAME}" == "xenial" ]]; then
+# therefore not applied to trusty.
+if [[ "${DISTRIB_CODENAME}" != "trusty" ]]; then
     systemctl enable rc-local.service
+fi
+
+# Ensure that glean sets up the eth0 network interface
+# on boot.
+if [[ -f /usr/lib/systemd/system/glean\@.service ]]; then
+  systemctl enable glean@eth0.service
 fi
 
 # Set the host ssh keys to regenerate at first boot if
