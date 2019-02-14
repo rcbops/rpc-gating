@@ -124,6 +124,7 @@ def delPubCloudSlave(Map args){
       input message: "Continue?"
     }
   )
+  ssh_slave.destroy(args.instance_name)
   common.conditionalStep(
     step_name: 'Cleanup',
     step: {
@@ -132,7 +133,6 @@ def delPubCloudSlave(Map args){
       cleanup (args)
     }
   )
-  ssh_slave.destroy(args.instance_name)
 }
 
 // if the instance params are set in the environment
