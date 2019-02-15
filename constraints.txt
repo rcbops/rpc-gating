@@ -37,6 +37,7 @@ jira==1.0.10
 jmespath==0.9.3
 jsonpatch==1.23
 jsonpointer==2.0
+junit-xml==1.8
 keystoneauth1==3.11.2
 linecache2==1.0.0
 MarkupSafe==1.1.0

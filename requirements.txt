@@ -11,6 +11,7 @@ jenkins-job-builder
 jenkinsapi
 jira
 jmespath
+junit-xml
 openstacksdk
 packaging
 passlib
