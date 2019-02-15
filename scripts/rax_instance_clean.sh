@@ -69,6 +69,9 @@ if [[ -f /usr/lib/systemd/system/glean\@.service ]]; then
   systemctl enable glean@eth0.service
 fi
 
+# Ensure that the interfaces previous setup by glean are removed
+rm -f /etc/network/interfaces.d/eth{0,1}.cfg
+
 # Set the host ssh keys to regenerate at first boot if
 # they are missing.
 cp /etc/rc.local /etc/rc.local.bak
