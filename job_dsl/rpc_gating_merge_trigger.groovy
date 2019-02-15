@@ -1,7 +1,11 @@
 // Can't use env.FOO = {FOO} to transfer JJB vars to groovy
 // as this file won't be templated by JJB.
 // Alternative is to use parameters with JJB vars as the defaults.
-library "rpc-gating-master"
+if (env.RPC_GATING_BRANCH != "master") {
+  library "rpc-gating@${env.RPC_GATING_BRANCH}"
+} else {
+  library "rpc-gating-master"
+}
 common.globalWraps(){
 
   // We do not want to trigger any of these
