@@ -20,6 +20,7 @@ import os
 import re
 
 
+from jenkinsapi.custom_exceptions import UnknownNode
 from jenkinsapi.jenkins import Jenkins
 
 
@@ -44,8 +45,17 @@ def create_node(jenkins, host_ip, name, credential_description, executors,
 
 
 def delete_node(jenkins, name):
-    print("Removing Slave from Jenkins: {}".format(name))
-    jenkins.delete_node(nodename=name)
+    print("Removing node from Jenkins: {}".format(name))
+    try:
+        jenkins.delete_node(nodename=name)
+    except UnknownNode:
+        print(
+            "Node '{node}' does not exist, nothing to delete.".format(
+                node=name,
+            )
+        )
+    else:
+        print("Node '{node}' has been deleted.".format(node=name))
 
 
 def delete_inactive_nodes(jenkins, protected_prefix):
