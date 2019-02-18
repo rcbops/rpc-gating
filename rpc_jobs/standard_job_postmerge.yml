@@ -90,5 +90,9 @@
       - timed: "{CRON}"
 
     dsl: |
-      library "rpc-gating-master"
+      if (env.RPC_GATING_BRANCH != "master") {{
+        library "rpc-gating@${{env.RPC_GATING_BRANCH}}"
+      }} else {{
+        library "rpc-gating-master"
+      }}
       common.stdJob("periodic", "{credentials}", "{jira_project_key}", "{wrappers}")

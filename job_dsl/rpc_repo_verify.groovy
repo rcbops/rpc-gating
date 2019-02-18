@@ -1,4 +1,8 @@
-library "rpc-gating-master"
+if (env.RPC_GATING_BRANCH != "master") {
+  library "rpc-gating@${env.RPC_GATING_BRANCH}"
+} else {
+  library "rpc-gating-master"
+}
 common.globalWraps(){
   common.use_node('ArtifactBuilder2') {
     // ArtifactBuilder2 only has a single executor, so no other jobs will be attempting to

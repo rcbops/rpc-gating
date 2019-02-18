@@ -17,7 +17,12 @@
         }
       }
 
-      library "rpc-gating@${RPC_GATING_BRANCH}"
+      if (env.RPC_GATING_BRANCH != "master") {
+        library "rpc-gating@${env.RPC_GATING_BRANCH}"
+      } else {
+        library "rpc-gating-master"
+      }
+
       common.globalWraps(){
         // Outer try ensures that a Jira issue is created for unexpected failure
         List releases = []

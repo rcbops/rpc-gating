@@ -84,9 +84,11 @@
           cancel-builds-on-update: true
 
     dsl: |
-      if ("{repo_name}" == "rpc-gating"){{
-        env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
-        library "rpc-gating@${{RPC_GATING_BRANCH}}"
+      if (env.RPC_GATING_BRANCH != "master") {{
+        if ("{repo_name}" == "rpc-gating") {{
+          env.RPC_GATING_BRANCH = "origin/pr/${{env.ghprbPullId}}/merge"
+        }}
+        library "rpc-gating@${{env.RPC_GATING_BRANCH}}"
       }} else {{
         library "rpc-gating-master"
       }}
