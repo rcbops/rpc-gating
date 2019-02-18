@@ -259,7 +259,7 @@
     CRON: "{CRON_DAILY}"
     image:
       - "rpc-r14-trusty_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r14-trusty_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-trusty-swift"
     scenario:
       - newton
     action:
@@ -275,8 +275,8 @@
     branch: "master"
     CRON: "{CRON_DAILY}"
     image:
-      - "rpc-r14-xenial_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r14-xenial_no_artifacts-swift"
+      - "rpc-r14-xenial-swift":
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial-swift"
     scenario:
       - newton
     action:
@@ -293,7 +293,7 @@
     CRON: "{CRON_DAILY}"
     image:
       - "rpc-r16-xenial_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial-swift"
     scenario:
       - pike
     action:
@@ -310,7 +310,7 @@
     CRON: "{CRON_DAILY}"
     image:
       - "rpc-r17-xenial_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r17-xenial-swift"
     scenario:
       - queens
     action:
@@ -327,7 +327,7 @@
     CRON: "{CRON_DAILY}"
     image:
       - "rpc-r18-xenial_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial-swift"
     scenario:
       - rocky
     action:
@@ -344,7 +344,7 @@
     CRON: "{CRON_DAILY}"
     image:
       - "rpc-r18-bionic_loose_artifacts-swift":
-          SLAVE_TYPE: "nodepool-rpc-r18-bionic_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r18-bionic-swift"
     scenario:
       - rocky
     action:

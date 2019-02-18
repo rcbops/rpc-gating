@@ -13,7 +13,7 @@
     hold_on_error: "4h"
     scenario:
       - rocky:
-          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial-swift"
     action:
       - "deploy"
     jira_project_key: "RI"
@@ -33,7 +33,7 @@
       - xenial_snapshot
     scenario:
       - rocky:
-          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial-swift"
     action:
       - "deploy"
     jira_project_key: "RI"

@@ -16,7 +16,7 @@
     # Use image for RPC-O install
     image:
       - xenial_snapshot:
-          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial-swift"
 
     # Octavia ignores that setting for now
     scenario:
@@ -44,7 +44,7 @@
     # upstream installer
     branch:
       - "master":
-          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial-swift"
 
     # Use image for RPC-O install
     image:
