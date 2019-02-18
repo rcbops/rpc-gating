@@ -14,13 +14,13 @@
 
     scenario:
       - newton:
-          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial-swift"
       - pike:
-          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial-swift"
       - queens:
-          SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r17-xenial-swift"
       - rocky:
-          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial-swift"
     action:
       - "functional"
 
@@ -71,13 +71,13 @@
 
     scenario:
       - newton:
-          SLAVE_TYPE: "nodepool-rpc-r14-xenial_loose_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r14-xenial-swift"
       - pike:
-          SLAVE_TYPE: "nodepool-rpc-r16-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r16-xenial-swift"
       - queens:
-          SLAVE_TYPE: "nodepool-rpc-r17-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r17-xenial-swift"
       - rocky:
-          SLAVE_TYPE: "nodepool-rpc-r18-xenial_no_artifacts-swift"
+          SLAVE_TYPE: "nodepool-rpc-r18-xenial-swift"
     action:
       - "functional"
 
