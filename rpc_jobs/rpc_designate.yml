@@ -120,10 +120,8 @@
     repo_url: "https://github.com/rcbops/rpc-designate"
 
     image:
-      - xenial-instance:
-          SLAVE_TYPE: "instance"
-          FLAVOR: "performance2-15"
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+      - xenial:
+          SLAVE_TYPE: "nodepool-rpco-14.2-xenial-base"
 
     scenario:
       - "newton"
