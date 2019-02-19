@@ -148,7 +148,7 @@
 
         // This stage uses the job name as a label rather than the build tag,
         // concurrent runs will interfere. A lock is used to serialise.
-        stage("Test build_failure_issue"){
+        stage("Test build_failure_notify"){
           lock("unit_test_jira_build_failure_issue_test"){
             try {
               labels = ["jenkins-build-failure", "jenkins", env.JOB_NAME ]
@@ -159,7 +159,7 @@
               assert issues.size() == 0
 
               // Create issue and add a comment
-              common.build_failure_issue(project)
+              common.build_failure_notify(project)
               issues = common.jira_query(issue_query)
               print issues
               assert issues.size() == 1
@@ -169,7 +169,7 @@
 
               // Ensure that duplicate issue is not created, and that
               // a comment is added to the existing issue
-              common.build_failure_issue(project)
+              common.build_failure_notify(project)
               issues = common.jira_query(issue_query)
               print issues
               assert issues.size() == 1

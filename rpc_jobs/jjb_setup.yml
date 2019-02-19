@@ -85,7 +85,7 @@
           }} catch(e) {{
             print(e)
             if (isBuildTriggeredByMergeToProduction) {{
-              common.build_failure_issue("RE")
+              common.build_failure_notify("RE")
             }}
             throw e
           }} // catch

@@ -952,32 +952,66 @@ No JIRA Issue key were found in commits ${repo_path}:${ghprbSourceBranch}""")
   }
 }
 
-// This function creates or updates issues related to build failures.
-// Should be used to report build failures by calling:
-//    common.build_failure_issue(project, labels)
-String build_failure_issue(String project,
-                           List labels = []){
-  withCredentials([
-    usernamePassword(
-      credentialsId: "jira_user_pass",
-      usernameVariable: "JIRA_USER",
-      passwordVariable: "JIRA_PASS"
-    )
-  ]){
-    return sh(script: """#!/bin/bash -xe
-      cd ${env.WORKSPACE}
-      set +x; . .venv/bin/activate; set -x
-      python rpc-gating/scripts/jirautils.py \
-        --user '$JIRA_USER' \
-        --password '$JIRA_PASS' \
-        build_failure_issue \
-          --project "${project}" ${generate_label_options(labels)} \
-          --job-name "${env.JOB_NAME}" \
-          --job-url "${env.JOB_URL}" \
-          --build-tag "${env.BUILD_TAG}" \
-          --build-url "${env.BUILD_URL}"
-    """, returnStdout: true).trim()
+/**
+ * Notify users of build failures.
+ *
+ * Creates/updates build failures issue for job if JiraProject specified.
+ * Sends notification on Slack if slackChannel specified.
+ *
+ * @param jiraProject Name of Jira project where issue should be created.
+ * @param jiraLabels List of labels to add to issue.
+ * @param slackChannel Name of Slack channel where message should be sent, e.g. "#foo".
+ * @param slackTeam Name of Slack team to notify, e.g. "@bar".
+ */
+String build_failure_notify(String jiraProject,
+                            List jiraLabels = [],
+                            String slackChannel = null,
+                            String slackTeam = null
+                            ){
+  String issueKey
+  if (jiraProject){
+    println("Creating build failure issue.")
+    withCredentials([
+      usernamePassword(
+        credentialsId: "jira_user_pass",
+        usernameVariable: "JIRA_USER",
+        passwordVariable: "JIRA_PASS"
+      )
+    ]){
+      issueKey = sh(script: """#!/bin/bash -xe
+        cd ${env.WORKSPACE}
+        set +x; . .venv/bin/activate; set -x
+        python rpc-gating/scripts/jirautils.py \
+          --user '$JIRA_USER' \
+          --password '$JIRA_PASS' \
+          build_failure_issue \
+            --project "${jiraProject}" ${generate_label_options(jiraLabels)} \
+            --job-name "${env.JOB_NAME}" \
+            --job-url "${env.JOB_URL}" \
+            --build-tag "${env.BUILD_TAG}" \
+            --build-url "${env.BUILD_URL}"
+      """, returnStdout: true).trim()
+    }
   }
+  if (slackChannel){
+    println("Sending build failure notification on Slack.")
+    String message
+    if (issueKey){
+      message = "Build failure, see ${jiraLinkFromIssueKey(issueKey)} for details."
+    } else{
+      message = "Build failure, no issue created, see ${env.BUILD_URL} for details."
+    }
+    if (slackTeam){
+      message = "${slackTeam}: ${message}"
+    }
+    slackSend(
+      channel: slackChannel,
+      message: message,
+      color: "warning"
+    )
+  }
+
+  return issueKey
 }
 
 
@@ -994,7 +1028,7 @@ String generate_label_options(List labels){
 
 
 // This method creates a jira issue. Doesn't check for duplicates or
-// do anthing fancy. Use build_failure_issue for build failures.
+// do anthing fancy. Use build_failure_notify for build failures.
 String create_jira_issue(String project,
                          String summary,
                          String description,
@@ -1866,7 +1900,7 @@ print(formatted_args)
 
 return this
 
-void stdJob(String hook_dir, String credentials, String jira_project_key, String wrappers) {
+void stdJob(String hook_dir, String credentials, String jira_project_key, String wrappers, String slackChannel, String slackTeam) {
   globalWraps(){
     standard_job_slave(env.SLAVE_TYPE) {
       wrapList(stdJobWrappers(wrappers)){
@@ -1960,12 +1994,9 @@ void stdJob(String hook_dir, String credentials, String jira_project_key, String
           errString = "Caught exception on ${env.NODE_NAME}: ${e} Build: ${env.BUILD_URL}"
           print errString
 
-          if (env.ghprbPullId == null && ! isAbortedBuild() && jira_project_key != '') {
-            print("Creating build failure issue.")
+          if (env.ghprbPullId == null && ! isAbortedBuild()) {
             def labels = ['post-merge-test-failure', 'jenkins', env.JOB_NAME]
-            build_failure_issue(jira_project_key, labels)
-          } else {
-            print("Skipping build failure issue creation.")
+            build_failure_notify(jira_project_key, labels, slackChannel, slackTeam)
           }
           throw e
         } finally {

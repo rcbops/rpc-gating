@@ -93,5 +93,5 @@
         library "rpc-gating-master"
       }}
       if (! common.isSkippable(skip_pattern, "{credentials}")) {{
-        common.stdJob("check", "{credentials}", "", "{wrappers}")
+        common.stdJob("check", "{credentials}", "", "{wrappers}", "", "")
       }}

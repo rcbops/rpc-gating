@@ -40,6 +40,8 @@
     name: 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     branch: "master"
     jira_project_key: ""
+    slack_channel: ""
+    slack_team: ""
     project-type: pipeline
     concurrent: true
     FLAVOR: "performance1-1"
@@ -95,4 +97,4 @@
       }} else {{
         library "rpc-gating-master"
       }}
-      common.stdJob("periodic", "{credentials}", "{jira_project_key}", "{wrappers}")
+      common.stdJob("periodic", "{credentials}", "{jira_project_key}", "{wrappers}", "{slack_channel}", "{slack_team}")

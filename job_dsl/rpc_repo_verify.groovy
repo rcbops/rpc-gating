@@ -52,7 +52,7 @@ common.globalWraps(){
       // but IMO that means the job should fail.
       if(currentBuild.result == "UNSTABLE"){
         currentBuild.result = "FAILURE"
-        common.build_failure_issue("RE", ["rpc-repo","illegal-package-update"])
+        common.build_failure_notify("RE", ["rpc-repo","illegal-package-update"])
       }
     } // stage
   } // node

@@ -191,6 +191,8 @@
     name: 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
     branch: "master"
     jira_project_key: ""
+    slack_channel: ""
+    slack_team: ""
     project-type: pipeline
     concurrent: false
     FLAVOR: "performance1-1"
@@ -236,4 +238,4 @@
           hold_on_error: "{hold_on_error}"
     dsl: |
       library "rpc-gating@${{RPC_GATING_BRANCH}}"
-      common.stdJob("release", "{credentials}", "{jira_project_key}", "{wrappers}")
+      common.stdJob("release", "{credentials}", "{jira_project_key}", "{wrappers}", "{slack_channel}", "{slack_team}")
