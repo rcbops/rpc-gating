@@ -1,0 +1,28 @@
+- job:
+    name: "RE-unit-test-clone-internal-repo"
+    project-type: pipeline
+    concurrent: true
+    properties:
+      - build-discarder:
+          num-to-keep: 30
+    parameters:
+      - rpc_gating_params
+      - standard_job_params:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+          SLAVE_CONTAINER_DOCKERFILE_REPO: "{SLAVE_CONTAINER_DOCKERFILE_REPO}"
+          SLAVE_CONTAINER_DOCKERFILE_PATH: "{SLAVE_CONTAINER_DOCKERFILE_PATH}"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
+          BUILD_TIMEOUT_HRS: "1"
+          hold_on_error: "0"
+      - phobos_params:
+    dsl: |
+      String libraryVersion
+      if (env.RPC_GATING_BRANCH == "master"){
+        libraryVersion = "rpc-gating-master"
+      } else {
+        libraryVersion = "rpc-gating@${env.RPC_GATING_BRANCH}"
+      }
+      library libraryVersion
+      common.use_node(env.SLAVE_TYPE){
+        common.clone_internal_repo("internal_repo", "internal:internal_github_clone_tester_url", "origin/master", "")
+      }

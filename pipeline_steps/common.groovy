@@ -767,6 +767,24 @@ String clone_internal_repo(String directory, String internal_repo, String ref, S
   String sha
   internal_slave() {
     withCredentials(repo_creds) {
+      withEnv(
+        [
+          "INTERNAL_REPO_HOSTNAME=${(env.INTERNAL_REPO_URL =~ "(?:@|//)([a-zA-Z0-9.-]+)(:|/)")[0][1]}",
+        ]
+      ){
+        sh(
+          """#!/bin/bash
+            ssh-keyscan "\${INTERNAL_REPO_HOSTNAME}" 2>/dev/null | while read ssh_key; do
+              if grep -q "\${ssh_key}" ~/.ssh/known_hosts; then
+                echo "Internal repo key already in known hosts: \${ssh_key}"
+              else
+                echo "Adding internal repo key to known hosts: \${ssh_key}"
+                echo "\${ssh_key}" >> ~/.ssh/known_hosts
+              fi
+            done
+          """
+        )
+      }
       sha = clone_repo(directory, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
     }
 

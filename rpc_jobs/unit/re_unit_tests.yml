@@ -373,7 +373,20 @@
               ]
             ]
           )
-        }
+        },
+        "Clone Internal Repository Check": {
+          build(
+            job: "RE-unit-test-clone-internal-repo",
+            wait: true,
+            parameters: [
+              [
+                $class: 'StringParameterValue',
+                name: 'RPC_GATING_BRANCH',
+                value: env.RPC_GATING_BRANCH
+              ]
+            ]
+          )
+        },
       ])
 
 #TODO: Validation of Published Artefacts.
