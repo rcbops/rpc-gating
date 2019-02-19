@@ -32,5 +32,8 @@
       - moleculerize:
           repo_url: "https://github.com/rcbops/moleculerize"
           branch: master
+      - rpc-openstack-healthcheck:
+          repo_url: "https://github.com/rcbops/rpc-openstack-healthcheck"
+          branch: master
     jobs:
       - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
