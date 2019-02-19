@@ -713,6 +713,18 @@
           name: PUSH_TO_MIRROR
           default: "NO"
           description: "Set this to YES if you want to push any changes made in this job to rpc-repo."
+      - string:
+          name: BUILD_APT_ARTIFACTS
+          default: "YES"
+          description: "Set this to NO if you want to skip building apt artifacts (doesn't affect PR jobs)"
+      - string:
+          name: BUILD_PYTHON_ARTIFACTS
+          default: "YES"
+          description: "Set this to NO if you want to skip building python artifacts (doesn't affect PR jobs)"
+      - string:
+          name: BUILD_GIT_ARTIFACTS
+          default: "YES"
+          description: "Set this to NO if you want to skip building git artifacts (doesn't affect PR jobs)"
     triggers:
       - github-pull-request:
           org-list:

@@ -65,6 +65,9 @@ common.globalWraps(){
       // The apt artifacts are built on a long-lived slave
       // with a single executor, so no locking is required.
       stage('Apt'){
+        // This stage must run even if BUILD_APT_ARTIFACTS is no
+        // so that PULL_FROM_REPO can happen. Ansible tags
+        // are used to ensure only pull_from_repo is executed.
         artifact_build.apt()
       }
 
@@ -74,8 +77,10 @@ common.globalWraps(){
       // We use the first available image for the series
       // as the artifacts are not distribution-specific.
       stage('Git'){
-        lock("artifact_git_newton"){
-          artifact_build.git(image_list[0])
+        if (env.BUILD_GIT_ARTIFACTS == "YES"){
+          lock("artifact_git_newton"){
+            artifact_build.git(image_list[0])
+          }
         }
       }
 
@@ -83,8 +88,10 @@ common.globalWraps(){
       // more than one job for each series executes at the
       // same time.
       stage('Python'){
-        lock("artifact_python_newton"){
-          parallel python_parallel
+        if (env.BUILD_PYTHON_ARTIFACTS == "YES"){
+          lock("artifact_python_newton"){
+            parallel python_parallel
+          }
         }
       }
 
