@@ -765,6 +765,7 @@ String clone_internal_repo(String directory, String internal_repo, String ref, S
   ]
 
   String sha
+  String directoryInternalSlave = directory.minus(env.WORKSPACE + "/")
   internal_slave() {
     withCredentials(repo_creds) {
       withEnv(
@@ -785,13 +786,13 @@ String clone_internal_repo(String directory, String internal_repo, String ref, S
           """
         )
       }
-      sha = clone_repo(directory, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
+      sha = clone_repo(directoryInternalSlave, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
     }
 
-    if (directory.endsWith("/")) {
-      directory_pattern = directory.minus(env.WORKSPACE + "/") + "**"
+    if (directoryInternalSlave.endsWith("/")) {
+      directory_pattern = directoryInternalSlave.minus(env.WORKSPACE + "/") + "**"
     } else {
-      directory_pattern = directory.minus(env.WORKSPACE + "/") + "/**"
+      directory_pattern = directoryInternalSlave.minus(env.WORKSPACE + "/") + "/**"
     }
     print "Internal repo stash include pattern: \"${directory_pattern}\"."
     stash includes: directory_pattern, name: "repo-clone"
