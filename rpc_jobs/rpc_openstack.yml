@@ -604,10 +604,9 @@
     image:
       - bionic_mnaio_no_artifacts:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
-      - xenial_mnaio_no_artifacts:
-          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
     scenario:
       - swift
+      - ceph
     action:
       - system_staging
       - system_maas
