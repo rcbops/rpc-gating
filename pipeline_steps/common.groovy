@@ -765,15 +765,34 @@ String clone_internal_repo(String directory, String internal_repo, String ref, S
   ]
 
   String sha
+  String directoryInternalSlave = directory.minus(env.WORKSPACE + "/")
   internal_slave() {
     withCredentials(repo_creds) {
-      sha = clone_repo(directory, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
+      withEnv(
+        [
+          "INTERNAL_REPO_HOSTNAME=${(env.INTERNAL_REPO_URL =~ "(?:@|//)([a-zA-Z0-9.-]+)(:|/)")[0][1]}",
+        ]
+      ){
+        sh(
+          """#!/bin/bash
+            ssh-keyscan "\${INTERNAL_REPO_HOSTNAME}" 2>/dev/null | while read ssh_key; do
+              if grep -q "\${ssh_key}" ~/.ssh/known_hosts; then
+                echo "Internal repo key already in known hosts: \${ssh_key}"
+              else
+                echo "Adding internal repo key to known hosts: \${ssh_key}"
+                echo "\${ssh_key}" >> ~/.ssh/known_hosts
+              fi
+            done
+          """
+        )
+      }
+      sha = clone_repo(directoryInternalSlave, "rpc-jenkins-svc-github-key", env.INTERNAL_REPO_URL, ref, refspec)
     }
 
-    if (directory.endsWith("/")) {
-      directory_pattern = directory.minus(env.WORKSPACE + "/") + "**"
+    if (directoryInternalSlave.endsWith("/")) {
+      directory_pattern = directoryInternalSlave.minus(env.WORKSPACE + "/") + "**"
     } else {
-      directory_pattern = directory.minus(env.WORKSPACE + "/") + "/**"
+      directory_pattern = directoryInternalSlave.minus(env.WORKSPACE + "/") + "/**"
     }
     print "Internal repo stash include pattern: \"${directory_pattern}\"."
     stash includes: directory_pattern, name: "repo-clone"
