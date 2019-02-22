@@ -83,7 +83,7 @@ def scan(String scan_type, String repo_name, String exclude_folders){
             } //try
         } // retry
 
-        if (currentBuild.getRawBuild().getResult().isWorseThan(Result.fromString("SUCCESS"))) {
+        if (Result.fromString(currentBuild.currentResult).isWorseThan(Result.fromString("SUCCESS"))) {
             throw new REException("Checkmarx Scan Threshold Exceeded for repo: " + repo_name)
         }
     } // withCredentials
