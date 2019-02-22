@@ -7,6 +7,41 @@
       - 'Component-Gate-Trigger_{repo_name}'
 
 - project:
+    name: magnanimous-turbo-chainsaw-aio-premerge-build
+    repo_name: magnanimous-turbo-chainsaw
+    repo_url: https://github.com/rcbops/magnanimous-turbo-chainsaw
+    branches: master
+    series: master
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^doc/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+    image:
+      - bionic:
+          IMAGE: "nodepool-ubuntu-bionic-"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: 'BASE_IMAGE=ubuntu:18:04'
+      - xenial:
+          IMAGE: "nodepool-ubuntu-xenial-"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: 'BASE_IMAGE=ubuntu:16:04'
+      - trusty:
+          IMAGE: "nodepool-ubuntu-trusty-"
+          SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: 'BASE_IMAGE=ubuntu:14:04'
+    scenario:
+      - fleet
+      - elk
+      - skydive
+      - all
+    action:
+      - deploy
+    credentials: "cloud_creds"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
     name: magnanimous-turbo-chainsaw-aio-postmerge-build
     repo_name: magnanimous-turbo-chainsaw
     repo_url: https://github.com/rcbops/magnanimous-turbo-chainsaw
