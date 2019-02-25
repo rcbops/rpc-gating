@@ -1,4 +1,5 @@
 import java.security.SecureRandom
+import com.rackspace.exceptions.REException
 
 // Upload all folders in the current working directory to checkmarx and scan for vulnerabilities.
 // If you wish to scan a subdir of the working dir, call this function within dir("subdir"){}
@@ -81,6 +82,10 @@ def scan(String scan_type, String repo_name, String exclude_folders){
                 throw e
             } //try
         } // retry
+
+        if (Result.fromString(currentBuild.currentResult).isWorseThan(Result.fromString("SUCCESS"))) {
+            throw new REException("Checkmarx Scan Threshold Exceeded for repo: " + repo_name)
+        }
     } // withCredentials
 }
 
