@@ -1,12 +1,10 @@
-<p><strong>Date</strong>: {{ date }}</p>
-<p><strong>Meta Version</strong>: {{ meta_version }}</p>
-<p><strong>Product versions included</strong></p>
+<p><strong>Releases</strong></p>
 <table class="wrapped">
 <colgroup><col /><col /><col /><col /></colgroup>
 <tbody>
-<tr><th>Product</th><th>Version</th><th>Release Notes</th><th>Comments</th></tr>
+<tr><th>Version</th><th>Date</th><th>Release Notes</th><th>Comments</th></tr>
 {% for row in rows %}
-<tr><td>{{ row.product }}</td><td>{{ row.version }}</td><td>{{ row.release_notes | urlize }}</td><td>{{ row.comments | urlize}}</td></tr>
+<tr><td>{{ row.version }}</td><td>{{ row.date }}</td><td>{{ row.release_notes | urlize }}</td><td>{{ row.comments | urlize}}</td></tr>
 {% endfor %}
 </tbody>
 </table>
