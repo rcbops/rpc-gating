@@ -4,7 +4,7 @@
     repo_name: "rpc-ceph"
     repo_url: "https://github.com/rcbops/rpc-ceph"
 
-    hold_on_error: "12h"
+    hold_on_error: "4h"
 
     branches:
       - "master"
@@ -25,8 +25,52 @@
     # rpc-ceph ignores that setting for now
     scenario:
       - "bluestore"
+      - "bluestore_mimic"
       - "functional"
+      - "functional_mimic"
       - "keystone_rgw"
+
+    # rpc-ceph ignores that setting for now
+    action:
+      - "test"
+
+    jira_project_key: "CEPHSTORA"
+
+    # Required to properly test deployment of rpc-maas
+    credentials: "cloud_creds"
+
+    # Link to the standard pre-merge-template
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-ceph-bionic-pre-merge"
+
+    repo_name: "rpc-ceph"
+    repo_url: "https://github.com/rcbops/rpc-ceph"
+
+    hold_on_error: "4h"
+
+    branches:
+      - "master"
+
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^docs/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+
+    image:
+      - bionic:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-g1-8"
+
+    # rpc-ceph ignores that setting for now
+    scenario:
+      - "bluestore_mimic"
+      - "functional_mimic"
 
     # rpc-ceph ignores that setting for now
     action:
@@ -57,8 +101,39 @@
 
     scenario:
       - "functional"
+      - "functional_mimic"
       - "bluestore"
+      - "bluestore_mimic"
       - "keystone_rgw"
+
+    action:
+      - 'test'
+
+    jira_project_key: "CEPHSTORA"
+
+    # Required to properly test deployment of rpc-maas
+    credentials: "cloud_creds"
+
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: 'rpc-ceph-bionic-release'
+
+    repo_name: 'rpc-ceph'
+    repo_url: 'https://github.com/rcbops/rpc-ceph'
+
+    branch: 'master'
+
+    hold_on_error: "4h"
+
+    image:
+      - bionic:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-g1-8"
+
+    scenario:
+      - "functional_mimic"
+      - "bluestore_mimic"
 
     action:
       - 'test'
@@ -85,7 +160,11 @@
     scenario:
       - bluestore:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+      - bluestore_mimic:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
       - functional:
+          SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
+      - functional_mimic:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
       - keystone_rgw:
           SLAVE_TYPE: "nodepool-ubuntu-xenial-g1-8"
