@@ -39,3 +39,5 @@
       - repo: git@github.com:rcbops/mk8s
         commitish: master
     checkmarx_exclude_folders: ""
+    slack_channel: ""
+    slack_team: ""

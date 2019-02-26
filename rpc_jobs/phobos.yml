@@ -189,7 +189,7 @@
           } catch (e) {
             if(env.DEPLOY == "true"){
               slack_notify("Phobos Deploy Failed", "danger")
-              common.build_failure_issue("REO")
+              common.build_failure_notify("REO")
             } else {
               slack_notify("Phobos Verification Failed", "warning")
             }

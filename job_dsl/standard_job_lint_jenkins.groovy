@@ -70,11 +70,8 @@ common.globalWraps(){
     } catch(e) {
       print(e)
       // Only create failure card when run as a post-merge job
-      if (env.ghprbPullId == null && ! common.isUserAbortedBuild() && env.JIRA_PROJECT_KEY != '') {
-        print("Creating build failure issue.")
-        common.build_failure_issue(env.JIRA_PROJECT_KEY)
-      } else {
-        print("Skipping build failure issue creation.")
+      if (env.ghprbPullId == null && ! common.isUserAbortedBuild()) {
+        common.build_failure_notify(env.JIRA_PROJECT_KEY, [], env.SLACK_CHANNEL, env.SLACK_TEAM)
       }
       throw e
     }
