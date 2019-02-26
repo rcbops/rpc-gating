@@ -53,7 +53,7 @@
       - "osp_13_deploy-smoke-tests"
       - "osp_13_deploy-system-tests"
     jira_project_key: "RLM"
-    credentials: "rpc_osp"
+    credentials: "rpc_osp rpc_asc_creds"
     jobs:
       - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
     CRON: "{CRON_DAILY}"
