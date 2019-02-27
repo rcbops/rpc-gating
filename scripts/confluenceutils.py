@@ -1,10 +1,9 @@
 import datetime
 import json
 import logging
-from operator import itemgetter
 import os.path
+import re
 import sys
-import uuid
 
 from bs4 import BeautifulSoup, NavigableString
 import click
@@ -144,8 +143,8 @@ def extract_table(raw_page):
 
     return [
         {
-            "product": row[0],
-            "version": row[1],
+            "version": row[0],
+            "date": row[1],
             "release_notes": row[2],
             "comments": row[3],
         }
@@ -153,58 +152,34 @@ def extract_table(raw_page):
     ]
 
 
-def extract_date(raw_page):
-    page = BeautifulSoup(raw_page, "html.parser")
-    date = extract_string(page.p).split(":", 1)[1].strip()
+def row_sort_key(row):
+    prerelease_map = {
+        "alpha": 0,
+        "beta": 1,
+        "rc": 2,
+        None: 3,
+    }
 
-    return date
+    def int_or_none(x):
+        return x if x is None else int(x)
 
-
-def is_async_release(date, scheduled_window_days=7):
-    month_start = date.replace(day=1)
-    one_day = datetime.timedelta(days=1)
-
-    saturday = 6
-    sunday = 7
-    if month_start.isoweekday() == saturday:
-        month_start = month_start + one_day
-
-    if month_start.isoweekday() == sunday:
-        month_start = month_start + one_day
-
-    scheduled_window_end = month_start + scheduled_window_days * one_day
-    if date < scheduled_window_end:
-        is_async = False
-    else:
-        is_async = True
-
-    logging.info(
-        "This release has been classified as {release_type}.".format(
-            release_type=("asynchronous" if is_async else "scheduled"),
-        )
+    version_regex = (
+        r"^(?P<version>r?"
+        r"(?P<major>[0-9]+)\."
+        r"(?P<minor>[0-9]+)\."
+        r"(?P<patch>[0-9]+)"
+        r"(-(?P<prerelease>alpha|beta|rc)\."
+        r"(?P<prerelease_version>[0-9]+))?)$"
     )
-    return is_async
 
+    v = re.match(version_regex, row["version"])
+    major = int(v.group("major"))
+    minor = int_or_none(v.group("minor"))
+    patch = int_or_none(v.group("patch"))
+    prerelease = prerelease_map[v.group("prerelease")]
+    prerelease_version = int(v.group("prerelease_version") or 0)
 
-def get_annual_release_page(c, space_key, year, product_release_page_id):
-    """Get annual release page.
-
-    The wiki is organised in a hierarchy:
-        Product Releases
-            {year} Monthly Releases
-                {version}
-            Patch and Async Releases
-                {version}
-        This function gets or creates the "{year} Monthly Releases" page.
-    """
-    annual_page_title = "{year} Monthly Releases".format(year=year)
-    annual_page_body = render_template("confluence_annual_page.j2",
-                                       uuid=uuid.uuid4())
-    return c.get_or_create_page(
-        annual_page_title,
-        annual_page_body,
-        space_key,
-        product_release_page_id)
+    return (major, minor, patch, prerelease, prerelease_version)
 
 
 @retry(
@@ -212,37 +187,16 @@ def get_annual_release_page(c, space_key, year, product_release_page_id):
     stop=stop_after_delay(300),
 )
 def _publish_release_to_wiki(
-    username, password, base_url, product_release_page, async_release_page,
-    component, version, release_notes_url, comment,
+    username, password, base_url, product_release_page, component, version,
+    release_notes_url, comment,
 ):
-    current_date = datetime.date.today()
-    meta_release = "{year}.{month:02d}".format(
-        year=current_date.year, month=current_date.month
-    )
     space_key = "RE"
 
     c = Confluence(username, password, base_url)
 
-    product_releases_page_id = c.get_page(
-        product_release_page, space_key,
-    )["id"]
+    parent_page_id = c.get_page(product_release_page, space_key)["id"]
 
-    if is_async_release(current_date):
-        async_releases_page_id = c.get_page(
-            async_release_page,
-            space_key,
-            parent=product_releases_page_id,
-        )["id"]
-
-        parent_page_id = async_releases_page_id
-        page_title = "{name} {version}".format(
-            name=component,
-            version=version,
-        )
-    else:
-        parent_page_id = get_annual_release_page(
-            c, space_key, current_date.year, product_releases_page_id)
-        page_title = meta_release
+    page_title = "{name} Releases".format(name=component)
 
     try:
         resp = c.get_page(
@@ -254,35 +208,26 @@ def _publish_release_to_wiki(
     except PageNotFound:
         page_id = None
         page_version_id = None
-        date = current_date.isoformat()
         rows = []
     else:
         page_id = resp["id"]
         page_version_id = resp["version"]["number"] + 1
         existing_page_content = resp["body"]["storage"]["value"]
-        date = extract_date(existing_page_content)
         rows = [
             row for row in extract_table(existing_page_content)
-            if not (
-                row["product"] == component
-                and row["version"] == version
-            )
+            if not row["version"] == version
         ]
 
     new_row = {
-        "product": component,
         "version": version,
         "release_notes": release_notes_url,
         "comments": comment,
+        "date": datetime.date.today().isoformat(),
     }
     rows.append(new_row)
-    rows.sort(key=itemgetter("version"))
-    rows.sort(key=itemgetter("product"))
+    rows.sort(key=row_sort_key)
 
-    page_body = render_template("confluence_release_page.j2",
-                                meta_version=meta_release,
-                                date=date,
-                                rows=rows)
+    page_body = render_template("confluence_release_page.j2", rows=rows)
     if page_id:
         c.update_page(
             page_id, page_version_id, space_key, page_title, page_body
@@ -312,11 +257,7 @@ def _publish_release_to_wiki(
 )
 @click.option(
     "--product-release-page",
-    default="Product Releases",
-)
-@click.option(
-    "--async-release-page",
-    default="Patch and Async Releases",
+    default="Managed Releases",
 )
 @click.option(
     "--component",
@@ -341,8 +282,8 @@ def _publish_release_to_wiki(
     help="Additional information to add against release in wiki.",
 )
 def publish_release_to_wiki(
-    username, password, base_url, product_release_page, async_release_page,
-    component, version, release_notes_url, comment,
+    username, password, base_url, product_release_page, component, version,
+    release_notes_url, comment,
 ):
     if not release_notes_url:
         ctx_obj = click.get_current_context().obj
