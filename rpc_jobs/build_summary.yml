@@ -6,7 +6,7 @@
     parameters:
       - string:
           name: "IMAGE_NAME"
-          default: "buildsummary"
+          default: "build-summary"
           description: |
             Hours. Instances older than this will be removed.
       - rpc_gating_params
