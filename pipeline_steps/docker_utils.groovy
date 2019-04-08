@@ -25,6 +25,10 @@ void prepareHost(){
           apt-get update
           apt-get install -y docker.io
         fi
+        if [ ! -e /etc/docker/daemon.json ]; then
+          echo '{ "max-concurrent-uploads": 2 }' > /etc/docker/daemon.json
+          service docker restart
+        fi
       """
     )
   }
