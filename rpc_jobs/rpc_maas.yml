@@ -44,6 +44,8 @@
     scenario:
       - rocky:
           SLAVE_TYPE: "nodepool-ubuntu-bionic-g1-8"
+      - stein:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-g1-8"
     action:
       - "deploy"
     credentials: "cloud_creds"
@@ -347,6 +349,23 @@
           SLAVE_TYPE: "nodepool-rpc-r18-bionic-swift"
     scenario:
       - rocky
+    action:
+      - "deploy"
+    credentials: "cloud_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-maas-master-bionic-stein-postmerge"
+    repo_name: "rpc-maas"
+    repo_url: "https://github.com/rcbops/rpc-maas"
+    branch: "master"
+    CRON: "{CRON_DAILY}"
+    image:
+      - "rpc-r19-bionic_loose_artifacts-swift":
+          SLAVE_TYPE: "nodepool-rpc-r19-bionic-swift"
+    scenario:
+      - stein
     action:
       - "deploy"
     credentials: "cloud_creds"
