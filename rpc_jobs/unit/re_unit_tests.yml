@@ -335,19 +335,19 @@
             ]
           )
         },
-        "Jira Issue check": {
-          build(
-            job: "RE-unit-test-jira",
-            wait: true,
-            parameters: [
-              [
-                $class: 'StringParameterValue',
-                name: 'RPC_GATING_BRANCH',
-                value: env.RPC_GATING_BRANCH
-              ]
-            ]
-          )
-        },
+        // "Jira Issue check": {
+        //   build(
+        //     job: "RE-unit-test-jira",
+        //     wait: true,
+        //     parameters: [
+        //       [
+        //         $class: 'StringParameterValue',
+        //         name: 'RPC_GATING_BRANCH',
+        //         value: env.RPC_GATING_BRANCH
+        //       ]
+        //     ]
+        //   )
+        // },
         "Runtime Wrappers Check": {
           build(
             job: "RE-unit-test-wrappers",

@@ -446,15 +446,17 @@ def archive_artifacts(Map args = [:]){
       // prevent failures in RE code eg (artifact archival) from causing
       // the build result to be set to failure.
       // try-catch placed here because this function is used in multiple places.
-      String jiraProjectKey = args.get("jiraProjectKey", "RE")
-      if (jiraProjectKey && !isAbortedBuild()){
-        try {
-          create_jira_issue(jiraProjectKey,
-                            "Artifact Archival Failure: ${env.BUILD_TAG}",
-                            "[${env.BUILD_TAG}|${env.BUILD_URL}]",
-                            ["jenkins", "artifact_archive_fail"])
-        } catch (f){
-          print "Failed to create Jira Issue :( ${f}"
+      if (env.ENABLE_JIRA == "yes") {
+        String jiraProjectKey = args.get("jiraProjectKey", "RE")
+        if (jiraProjectKey && !isAbortedBuild()){
+          try {
+            create_jira_issue(jiraProjectKey,
+                              "Artifact Archival Failure: ${env.BUILD_TAG}",
+                              "[${env.BUILD_TAG}|${env.BUILD_URL}]",
+                              ["jenkins", "artifact_archive_fail"])
+          } catch (f){
+            print "Failed to create Jira Issue :( ${f}"
+          }
         }
       }
       if (args.get("throwExceptionOnArchiveFailure", false)){
@@ -988,28 +990,30 @@ String build_failure_notify(String jiraProject,
                             String slackTeam = null
                             ){
   String issueKey
-  if (jiraProject){
-    println("Creating build failure issue.")
-    withCredentials([
-      usernamePassword(
-        credentialsId: "jira_user_pass",
-        usernameVariable: "JIRA_USER",
-        passwordVariable: "JIRA_PASS"
-      )
-    ]){
-      issueKey = sh(script: """#!/bin/bash -xe
-        cd ${env.WORKSPACE}
-        set +x; . .venv/bin/activate; set -x
-        python rpc-gating/scripts/jirautils.py \
-          --user '$JIRA_USER' \
-          --password '$JIRA_PASS' \
-          build_failure_issue \
-            --project "${jiraProject}" ${generate_label_options(jiraLabels)} \
-            --job-name "${env.JOB_NAME}" \
-            --job-url "${env.JOB_URL}" \
-            --build-tag "${env.BUILD_TAG}" \
-            --build-url "${env.BUILD_URL}"
-      """, returnStdout: true).trim()
+  if (env.ENABLE_JIRA == "yes") {
+    if (jiraProject){
+      println("Creating build failure issue.")
+      withCredentials([
+        usernamePassword(
+          credentialsId: "jira_user_pass",
+          usernameVariable: "JIRA_USER",
+          passwordVariable: "JIRA_PASS"
+        )
+      ]){
+        issueKey = sh(script: """#!/bin/bash -xe
+          cd ${env.WORKSPACE}
+          set +x; . .venv/bin/activate; set -x
+          python rpc-gating/scripts/jirautils.py \
+            --user '$JIRA_USER' \
+            --password '$JIRA_PASS' \
+            build_failure_issue \
+              --project "${jiraProject}" ${generate_label_options(jiraLabels)} \
+              --job-name "${env.JOB_NAME}" \
+              --job-url "${env.JOB_URL}" \
+              --build-tag "${env.BUILD_TAG}" \
+              --build-url "${env.BUILD_URL}"
+        """, returnStdout: true).trim()
+      }
     }
   }
   if (slackChannel){
@@ -1855,10 +1859,12 @@ void globalWraps(Closure body){
       shared_slave(){
         wrap([$class: 'LogfilesizecheckerWrapper', 'maxLogSize': 200, 'failBuild': true, 'setOwn': true]) {
           setTriggerVars()
-          if(shouldAbortForMaintenance()){
-            recordAbortDueToMaintenance()
-            currentBuild.result = "ABORTED"
-            return
+          if (env.ENABLE_JIRA == "yes") {
+            if(shouldAbortForMaintenance()){
+              recordAbortDueToMaintenance()
+              currentBuild.result = "ABORTED"
+              return
+            }
           }
           print("common.globalWraps pre body")
           body()

@@ -9,10 +9,12 @@
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.globalWraps(){
-        String jiraIssue = common.getOrCreateIssueForNextMaintenanceWindow()
-        issueLink="https://rpc-openstack.atlassian.net/browse/${jiraIssue}"
-        print("Issue: ${issueLink}")
-        currentBuild.description = "Issue: <a href=\"${issueLink}\">${jiraIssue}</a>"
+        if (env.ENABLE_JIRA == "yes") {
+          String jiraIssue = common.getOrCreateIssueForNextMaintenanceWindow()
+          issueLink="https://rpc-openstack.atlassian.net/browse/${jiraIssue}"
+          print("Issue: ${issueLink}")
+          currentBuild.description = "Issue: <a href=\"${issueLink}\">${jiraIssue}</a>"
+        }
       }
 
 - parameter:
