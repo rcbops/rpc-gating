@@ -66,16 +66,16 @@
             - name: Exit with failure
               fail: msg="vpnc service failed to start"
 
-    - name: Test connectivity
-      uri:
-        url: "{{ connectivity_test_url }}"
-        method: GET
-        status_code:
-          - 300
-          - 200
-        validate_certs: no
-      changed_when: false
-      register: connectivity_test
-      until: connectivity_test is success
-      retries: 5
-      delay: 2
+#    - name: Test connectivity
+#      uri:
+#        url: "{{ connectivity_test_url }}"
+#        method: GET
+#        status_code:
+#          - 300
+#          - 200
+#        validate_certs: no
+#      changed_when: false
+#      register: connectivity_test
+#      until: connectivity_test is success
+#      retries: 5
+#      delay: 2

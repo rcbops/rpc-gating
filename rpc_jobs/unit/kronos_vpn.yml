@@ -9,7 +9,7 @@
       # Default params are provided by macro, add any extra params, or
       # params you want to override the defaults for.
       - instance_params:
-          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (PVHVM)"
+          IMAGE: "Ubuntu 16.04 LTS (Xenial Xerus) (Cloud)"
           FLAVOR: "performance1-1"
           REGIONS: "DFW ORD"
           FALLBACK_REGIONS: "IAD"
