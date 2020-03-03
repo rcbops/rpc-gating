@@ -10,7 +10,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'jira==1.0.10',
-        'flask==0.12.3',
+        'flask==1.0',
         'flup==1.0.2'
     ],
     entry_points={
