@@ -23,7 +23,7 @@ import groovy.transform.Field
 
 void download_venv(){
   sh """#!/bin/bash -xeu
-    REPO_BASE="https://rpc-repo.rackspace.com/rpcgating/venvs"
+    REPO_BASE="http://rpc-repo.rackspace.com/rpcgating/venvs"
     cd ${env.WORKSPACE}
     pushd rpc-gating
       SHA=\$(git rev-parse HEAD)
@@ -1383,7 +1383,7 @@ void connect_phobos_vpn(String gateway=null){
             xauth_pass: env.xauth_pass,
             gateway: gateway,
             vpn_name: "phobos",
-            connectivity_test_url: "https://phobos.rpc.rackspace.com:5000/"
+            connectivity_test_url: "http://172.20.4.10:5000/"
           ]
         ) //venvPlaybook
       }
