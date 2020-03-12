@@ -1,0 +1,259 @@
+### tests rpc-upgrades to <scenario> leaped from <action>
+- project:
+    name: "rpc-upgrades-aio-newton-head-pr"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+      | ^incremental/
+    image:
+      - trusty_aio:
+          SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
+    scenario:
+      - "swift"
+    action:
+      - "mitaka_to_newton_leap"
+      - "liberty_to_newton_leap"
+      - "kilo_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-mnaio-queens-incremental-pr"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+      | ^scripts/
+    image:
+      - xenial_mnaio-snap:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - "swift"
+    action:
+      - "newton_to_pike_inc"
+      - "pike_to_queens_inc"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-tox-pr"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branches:
+     - "master"
+    skip_pattern: |
+      \.md$
+      | \.rst$
+      | ^releasenotes/
+      | ^gating/generate_release_notes/
+      | ^gating/periodic/
+      | ^gating/release/
+    image:
+      - container:
+          SLAVE_TYPE: "container"
+    scenario:
+      - "ansible-lint"
+      - "ansible-syntax"
+      - "bashate"
+      - "pep8"
+      - "releasenotes"
+      - "docs"
+    action:
+      - "tox-test"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PR_{repo_name}-{series}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-release"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    branch: "master"
+    image:
+      - trusty_aio:
+          SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
+    scenario:
+      - "swift"
+    action:
+      - "mitaka_to_newton_leap"
+      - "liberty_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'RELEASE_{repo_name}-{branch}-{image}-{scenario}-{action}'
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-pm"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - trusty_aio:
+          SLAVE_TYPE: "nodepool-rpco-14.2-trusty-base"
+    scenario:
+      - "swift"
+    action:
+      - "kilo_to_newton_leap"
+      - "liberty_to_newton_leap"
+      - "mitaka_to_newton_leap"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_WEEKLY}"
+
+- project:
+    name: "rpc-upgrades-aio-newton-head-pm-minor"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - xenial_aio:
+          SLAVE_TYPE: "nodepool-rpco-14.2-xenial-base"
+    scenario:
+      - "swift"
+    action:
+      - "r14.15.0_to_newton_minor"
+      - "r16.0.0_to_pike_minor"
+      - "r17.0.0_to_queens_minor"
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_WEEKLY}"
+
+- project:
+    name: "rpc-upgrades-mnaio-snap-incremental"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - xenial_mnaio-snap:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - swift
+    action:
+      - newton_to_rocky_inc
+      - newton_to_queens_inc
+      - newton_to_pike_inc
+      - pike_to_rocky_inc
+      - pike_to_queens_inc
+      - queens_to_rocky_inc
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_WEEKLY}"
+
+- project:
+    name: "rpc-upgrades-mnaio-snapcap-trusty"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      - trusty_mnaio:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - swift
+    action:
+      - mitaka_to_r14.current_snapcap
+      - r13.0.0_to_r14.current_snapcap
+      - r13.0.2_to_r14.current_snapcap
+      - r13.1.2_to_r14.current_snapcap
+      - r13.1.3_to_r14.current_snapcap
+      - r13.1.4_to.r14.current_snapcap
+      - liberty_to_r14.current_snapcap
+      - r12.2.8_to_r14.current_snapcap
+      - r12.2.5_to_r14.current_snapcap
+      - r12.2.2_to_r14.current_snapcap
+      - r12.1.2_to_r14.current_snapcap
+      - kilo_to_r14.current_snapcap
+    jira_project_key: "RLM"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: ""
+
+- project:
+    name: "rpc-upgrades-mnaio-snap-leapfrog"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+    image:
+      # in mnaio builds, the OS equals the VMs OS
+      - trusty_mnaio-snap:
+          SLAVE_TYPE: "nodepool-ubuntu-bionic-om-io2"
+    scenario:
+      - "swift"
+    action:
+      - kilo_to_newton_leap
+      - liberty_to_newton_leap
+      - mitaka_to_newton_leap
+      - mitaka_to_r14.current_leap
+      - r13.0.0_to_r14.current_leap
+      - r13.0.2_to_r14.current_leap
+      - r13.1.2_to_r14.current_leap
+      - r13.1.3_to_r14.current_leap
+      - r13.1.4_to.r14.current_leap
+      - liberty_to_r14.current_leap
+      - r12.2.8_to_r14.current_leap
+      - r12.2.5_to_r14.current_leap
+      - r12.2.2_to_r14.current_leap
+      - r12.1.2_to_r14.current_leap
+      - kilo_to_r14.current_leap
+    jira_project_key: "RLM"
+    # Required by RPC-ASC team to upload test results qTest
+    credentials: "rpc_asc_creds"
+    jobs:
+      - 'PM_{repo_name}-{branch}-{image}-{scenario}-{action}'
+    CRON: "{CRON_MONTHLY}"
+
+- project:
+    name: "rpc-upgrades"
+    repo_name: "rpc-upgrades"
+    repo_url: "https://github.com/rcbops/rpc-upgrades"
+
+    jobs:
+      - 'Component-Gate-Trigger_{repo_name}'
+
+- project:
+    name: "rpc-upgrades-re-release-pr"
+    repo:
+      - rpc-upgrades:
+          URL: "https://github.com/rcbops/rpc-upgrades"
+          BRANCH: "master"
+    jobs:
+      - 'RE-Release-PR_{repo}-{BRANCH}'
+
+- project:
+    name: 'rpc-upgrades-whisperer'
+    series:
+      - all_branches:
+          branches: '.*'
+    repo:
+      - rpc-upgrades:
+          repo_url: 'https://github.com/rcbops/rpc-upgrades'
+    jobs:
+      - 'Pull-Request-Whisperer_{repo}'
+
+- project:
+    name: 'rpc-upgrades-checkmarx'
+    jira_project_key: ""
+    trigger:
+      - PM
+    scan_type:
+      - all
+      - pci
+    repo_name:
+      - rpc-upgrades:
+          repo_url: "https://github.com/rcbops/rpc-upgrades"
+          branch: master
+    jobs:
+      - '{trigger}-Checkmarx_{scan_type}-{repo_name}'
