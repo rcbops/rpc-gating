@@ -137,7 +137,6 @@ dashboard:
             - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputePostServers.mean, 'IAD')
             - target: alias(stats.timers.nodepool.task.pubcloud-lon.ComputePostServers.mean, 'LON')
             - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputePostServers.mean, 'ORD')
-            - target: alias(stats.timers.nodepool.task.phobos-nodepool.ComputePostServers.mean, 'Phobos')
         - title: Get Server
           type: graph
           lines: true
@@ -152,7 +151,6 @@ dashboard:
             - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServersDetail.mean, 'IAD')
             - target: alias(stats.timers.nodepool.task.pubcloud-lon.ComputeGetServersDetail.mean, 'LON')
             - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServersDetail.mean, 'ORD')
-            - target: alias(stats.timers.nodepool.task.phobos-nodepool.ComputeGetServersDetail.mean, 'Phobos')
         - title: Delete Server
           type: graph
           lines: true
@@ -167,7 +165,6 @@ dashboard:
             - target: alias(stats.timers.nodepool.task.pubcloud-iad.ComputeDeleteServers.mean, 'IAD')
             - target: alias(stats.timers.nodepool.task.pubcloud-lon.ComputeDeleteServers.mean, 'LON')
             - target: alias(stats.timers.nodepool.task.pubcloud-ord.ComputeDeleteServers.mean, 'ORD')
-            - target: alias(stats.timers.nodepool.task.phobos-nodepool.ComputeDeleteServers.mean, 'Phobos')
         - title: List Servers
           type: graph
           lines: true
@@ -182,7 +179,6 @@ dashboard:
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetServers.mean, '0.001'), 'IAD')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-lon.ComputeGetServers.mean, '0.001'), 'LON')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetServers.mean, '0.001'), 'ORD')
-            - target: alias(scale(stats.timers.nodepool.task.phobos-nodepool.ComputeGetServers.mean, '0.001'), 'Phobos')
         - title: Get Limits
           type: graph
           lines: true
@@ -197,7 +193,6 @@ dashboard:
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-iad.ComputeGetLimits.mean, '0.001'), 'IAD')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-lon.ComputeGetLimits.mean, '0.001'), 'LON')
             - target: alias(scale(stats.timers.nodepool.task.pubcloud-ord.ComputeGetLimits.mean, '0.001'), 'ORD')
-            - target: alias(scale(stats.timers.nodepool.task.phobos-nodepool.ComputeGetLimits.mean, '0.001'), 'Phobos')
     - title: Node Launches
       showTitle: true
       height: 250px
@@ -215,7 +210,6 @@ dashboard:
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-iad.ready, '1m'), 'sum'), 'IAD')
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-lon.ready, '1m'), 'sum'), 'LON')
             - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.pubcloud-ord.ready, '1m'), 'sum'), 'ORD')
-            - target: alias(consolidateBy(smartSummarize(stats_counts.nodepool.launch.provider.phobos-nodepool.ready, '1m'), 'sum'), 'Phobos')
         - title: Error Node Launch Attempts
           type: graph
           span: 4
@@ -229,7 +223,6 @@ dashboard:
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-iad.error.*), '1m'), 'sum'), 'IAD')
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-lon.error.*), '1m'), 'sum'), 'LON')
             - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.pubcloud-ord.error.*), '1m'), 'sum'), 'ORD')
-            - target: alias(consolidateBy(smartSummarize(sumSeries(stats_counts.nodepool.launch.provider.phobos-nodepool.error.*), '1m'), 'sum'), 'Phobos')
         - title: Time to Ready
           type: graph
           span: 4
@@ -243,7 +236,6 @@ dashboard:
             - target: alias(stats.timers.nodepool.launch.provider.pubcloud-iad.ready.mean, 'IAD')
             - target: alias(stats.timers.nodepool.launch.provider.pubcloud-lon.ready.mean, 'LON')
             - target: alias(stats.timers.nodepool.launch.provider.pubcloud-ord.ready.mean, 'ORD')
-            - target: alias(stats.timers.nodepool.launch.provider.phobos-nodepool.ready.mean, 'Phobos')
         - title: Test Nodes (DFW)
           type: graph
           span: 2
@@ -309,23 +301,6 @@ dashboard:
             - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.nodes.used, 'Used')
             - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.nodes.deleting, 'Deleting')
             - target: alias(stats.gauges.nodepool.provider.pubcloud-ord.max_servers, 'Max')
-          seriesOverrides:
-            - alias: Max
-              stack: False
-        - title: Test Nodes (Phobos)
-          type: graph
-          span: 2
-          stack: true
-          tooltip:
-            value_type: individual
-          leftYAxisLabel: "nodes"
-          targets:
-            - target: alias(stats.gauges.nodepool.provider.phobos-nodepool.nodes.building, 'Building')
-            - target: alias(stats.gauges.nodepool.provider.phobos-nodepool.nodes.ready, 'Available')
-            - target: alias(stats.gauges.nodepool.provider.phobos-nodepool.nodes.in-use, 'In Use')
-            - target: alias(stats.gauges.nodepool.provider.phobos-nodepool.nodes.used, 'Used')
-            - target: alias(stats.gauges.nodepool.provider.phobos-nodepool.nodes.deleting, 'Deleting')
-            - target: alias(stats.gauges.nodepool.provider.phobos-nodepool.max_servers, 'Max')
           seriesOverrides:
             - alias: Max
               stack: False

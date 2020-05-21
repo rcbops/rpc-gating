@@ -159,22 +159,6 @@
             gating scripts and overriding the default value has no effect.
 
 - parameter:
-    name: phobos_params
-    parameters:
-      - string:
-          name: GATEWAY
-          default: from_creds
-          help: |
-            IP of Phobos VPN Gateway, if set to "from_creds", the gateway
-            IP will be pulled from the Jenkins Creds Store
-      - string:
-          name: PING_HOST
-          default: 172.20.4.10
-          help: |
-            Host that is only accessible via Phobos vpn, used to verify
-            connectivity
-
-- parameter:
     name: jjb_params
     parameters:
       - text:

@@ -77,33 +77,6 @@
         common.use_node("master"){
           try {
             dir("rpc-gating") {
-              // jenkins docker plugin stuff does not work
-              // with jenkins only having access to the docker
-              // socket via sudo (as is the case on CIT nodes)
-              stage("Docker Build"){
-                if (! common.isKronosVPNConnected()){
-                  sh "sudo restart vpnc-kronos"
-                }
-                common.docker_cache_workaround()
-                // Docker version on master doesn't like '/' in the name, using '-' as the separator
-                name = docker_utils.toInternalRegistryName("periodic-cleanup", "latest", "re", env.RE_JOB_REPO_NAME, "-")
-                withCredentials([
-                  usernamePassword(
-                    credentialsId: "kronos_mk8s_jenkins_account",
-                    usernameVariable: "registryUser",
-                    passwordVariable: "registryPassword"
-                  ),
-                  string(
-                    credentialsId: 'kronos_docker_registry_domain_name',
-                    variable: 'registryDomainName'
-                  )
-                ]){
-                  sh """
-                    sudo docker login --password '${registryPassword}' --username '${registryUser}' --email 'jenkins@localhost' '${registryDomainName}'
-                    sudo docker pull '${name}'
-                  """
-                }
-              }
               stage("Public Cloud Cleanup"){
                 clouds_cfg = common.writeCloudsCfg()
                 common.withRequestedCredentials("cloud_creds, jenkins_api_creds") {
