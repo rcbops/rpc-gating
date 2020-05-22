@@ -92,7 +92,7 @@
                       --env 'JENKINS_API_KEY=${JENKINS_API_KEY}' \
                       --env 'PUBCLOUD_USERNAME=${PUBCLOUD_USERNAME}' \
                       --env 'PUBCLOUD_API_KEY=${PUBCLOUD_API_KEY}' \
-                      '${name}' \
+                      'jenkins-periodic-cleanup' \
                       python rpc-gating/scripts/periodic_cleanup.py
                   """
                 }
