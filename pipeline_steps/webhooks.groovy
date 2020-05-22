@@ -11,10 +11,6 @@ def webhooks(){
             credentialsId: 'id_rsa_cloud10_jenkins_file',
             variable: 'jenkins_ssh_privkey'
           ),
-          file(
-            credentialsId: 'id_rsa_phobostunnel_pub',
-            variable: 'phobostunnel_ssh_pubkey'
-          ),
           usernamePassword(
             credentialsId: "github_webhook_proxy_basic_auth",
             usernameVariable: "webhookproxy_user",
@@ -48,7 +44,6 @@ def webhooks(){
                 WORKSPACE: "${env.WORKSPACE}",
                 webhookproxy_user: "${env.webhookproxy_user}",
                 webhookproxy_pass: "${env.webhookproxy_pass}",
-                phobostunnel_ssh_pubkey: "${env.phobostunnel_ssh_pubkey}"
               ]
             ) //venvPlaybook
           } //dir

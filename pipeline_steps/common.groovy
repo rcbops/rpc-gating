@@ -602,17 +602,6 @@ clouds:
       username: ${env.PUBCLOUD_UK_USERNAME}
       api_key: ${env.PUBCLOUD_UK_API_KEY}
 
-  phobos_nodepool:
-    identity_api_version: 3
-    verify: False
-    auth:
-      auth_url: "${env.PHOBOS_NODEPOOL_AUTH_URL}"
-      project_name: "${env.PHOBOS_NODEPOOL_PROJECT_NAME}"
-      project_id: "${env.PHOBOS_NODEPOOL_PROJECT_ID}"
-      username: "${env.PHOBOS_NODEPOOL_USERNAME}"
-      password: "${env.PHOBOS_NODEPOOL_PASSWORD}"
-      user_domain_name: "${env.PHOBOS_NODEPOOL_USER_DOMAIN_NAME}"
-
 # This configuration is used by ansible
 # when using the openstack dynamic inventory.
 ansible:
@@ -1354,95 +1343,6 @@ void standard_job_slave(String slave_type, Closure body){
 }
 
 
-void connect_phobos_vpn(String gateway=null){
-  withRequestedCredentials("phobos_vpn_auth_creds"){
-    dir('rpc-gating/playbooks'){
-      if (gateway == null){
-        gateway = env.gw_from_creds
-      }
-      Boolean isPhobosVPNServerPingable = ! sh(
-        script: """#!/bin/bash
-          apt-get update
-          apt-get install -y iputils-ping
-          ping -c 3 ${gateway}
-        """,
-        returnStatus: true
-      ).asBoolean()
-      if (isPhobosVPNServerPingable){
-        venvPlaybook(
-          playbooks: [
-            "vpn_setup.yml"
-          ],
-          args: [
-            "-u root"
-          ],
-          vars: [
-            ipsec_id: env.ipsec_id,
-            ipsec_secret: env.ipsec_secret,
-            xauth_user: env.xauth_user,
-            xauth_pass: env.xauth_pass,
-            gateway: gateway,
-            vpn_name: "phobos",
-            connectivity_test_url: "http://172.20.4.10:5000/"
-          ]
-        ) //venvPlaybook
-      }
-    } // dir
-  } // withRequestedCredentials
-}
-
-
-Boolean isKronosVPNConnected(){
-    withCredentials(
-      [
-        string(
-          credentialsId: 'kronos_docker_registry_url',
-          variable: 'registryURL'
-        )
-      ]
-    ){
-      return ! sh (
-        script: """curl --connect-timeout 10 --insecure '$registryURL' """,
-        returnStatus: true
-      ).asBoolean()
-    }
-}
-
-void connect_kronos_vpn(){
-  if (! isKronosVPNConnected()){
-    withRequestedCredentials("kronos_vpn_auth_creds"){
-      withCredentials(
-        [
-          string(
-            credentialsId: 'kronos_docker_registry_url',
-            variable: 'registryURL'
-          )
-        ]
-      ){
-        dir("${WORKSPACE}/rpc-gating/playbooks"){
-          venvPlaybook(
-            playbooks: [
-              "vpn_setup.yml"
-            ],
-            args: [
-              "-u root"
-            ],
-            vars: [
-              ipsec_id: env.KRONOS_IPSEC_ID,
-              ipsec_secret: env.KRONOS_IPSEC_SECRET,
-              xauth_user: env.KRONOS_XAUTH_USER,
-              xauth_pass: env.KRONOS_XAUTH_PASS,
-              gateway: env.KRONOS_GW_FROM_CREDS,
-              vpn_name: "kronos",
-              connectivity_test_url: registryURL
-            ]
-          )
-        }
-      }
-    }
-  }
-}
-
 // This is a global wrapper to kick off the RPC-O Newton deployment
 // artifact build job which is a special case for RPC-O's newton branch.
 void buildRpcNewtonArtifacts() {
@@ -1471,12 +1371,6 @@ List build_creds_array(String list_of_cred_ids){
         'dev_pubcloud_tenant_id',
         'PUBCLOUD_UK_USERNAME',
         'PUBCLOUD_UK_API_KEY',
-        'phobos_nodepool_auth_url',
-        'phobos_nodepool_project_name',
-        'phobos_nodepool_project_id',
-        'phobos_nodepool_username',
-        'phobos_nodepool_password',
-        'phobos_nodepool_user_domain_name'
       ],
       "rpc_asc_creds": [
         'RPC_ASC_QTEST_API_TOKEN',
@@ -1493,21 +1387,6 @@ List build_creds_array(String list_of_cred_ids){
         'RPC_REPO_GPG_SECRET_KEY_FILE',
         'RPC_REPO_GPG_PUBLIC_KEY_FILE'
       ],
-      "phobos_embedded": [
-        'phobos_clouds_rpc_jenkins_user',
-        'id_rsa_cloud10_jenkins_file',
-        'rackspace_ca_crt'
-      ],
-      "kronos_vpn_auth_creds": [
-        "kronos_vpn_ipsec",
-        "kronos_vpn_xauth",
-        "kronos_vpn_gateway"
-      ],
-      "phobos_vpn_auth_creds": [
-        "phobos_vpn_ipsec",
-        "phobos_vpn_xauth",
-        "phobos_vpn_gateway"
-      ],
       "jenkins_ssh_privkey": [
         'id_rsa_cloud10_jenkins_file',
       ],
@@ -1519,24 +1398,11 @@ List build_creds_array(String list_of_cred_ids){
         "RPC_OSP_REDHAT_POOL_ID",
         "RPC_OSP_REDHAT_PASSWORD",
         "RPC_OSP_REDHAT_USERNAME"
-      ],
-      "kronos_docker_registry": [
-       "kronos_docker_registry_domain_name",
-       "kronos_mk8s_jenkins_account"
       ]
     ]
     // only needs to contain creds that should be exposed.
     // every cred added should also be documented in RE for Projects
     Map available_creds = [
-      "kronos_docker_registry_domain_name": string(
-        credentialsId: 'kronos_docker_registry_domain_name',
-        variable: 'kronos_docker_registry_domain_name'
-      ),
-      "kronos_mk8s_jenkins_account": usernamePassword(
-        credentialsId: "kronos_mk8s_jenkins_account",
-        usernameVariable: "kronos_mk8s_jenkins_username",
-        passwordVariable: "kronos_mk8s_jenkins_password"
-      ),
       "dev_pubcloud_username": string(
         credentialsId: "dev_pubcloud_username",
         variable: "PUBCLOUD_USERNAME"
@@ -1614,65 +1480,9 @@ List build_creds_array(String list_of_cred_ids){
         credentialsId: "RPC_REPO_GPG_PUBLIC_KEY_FILE",
         variable: "GPG_PUBLIC"
       ),
-      "phobos_clouds_rpc_jenkins_user": file(
-        credentialsId: "phobos_clouds_rpc_jenkins_user",
-        variable: "phobos_clouds_rpc_jenkins_user"
-      ),
       "rackspace_ca_crt": file(
         credentialsId: "rackspace_ca_crt",
         variable: "rackspace_ca_crt"
-      ),
-      "kronos_vpn_ipsec": usernamePassword(
-        credentialsId: "kronos_vpn_ipsec",
-        usernameVariable: "KRONOS_IPSEC_ID",
-        passwordVariable: "KRONOS_IPSEC_SECRET"
-      ),
-      "kronos_vpn_xauth": usernamePassword(
-        credentialsId: "kronos_vpn_xauth",
-        usernameVariable: "KRONOS_XAUTH_USER",
-        passwordVariable: "KRONOS_XAUTH_PASS"
-      ),
-      "kronos_vpn_gateway": string(
-        credentialsId: 'kronos_vpn_gateway',
-        variable: 'KRONOS_GW_FROM_CREDS'
-      ),
-      "phobos_vpn_ipsec": usernamePassword(
-        credentialsId: "phobos_vpn_ipsec",
-        usernameVariable: "ipsec_id",
-        passwordVariable: "ipsec_secret"
-      ),
-      "phobos_vpn_xauth": usernamePassword(
-        credentialsId: "phobos_vpn_xauth",
-        usernameVariable: "xauth_user",
-        passwordVariable: "xauth_pass"
-      ),
-      "phobos_vpn_gateway": string(
-        credentialsId: 'phobos_vpn_gateway',
-        variable: 'gw_from_creds'
-      ),
-      "phobos_nodepool_auth_url": string(
-        credentialsId: "phobos_nodepool_auth_url",
-        variable: "PHOBOS_NODEPOOL_AUTH_URL"
-      ),
-      "phobos_nodepool_project_name": string(
-        credentialsId: "phobos_nodepool_project_name",
-        variable: "PHOBOS_NODEPOOL_PROJECT_NAME"
-      ),
-      "phobos_nodepool_project_id": string(
-        credentialsId: "phobos_nodepool_project_id",
-        variable: "PHOBOS_NODEPOOL_PROJECT_ID"
-      ),
-      "phobos_nodepool_username": string(
-        credentialsId: "phobos_nodepool_username",
-        variable: "PHOBOS_NODEPOOL_USERNAME"
-      ),
-      "phobos_nodepool_password": string(
-        credentialsId: "phobos_nodepool_password",
-        variable: "PHOBOS_NODEPOOL_PASSWORD"
-      ),
-      "phobos_nodepool_user_domain_name": string(
-        credentialsId: "phobos_nodepool_user_domain_name",
-        variable: "PHOBOS_NODEPOOL_USER_DOMAIN_NAME"
       ),
       "service_account_jenkins_api_creds": usernamePassword(
         credentialsId: "service_account_jenkins_api_creds",
@@ -1778,8 +1588,6 @@ void setTriggerVars(){
 // into a list of functions for use with wrapList
 List stdJobWrappers(String wrappers){
   Map availableWrappers = [
-    "phobos_vpn": {body -> connect_phobos_vpn(); body()},
-    "kronos_vpn": {body -> connect_kronos_vpn(); body()},
     "rpco_deploy_artifact_build": {body -> buildRpcNewtonArtifacts(); body()}
   ]
   // Convert csv list of strings to list of wrapper functions

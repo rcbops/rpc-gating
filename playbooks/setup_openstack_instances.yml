@@ -34,12 +34,6 @@
   gather_facts: False
   vars:
     default_metadata:
-      # NOTE(odyssey4me):
-      # There is a build_config option to have MaaS setup
-      # by the public cloud automation when the instance
-      # is being built, but that option will not be available
-      # in Phobos, so we'll rather do it using our MaaS
-      # deployment tooling.
       build_config: core
   tasks:
     - name: Unlock instances scheduled to be deleted or where volumes may need to be added

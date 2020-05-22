@@ -14,25 +14,15 @@
           SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS: "{SLAVE_CONTAINER_DOCKERFILE_BUILD_ARGS}"
           BUILD_TIMEOUT_HRS: "10"
           hold_on_error: "0"
-      - phobos_params:
     dsl: |
       library "rpc-gating@${RPC_GATING_BRANCH}"
       // can specify this in a job-template, but not in a job
       // as there is a jjb key called wrappers
-      wrappers = "phobos_vpn"
       if ("{repo_name}" == "rpc-gating"){
         env.RPC_GATING_BRANCH = "origin/pr/${env.ghprbPullId}/merge"
       }
       library "rpc-gating@${RPC_GATING_BRANCH}"
       common.standard_job_slave(env.SLAVE_TYPE){
         common.wrapList(common.stdJobWrappers(wrappers)){
-          stage("Ensure phobos reachable after connecting"){
-            // will throw exception on failure
-            sh """#!/bin/bash -x
-              # ping not installed(!)
-              # ping -w 5 ${env.PING_HOST}
-              curl --fail http://${env.PING_HOST}
-            """
-          }
         }
       }

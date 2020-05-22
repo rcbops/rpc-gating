@@ -34,9 +34,6 @@
     JIRA_PASSWORD: "{{ lookup('env', 'JIRA_PASS') }}"
     JIRA_PROJECT: "{{ lookup('env', 'JIRA_PROJECT') }}"
 
-    # phobostunnel_ssh_pubkey Injected by Jenkins Credential
-    PHOBOS_SSH_PORT: 2223
-
   pre_tasks:
     # used by webhooks.groovy to create the ssh tunnel script
     - name: Write ip file
@@ -115,25 +112,6 @@
       shell: |
         cd ~jenkins
         htpasswd -cb .htpasswd {{ webhookproxy_user }} {{ webhookproxy_pass }}
-
-    # The webhook proxy node will be used as a proxy for connections
-    # to phobos (RE-643)
-    # The deploy-phobos container will have a service that connects
-    # via ssh to the webhook proxy node using ssh remote forwarding
-    # to expose the local port
-    - name: Create phobos user
-      user:
-        name: phobos
-
-    - name: Add phobos user Authorised key
-      authorized_key:
-        user: phobos
-        key: "{{ lookup('file', phobostunnel_ssh_pubkey) }}"
-
-    - name: Allow access to phobos deploy host
-      ufw:
-        rule: allow
-        port: "{{ PHOBOS_SSH_PORT }}"
 
   roles:
     - role: geerlingguy.nginx
