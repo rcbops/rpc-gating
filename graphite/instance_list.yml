@@ -1,7 +1,0 @@
----
-instance_list:
-  - name: graphite-server-iad-1
-    flavor: general1-4
-    region: IAD
-    metadata:
-      group: "graphite_server"

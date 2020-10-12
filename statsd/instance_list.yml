@@ -1,7 +1,0 @@
----
-instance_list:
-  - name: statsd-server-iad-1
-    flavor: general1-1
-    region: IAD
-    metadata:
-      group: "statsd_server"

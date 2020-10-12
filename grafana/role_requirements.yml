@@ -1,9 +1,0 @@
----
-- name: cloudalchemy.grafana
-  scm: git
-  src: https://github.com/cloudalchemy/ansible-grafana
-  version: "0.13.0"
-- name: openstack.grafyaml
-  scm: git
-  src: https://github.com/openstack/ansible-role-grafyaml
-  version: e06efde1aedc2faf3cf19180645eefa5f99c88ad

@@ -1,5 +1,0 @@
----
-- name: openstack.statsd
-  scm: git
-  src: https://github.com/openstack/ansible-role-statsd
-  version: 1e5c3995e11f776bc7b67a9817209c7b94835779

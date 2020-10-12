@@ -31,10 +31,7 @@ common.globalWraps(){
 
   List parallelJobs = [
     'Build-Docker-Images-For-Master',
-    'Setup-Grafana',
-    'Setup-Graphite',
     'Setup-Nodepool',
-    'Setup-StatsD'
   ]
 
   List jobParameters = [

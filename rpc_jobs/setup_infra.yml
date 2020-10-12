@@ -112,15 +112,6 @@
     CRON: "{CRON_DAILY}"
     RPC_GATING_BRANCH: "master"
     app:
-      - Grafana:
-          name_lower: "grafana"
-          credentials: "id_rsa_cloud10_jenkins_file,RE_GRAFANA_ADMIN_PASSWORD,RE_GRAFANA_GRAFYAML_API_KEY"
-      - Graphite:
-          name_lower: "graphite"
-          credentials: "id_rsa_cloud10_jenkins_file,RE_GRAPHITE_ADMIN_PASSWORD,RE_GRAPHITE_SECRET_KEY"
-      - StatsD:
-          name_lower: "statsd"
-          credentials: "id_rsa_cloud10_jenkins_file"
       - Nodepool:
           name_lower: "nodepool"
           credentials: "id_rsa_cloud10_jenkins_file"

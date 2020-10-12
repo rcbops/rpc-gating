@@ -1,5 +1,0 @@
----
-- name: nsg.graphite
-  scm: git
-  src: https://github.com/nsg/ansible-graphite
-  version: "2.1"
